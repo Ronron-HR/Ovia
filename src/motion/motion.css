@@ -1,0 +1,435 @@
+/* =========================================================================
+   OVIA — MOTION-SYSTEM
+   Ét sted at justere hele sidens følelse. Ændrer du tallene her,
+   ændrer du siden — komponenterne indeholder ingen varigheder.
+
+   Regler systemet håndhæver:
+   - Kun transform og opacity animeres. Aldrig top/left/width/height.
+   - Store elementer bevæger sig langsomt, små hurtigt (masse-reglen).
+   - Scroll-drevne bevægelser har ingen easing — de mapper lineært.
+   ========================================================================= */
+
+:root {
+  /* --- Kurver ------------------------------------------------------------
+     Indgang: ca. 90% af distancen i de første 40% af tiden. Derfor kan
+     en overskrift køre 700ms og stå læsbar efter 300.
+     Udgang: spejlvendt — masse sætter sig langsomt i bevægelse.
+     Hover: ca. 4% overshoot, klippet ned fra en typisk spring på 1.56. */
+  --ease-entrance: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-exit: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-hover: cubic-bezier(0.34, 1.3, 0.64, 1);
+
+  /* --- Varigheder — intet over 800ms ------------------------------------ */
+  --dur-tap: 140ms;
+  --dur-hover: 200ms;
+  --dur-reveal: 620ms;
+  --dur-reveal-lg: 760ms;
+  --dur-exit: 320ms;
+  --stagger: 60ms;
+
+  /* --- Afstande --------------------------------------------------------- */
+  --reveal-y: 24px;
+  --reveal-y-lg: 32px;
+
+  /* --- Hero-load — koreograferet sekvens, se HERO nedenfor -------------- */
+  --dur-hero-line: 700ms;
+  --dur-hero-media: 760ms;
+
+  /* Hvor meget portrættet skalerer ned på plads i heroen.
+     Sat til 1.02 og ikke 1.06, fordi kildebilledet kun er 320px bredt
+     efter beskæring — en større startskala ville forstørre et billede,
+     der i forvejen ikke har pixels nok. Kommer der et portræt på
+     2000px+, kan den ryge op på 1.06 igen. */
+  --hero-media-scale: 1.02;
+
+  /* --- Lagovergang (signature moment 02) --------------------------------
+     --layer-travel: hvor længe heroen holdes fast. Det er den eneste værdi,
+       du skal røre. 65vh frem for en fuld skærmhøjde: en fuld skærm uden
+       nyt indhold er for meget tålmodighed at bede om.
+     --layer-lift: hvor meget laget selv skubber sig op oveni scroll.
+       Udledes, så laget rammer toppen præcis når heroen slipper — og så
+       regnestykket ikke kan komme ud af trit med travel. */
+  --layer-travel: 65vh;
+  --layer-lift: calc(100svh - var(--layer-travel));
+  --hero-sink: -8%;
+  --hero-scale: 0.98;
+  --hero-fade: 0.55;
+
+  /* --- Parallax (signature moment 04) ------------------------------------
+     Værdien er den samlede rejse; forskydningen er det halve til hver side. */
+  --par-img: 80px;
+  --par-txt: 24px;
+
+  /* --- Nav -------------------------------------------------------------- */
+  --nav-h: 64px;
+
+  /* Scroll-progress. --lp er global (lagovergangen), --p er lokal pr. scene. */
+  --lp: 0;
+  --p: 0;
+}
+
+@media (max-width: 767px) {
+  :root {
+    /* Kortere scroll-distance, færre samtidige lag, ingen scale på et
+       fuldskærmslag — det er den dyreste enkeltdel på mobile GPU'er. */
+    --layer-travel: 55vh;
+    --hero-sink: -4%;
+    --hero-scale: 1;
+    --par-img: 24px; /* ±12px, under mobilgrænsen */
+    --par-txt: 8px;
+    --reveal-y: 20px;
+    --reveal-y-lg: 24px;
+    --nav-h: 56px;
+  }
+}
+
+/* =========================================================================
+   TILGÆNGELIGHED — ikke til forhandling
+   Uden JS findes klassen .js-motion ikke, og intet herunder rammer noget:
+   alt indhold er synligt fra første frame.
+   ========================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-reveal: 200ms;
+    --dur-reveal-lg: 200ms;
+    --reveal-y: 0px;
+    --reveal-y-lg: 0px;
+    /* Ingen lagovergang: siden bliver et almindeligt dokument i flow. */
+    --layer-travel: 0vh;
+    --layer-lift: 0vh;
+    --hero-sink: 0%;
+    --hero-scale: 1;
+    --hero-fade: 1;
+    --par-img: 0px;
+    --par-txt: 0px;
+  }
+}
+
+/* =========================================================================
+   STANDARD-REVEAL
+   Bruges af Hvad jeg laver, Sådan foregår det og Priser — og intet andet.
+   Netop ensartetheden her er det, der får de fem momenter til at virke.
+   ========================================================================= */
+
+.js-motion [data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, var(--reveal-y), 0);
+  transition:
+    opacity var(--dur-reveal) var(--ease-entrance) var(--d, 0ms),
+    transform var(--dur-reveal) var(--ease-entrance) var(--d, 0ms);
+}
+
+.js-motion [data-reveal='lg'] {
+  transform: translate3d(0, var(--reveal-y-lg), 0);
+  transition-duration: var(--dur-reveal-lg);
+}
+
+.js-motion [data-reveal].is-in {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+/* Maskeret linje-reveal, drevet af IntersectionObserver frem for load.
+   Bruges ét sted: kontakt-overskriften. Samme gestus som heroen — og
+   netop fordi den kun optræder to steder, betyder den noget.
+
+   VIGTIGT: [data-reveal='rise'] sættes på MASKEN, ikke på linjen indeni.
+   Linjen starter skubbet helt ud af masken og er dermed fuldstændig
+   klippet væk — en IntersectionObserver ser den aldrig krydse noget som
+   helst, og revealen ville aldrig fyre. Masken er synlig hele vejen. */
+.js-motion [data-reveal='rise'] {
+  opacity: 1;
+  transform: none;
+}
+
+.js-motion [data-reveal='rise'] > * {
+  display: block; /* transform rammer ikke inline-elementer */
+  transform: translate3d(0, 105%, 0);
+  transition: transform var(--dur-reveal-lg) var(--ease-entrance) var(--d, 0ms);
+}
+
+.js-motion [data-reveal='rise'].is-in > * {
+  transform: translate3d(0, 0, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js-motion [data-reveal='rise'] > * {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js-motion [data-reveal] {
+    transform: none;
+    transition: opacity var(--dur-reveal) linear;
+  }
+  .js-motion [data-reveal].is-in {
+    transform: none;
+  }
+}
+
+/* =========================================================================
+   SIGNATURE MOMENT 01 — HERO LOAD
+   Ren CSS. Kører på første frame og venter ikke på React-hydrering.
+   Læsbarhed: linje 1 står reelt stille efter ~300ms. Kravet er 400ms.
+   ========================================================================= */
+
+.mask {
+  display: block;
+  overflow: hidden;
+  /* Plads til underlængder (g, j, y) så masken ikke klipper dem. */
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+
+.js-motion .hero-rise {
+  display: block;
+  transform: translate3d(0, 105%, 0);
+  animation: rise var(--dur-hero-line) var(--ease-entrance) var(--d, 0ms) both;
+}
+
+.js-motion [data-hero='fade'] {
+  opacity: 0;
+  animation: fade-up 520ms var(--ease-entrance) var(--d, 0ms) both;
+}
+
+.js-motion [data-hero='media'] {
+  transform: translate3d(0, 100%, 0);
+  animation: rise var(--dur-hero-media) var(--ease-entrance) var(--d, 0ms) both;
+}
+
+.js-motion [data-hero='media-inner'] {
+  transform: scale(var(--hero-media-scale));
+  animation: settle var(--dur-hero-media) var(--ease-entrance) var(--d, 0ms) both;
+}
+
+@keyframes rise {
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 16px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes settle {
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes fade-only {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js-motion .hero-rise,
+  .js-motion [data-hero='fade'],
+  .js-motion [data-hero='media'],
+  .js-motion [data-hero='media-inner'] {
+    transform: none;
+    animation: fade-only 200ms linear both;
+    animation-delay: 0ms;
+  }
+}
+
+/* =========================================================================
+   SIGNATURE MOMENT 02 — LAGOVERGANG
+   Heroen holdes fast (sticky) mens næste sektion skubber sig ind over den.
+   Ingen pinning-bibliotek: position:sticky gør det natively, og fordi
+   .layer-stage fylder i flowet, lander anchor- og deep-links korrekt.
+   ========================================================================= */
+
+/* Værten om begge lag. flow-root er ikke pynt: uden den kollapser
+   .layer-rest's negative bundmargin ud gennem forælderen, og så bliver
+   dokumentet --layer-lift for højt — en stribe tom baggrund under
+   sidste sektion. */
+.layer-host {
+  display: flow-root;
+}
+
+.layer-stage {
+  position: relative;
+  height: calc(100svh + var(--layer-travel));
+}
+
+.layer-sticky {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  display: flex;
+  flex-direction: column;
+  overflow: clip;
+}
+
+/* Heroens modbevægelse: den trækker sig bagud, den ruller ikke væk. */
+.layer-sink {
+  transform: translate3d(0, calc(var(--hero-sink) * var(--lp)), 0)
+    scale(calc(1 - (1 - var(--hero-scale)) * var(--lp)));
+  opacity: calc(1 - (1 - var(--hero-fade)) * var(--lp));
+}
+
+/* Alt efter heroen er ét lag. Det trækkes op over heroen med
+   --layer-lift, så det rammer toppen præcis når heroen slipper.
+   margin-bottom kompenserer, så dokumentet ikke bliver for højt. */
+.layer-rest {
+  position: relative;
+  z-index: 1;
+  margin-top: calc(-1 * var(--layer-travel));
+  margin-bottom: calc(-1 * var(--layer-lift));
+  transform: translate3d(0, calc(-1 * var(--layer-lift) * var(--lp)), 0);
+  background: var(--color-paper);
+}
+
+:root[data-layer='active'] .layer-rest,
+:root[data-layer='active'] .layer-sink {
+  will-change: transform;
+}
+
+/* Laget forskyder alt under sig permanent med --layer-lift.
+   Uden denne korrektion ville anchor-links lande --layer-lift for lavt. */
+.layer-rest [id] {
+  scroll-margin-top: calc(var(--layer-lift) + var(--nav-h) + 24px);
+}
+
+/* =========================================================================
+   NAV — skjult i heroen, fader ind når lagovergangen er færdig
+   visibility (ikke kun opacity) holder den ude af tab-rækkefølgen imens.
+   ========================================================================= */
+
+.js-motion .nav {
+  opacity: 0;
+  visibility: hidden;
+  transform: translate3d(0, -8px, 0);
+  transition:
+    opacity var(--dur-reveal) var(--ease-entrance),
+    transform var(--dur-reveal) var(--ease-entrance),
+    visibility 0s linear var(--dur-reveal);
+}
+
+:root.js-motion[data-nav='on'] .nav {
+  opacity: 1;
+  visibility: visible;
+  transform: translate3d(0, 0, 0);
+  transition-delay: 0s, 0s, 0s;
+}
+
+/* =========================================================================
+   SIGNATURE MOMENT 03 — PALMY MASKEREVEAL
+   overflow:hidden + translateY frem for clip-path: visuelt identisk for en
+   lige kant, men garanteret compositor-only.
+   Modbevægelsen indeni gør, at billedet virker forankret bag masken
+   frem for slæbt op.
+   ========================================================================= */
+
+.reveal-mask {
+  overflow: hidden;
+}
+
+.js-motion .reveal-mask-inner {
+  transform: translate3d(0, calc((1 - var(--p)) * 100%), 0);
+}
+
+.js-motion .reveal-mask-media {
+  transform: translate3d(0, calc((1 - var(--p)) * -6%), 0)
+    scale(calc(1.1 - 0.1 * var(--p)));
+}
+
+:root:not(.js-motion) .reveal-mask-inner,
+:root:not(.js-motion) .reveal-mask-media {
+  transform: none;
+}
+
+.is-live .reveal-mask-inner,
+.is-live .reveal-mask-media {
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js-motion .reveal-mask-inner,
+  .js-motion .reveal-mask-media {
+    transform: none;
+  }
+}
+
+/* =========================================================================
+   SIGNATURE MOMENT 04 — OM MIG
+   Billede og tekst bevæger sig i forskellig hastighed og overlapper.
+   Cursor ligger på et indre element, så de to transforms ikke kæmper.
+   ========================================================================= */
+
+.js-motion .par-img {
+  transform: translate3d(0, calc((0.5 - var(--p)) * var(--par-img)), 0);
+}
+
+.js-motion .par-txt {
+  transform: translate3d(0, calc((0.5 - var(--p)) * var(--par-txt)), 0);
+}
+
+.pointer-shift {
+  transform: translate3d(var(--mx, 0px), var(--my, 0px), 0);
+  transition: transform 0s;
+}
+
+.is-live .par-img,
+.is-live .par-txt {
+  will-change: transform;
+}
+
+/* =========================================================================
+   MICRO-INTERACTIONS
+   Hover kun hvor der findes en hover-enhed. Tap-feedback overalt.
+   Ingen magnetiske knapper, ingen custom cursor, ingen lyd.
+   ========================================================================= */
+
+.btn {
+  transition:
+    background-color var(--dur-hover) var(--ease-hover),
+    color var(--dur-hover) var(--ease-hover),
+    border-color var(--dur-hover) var(--ease-hover),
+    transform var(--dur-hover) var(--ease-hover);
+}
+
+.btn:active {
+  transform: scale(0.98);
+  transition-duration: var(--dur-tap);
+}
+
+.link-underline {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 100% 1px;
+  transition: background-size var(--dur-hover) var(--ease-entrance);
+}
+
+@media (hover: hover) {
+  .link-underline:hover {
+    background-size: 0% 1px;
+    background-position: 100% 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .link-underline {
+    transition-duration: 1ms;
+  }
+  .btn:active {
+    transform: none;
+  }
+}
