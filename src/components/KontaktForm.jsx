@@ -60,7 +60,7 @@ export default function KontaktForm({ children }) {
           <button
             type="submit"
             disabled={state === 'sending'}
-            className="btn relative inline-block bg-paper px-8 py-4 text-[15px] font-medium text-ink hover:bg-clay hover:text-paper disabled:opacity-60"
+            className="btn relative inline-block bg-paper px-8 py-4 text-[15px] font-medium text-ink hover:bg-accent-bright disabled:opacity-60"
           >
             {state === 'sending' ? form.sending : form.submit}
           </button>,

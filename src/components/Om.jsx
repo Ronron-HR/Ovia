@@ -2,58 +2,43 @@ import { useRef } from 'react'
 import { om } from '../content.js'
 import { useProgress } from '../motion/useProgress.js'
 import { usePointer } from '../motion/usePointer.js'
+import Logo from './Logo.jsx'
 
 /**
- * SIGNATURE MOMENT 04 — ORDMÆRKET
+ * SIGNATURE MOMENT 04 — LOGOET
  *
- * OVIA er sektionens visuelle fokus. Bogstaverne rejser sig ét ad gangen
- * op fra en fælles grundlinje — samme maskerede rise som heroen og
- * kontakt-overskriften, bare tegn for tegn. Det er en indgang, der kører
- * én gang, når ordet kommer til syne, og derefter står helt stille.
+ * Ovia-logoet er sektionens visuelle fokus. Bogstaverne rejser sig ét ad
+ * gangen op fra en fælles grundlinje, og accentprikken lander til sidst —
+ * samme maskerede rise som heroen og kontakt-overskriften, bare tegn for
+ * tegn. Det er en indgang, der kører én gang, når logoet kommer til syne,
+ * og derefter står helt stille.
  *
- * Revealen bruger det eksisterende [data-reveal='rise'] (se motion.css),
- * så kurve, varighed og reduced-motion-adfærd følger med uden ny kode.
- * Rækkefølgen er FAST (venstre mod højre) og ikke tilfældig.
+ * Selve animationen bor i Logo.jsx (reveal) og bruger det eksisterende
+ * [data-reveal='rise'] i motion.css, så kurve, varighed og reduced-motion
+ * følger med uden ny kode.
  *
- * Tekstkolonnen kører sin egen svage parallax og overlapper ordmærket.
- * Ordet reagerer desuden på cursoren, som billedet gjorde: maks 10px,
+ * Tekstkolonnen kører sin egen svage parallax og overlapper logoet.
+ * Logoet reagerer desuden på cursoren, som billedet gjorde: maks 10px,
  * lerpet, og ikke på touch.
  */
-
-/** Forsinkelse mellem bogstaverne. Kort nok til at læses som ét ord. */
-const LETTER_STAGGER = 90
-
 export default function Om() {
   const scene = useRef(null)
-  const wordmark = useRef(null)
+  const logo = useRef(null)
 
   useProgress(scene, { mode: 'pass' })
-  usePointer(scene, wordmark)
+  usePointer(scene, logo)
 
   return (
     <section id={om.id} ref={scene} className="bg-paper">
       <div className="shell py-28 md:py-44">
         <div className="grid grid-cols-12 items-start">
           <div className="col-span-12 md:col-span-5 md:col-start-1 md:row-start-1">
-            <div ref={wordmark} className="pointer-shift">
-              <p className="t-display text-[clamp(88px,20vw,240px)] leading-none uppercase">
-                <span className="sr-only">{om.wordmark}</span>
-                <span aria-hidden="true" data-reveal="rise" className="mask wordmark">
-                  {[...om.wordmark].map((letter, i) => (
-                    <span
-                      key={`${letter}-${i}`}
-                      className="wordmark-letter"
-                      style={{ '--d': `${i * LETTER_STAGGER}ms` }}
-                    >
-                      {letter}
-                    </span>
-                  ))}
-                </span>
-              </p>
+            <div ref={logo} className="pointer-shift">
+              <Logo reveal className="block h-[clamp(92px,15.5vw,190px)] text-ink" />
             </div>
           </div>
 
-          <div className="par-txt relative z-10 col-span-12 -mt-6 bg-paper pt-10 md:col-span-8 md:col-start-5 md:row-start-1 md:mt-[22vh] md:pt-0 md:pl-10">
+          <div className="par-txt relative z-10 col-span-12 mt-8 bg-paper md:col-span-8 md:col-start-5 md:row-start-1 md:mt-[22vh] md:pl-10">
             <p data-reveal className="t-eyebrow">
               {om.eyebrow}
             </p>

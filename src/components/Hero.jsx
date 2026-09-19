@@ -62,7 +62,7 @@ export default function Hero() {
               >
                 <a
                   href={hero.primary.href}
-                  className="btn bg-ink px-6 py-3.5 text-[14px] font-medium text-paper hover:bg-clay"
+                  className="btn bg-ink px-6 py-3.5 text-[14px] font-medium text-paper hover:bg-accent"
                 >
                   {hero.primary.label}
                 </a>

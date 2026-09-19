@@ -29,7 +29,7 @@ export default function Proces() {
               style={{ '--d': `${Math.min(i, 4) * 60}ms` }}
               className="rule grid grid-cols-12 gap-x-6 gap-y-2 py-8 last:border-b last:border-rule md:py-10"
             >
-              <span className="t-display col-span-12 text-[18px] text-clay md:col-span-2 md:text-[22px]">
+              <span className="t-display col-span-12 text-[18px] text-accent md:col-span-2 md:text-[22px]">
                 {String(i + 1).padStart(2, '0')}
               </span>
               <h3 className="t-display col-span-12 text-[26px] md:col-span-4 md:text-[32px]">

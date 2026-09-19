@@ -153,11 +153,6 @@ export const om = {
     'Jeg har brugt stort set hele min ungdom online. Det er ikke et kursus, jeg har taget — det er dét, jeg har lavet, siden jeg var barn. Jeg ved, hvordan folk scroller, hvad de klikker væk fra, og hvad der får dem til at blive.',
     'Jeg er ny, og det siger jeg højt. Fordelen er, at du taler med den, der laver arbejdet, og at du får svar samme dag.',
   ],
-  /* Ordmærket står i stedet for portrættet. Bogstaverne bevæger sig i
-     forskellig hastighed og flugter præcis, når sektionen er midt i
-     skærmen. Skriver du et andet ord, virker det stadig — hastighederne
-     fordeles efter bogstavets plads i ordet. */
-  wordmark: 'Ovia',
 }
 
 export const proces = {

@@ -27,7 +27,7 @@ function Section({ title, children }) {
   )
 }
 
-const list = 'flex list-disc flex-col gap-2 pl-5 marker:text-clay'
+const list = 'flex list-disc flex-col gap-2 pl-5 marker:text-accent'
 
 export default function Privatlivspolitik() {
   return (

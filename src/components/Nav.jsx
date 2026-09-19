@@ -13,7 +13,7 @@ import { useNavSpy } from '../motion/useNavSpy.js'
  *   2. Når indholdet glider op under: hårstregen tegnes i bunden. Baggrunden
  *      er papir med gennemsigtighed og blur, så den aldrig er en hård kasse.
  *   3. Aktivt afsnit: scrollspy (useNavSpy) markerer ét link, og en enkelt
- *      streg i ler glider derhen. Stregen er ét element, ikke ét pr. link —
+ *      streg i accentfarven glider derhen. Stregen er ét element, ikke ét pr. link —
  *      derfor kan den glide i stedet for at blinke.
  *
  * MOBIL: ordet "Menu" i stedet for et ikon. Overlayet er et SØSKENDE til
