@@ -27,7 +27,7 @@
 
 /* =========================================================================
    RETNING A — PAPIR
-   Varmt papir, blæk og én accent: ler.
+   Varmt papir, blæk og én accent: dæmpet grå.
    Typografien er sidens store, langsomme element;
    billedet er anden stemme.
    ========================================================================= */
@@ -37,12 +37,11 @@
   --color-paper-2: #ebe7de;
   --color-ink: #16130f;
   --color-muted: #6b655c;
-  /* Ler — sidens eneste accent, på lyse og mørke flader. Mod papir 4,0:1 og
-     mod blæk 4,1:1: nok til streger, fokusringe og store tal, men under AA
-     (4,5:1) til lille brødtekst — brug den derfor ikke til løbende tekst.
-     Faviconet, apple-touch-icon og og:image tegnes ud fra denne værdi
-     (npm run brand). */
-  --color-accent: #c4552f;
+  /* Sidens eneste accent: den grå, "Specs" har i wordmarket (blæk ved 60 %
+     over papir). Mod papir 4,7:1 og mod blæk 3,5:1: nok til streger,
+     fokusringe og hover-flader. Faviconet, apple-touch-icon og og:image
+     tegnes ud fra denne værdi (npm run brand). */
+  --color-accent: #6f6c67;
   --color-rule: #dfd9cf;
 
   --font-display: "Instrument Serif", Georgia, "Times New Roman", serif;

@@ -1,29 +1,14 @@
 import { proces } from '../content.js'
 
 /**
- * SIGNATURE MOMENT 06 — TÆLLEVÆRKET
- *
- * Numrene er ikke pynt — det her er en faktisk rækkefølge. Men de er en
- * detalje ved siden af trinnet, ikke et selvstændigt grafisk element: samme
- * serif som overskrifterne (Instrument Serif, kun vægt 400 — så der er
- * ingen syntetisk fed at komme i vanskeligheder med), lille, i dæmpet blæk,
- * og hængt i marginen lige op ad overskriften. Rullen på plads er den samme.
- *
- * Bevægelsen bor i motion.css. Selve rullen hænger på <li>-ets [data-reveal],
- * så der kun er ét tidsforløb i sektionen.
+ * Trinene er en faktisk rækkefølge, så hvert trin har en lille label over
+ * overskriften: "TRIN 01" i Instrument Serif (kun vægt 400 — ingen syntetisk
+ * fed), versaler, dæmpet grå, samme afdæmpede stemme som sektionens eyebrow.
  *
  * data-step: hvert trin tænder for sig, når DET SELV er nået op i skærmen
  * (se useReveal) — ingen indeksbaseret forsinkelse. Kommer trin 2 først
  * ind i billedet, når man scroller ned til det, afsløres det først da.
  */
-
-/* Opløbet: cifrene lige før målet, så hjulet ruller som et tælleværk frem
-   for bare at stige. Længden er den samme for alle fire tal — et opløb,
-   der voksede med tallet, ville få 04 til at rulle fire gange så langt
-   som 01 og ødelægge fornemmelsen af én maskine. */
-const RUN = 2
-const runUp = (digit) =>
-  Array.from({ length: RUN + 1 }, (_, k) => (Number(digit) - RUN + k + 10) % 10)
 export default function Proces() {
   return (
     <section id={proces.id} className="bg-paper">
@@ -49,30 +34,9 @@ export default function Proces() {
               data-step
               className="rule grid grid-cols-12 gap-x-6 gap-y-2 py-8 last:border-b last:border-rule md:py-10"
             >
-              {/* Hjulene er aria-hidden: en oplæser ville ellers læse
-                  opløbscifrene med og sige "otte ni nul" i stedet for
-                  "nul". Tallet selv står som skjult tekst ved siden af,
-                  så det annonceres præcis som før. */}
-              <span
-                aria-hidden="true"
-                className="odo font-display col-span-12 mb-1 text-[15px] leading-none text-ink/45 md:col-span-1 md:mb-0 md:justify-self-end md:text-[18px]"
-              >
-                {String(i + 1)
-                  .padStart(2, '0')
-                  .split('')
-                  .map((digit, j) => (
-                    <span key={j} className="odo-wheel" style={{ '--odo-d': `${j * 60}ms` }}>
-                      <span className="odo-strip">
-                        {runUp(digit).map((d) => (
-                          <span key={d} className="odo-cell">
-                            {d}
-                          </span>
-                        ))}
-                      </span>
-                    </span>
-                  ))}
+              <span className="t-eyebrow font-display col-span-12 text-[14px]">
+                Trin {String(i + 1).padStart(2, '0')}
               </span>
-              <span className="sr-only">{String(i + 1).padStart(2, '0')}</span>
               <h3 className="t-display col-span-12 text-[26px] md:col-span-5 md:text-[32px]">
                 {step.title}
               </h3>
