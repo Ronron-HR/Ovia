@@ -3,17 +3,18 @@ import { proces } from '../content.js'
 /**
  * SIGNATURE MOMENT 06 — TÆLLEVÆRKET
  *
- * Numrene er ikke pynt — det her er en faktisk rækkefølge, og rækkefølgen
- * er pointen i sektionen. Derfor får tallet vægt: blæk i stedet for ler,
- * og et mekanisk rul på plads, når trinnet kommer til syne.
- *
- * Tallet er sat i Inter og ikke i display-serif'en. Det er ikke en smag,
- * det er en begrænsning: Instrument Serif har kun vægt 400, så en fed
- * serif ville være browserens syntetiske efterligning. Inters wght-akse
- * går til 900, så 700 her er ægte. Se @font-face i index.css.
+ * Numrene er ikke pynt — det her er en faktisk rækkefølge. Men de er en
+ * detalje ved siden af trinnet, ikke et selvstændigt grafisk element: samme
+ * serif som overskrifterne (Instrument Serif, kun vægt 400 — så der er
+ * ingen syntetisk fed at komme i vanskeligheder med), lille, i dæmpet blæk,
+ * og hængt i marginen lige op ad overskriften. Rullen på plads er den samme.
  *
  * Bevægelsen bor i motion.css. Selve rullen hænger på <li>-ets [data-reveal],
  * så der kun er ét tidsforløb i sektionen.
+ *
+ * data-step: hvert trin tænder for sig, når DET SELV er nået op i skærmen
+ * (se useReveal) — ingen indeksbaseret forsinkelse. Kommer trin 2 først
+ * ind i billedet, når man scroller ned til det, afsløres det først da.
  */
 
 /* Opløbet: cifrene lige før målet, så hjulet ruller som et tælleværk frem
@@ -45,7 +46,7 @@ export default function Proces() {
             <li
               key={step.title}
               data-reveal
-              style={{ '--d': `${Math.min(i, 4) * 60}ms` }}
+              data-step
               className="rule grid grid-cols-12 gap-x-6 gap-y-2 py-8 last:border-b last:border-rule md:py-10"
             >
               {/* Hjulene er aria-hidden: en oplæser ville ellers læse
@@ -54,7 +55,7 @@ export default function Proces() {
                   så det annonceres præcis som før. */}
               <span
                 aria-hidden="true"
-                className="odo col-span-12 mb-1 text-[28px] leading-none font-bold tracking-[-0.02em] text-ink md:col-span-2 md:mb-0 md:text-[34px]"
+                className="odo font-display col-span-12 mb-1 text-[15px] leading-none text-ink/45 md:col-span-1 md:mb-0 md:justify-self-end md:text-[18px]"
               >
                 {String(i + 1)
                   .padStart(2, '0')
@@ -72,7 +73,7 @@ export default function Proces() {
                   ))}
               </span>
               <span className="sr-only">{String(i + 1).padStart(2, '0')}</span>
-              <h3 className="t-display col-span-12 text-[26px] md:col-span-4 md:text-[32px]">
+              <h3 className="t-display col-span-12 text-[26px] md:col-span-5 md:text-[32px]">
                 {step.title}
               </h3>
               <p className="t-body col-span-12 max-w-[52ch] text-[15px] md:col-span-6">

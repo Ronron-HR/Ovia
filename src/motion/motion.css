@@ -589,9 +589,10 @@
    fjerde gentagelse af den samme.
 
    Den hænger på trinnets egen [data-reveal]: den har allerede en
-   IntersectionObserver og en forsinkelse pr. trin, og --d ARVES ned til
-   cifrene. Hjulenes indbyrdes stagger (--odo-d) lægges derfor oveni
-   trinnets i stedet for at konkurrere med den — ét tidsforløb, ikke to.
+   IntersectionObserver (med data-step: én pr. trin, se useReveal), og en
+   evt. --d ARVES ned til cifrene. Hjulenes indbyrdes stagger (--odo-d)
+   lægges derfor oveni i stedet for at konkurrere med den — ét tidsforløb,
+   ikke to. Trinnene selv har ingen --d: hvert tændes af sin egen scroll.
 
    Landet er standardtilstanden. Uden JS, uden observer og efter
    vagthundens timeout i index.html står det RIGTIGE tal. Et opløbsciffer
