@@ -47,7 +47,7 @@ export const nav = {
 export const heroLineOptions = [
   ['Jeg er 17 og bygger websites.', 'Du taler med den, der koder.'],
   ['17 år, ét projekt ad gangen.', 'Ikke nummer ti i køen.'],
-  ['Jeg er 17.', 'Du får hele min opmærksomhed.'],
+  ['Jeg er ung.', 'Du får hele min opmærksomhed.'],
   ['Jeg er 17 og går i gymnasiet.', 'Fast pris, aftalt på forhånd.'],
   ['17 år. Intet bureau bagved.', 'Du betaler for arbejdet.'],
 ]
