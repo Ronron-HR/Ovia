@@ -8,7 +8,11 @@ import { REVEAL_THRESHOLD, reduced } from './motion.js'
  * fyrer én gang og afmeldes derefter — der sker intet ved at scrolle tilbage op.
  * Ingen scroll-listeners.
  *
- * [data-step] er undtaget fra den fælles observer, men tændes her, af en
+ * [data-seq] er undtaget: dem tænder useSequence ét ad gangen. Ville begge
+ * observere dem, vandt den her, fordi den tænder med det samme, og
+ * sekvensen ville aldrig kunne ses.
+ *
+ * [data-step] er også undtaget fra den fælles observer, men tændes her, af en
  * observer med sin egen trigger-linje: et trin, der står i en rækkefølge, skal
  * afsløres, når man scroller ned til DET — ikke når sektionen som helhed
  * dukker op. Linjen ligger REVEAL_THRESHOLD af skærmhøjden oppe fra bunden,
@@ -17,7 +21,7 @@ import { REVEAL_THRESHOLD, reduced } from './motion.js'
  */
 export function useReveal() {
   useEffect(() => {
-    const nodes = document.querySelectorAll('[data-reveal]:not([data-step])')
+    const nodes = document.querySelectorAll('[data-reveal]:not([data-seq]):not([data-step])')
     const steps = document.querySelectorAll('[data-step]')
 
     const showAll = () => {

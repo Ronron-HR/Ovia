@@ -9,6 +9,7 @@ import Ydelser from './components/Ydelser.jsx'
 import { casePalmy } from './content.js'
 import { useLayer } from './motion/useLayer.js'
 import { useReveal } from './motion/useReveal.js'
+import { useSequence } from './motion/useSequence.js'
 
 export default function App() {
   const stage = useRef(null)
