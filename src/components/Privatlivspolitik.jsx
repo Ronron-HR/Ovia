@@ -1,4 +1,5 @@
 import { kontakt, legal, site } from '../content.js'
+import Logo from './Logo.jsx'
 
 /**
  * Privatlivspolitik.
@@ -33,8 +34,8 @@ export default function Privatlivspolitik() {
     <>
       <header className="border-b border-rule">
         <div className="shell flex h-[64px] items-center justify-between">
-          <a href="/" className="t-display text-[22px] leading-none tracking-tight text-ink">
-            Ovia
+          <a href="/" aria-label="Ovia, til forsiden" className="text-ink">
+            <Logo className="block h-[22px]" />
           </a>
           <a href="/" className="link-underline text-[13px] font-medium text-ink">
             Til forsiden

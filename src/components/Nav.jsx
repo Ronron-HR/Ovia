@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { nav } from '../content.js'
+import Logo from './Logo.jsx'
 import { useNavSpy } from '../motion/useNavSpy.js'
 
 /**
@@ -149,12 +150,8 @@ export default function Nav() {
         className="nav fixed inset-x-0 top-0 z-50 bg-paper/80 backdrop-blur-md"
       >
         <div className="shell flex h-[var(--nav-h)] items-center justify-between gap-6">
-          <a
-            href="#hero"
-            onClick={close}
-            className="t-display text-[22px] leading-none tracking-tight text-ink"
-          >
-            {nav.brand}
+          <a href="#hero" onClick={close} aria-label={nav.brand} className="text-ink">
+            <Logo className="block h-[22px]" />
           </a>
 
           <div className="hidden items-center gap-10 md:flex">
