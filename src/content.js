@@ -74,7 +74,7 @@ const portrait = {
 
 export const hero = {
   lines: heroLineOptions[HERO_LINES],
-  deck: 'Jeg bygger websites til danske virksomheder ved siden af gymnasiet. Fast pris, aftalt efter et kort kald.',
+  deck: 'Jeg laver websites, content og annoncer til danske virksomheder ved siden af gymnasiet. Fast pris, aftalt efter et kort kald.',
   primary: { label: 'Skriv til mig', href: '#kontakt' },
   secondary: null, // fx { label: 'Se mit arbejde', href: '#case' } når casen tændes
   portrait,
