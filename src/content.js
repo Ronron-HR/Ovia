@@ -209,6 +209,29 @@ export const kontakt = {
   },
 }
 
+/* -------------------------------------------------------------------------
+   JURIDISKE OPLYSNINGER — bruges af footeren og privatlivspolitikken.
+
+   e-handelsloven kræver, at en virksomheds navn, adresse, mail og evt.
+   CVR-nr. kan findes på siden. Er der et CVR-nr., skriv det i `cvr` — så
+   vises det af sig selv i footeren og i privatlivspolitikken. null skjuler
+   linjen. Registrerer du virksomheden senere, er det her, det skal ind.
+
+   Privatlivspolitikken tager sit indhold herfra og fra `site` og
+   `kontakt.form.endpoint` — så den passer, hver gang du ændrer dem.
+   Er formularen ikke slået til, nævner politikken ikke Formspree.
+------------------------------------------------------------------------- */
+export const legal = {
+  owner: 'Ronny Hong',
+  address: 'Hjortshøj Stationsvej 6, 8530 Hjortshøj',
+  cvr: null,
+  hosting: 'Cloudflare',
+  mailProvider: 'Google (Gmail)',
+  retentionMonths: 12,
+  updated: '19. september 2026',
+}
+
 export const footer = {
   left: '© 2026 Ovia',
+  links: [{ label: 'Privatlivspolitik', href: '/privatlivspolitik/' }],
 }

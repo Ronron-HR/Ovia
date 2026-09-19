@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { footer, kontakt, site } from '../content.js'
+import { footer, kontakt, legal, site } from '../content.js'
 import { usePointer } from '../motion/usePointer.js'
 import KontaktForm from './KontaktForm.jsx'
 
@@ -98,8 +98,25 @@ export default function Kontakt() {
           </div>
         </div>
 
-        <footer className="mt-20 border-t border-paper/15 pt-6 text-[13px] text-paper/50 md:mt-28">
-          {footer.left}
+        <footer className="mt-20 border-t border-paper/15 pt-6 text-[13px] leading-relaxed text-paper/50 md:mt-28">
+          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+            <div>
+              <p>{footer.left}</p>
+              <p className="mt-1">
+                {legal.owner} · {legal.address}
+                {legal.cvr && ` · CVR ${legal.cvr}`}
+              </p>
+            </div>
+            <ul className="flex gap-6">
+              {footer.links.map((link) => (
+                <li key={link.href}>
+                  <a href={link.href} className="link-underline text-paper/70">
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
         </footer>
       </div>
     </section>

@@ -38,12 +38,12 @@
     <link rel="canonical" href="https://DIT-DOMÆNE/" />
     -->
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Inter:wght@400;500&display=swap"
-    />
+    <!-- Skrifterne ligger på egen server (public/fonts, @font-face i index.css).
+         Ingen kald til Google Fonts: så sendes besøgendes IP-adresse ikke til
+         tredjepart, og privatlivspolitikken kan med sandhed sige, at siden
+         ikke deler noget med andre. crossorigin er påkrævet ved font-preload. -->
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/instrument-serif-latin.woff2" crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/inter-latin.woff2" crossorigin />
 
     <!-- Hero-billedet preloades. type= gør, at browsere uden AVIF
          springer den over og henter WebP/JPEG via <picture> i stedet. -->

@@ -1,6 +1,24 @@
 @import "tailwindcss";
 @import "./motion/motion.css";
 
+/* Selvhostede skrifter (latin dækker æ, ø, å, € og tankestreg). Inter er én
+   variabel fil, der dækker begge vægte. Filerne er SIL Open Font License. */
+@font-face {
+  font-family: "Instrument Serif";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/instrument-serif-latin.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400 500;
+  font-display: swap;
+  src: url("/fonts/inter-latin.woff2") format("woff2");
+}
+
 /* =========================================================================
    RETNING A — PAPIR
    Varmt papir, blæk og ler. Typografien er sidens store, langsomme element;
