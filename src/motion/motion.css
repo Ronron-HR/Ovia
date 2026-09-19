@@ -59,6 +59,19 @@
      Værdien er den samlede rejse; forskydningen er det halve til hver side. */
   --par-txt: 24px;
 
+  /* --- Tælleværk (signature moment 06) -----------------------------------
+     --odo-cell: vindueshøjden, altså ét ciffer. Enheden er em, og em i en
+       custom property opløses dér, hvor den BRUGES — altså mod cifrets
+       egen grad, ikke mod rodens. Derfor følger vinduet automatisk med,
+       når tallet skifter grad mellem mobil og desktop.
+     --odo-run: hvor mange cifre der rulles igennem før målet. To er nok
+       til at læses som et tælleværk; flere gør det til en spilleautomat.
+     Varigheden er kortere end en reveal: et ciffer er et lille element,
+     og masse-reglen gælder også her. */
+  --odo-cell: 1.1em;
+  --odo-run: 2;
+  --dur-odo: 540ms;
+
   /* --- Nav -------------------------------------------------------------- */
   --nav-h: 64px;
 
@@ -498,6 +511,68 @@
 
 .is-live .par-txt {
   will-change: transform;
+}
+
+/* =========================================================================
+   SIGNATURE MOMENT 06 — TÆLLEVÆRKET
+   Trinnenes tal ruller på plads som et mekanisk tælleværk: hvert ciffer
+   sidder i sit eget vindue og triller to cifre op til sit mål.
+
+   Hvorfor ikke den maskerede rise fra heroen? Fordi den er brugt op —
+   hele linjer i heroen og i kontakt, tegn for tegn i logoet. Et tælleværk
+   ruller IGENNEM andre cifre og er derfor sin egen gestus frem for en
+   fjerde gentagelse af den samme.
+
+   Den hænger på trinnets egen [data-reveal]: den har allerede en
+   IntersectionObserver og en forsinkelse pr. trin, og --d ARVES ned til
+   cifrene. Hjulenes indbyrdes stagger (--odo-d) lægges derfor oveni
+   trinnets i stedet for at konkurrere med den — ét tidsforløb, ikke to.
+
+   Landet er standardtilstanden. Uden JS, uden observer og efter
+   vagthundens timeout i index.html står det RIGTIGE tal. Et opløbsciffer
+   må aldrig kunne blive stående.
+   ========================================================================= */
+
+.odo {
+  display: inline-flex;
+  font-variant-numeric: tabular-nums;
+}
+
+.odo-wheel {
+  display: block;
+  overflow: hidden;
+  height: var(--odo-cell);
+}
+
+.odo-cell {
+  display: block;
+  height: var(--odo-cell);
+  line-height: var(--odo-cell);
+}
+
+.odo-strip {
+  display: block;
+  transform: translate3d(0, calc(var(--odo-run) * -1 * var(--odo-cell)), 0);
+}
+
+.js-motion [data-reveal]:not(.is-in) .odo-strip {
+  transform: translate3d(0, 0, 0);
+}
+
+.js-motion .odo-strip {
+  transition: transform var(--dur-odo) var(--ease-entrance)
+    calc(var(--d, 0ms) + var(--odo-d, 0ms));
+}
+
+/* Ingen rulning: tallet står landet fra første frame. */
+@media (prefers-reduced-motion: reduce) {
+  .js-motion [data-reveal]:not(.is-in) .odo-strip {
+    transform: translate3d(0, calc(var(--odo-run) * -1 * var(--odo-cell)), 0);
+  }
+  .js-motion .odo-strip {
+    transition-duration: 1ms;
+    transition-delay: 0ms;
+  }
 }
 
 /* =========================================================================

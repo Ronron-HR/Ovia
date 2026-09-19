@@ -11,10 +11,16 @@
   src: url("/fonts/instrument-serif-latin.woff2") format("woff2");
 }
 
+/* Inter er en variabel fil med en wght-akse fra 100 til 900 — hele
+   intervallet ligger allerede i de 48 kB, der hentes i forvejen.
+   Deskriptoren stod på "400 500" og klampede derfor alt tungere ned til
+   500, hvorefter browseren TEGNEDE en falsk fed oveni. Med det fulde
+   interval er 700 ægte og koster ikke én ekstra byte. Instrument Serif
+   har ingen akse: den kan kun 400, og en fed serif ville være syntetisk. */
 @font-face {
   font-family: "Inter";
   font-style: normal;
-  font-weight: 400 500;
+  font-weight: 100 900;
   font-display: swap;
   src: url("/fonts/inter-latin.woff2") format("woff2");
 }
