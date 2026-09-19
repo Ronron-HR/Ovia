@@ -9,7 +9,7 @@ export default function Ydelser() {
     <section id={ydelser.id} className="bg-paper">
       <div className="shell py-24 md:py-36">
         <header className="max-w-[46ch]">
-          <p data-reveal className="t-eyebrow">
+          <p data-reveal className="t-eyebrow eyebrow-rule">
             {ydelser.eyebrow}
           </p>
           <h2

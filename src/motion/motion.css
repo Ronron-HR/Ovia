@@ -74,6 +74,10 @@
 
   /* --- Nav -------------------------------------------------------------- */
   --nav-h: 64px;
+  /* Barens højde efter lagovergangen, som andel af --nav-h. 0.84 = 16% lavere
+     (64px -> ca. 54px, 56px -> ca. 47px). Bruges kun til transform, så
+     --nav-h — og dermed scroll-margin og deep-links — er urørt. */
+  --nav-compact: 0.84;
 
   /* Scroll-progress. --lp er global (lagovergangen), --p er lokal pr. scene. */
   --lp: 0;
@@ -138,6 +142,41 @@
 .js-motion [data-reveal].is-in {
   opacity: 1;
   transform: translate3d(0, 0, 0);
+}
+
+/* Eyebrow-streg. En tynd accentstreg tegnes fra venstre under sektionernes
+   eyebrow, når den afsløres — .is-in kommer fra useReveal, som tænder selve
+   eyebrow'en. Kun de fire, der har klassen; kontakt har sit eget moment.
+   Landet er standardtilstanden (samme princip som tælleværket): uden JS
+   og efter vagthunden står stregen der bare. Kun transform. */
+.eyebrow-rule {
+  position: relative;
+  width: fit-content;
+}
+
+.eyebrow-rule::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  /* Bogstavafstanden lægges også efter sidste tegn — trækkes fra, så
+     stregen slutter under bogstavet (som .nav-indicator). */
+  right: 0.16em;
+  bottom: 0;
+  height: 1px;
+  background: var(--color-accent);
+  transform-origin: 0 50%;
+  transition: transform var(--dur-hover) var(--ease-entrance) var(--stagger);
+}
+
+.js-motion .eyebrow-rule:not(.is-in)::after {
+  transform: scaleX(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Ingen tegning: stregen fader ind med eyebrow'en. */
+  .js-motion .eyebrow-rule:not(.is-in)::after {
+    transform: none;
+  }
 }
 
 /* Maskeret linje-reveal, drevet af IntersectionObserver frem for load.
@@ -340,10 +379,36 @@
   animation: fade-only var(--dur-reveal) var(--ease-entrance) 460ms both;
 }
 
+/* Kompakt bar efter lagovergangen — samme tilstand (data-scrolled), kurve og
+   varighed som fade-in'en og hårstregen; kun transform.
+   Baren løftes --t ud af skærmen (baggrund, blur og hårstreg følger med),
+   og indholdet skubbes --t/2 ned igen, så det stadig er centreret i den
+   lavere bar. --t udledes af --nav-compact, så mobil følger med. */
+.nav {
+  --t: calc(var(--nav-h) * (1 - var(--nav-compact)));
+  transition: transform var(--dur-reveal) var(--ease-entrance);
+}
+
+.nav-bar {
+  transition: transform var(--dur-reveal) var(--ease-entrance);
+}
+
+.nav[data-scrolled='true'] {
+  transform: translate3d(0, calc(-1 * var(--t)), 0);
+}
+
+.nav[data-scrolled='true'] .nav-bar {
+  transform: translate3d(0, calc(var(--t) / 2), 0);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .js-motion .nav {
     animation-duration: 200ms;
     animation-delay: 0ms;
+  }
+  .nav,
+  .nav-bar {
+    transition-duration: 1ms;
   }
 }
 

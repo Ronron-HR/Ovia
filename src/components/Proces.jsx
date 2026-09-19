@@ -28,7 +28,7 @@ export default function Proces() {
     <section id={proces.id} className="bg-paper">
       <div className="shell py-24 md:py-36">
         <header className="max-w-[40ch]">
-          <p data-reveal className="t-eyebrow">
+          <p data-reveal className="t-eyebrow eyebrow-rule">
             {proces.eyebrow}
           </p>
           <h2

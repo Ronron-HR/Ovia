@@ -38,7 +38,7 @@ export default function Om() {
           </div>
 
           <div className="par-txt relative z-10 col-span-12 mt-8 bg-paper md:col-span-8 md:col-start-5 md:row-start-1 md:mt-[22vh] md:pl-10">
-            <p data-reveal className="t-eyebrow">
+            <p data-reveal className="t-eyebrow eyebrow-rule">
               {om.eyebrow}
             </p>
             <h2

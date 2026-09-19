@@ -149,7 +149,7 @@ export default function Nav() {
         data-scrolled={scrolled}
         className="nav fixed inset-x-0 top-0 z-50 bg-paper/80 backdrop-blur-md"
       >
-        <div className="shell flex h-[var(--nav-h)] items-center justify-between gap-6">
+        <div className="nav-bar shell flex h-[var(--nav-h)] items-center justify-between gap-6">
           <a href="#hero" onClick={close} aria-label={nav.brand} className="text-ink">
             <Logo className="block h-[26px]" />
           </a>

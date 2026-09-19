@@ -22,7 +22,7 @@ export default function Case() {
       <div className="shell py-24 md:py-36">
         <header className="flex flex-wrap items-end justify-between gap-6">
           <div>
-            <p data-reveal className="t-eyebrow">
+            <p data-reveal className="t-eyebrow eyebrow-rule">
               {data.eyebrow}
             </p>
             <h2
