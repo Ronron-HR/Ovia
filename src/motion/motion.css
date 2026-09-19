@@ -57,7 +57,6 @@
 
   /* --- Parallax (signature moment 04) ------------------------------------
      Værdien er den samlede rejse; forskydningen er det halve til hver side. */
-  --par-img: 80px;
   --par-txt: 24px;
 
   /* --- Nav -------------------------------------------------------------- */
@@ -75,7 +74,6 @@
     --layer-travel: 55vh;
     --hero-sink: -4%;
     --hero-scale: 1;
-    --par-img: 24px; /* ±12px, under mobilgrænsen */
     --par-txt: 8px;
     --reveal-y: 20px;
     --reveal-y-lg: 24px;
@@ -101,7 +99,6 @@
     --hero-sink: 0%;
     --hero-scale: 1;
     --hero-fade: 1;
-    --par-img: 0px;
     --par-txt: 0px;
   }
 }
@@ -367,13 +364,29 @@
 }
 
 /* =========================================================================
-   SIGNATURE MOMENT 04 — OM MIG
-   Billede og tekst bevæger sig i forskellig hastighed og overlapper.
-   Cursor ligger på et indre element, så de to transforms ikke kæmper.
+   SIGNATURE MOMENT 04 — ORDMÆRKET
+   Samme maskerede rise som heroen og kontakt-overskriften, men bogstav
+   for bogstav: OVIA rejser sig ét tegn ad gangen fra en fælles grundlinje.
+   Ingen ny kurve og ingen ny varighed — --ease-entrance og --dur-reveal-lg
+   kommer fra [data-reveal='rise'] ovenfor, og --d sættes pr. bogstav.
+   Kun teksten bevæger sig: én gestus, ét sted, og resten står stille.
+   Tekstkolonnen kører sin egen svage parallax og overlapper ordmærket.
+   Cursor ligger på et element udenom, så de to transforms ikke kæmper.
    ========================================================================= */
 
-.js-motion .par-img {
-  transform: translate3d(0, calc((0.5 - var(--p)) * var(--par-img)), 0);
+/* Masken klipper kun lodret. Ordet er bredere end sin kolonne og må ikke
+   skæres af i siden — bogstaverne skal have plads til at glide ind bag
+   teksten. */
+.wordmark {
+  white-space: nowrap;
+  overflow-x: visible;
+  overflow-y: clip;
+}
+
+/* [data-reveal='rise'] > * gør børn til display:block; bogstaver skal blive
+   i rækken. Samme specificitet + senere = vinder. */
+.js-motion [data-reveal='rise'] > .wordmark-letter {
+  display: inline-block;
 }
 
 .js-motion .par-txt {
@@ -385,7 +398,6 @@
   transition: transform 0s;
 }
 
-.is-live .par-img,
 .is-live .par-txt {
   will-change: transform;
 }

@@ -1,65 +1,59 @@
 import { useRef } from 'react'
-import { casePalmy, om } from '../content.js'
+import { om } from '../content.js'
 import { useProgress } from '../motion/useProgress.js'
 import { usePointer } from '../motion/usePointer.js'
-import Slot from './Slot.jsx'
 
 /**
- * SIGNATURE MOMENT 04 — PARALLAX OG CURSOR
+ * SIGNATURE MOMENT 04 — ORDMÆRKET
  *
- * Billedet er designelementet her. Billedkolonnen rejser 80px gennem
- * sektionens gennemløb, tekstkolonnen kun 24px — forskellen er det, der
- * skaber overlappet. Kolonnerne overlapper i grid'et fra starten, ikke
- * med absolut positionering lagt på bagefter.
+ * OVIA er sektionens visuelle fokus. Bogstaverne rejser sig ét ad gangen
+ * op fra en fælles grundlinje — samme maskerede rise som heroen og
+ * kontakt-overskriften, bare tegn for tegn. Det er en indgang, der kører
+ * én gang, når ordet kommer til syne, og derefter står helt stille.
  *
- * Cursoren ligger på et indre element, så parallax og cursor ikke kæmper
- * om den samme transform. Maks 10px, lerpet. På touch findes den ikke.
+ * Revealen bruger det eksisterende [data-reveal='rise'] (se motion.css),
+ * så kurve, varighed og reduced-motion-adfærd følger med uden ny kode.
+ * Rækkefølgen er FAST (venstre mod højre) og ikke tilfældig.
  *
- * MENS CASEN ER SLUKKET låner portrættet casens maskereveal, så sidens
- * bedste greb ikke står ubrugt, og Om mig bliver det tungeste visuelle
- * moment efter heroen. Tændes casen, falder masken væk af sig selv —
- * to steder med samme gestus ville udvande begge.
- *
- * De to progress-scener kolliderer ikke: sektionen driver parallaxen
- * (hele gennemløbet), maske-wrapperen driver sin egen (færdig tidligt),
- * og hver skriver --p i sit eget undertræ.
+ * Tekstkolonnen kører sin egen svage parallax og overlapper ordmærket.
+ * Ordet reagerer desuden på cursoren, som billedet gjorde: maks 10px,
+ * lerpet, og ikke på touch.
  */
+
+/** Forsinkelse mellem bogstaverne. Kort nok til at læses som ét ord. */
+const LETTER_STAGGER = 90
+
 export default function Om() {
   const scene = useRef(null)
-  const maskScene = useRef(null)
-  const idle = useRef(null)
-  const portrait = useRef(null)
-
-  const heavy = !casePalmy.enabled
+  const wordmark = useRef(null)
 
   useProgress(scene, { mode: 'pass' })
-  // Er casen tændt, peger hooket på en tom ref og starter aldrig noget.
-  useProgress(heavy ? maskScene : idle, { mode: 'enter', startVh: 0.85, distanceVh: 0.45 })
-  usePointer(scene, portrait)
+  usePointer(scene, wordmark)
 
   return (
     <section id={om.id} ref={scene} className="bg-paper">
       <div className="shell py-28 md:py-44">
         <div className="grid grid-cols-12 items-start">
-          {/* BEGGE kolonner skal placeres eksplicit — række OG startkolonne.
-              Grid-overlap er kun tilladt for eksplicit placerede elementer.
-              Mangler billedet sin col-start, forsøger auto-placeringen at
-              undgå tekstkolonnen, finder ikke fem ledige kolonner i rækken
-              og skubber billedet ud i implicitte kolonner, der er 0px brede.
-              Resultatet er et billede med bredde nul. */}
-          <div className="par-img col-span-10 md:col-span-5 md:col-start-1 md:row-start-1">
-            <div ref={maskScene} className={heavy ? 'reveal-mask' : undefined}>
-              <div className={heavy ? 'reveal-mask-inner' : undefined}>
-                <div className={heavy ? 'reveal-mask-media' : undefined}>
-                  <div ref={portrait} className="pointer-shift">
-                    <Slot image={om.portrait} framed />
-                  </div>
-                </div>
-              </div>
+          <div className="col-span-12 md:col-span-5 md:col-start-1 md:row-start-1">
+            <div ref={wordmark} className="pointer-shift">
+              <p className="t-display text-[clamp(88px,20vw,240px)] leading-none uppercase">
+                <span className="sr-only">{om.wordmark}</span>
+                <span aria-hidden="true" data-reveal="rise" className="mask wordmark">
+                  {[...om.wordmark].map((letter, i) => (
+                    <span
+                      key={`${letter}-${i}`}
+                      className="wordmark-letter"
+                      style={{ '--d': `${i * LETTER_STAGGER}ms` }}
+                    >
+                      {letter}
+                    </span>
+                  ))}
+                </span>
+              </p>
             </div>
           </div>
 
-          <div className="par-txt relative z-10 col-span-12 -mt-12 bg-paper pt-10 md:col-span-8 md:col-start-5 md:row-start-1 md:mt-[22vh] md:pt-0 md:pl-10">
+          <div className="par-txt relative z-10 col-span-12 -mt-6 bg-paper pt-10 md:col-span-8 md:col-start-5 md:row-start-1 md:mt-[22vh] md:pt-0 md:pl-10">
             <p data-reveal className="t-eyebrow">
               {om.eyebrow}
             </p>

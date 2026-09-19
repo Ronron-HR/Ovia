@@ -104,10 +104,8 @@ export const ydelser = {
 }
 
 /* Casen er bygget og klar, men slukket. Sæt enabled: true, når Palmy
-   skal frem — koreografien skal ikke bygges om.
-   NB: mens den er slukket, låner Om mig-portrættet casens maskereveal,
-   så siden ikke står uden sit tungeste visuelle greb. Tænder du casen,
-   giver Om mig masken tilbage af sig selv. */
+   skal frem — koreografien skal ikke bygges om. Maskerevealen hører til
+   her og bruges ikke andre steder. */
 export const casePalmy = {
   enabled: false,
   id: 'case',
@@ -146,7 +144,11 @@ export const om = {
     'Jeg har brugt stort set hele min ungdom online. Det er ikke et kursus, jeg har taget — det er dét, jeg har lavet, siden jeg var barn. Jeg ved, hvordan folk scroller, hvad de klikker væk fra, og hvad der får dem til at blive.',
     'Jeg er ny, og det siger jeg højt. Fordelen er, at du taler med den, der laver arbejdet, og at du får svar samme dag.',
   ],
-  portrait,
+  /* Ordmærket står i stedet for portrættet. Bogstaverne bevæger sig i
+     forskellig hastighed og flugter præcis, når sektionen er midt i
+     skærmen. Skriver du et andet ord, virker det stadig — hastighederne
+     fordeles efter bogstavets plads i ordet. */
+  wordmark: 'Ovia',
 }
 
 export const proces = {
