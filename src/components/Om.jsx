@@ -8,10 +8,9 @@ import Logo from './Logo.jsx'
  * SIGNATURE MOMENT 04 — LOGOET
  *
  * OviaSpecs-logoet er sektionens visuelle fokus. Bogstaverne rejser sig ét ad
- * gangen op fra en fælles grundlinje, og accentprikken lander til sidst —
- * samme maskerede rise som heroen og kontakt-overskriften, bare tegn for
- * tegn. Det er en indgang, der kører én gang, når logoet kommer til syne,
- * og derefter står helt stille.
+ * gangen op fra en fælles grundlinje — samme maskerede rise som heroen og
+ * kontakt-overskriften, bare tegn for tegn. Det er en indgang, der kører én
+ * gang, når logoet kommer til syne, og derefter står helt stille.
  *
  * Selve animationen bor i Logo.jsx (reveal) og bruger det eksisterende
  * [data-reveal='rise'] i motion.css, så kurve, varighed og reduced-motion
@@ -34,7 +33,7 @@ export default function Om() {
         <div className="grid grid-cols-12 items-start">
           <div className="col-span-12 md:col-span-5 md:col-start-1 md:row-start-1">
             <div ref={logo} className="pointer-shift">
-              <Logo reveal className="block h-[min(clamp(92px,15.5vw,190px),calc((100vw_-_40px)*0.296))] text-ink" />
+              <Logo reveal className="block h-[min(clamp(92px,15.5vw,190px),calc((100vw_-_40px)*0.295))] text-ink" />
             </div>
           </div>
 

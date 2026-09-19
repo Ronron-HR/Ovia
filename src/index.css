@@ -21,7 +21,7 @@
 
 /* =========================================================================
    RETNING A — PAPIR
-   Varmt papir, blæk og grøn accent (gul på mørk flade — se --color-accent-bright).
+   Varmt papir, blæk og én accent: ler.
    Typografien er sidens store, langsomme element;
    billedet er anden stemme.
    ========================================================================= */
@@ -31,11 +31,12 @@
   --color-paper-2: #ebe7de;
   --color-ink: #16130f;
   --color-muted: #6b655c;
-  /* Accent i to udgaver, som Impact Commerce gør: grøn på lyse flader, skarp gul
-     på mørke. Gul kan ikke ses på papir, og grøn forsvinder på blæk — derfor to.
-     Grøn: 4,5:1 mod papir (AA). Gul: bruges kun oven på --color-ink. */
-  --color-accent: #2f7d3b;
-  --color-accent-bright: #feff00;
+  /* Ler — sidens eneste accent, på lyse og mørke flader. Mod papir 4,0:1 og
+     mod blæk 4,1:1: nok til streger, fokusringe og store tal, men under AA
+     (4,5:1) til lille brødtekst — brug den derfor ikke til løbende tekst.
+     Faviconet, apple-touch-icon og og:image tegnes ud fra denne værdi
+     (npm run brand). */
+  --color-accent: #c4552f;
   --color-rule: #dfd9cf;
 
   --font-display: "Instrument Serif", Georgia, "Times New Roman", serif;
@@ -74,11 +75,6 @@
   :focus-visible {
     outline: 2px solid var(--color-accent);
     outline-offset: 3px;
-  }
-
-  /* På mørke flader er grøn næsten usynlig — der bruges gul. */
-  .bg-ink :focus-visible {
-    outline-color: var(--color-accent-bright);
   }
 
   img {

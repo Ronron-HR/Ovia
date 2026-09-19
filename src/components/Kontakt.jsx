@@ -89,7 +89,7 @@ export default function Kontakt() {
               withHalo(
                 <a
                   href={`mailto:${site.email}`}
-                  className="btn relative inline-block bg-paper px-8 py-4 text-[15px] font-medium text-ink hover:bg-accent-bright"
+                  className="btn relative inline-block bg-paper px-8 py-4 text-[15px] font-medium text-ink hover:bg-accent hover:text-paper"
                 >
                   {kontakt.cta.label}
                 </a>,

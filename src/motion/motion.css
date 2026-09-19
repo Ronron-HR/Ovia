@@ -479,7 +479,7 @@
    SIGNATURE MOMENT 04 — LOGOET
    Samme maskerede rise som heroen og kontakt-overskriften (se
    [data-reveal='rise'] ovenfor), bogstav for bogstav: logoet rejser sig ét
-   tegn ad gangen fra en fælles grundlinje, og prikken lander sidst. Ingen ny
+   tegn ad gangen fra en fælles grundlinje. Ingen ny
    kurve og ingen ny varighed — --ease-entrance og --dur-reveal-lg kommer
    derfra, og --d sættes pr. tegn i Logo.jsx. SVG'ets egen kant er masken.
    Kun logoet bevæger sig: én gestus, ét sted, og resten står stille.
