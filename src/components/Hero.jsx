@@ -28,11 +28,18 @@ export default function Hero() {
   return (
     <section id="hero" className="layer-sticky bg-paper">
       <div className="layer-sink flex flex-1 flex-col justify-center">
-        <div className="shell w-full py-10 md:py-14">
+        {/* Toppolstringen på mobil er nav'ens egen højde, ikke et gæt.
+            Heroen centrerer sit indhold i 100svh, og baren svæver ovenpå:
+            bliver indholdet højt nok, skubbes første linje ind under den.
+            Med --nav-h som polstring centreres der i det, der er tilbage,
+            og overlappet kan ikke opstå. På desktop er der luft nok. */}
+        <div className="shell w-full pt-[var(--nav-h)] pb-10 md:py-14">
           {/* Loftet på 80px er ikke tilfældigt: det er den største grad,
               hvor en linje på ~29 tegn stadig holder på én linje i den
-              fulde bredde. Skriver du længere linjer, skal loftet ned. */}
-          <h1 className="t-display text-[clamp(32px,7vw,80px)]">
+              fulde bredde. Skriver du længere linjer, skal loftet ned.
+              Gulvet er 36 og ikke 32: under ~515px vinder gulvet over
+              7vw, så det er ALENE gulvet, der sætter graden på telefon. */}
+          <h1 className="t-display text-[clamp(36px,7vw,80px)]">
             {hero.lines.map((line, i) => (
               <span key={line} className="mask">
                 <span className="hero-rise" style={{ '--d': `${i * 70}ms` }}>
@@ -45,12 +52,12 @@ export default function Hero() {
           {/* Underrubrik og CTA ligger i SAMME kolonne. Lå de i hver sin
               gridcelle, ville portrættets højde gøre rækken høj og
               efterlade et tomt hul mellem dem. */}
-          <div className="mt-6 grid grid-cols-12 gap-x-6 gap-y-8 md:mt-10">
+          <div className="mt-6 grid grid-cols-12 gap-x-6 gap-y-6 md:mt-10 md:gap-y-8">
             <div className="col-span-12 md:col-span-6 md:row-start-1">
               <p
                 data-hero="fade"
                 style={{ '--d': '140ms' }}
-                className="t-body max-w-[48ch] text-[15px] md:text-[17px]"
+                className="t-body max-w-[48ch] text-[16px] md:text-[17px]"
               >
                 {hero.deck}
               </p>
@@ -80,9 +87,21 @@ export default function Hero() {
             {/* Heroen bæres af typografien. Portrættet er en lille,
                 forskudt detalje ved siden af — derfor tre kolonner yderst
                 til højre, et loft på 26svh og en nedrykning, så det
-                bevidst ikke flugter med tekstblokken. */}
-            <div className="col-span-4 md:col-span-3 md:col-start-10 md:row-start-1 md:mt-12">
-              <div data-hero="media" style={{ '--d': '220ms' }} className="mask ml-auto w-full">
+                bevidst ikke flugter med tekstblokken.
+
+                PÅ MOBIL kan det ikke være kolonner. Gitteret er 12 spalter
+                med 24px mellemrum, og på 390px æder mellemrummene 264 af
+                350 — fire spalter er derfor ~100px, og portrættet blev en
+                miniature. Her får rækken hele bredden, og BREDDEN sættes
+                direkte: 38vw, loft 168px. Slot lægger selv min(100%, 26svh)
+                ovenpå, så et lavt vindue skrumper billedet frem for at
+                sprænge heroens 100svh. */}
+            <div className="col-span-12 md:col-span-3 md:col-start-10 md:row-start-1 md:mt-12">
+              <div
+                data-hero="media"
+                style={{ '--d': '220ms' }}
+                className="mask ml-auto w-[38vw] max-w-[168px] md:w-full md:max-w-none"
+              >
                 <div data-hero="media-inner" style={{ '--d': '220ms' }}>
                   <Slot
                     image={hero.portrait}

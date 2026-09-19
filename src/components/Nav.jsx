@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { nav } from '../content.js'
+import { nav, site } from '../content.js'
 import Logo from './Logo.jsx'
 import { useNavSpy } from '../motion/useNavSpy.js'
 
@@ -194,7 +194,7 @@ export default function Nav() {
             aria-expanded={open}
             aria-controls="menu"
             onClick={() => setOpen((v) => !v)}
-            className="-mr-2 px-2 py-3 text-[12px] font-medium uppercase tracking-[0.08em] text-ink md:hidden"
+            className="-mr-2 inline-flex min-h-11 min-w-11 items-center justify-end px-2 text-[12px] font-medium uppercase tracking-[0.08em] text-ink md:hidden"
           >
             {open ? nav.close : nav.menu}
           </button>
@@ -212,21 +212,62 @@ export default function Nav() {
         data-open={open}
         className="menu-overlay fixed inset-0 z-40 bg-paper md:hidden"
       >
-        <nav aria-label="Mobilmenu" className="shell flex h-full flex-col justify-center pt-[var(--nav-h)] pb-16">
-          <ul className="flex flex-col gap-3">
+        <nav aria-label="Mobilmenu" className="shell flex h-full flex-col pt-[var(--nav-h)] pb-10">
+          {/* Graden sidder på .mask og ikke på linket indeni. Masken giver
+              plads til underlængder med padding-bottom: 0.08em — og em
+              regnes mod ELEMENTETS EGEN grad. Lå graden på <a>, blev
+              afstanden målt mod arvede 16px, altså 1,3px i stedet for 4,
+              og j'et i "Hvad jeg laver" fik halen klippet af. Heroen
+              gør det samme; det er derfor den ikke klipper. */}
+          <ul className="flex flex-1 flex-col justify-center gap-3">
             {nav.links.map((link, i) => (
-              <li key={link.href} className="mask">
+              <li key={link.href} className="mask t-display text-[clamp(38px,11vw,58px)]">
                 <a
                   href={link.href}
                   onClick={close}
                   style={{ '--d': `${80 + i * 70}ms` }}
-                  className="menu-rise t-display text-[clamp(44px,13vw,64px)] text-ink"
+                  className="menu-rise text-ink"
                 >
                   {link.label}
                 </a>
               </li>
             ))}
           </ul>
+
+          {/* Menuen er hele skærmen på telefon, og indtil nu stod der kun
+              tre links i den. Handlingen og de to måder at fange mig på
+              hører til her: på mobil findes bar-CTA'en ikke, så uden det
+              her er der ingen vej videre fra en åben menu. */}
+          <div className="mt-10 border-t border-rule pt-6">
+            <a
+              href={nav.cta.href}
+              onClick={close}
+              className="btn block bg-ink px-6 py-4 text-center text-[15px] font-medium text-paper"
+            >
+              {nav.cta.label}
+            </a>
+
+            <ul className="mt-5 flex flex-col gap-1 text-[15px]">
+              <li>
+                <a
+                  href={`mailto:${site.email}`}
+                  onClick={close}
+                  className="link-underline inline-block py-1 text-ink"
+                >
+                  {site.email}
+                </a>
+              </li>
+              <li>
+                <a
+                  href={`tel:${site.phoneHref}`}
+                  onClick={close}
+                  className="link-underline inline-block py-1 text-ink"
+                >
+                  {site.phone}
+                </a>
+              </li>
+            </ul>
+          </div>
         </nav>
       </div>
     </>
