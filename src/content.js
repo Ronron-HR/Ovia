@@ -25,9 +25,18 @@ export const site = {
   phoneHref: '+4553613699',
 }
 
+/* Links peger på sektions-id'er. Sektioner uden eget link (fx Sådan
+   foregår det) regnes med under det link, man kom fra. */
 export const nav = {
   brand: 'Ovia',
+  links: [
+    { label: 'Hvad jeg laver', href: '#ydelser' },
+    { label: 'Om mig', href: '#om' },
+    { label: 'Kontakt', href: '#kontakt' },
+  ],
   cta: { label: 'Skriv til mig', href: '#kontakt' },
+  menu: 'Menu',
+  close: 'Luk',
 }
 
 /* -------------------------------------------------------------------------

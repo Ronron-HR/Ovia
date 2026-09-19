@@ -297,10 +297,23 @@
   will-change: transform;
 }
 
-/* Laget forskyder alt under sig permanent med --layer-lift.
-   Uden denne korrektion ville anchor-links lande --layer-lift for lavt. */
+/* Anchor-landing. Sektionen skal lande lige under baren: --nav-h, ikke en
+   gættet konstant. Laget er derimod løftet --layer-lift * --lp, og hvor
+   meget af løftet, der allerede er sket, ændrer sig med scroll. Browseren
+   regner målet ud FØR bevægelsen, så det manglende løft lægges til her og
+   forsvinder af sig selv, jo længere laget er nået (--lp 1 = ingen tillæg).
+   Med et fast tillæg landede sektionerne 280px for langt nede, hver gang
+   nav'en var synlig. */
 .layer-rest [id] {
-  scroll-margin-top: calc(var(--layer-lift) + var(--nav-h) + 24px);
+  scroll-margin-top: calc(var(--nav-h) + var(--layer-lift) * (1 - var(--lp)));
+}
+
+/* Den første sektion kan ikke lande under baren: for at nå dertil skulle der
+   scrolles ind i lagovergangen, hvor nav'en endnu er skjult og laget ikke
+   er nået op. Den lander i stedet med toppen i skærmkanten — baren dækker
+   kun dens polstring, ikke dens indhold. */
+.layer-rest > [data-nav-sentinel] + section {
+  scroll-margin-top: calc(var(--layer-lift) * (1 - var(--lp)));
 }
 
 /* =========================================================================
@@ -323,6 +336,109 @@
   visibility: visible;
   transform: translate3d(0, 0, 0);
   transition-delay: 0s, 0s, 0s;
+}
+
+/* Hårstregen. Tegnes fra venstre, første gang indholdet glider op under
+   baren — før da er der intet at adskille fra, og en streg ville gøre baren
+   til en hård kasse ovenpå tom papirflade. Kun transform. */
+.nav-line {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--color-rule);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform var(--dur-reveal-lg) var(--ease-entrance);
+}
+
+.nav[data-scrolled='true'] .nav-line {
+  transform: scaleX(1);
+}
+
+/* Links: dæmpede, blæk når de er aktive eller peges på. Farven skifter med
+   hover-varigheden; ingen bevægelse på selve linket. */
+.nav-link {
+  color: var(--color-muted);
+  transition: color var(--dur-hover) var(--ease-entrance);
+}
+
+.nav-link[aria-current] {
+  color: var(--color-ink);
+}
+
+@media (hover: hover) {
+  .nav-link:hover {
+    color: var(--color-ink);
+  }
+}
+
+/* Understregningen er ÉT element, som glider mellem linkene. Position og
+   bredde kommer som --ix og --iw fra Nav.jsx; her er kun bevægelsen.
+   Samme kurve og varighed som resten af siden. Overgangen tændes først, når
+   stregen står på sin første plads (data-ready), så den ikke vokser ind. */
+.nav-indicator {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 1px;
+  height: 1px;
+  background: var(--color-clay);
+  transform: translate3d(var(--ix, 0px), 0, 0) scaleX(var(--iw, 0));
+  transform-origin: 0 50%;
+}
+
+.nav-indicator[data-ready='true'] {
+  transition: transform var(--dur-reveal) var(--ease-entrance);
+}
+
+/* Mobil-overlay. Fuldskærm i papir. Linjerne kommer ind med samme maskerede
+   rise som heroen — .mask klipper, .menu-rise rejser sig. Ind: hero-varigheden
+   og indgangskurven. Ud: kort og hurtigt, så menuen ikke hænger efter valget. */
+.menu-overlay {
+  visibility: hidden;
+  opacity: 0;
+  overscroll-behavior: contain;
+  transition:
+    opacity var(--dur-exit) var(--ease-exit),
+    visibility 0s linear var(--dur-exit);
+}
+
+.menu-overlay[data-open='true'] {
+  visibility: visible;
+  opacity: 1;
+  transition:
+    opacity var(--dur-hover) var(--ease-entrance),
+    visibility 0s;
+}
+
+.menu-rise {
+  display: block;
+  transform: translate3d(0, 105%, 0);
+  transition: transform var(--dur-exit) var(--ease-exit);
+}
+
+.menu-overlay[data-open='true'] .menu-rise {
+  transform: translate3d(0, 0, 0);
+  transition: transform var(--dur-hero-line) var(--ease-entrance) var(--d, 0ms);
+}
+
+/* .mask klipper — en udenpå-outline ville blive skåret af. */
+.menu-rise:focus-visible {
+  outline-offset: -4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-line,
+  .nav-indicator[data-ready='true'],
+  .menu-rise,
+  .menu-overlay[data-open='true'] .menu-rise {
+    transition-duration: 1ms;
+    transition-delay: 0ms;
+  }
+  .menu-rise {
+    transform: none;
+  }
 }
 
 /* =========================================================================

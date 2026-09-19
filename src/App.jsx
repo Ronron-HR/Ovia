@@ -41,6 +41,12 @@ export default function App() {
             uden at lagovergangen skal røres — den ligger mellem heroen og
             det, der tilfældigvis står først. */}
         <div className="layer-rest">
+          {/* Vagt til nav'ens hårstreg — se useNavSpy. */}
+          <span
+            aria-hidden="true"
+            data-nav-sentinel
+            className="pointer-events-none absolute top-0 left-0 h-px w-px"
+          />
           <Ydelser />
           {casePalmy.enabled && <Case />}
           <Om />
