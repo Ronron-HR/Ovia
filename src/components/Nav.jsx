@@ -151,7 +151,7 @@ export default function Nav() {
       >
         <div className="shell flex h-[var(--nav-h)] items-center justify-between gap-6">
           <a href="#hero" onClick={close} aria-label={nav.brand} className="text-ink">
-            <Logo className="block h-[22px]" />
+            <Logo className="block h-[26px]" />
           </a>
 
           <div className="hidden items-center gap-10 md:flex">

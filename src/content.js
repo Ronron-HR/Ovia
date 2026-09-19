@@ -19,7 +19,7 @@
    ========================================================================= */
 
 export const site = {
-  brand: 'Ovia',
+  brand: 'OviaSpecs',
   email: 'ronnyhong723@gmail.com',
   phone: '53 61 36 99',
   phoneHref: '+4553613699',
@@ -28,7 +28,7 @@ export const site = {
 /* Links peger på sektions-id'er. Sektioner uden eget link (fx Sådan
    foregår det) regnes med under det link, man kom fra. */
 export const nav = {
-  brand: 'Ovia',
+  brand: 'OviaSpecs',
   links: [
     { label: 'Hvad jeg laver', href: '#ydelser' },
     { label: 'Om mig', href: '#om' },
@@ -76,7 +76,7 @@ const portrait = {
   base: '/ronny',
   width: 500,
   height: 625,
-  alt: 'Ronny, der står bag Ovia',
+  alt: 'Ronny, der står bag OviaSpecs',
   ratio: '4 / 5',
   spec: 'Founder-portræt · 4:5',
 }
@@ -227,6 +227,6 @@ export const legal = {
 }
 
 export const footer = {
-  left: '© 2026 Ovia',
+  left: '© 2026 OviaSpecs',
   links: [{ label: 'Privatlivspolitik', href: '/privatlivspolitik/' }],
 }

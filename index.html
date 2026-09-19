@@ -6,7 +6,7 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>Ovia — Websites, content og annoncer af Ronny</title>
+    <title>OviaSpecs — Websites, content og annoncer af Ronny</title>
     <meta
       name="description"
       content="Jeg hedder Ronny, jeg er 17 år og går i gymnasiet. Ved siden af skolen laver jeg websites, content og annoncer. Prisen aftaler vi fast efter et kort kald."
@@ -15,27 +15,26 @@
 
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="da_DK" />
-    <meta property="og:site_name" content="Ovia" />
-    <meta property="og:title" content="Ovia — Websites, content og annoncer af Ronny" />
+    <meta property="og:site_name" content="OviaSpecs" />
+    <meta property="og:title" content="OviaSpecs — Websites, content og annoncer af Ronny" />
     <meta
       property="og:description"
       content="Jeg hedder Ronny, jeg er 17 år og går i gymnasiet. Ved siden af skolen laver jeg websites, content og annoncer. Prisen aftaler vi fast efter et kort kald."
     />
-    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:card" content="summary_large_image" />
 
     <!-- [MANGLER] OG-billede og domæne.
          og:url og og:image skal være ABSOLUTTE URL'er — derfor kan de ikke
          sættes, før domænet er kendt. Når det er på plads:
            1. læg et 1200×630 billede i public/og.jpg
-           2. udkommentér blokken, indsæt domænet, og fjern den
-              twitter:card-linje ovenfor, der står som "summary"
+           2. udkommentér blokken og indsæt domænet (twitter:card ovenfor
+              står allerede som summary_large_image og kræver og:image)
            3. tilføj public/sitemap.xml og en Sitemap-linje i robots.txt
 
     <meta property="og:url" content="https://DIT-DOMÆNE/" />
     <meta property="og:image" content="https://DIT-DOMÆNE/og.jpg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta name="twitter:card" content="summary_large_image" />
     <link rel="canonical" href="https://DIT-DOMÆNE/" />
     -->
 
@@ -66,7 +65,7 @@
       ;(function () {
         var root = document.documentElement
         root.classList.add('js-motion')
-        window.__oviaReady = function () {
+        window.__oviaSpecsReady = function () {
           root.setAttribute('data-motion-ready', '1')
         }
         setTimeout(function () {
@@ -80,7 +79,7 @@
   <body>
     <div id="root"></div>
     <noscript>
-      <h1>Ovia — Websites, content og annoncer</h1>
+      <h1>OviaSpecs — Websites, content og annoncer</h1>
       <p>Jeg hedder Ronny og laver websites, content og annoncer til danske virksomheder. Skriv til ronnyhong723@gmail.com for et kort kald og en fast pris.</p>
     </noscript>
     <script type="module" src="/src/main.jsx"></script>

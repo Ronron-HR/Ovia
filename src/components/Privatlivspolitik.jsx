@@ -34,8 +34,8 @@ export default function Privatlivspolitik() {
     <>
       <header className="border-b border-rule">
         <div className="shell flex h-[64px] items-center justify-between">
-          <a href="/" aria-label="Ovia, til forsiden" className="text-ink">
-            <Logo className="block h-[22px]" />
+          <a href="/" aria-label="OviaSpecs, til forsiden" className="text-ink">
+            <Logo className="block h-[26px]" />
           </a>
           <a href="/" className="link-underline text-[13px] font-medium text-ink">
             Til forsiden
@@ -56,10 +56,10 @@ export default function Privatlivspolitik() {
         <div className="mt-16">
           <Section title="Hvem er ansvarlig">
             <p>
-              Ovia er dataansvarlig for de oplysninger, der behandles gennem denne side.
+              OviaSpecs er dataansvarlig for de oplysninger, der behandles gennem denne side.
             </p>
             <p>
-              Ovia v/ {legal.owner}
+              OviaSpecs v/ {legal.owner}
               <br />
               {legal.address}
               <br />
@@ -227,7 +227,7 @@ export default function Privatlivspolitik() {
       </main>
 
       <footer className="border-t border-rule">
-        <div className="shell py-8 text-[13px] text-muted">© 2026 Ovia</div>
+        <div className="shell py-8 text-[13px] text-muted">© 2026 OviaSpecs</div>
       </footer>
     </>
   )

@@ -19,7 +19,7 @@ export default function App() {
   // Fortæller vagthunden i index.html, at motion-koden lever. Sker det
   // ikke inden 2,5s, fjernes .js-motion, og alt indhold bliver synligt.
   useEffect(() => {
-    window.__oviaReady?.()
+    window.__oviaSpecsReady?.()
   }, [])
 
   return (
