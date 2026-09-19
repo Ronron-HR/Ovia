@@ -6,7 +6,7 @@ import { clamp, reduced } from './motion.js'
  * Lagovergangen mellem hero og resten af siden (signature moment 02).
  *
  * Skriver --lp (0→1) på :root. Heroen læser den til sin modbevægelse,
- * .layer-rest til sit løft, og nav'en fader ind når den rammer 1.
+ * .layer-rest til sit løft, og anchor-landingen til sit tillæg.
  *
  * Progressen udledes af scenens egen højde frem for et hardcodet tal, så
  * --layer-travel i motion.css altid er den eneste sandhed.
@@ -47,11 +47,9 @@ export function useLayer(stageRef) {
       document.fonts?.ready.then(land)
     }
 
-    // Reduced motion: ingen lagovergang. Nav'en er der fra start, så siden
-    // ikke mister sin eneste navigation.
+    // Reduced motion: ingen lagovergang.
     if (reduced()) {
       root.style.setProperty('--lp', '1')
-      root.dataset.nav = 'on'
       root.dataset.layer = 'done'
       return
     }
@@ -68,7 +66,6 @@ export function useLayer(stageRef) {
 
       root.style.setProperty('--lp', p.toFixed(4))
       root.dataset.layer = p < 1 ? 'active' : 'done'
-      root.dataset.nav = p > 0.98 ? 'on' : 'off'
     }
 
     // Loopet kører kun mens scenen er i nærheden. Resten af siden ligger

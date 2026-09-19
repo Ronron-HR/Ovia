@@ -317,25 +317,21 @@
 }
 
 /* =========================================================================
-   NAV — skjult i heroen, fader ind når lagovergangen er færdig
-   visibility (ikke kun opacity) holder den ude af tab-rækkefølgen imens.
+   NAV — synlig fra første frame
+   Den fader ind sidst i hero-koreografien (samme tidspunkt som mærket havde
+   før) og gør intet andet. Uden JS findes .js-motion ikke, og baren står
+   der bare. Hårstregen og den glidende understregning er beskrevet nedenfor.
    ========================================================================= */
 
 .js-motion .nav {
-  opacity: 0;
-  visibility: hidden;
-  transform: translate3d(0, -8px, 0);
-  transition:
-    opacity var(--dur-reveal) var(--ease-entrance),
-    transform var(--dur-reveal) var(--ease-entrance),
-    visibility 0s linear var(--dur-reveal);
+  animation: fade-only var(--dur-reveal) var(--ease-entrance) 460ms both;
 }
 
-:root.js-motion[data-nav='on'] .nav {
-  opacity: 1;
-  visibility: visible;
-  transform: translate3d(0, 0, 0);
-  transition-delay: 0s, 0s, 0s;
+@media (prefers-reduced-motion: reduce) {
+  .js-motion .nav {
+    animation-duration: 200ms;
+    animation-delay: 0ms;
+  }
 }
 
 /* Hårstregen. Tegnes fra venstre, første gang indholdet glider op under

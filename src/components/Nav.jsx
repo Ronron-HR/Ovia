@@ -6,11 +6,11 @@ import { useNavSpy } from '../motion/useNavSpy.js'
  * Nav: mærke til venstre, tre ankerlinks og ét CTA til højre.
  *
  * Tre tilstande:
- *   1. Skjult i heroen. Synligheden styres af data-nav på :root, sat af
- *      useLayer — visibility, ikke kun opacity, så den er ude af
- *      tab-rækkefølgen imens.
- *   2. Efter lagovergangen: fader ind. Papir med gennemsigtighed og blur, og
- *      en hårstreg i bunden, der først tegnes, når indholdet glider under.
+ *   1. Øverst, i heroen: baren står der fra start og fader ind med heroen.
+ *      Papir med gennemsigtighed, ingen streg — der er intet under den at
+ *      adskille fra — og intet aktivt link, for man står ikke i et afsnit.
+ *   2. Når indholdet glider op under: hårstregen tegnes i bunden. Baggrunden
+ *      er papir med gennemsigtighed og blur, så den aldrig er en hård kasse.
  *   3. Aktivt afsnit: scrollspy (useNavSpy) markerer ét link, og en enkelt
  *      streg i ler glider derhen. Stregen er ét element, ikke ét pr. link —
  *      derfor kan den glide i stedet for at blinke.
@@ -40,9 +40,16 @@ export default function Nav() {
 
   /* --- Glidende understregning ------------------------------------------ */
   const place = useCallback(() => {
-    const link = links.current[active]
+    const link = active && links.current[active]
     const line = indicator.current
-    if (!link || !line || !link.offsetWidth) return
+    if (!line) return
+
+    // Ingen aktiv sektion (heroen): stregen trækkes ind, hvor den står.
+    if (!link) {
+      line.style.setProperty('--iw', '0')
+      return
+    }
+    if (!link.offsetWidth) return
 
     // Bogstavafstand lægges også efter sidste tegn. Den trækkes fra, så
     // stregen slutter under bogstavet og ikke i luften efter det.

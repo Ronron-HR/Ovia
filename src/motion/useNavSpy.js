@@ -3,10 +3,12 @@ import { useEffect, useState } from 'react'
 /**
  * Nav-tilstande, der afhænger af scroll — uden scroll-listeners.
  *
- * active   id på det link, man befinder sig i. Altid præcis ét: rækken af
- *          sektioner læses fra DOM'en, og en sektion uden eget link (Sådan
- *          foregår det) hører til det link, man kom fra. Findes der ingen
- *          match endnu, står det første link aktivt — aldrig nul, aldrig to.
+ * active   id på det link, man befinder sig i — højst ét. Rækken af sektioner
+ *          læses fra DOM'en, og en sektion uden eget link (Sådan foregår det)
+ *          hører til det link, man kom fra. I heroen er active null: baren er
+ *          synlig dér, men man står ikke i noget afsnit, og et understreget
+ *          "Hvad jeg laver" ville pege på noget, man ikke har nået. Fra og med
+ *          første sektion er der altid præcis ét aktivt link, aldrig to.
  * scrolled sand, når indholdet er begyndt at glide op under baren. Bruges til
  *          at tegne hårstregen. Aflæses på en 1px-vagt øverst i laget frem
  *          for et scroll-tal, så tærsklen følger lagovergangen af sig selv.
@@ -16,17 +18,17 @@ import { useEffect, useState } from 'react'
  * reelt fylder det, man kigger på, og ikke når dens kant lige rammer toppen.
  */
 export function useNavSpy(linkIds) {
-  const [active, setActive] = useState(linkIds[0])
+  const [active, setActive] = useState(null)
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
     const sections = [...document.querySelectorAll('main section[id]')]
     if (!sections.length) return
 
-    // Sektion → hvilket link den hører under. Sektioner før det første
-    // link (heroen) falder tilbage på det første.
+    // Sektion → hvilket link den hører under. Før det første link (heroen)
+    // hører den ingen steder under.
     const ownerOf = new Map()
-    let owner = linkIds[0]
+    let owner = null
     for (const section of sections) {
       if (linkIds.includes(section.id)) owner = section.id
       ownerOf.set(section, owner)

@@ -1,4 +1,4 @@
-import { hero, site } from '../content.js'
+import { hero } from '../content.js'
 import Slot from './Slot.jsx'
 
 /**
@@ -13,7 +13,7 @@ import Slot from './Slot.jsx'
  *   140ms  underrubrik
  *   220ms  portræt              ── billedet er anden stemme
  *   380ms  CTA
- *   460ms  mærke
+ *   460ms  nav (mærket bor der; se motion.css)
  *
  * Linje 1 står reelt læsbar efter ~300ms. Kravet er 400ms.
  *
@@ -29,14 +29,6 @@ export default function Hero() {
     <section id="hero" className="layer-sticky bg-paper">
       <div className="layer-sink flex flex-1 flex-col justify-center">
         <div className="shell w-full py-10 md:py-14">
-          <p
-            data-hero="fade"
-            style={{ '--d': '460ms' }}
-            className="t-display mb-8 text-[20px] leading-none md:mb-12 md:text-[24px]"
-          >
-            {site.brand}
-          </p>
-
           {/* Loftet på 80px er ikke tilfældigt: det er den største grad,
               hvor en linje på ~29 tegn stadig holder på én linje i den
               fulde bredde. Skriver du længere linjer, skal loftet ned. */}
