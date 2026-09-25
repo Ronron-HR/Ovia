@@ -1,222 +1,65 @@
 /* =========================================================================
    OVIASPECS — MOTION-SYSTEM
-   Ét sted at justere hele sidens følelse. Ændrer du tallene her,
-   ændrer du siden — komponenterne indeholder ingen varigheder.
+   Ét sted at justere hele sidens følelse. Komponenterne indeholder ingen
+   varigheder.
 
-   Regler systemet håndhæver:
-   - Kun transform og opacity animeres. Aldrig top/left/width/height.
-   - Store elementer bevæger sig langsomt, små hurtigt (masse-reglen).
-   - Scroll-drevne bevægelser har ingen easing — de mapper lineært.
+   Tre slags bevægelse, og ikke flere:
+     1. INDGANG      — heroens overskrift, tekst og skærmbilleder kommer ind
+                       én gang ved load (ren CSS, starter på første frame).
+     2. INDTONING    — sektionsoverskrifter og enkelte blokke fader op, når
+                       de kommer til syne. Én gang, aldrig ved scroll tilbage.
+     3. RESPONS      — knapper, links, menu og bookingeksemplet svarer på
+                       det, man gør.
+
+   Regler:
+   - Kun transform og opacity animeres.
+   - Intet er skjult, hvis JavaScript fejler: alt herunder gælder kun under
+     .js-motion, og index.html fjerner klassen igen efter 2,5 s uden svar.
+   - prefers-reduced-motion fjerner al bevægelse, som ikke er ren opacity.
    ========================================================================= */
 
 :root {
-  /* --- Kurver ------------------------------------------------------------
-     Indgang: ca. 90% af distancen i de første 40% af tiden. Derfor kan
-     en overskrift køre 700ms og stå læsbar efter 300.
-     Udgang: spejlvendt — masse sætter sig langsomt i bevægelse.
-     Hover: ca. 4% overshoot, klippet ned fra en typisk spring på 1.56. */
   --ease-entrance: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-exit: cubic-bezier(0.7, 0, 0.84, 0);
   --ease-hover: cubic-bezier(0.34, 1.3, 0.64, 1);
 
-  /* --- Varigheder — intet over 800ms ------------------------------------ */
   --dur-tap: 140ms;
   --dur-hover: 200ms;
   --dur-reveal: 620ms;
-  --dur-reveal-lg: 760ms;
   --dur-exit: 320ms;
-  --stagger: 60ms;
-
-  /* --- Afstande --------------------------------------------------------- */
-  --reveal-y: 24px;
-  --reveal-y-lg: 32px;
-
-  /* --- Hero-load — koreograferet sekvens, se HERO nedenfor -------------- */
   --dur-hero-line: 700ms;
-  --dur-hero-media: 760ms;
+  --dur-hero-media: 800ms;
 
-  /* Hvor meget portrættet skalerer ned på plads i heroen.
-     Sat til 1.02 og ikke 1.06, fordi kildebilledet kun er 320px bredt
-     efter beskæring — en større startskala ville forstørre et billede,
-     der i forvejen ikke har pixels nok. Kommer der et portræt på
-     2000px+, kan den ryge op på 1.06 igen. */
-  --hero-media-scale: 1.02;
+  --reveal-y: 24px;
 
-  /* --- Lagovergang (signature moment 02) --------------------------------
-     --layer-travel: hvor længe heroen holdes fast. Det er den eneste værdi,
-       du skal røre. 65vh frem for en fuld skærmhøjde: en fuld skærm uden
-       nyt indhold er for meget tålmodighed at bede om.
-     --layer-lift: hvor meget laget selv skubber sig op oveni scroll.
-       Udledes, så laget rammer toppen præcis når heroen slipper — og så
-       regnestykket ikke kan komme ud af trit med travel. */
-  --layer-travel: 65vh;
-  --layer-lift: calc(100svh - var(--layer-travel));
-  --hero-sink: -8%;
-  --hero-scale: 0.98;
-  --hero-fade: 0.55;
-
-  /* --- Parallax (signature moment 04) ------------------------------------
-     Værdien er den samlede rejse; forskydningen er det halve til hver side. */
-  --par-txt: 24px;
-
-  /* --- Nav -------------------------------------------------------------- */
   --nav-h: 64px;
-  /* Barens højde efter lagovergangen, som andel af --nav-h. 0.84 = 16% lavere
-     (64px -> ca. 54px, 56px -> ca. 47px). Bruges kun til transform, så
-     --nav-h — og dermed scroll-margin og deep-links — er urørt. */
-  --nav-compact: 0.84;
-
-  /* Scroll-progress. --lp er global (lagovergangen), --p er lokal pr. scene. */
   --lp: 0;
-  --p: 0;
 }
 
 @media (max-width: 767px) {
   :root {
-    /* Kortere scroll-distance, færre samtidige lag, ingen scale på et
-       fuldskærmslag — det er den dyreste enkeltdel på mobile GPU'er. */
-    --layer-travel: 55vh;
-    --hero-sink: -4%;
-    --hero-scale: 1;
-    --par-txt: 8px;
-    --reveal-y: 20px;
-    --reveal-y-lg: 24px;
+    --reveal-y: 16px;
     --nav-h: 56px;
   }
 }
 
-/* =========================================================================
-   TILGÆNGELIGHED — ikke til forhandling
-   Uden JS findes klassen .js-motion ikke, og intet herunder rammer noget:
-   alt indhold er synligt fra første frame.
-   ========================================================================= */
-
 @media (prefers-reduced-motion: reduce) {
   :root {
     --dur-reveal: 200ms;
-    --dur-reveal-lg: 200ms;
     --reveal-y: 0px;
-    --reveal-y-lg: 0px;
-    /* Ingen lagovergang: siden bliver et almindeligt dokument i flow. */
-    --layer-travel: 0vh;
-    --layer-lift: 0vh;
-    --hero-sink: 0%;
-    --hero-scale: 1;
-    --hero-fade: 1;
-    --par-txt: 0px;
   }
 }
 
 /* =========================================================================
-   STANDARD-REVEAL
-   Bruges af Hvad jeg laver, Sådan foregår det og Priser — og intet andet.
-   Netop ensartetheden her er det, der får de fem momenter til at virke.
-   ========================================================================= */
-
-.js-motion [data-reveal] {
-  opacity: 0;
-  transform: translate3d(0, var(--reveal-y), 0);
-  transition:
-    opacity var(--dur-reveal) var(--ease-entrance) var(--d, 0ms),
-    transform var(--dur-reveal) var(--ease-entrance) var(--d, 0ms);
-}
-
-.js-motion [data-reveal='lg'] {
-  transform: translate3d(0, var(--reveal-y-lg), 0);
-  transition-duration: var(--dur-reveal-lg);
-}
-
-.js-motion [data-reveal].is-in {
-  opacity: 1;
-  transform: translate3d(0, 0, 0);
-}
-
-/* Eyebrow-streg. En tynd accentstreg tegnes fra venstre under sektionernes
-   eyebrow, når den afsløres — .is-in kommer fra useReveal, som tænder selve
-   eyebrow'en. Kun de fire, der har klassen; kontakt har sit eget moment.
-   Landet er standardtilstanden: uden JS
-   og efter vagthunden står stregen der bare. Kun transform. */
-.eyebrow-rule {
-  position: relative;
-  width: fit-content;
-}
-
-.eyebrow-rule::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  /* Bogstavafstanden lægges også efter sidste tegn — trækkes fra, så
-     stregen slutter under bogstavet (som .nav-indicator). */
-  right: 0.16em;
-  bottom: 0;
-  height: 1px;
-  background: var(--color-accent);
-  transform-origin: 0 50%;
-  transition: transform var(--dur-hover) var(--ease-entrance) var(--stagger);
-}
-
-.js-motion .eyebrow-rule:not(.is-in)::after {
-  transform: scaleX(0);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  /* Ingen tegning: stregen fader ind med eyebrow'en. */
-  .js-motion .eyebrow-rule:not(.is-in)::after {
-    transform: none;
-  }
-}
-
-/* Maskeret linje-reveal, drevet af IntersectionObserver frem for load.
-   Bruges ét sted: kontakt-overskriften. Samme gestus som heroen — og
-   netop fordi den kun optræder to steder, betyder den noget.
-
-   VIGTIGT: [data-reveal='rise'] sættes på MASKEN, ikke på linjen indeni.
-   Linjen starter skubbet helt ud af masken og er dermed fuldstændig
-   klippet væk — en IntersectionObserver ser den aldrig krydse noget som
-   helst, og revealen ville aldrig fyre. Masken er synlig hele vejen. */
-.js-motion [data-reveal='rise'] {
-  opacity: 1;
-  transform: none;
-}
-
-.js-motion [data-reveal='rise'] > * {
-  display: block; /* transform rammer ikke inline-elementer */
-  transform: translate3d(0, 105%, 0);
-  transition: transform var(--dur-reveal-lg) var(--ease-entrance) var(--d, 0ms);
-}
-
-.js-motion [data-reveal='rise'].is-in > * {
-  transform: translate3d(0, 0, 0);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .js-motion [data-reveal='rise'] > * {
-    transform: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .js-motion [data-reveal] {
-    transform: none;
-    transition: opacity var(--dur-reveal) linear;
-  }
-  .js-motion [data-reveal].is-in {
-    transform: none;
-  }
-}
-
-/* =========================================================================
-   SIGNATURE MOMENT 01 — HERO LOAD
-   Ren CSS. Kører på første frame og venter ikke på React-hydrering.
-   Læsbarhed: linje 1 står reelt stille efter ~300ms. Kravet er 400ms.
+   1. INDGANG — hero
    ========================================================================= */
 
 .mask {
   display: block;
   overflow: hidden;
-  /* Plads til underlængder (g, j, y) så masken ikke klipper dem. */
-  padding-bottom: 0.08em;
-  margin-bottom: -0.08em;
+  /* Plads til underlængder (g, j, y), så masken ikke klipper dem. */
+  padding-bottom: 0.1em;
+  margin-bottom: -0.1em;
 }
 
 .js-motion .hero-rise {
@@ -227,17 +70,19 @@
 
 .js-motion [data-hero='fade'] {
   opacity: 0;
-  animation: fade-up 520ms var(--ease-entrance) var(--d, 0ms) both;
+  animation: fade-up 560ms var(--ease-entrance) var(--d, 0ms) both;
 }
 
+/* Skærmbillederne kommer ind nedefra og lægger sig på plads. */
 .js-motion [data-hero='media'] {
-  transform: translate3d(0, 100%, 0);
-  animation: rise var(--dur-hero-media) var(--ease-entrance) var(--d, 0ms) both;
+  opacity: 0;
+  animation: media-in var(--dur-hero-media) var(--ease-entrance) var(--d, 0ms) both;
 }
 
-.js-motion [data-hero='media-inner'] {
-  transform: scale(var(--hero-media-scale));
-  animation: settle var(--dur-hero-media) var(--ease-entrance) var(--d, 0ms) both;
+/* Telefonerne kommer op efter skærmen, hver med sin forsinkelse. */
+.js-motion [data-hero='phone'] {
+  opacity: 0;
+  animation: media-in var(--dur-hero-media) var(--ease-entrance) var(--d, 0ms) both;
 }
 
 @keyframes rise {
@@ -257,9 +102,14 @@
   }
 }
 
-@keyframes settle {
+@keyframes media-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 32px, 0);
+  }
   to {
-    transform: scale(1);
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
   }
 }
 
@@ -276,7 +126,7 @@
   .js-motion .hero-rise,
   .js-motion [data-hero='fade'],
   .js-motion [data-hero='media'],
-  .js-motion [data-hero='media-inner'] {
+  .js-motion [data-hero='phone'] {
     transform: none;
     animation: fade-only 200ms linear both;
     animation-delay: 0ms;
@@ -284,124 +134,219 @@
 }
 
 /* =========================================================================
-   SIGNATURE MOMENT 02 — LAGOVERGANG
-   Heroen holdes fast (sticky) mens næste sektion skubber sig ind over den.
-   Ingen pinning-bibliotek: position:sticky gør det natively, og fordi
-   .layer-stage fylder i flowet, lander anchor- og deep-links korrekt.
+   2. INDTONING — data-reveal
+   Sættes på sektionsoverskrifter og enkelte blokke, ikke på hvert kort.
    ========================================================================= */
 
-/* Værten om begge lag. flow-root er ikke pynt: uden den kollapser
-   .layer-rest's negative bundmargin ud gennem forælderen, og så bliver
-   dokumentet --layer-lift for højt — en stribe tom baggrund under
-   sidste sektion. */
-.layer-host {
-  display: flow-root;
+.js-motion [data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, var(--reveal-y), 0);
+  transition:
+    opacity var(--dur-reveal) var(--ease-entrance) var(--d, 0ms),
+    transform var(--dur-reveal) var(--ease-entrance) var(--d, 0ms);
 }
 
-.layer-stage {
-  position: relative;
-  height: calc(100svh + var(--layer-travel));
-}
-
-.layer-sticky {
-  position: sticky;
-  top: 0;
-  height: 100svh;
-  display: flex;
-  flex-direction: column;
-  overflow: clip;
-}
-
-/* Heroens modbevægelse: den trækker sig bagud, den ruller ikke væk. */
-.layer-sink {
-  transform: translate3d(0, calc(var(--hero-sink) * var(--lp)), 0)
-    scale(calc(1 - (1 - var(--hero-scale)) * var(--lp)));
-  opacity: calc(1 - (1 - var(--hero-fade)) * var(--lp));
-}
-
-/* Alt efter heroen er ét lag. Det trækkes op over heroen med
-   --layer-lift, så det rammer toppen præcis når heroen slipper.
-   margin-bottom kompenserer, så dokumentet ikke bliver for højt. */
-.layer-rest {
-  position: relative;
-  z-index: 1;
-  margin-top: calc(-1 * var(--layer-travel));
-  margin-bottom: calc(-1 * var(--layer-lift));
-  transform: translate3d(0, calc(-1 * var(--layer-lift) * var(--lp)), 0);
-  background: var(--color-paper);
-}
-
-:root[data-layer='active'] .layer-rest,
-:root[data-layer='active'] .layer-sink {
-  will-change: transform;
-}
-
-/* Anchor-landing. Sektionen skal lande lige under baren: --nav-h, ikke en
-   gættet konstant. Laget er derimod løftet --layer-lift * --lp, og hvor
-   meget af løftet, der allerede er sket, ændrer sig med scroll. Browseren
-   regner målet ud FØR bevægelsen, så det manglende løft lægges til her og
-   forsvinder af sig selv, jo længere laget er nået (--lp 1 = ingen tillæg).
-   Med et fast tillæg landede sektionerne 280px for langt nede, hver gang
-   nav'en var synlig. */
-.layer-rest [id] {
-  scroll-margin-top: calc(var(--nav-h) + var(--layer-lift) * (1 - var(--lp)));
-}
-
-/* Den første sektion kan ikke lande under baren: for at nå dertil skulle der
-   scrolles ind i lagovergangen, hvor nav'en endnu er skjult og laget ikke
-   er nået op. Den lander i stedet med toppen i skærmkanten — baren dækker
-   kun dens polstring, ikke dens indhold. */
-.layer-rest > [data-nav-sentinel] + section {
-  scroll-margin-top: calc(var(--layer-lift) * (1 - var(--lp)));
-}
-
-/* =========================================================================
-   NAV — synlig fra første frame
-   Den fader ind sidst i hero-koreografien (samme tidspunkt som mærket havde
-   før) og gør intet andet. Uden JS findes .js-motion ikke, og baren står
-   der bare. Hårstregen og den glidende understregning er beskrevet nedenfor.
-   ========================================================================= */
-
-.js-motion .nav {
-  animation: fade-only var(--dur-reveal) var(--ease-entrance) 460ms both;
-}
-
-/* Kompakt bar efter lagovergangen — samme tilstand (data-scrolled), kurve og
-   varighed som fade-in'en og hårstregen; kun transform.
-   Baren løftes --t ud af skærmen (baggrund, blur og hårstreg følger med),
-   og indholdet skubbes --t/2 ned igen, så det stadig er centreret i den
-   lavere bar. --t udledes af --nav-compact, så mobil følger med. */
-.nav {
-  --t: calc(var(--nav-h) * (1 - var(--nav-compact)));
-  transition: transform var(--dur-reveal) var(--ease-entrance);
-}
-
-.nav-bar {
-  transition: transform var(--dur-reveal) var(--ease-entrance);
-}
-
-.nav[data-scrolled='true'] {
-  transform: translate3d(0, calc(-1 * var(--t)), 0);
-}
-
-.nav[data-scrolled='true'] .nav-bar {
-  transform: translate3d(0, calc(var(--t) / 2), 0);
+.js-motion [data-reveal].is-in {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .js-motion .nav {
-    animation-duration: 200ms;
-    animation-delay: 0ms;
-  }
-  .nav,
-  .nav-bar {
-    transition-duration: 1ms;
+  .js-motion [data-reveal] {
+    transform: none;
+    transition: opacity var(--dur-reveal) linear;
   }
 }
 
-/* Hårstregen. Tegnes fra venstre, første gang indholdet glider op under
-   baren — før da er der intet at adskille fra, og en streg ville gøre baren
-   til en hård kasse ovenpå tom papirflade. Kun transform. */
+/* Sammenhængen: linjen mellem de tre trin tegnes fra venstre, når rækken
+   kommer til syne. Uden JS står den færdigtegnet. Kun transform. */
+.rail-line {
+  transform-origin: 0 50%;
+  transition: transform 900ms var(--ease-entrance) 200ms;
+}
+
+.js-motion [data-rail]:not(.is-in) .rail-line {
+  transform: scaleX(0);
+}
+
+.js-motion [data-rail]:not(.is-in) .rail-line-y {
+  transform: scaleY(0);
+}
+
+.rail-line-y {
+  transform-origin: 50% 0;
+  transition: transform 900ms var(--ease-entrance) 200ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js-motion [data-rail]:not(.is-in) .rail-line,
+  .js-motion [data-rail]:not(.is-in) .rail-line-y {
+    transform: none;
+  }
+}
+
+/* Sådan foregår det: hvert trin tændes, når man selv når ned til det. */
+.js-motion [data-step] {
+  opacity: 0;
+  transform: translate3d(0, var(--reveal-y), 0);
+  transition:
+    opacity var(--dur-reveal) var(--ease-entrance),
+    transform var(--dur-reveal) var(--ease-entrance);
+}
+
+.js-motion [data-step].is-in {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js-motion [data-step] {
+    transform: none;
+    transition: opacity var(--dur-reveal) linear;
+  }
+}
+
+/* =========================================================================
+   3. RESPONS
+   ========================================================================= */
+
+.btn {
+  transition:
+    background-color var(--dur-hover) var(--ease-entrance),
+    color var(--dur-hover) var(--ease-entrance),
+    border-color var(--dur-hover) var(--ease-entrance),
+    transform var(--dur-hover) var(--ease-hover);
+}
+
+.btn:active {
+  transform: scale(0.98);
+  transition-duration: var(--dur-tap);
+}
+
+.link-underline {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 100% 1px;
+  transition: background-size var(--dur-hover) var(--ease-entrance);
+}
+
+@media (hover: hover) {
+  .link-underline:hover {
+    background-size: 0% 1px;
+    background-position: 100% 100%;
+  }
+}
+
+/* Pil i links: skubbes en anelse ved hover/fokus. */
+.arrow {
+  display: inline-block;
+  transition: transform var(--dur-hover) var(--ease-entrance);
+}
+
+@media (hover: hover) {
+  a:hover > .arrow,
+  a:focus-visible > .arrow {
+    transform: translate3d(3px, 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .link-underline,
+  .arrow {
+    transition-duration: 1ms;
+  }
+  .btn:active {
+    transform: none;
+  }
+}
+
+/* Spørgsmål: pilen drejer, indholdet fader ind. */
+.faq summary {
+  list-style: none;
+}
+.faq summary::-webkit-details-marker {
+  display: none;
+}
+.faq .faq-plus {
+  transition: transform var(--dur-hover) var(--ease-entrance);
+}
+.faq[open] .faq-plus {
+  transform: rotate(45deg);
+}
+.faq[open] .faq-body {
+  animation: fade-up 320ms var(--ease-entrance) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .faq .faq-plus {
+    transition-duration: 1ms;
+  }
+  .faq[open] .faq-body {
+    animation: fade-only 200ms linear both;
+  }
+}
+
+/* --- Bookingeksemplet ----------------------------------------------------
+   Valg svarer med det samme: den valgte flade skifter farve (200ms), listen
+   over tidspunkter skifter ind (fade + 8px), og oversigten opdaterer sig
+   med en lille indskydning. Kun opacity og transform. */
+.slot-btn,
+.choice {
+  transition:
+    background-color var(--dur-hover) var(--ease-entrance),
+    border-color var(--dur-hover) var(--ease-entrance),
+    color var(--dur-hover) var(--ease-entrance),
+    transform var(--dur-hover) var(--ease-hover);
+}
+
+.slot-btn:active:not(:disabled),
+.choice:active {
+  transform: scale(0.97);
+  transition-duration: var(--dur-tap);
+}
+
+.swap-in {
+  animation: swap-in 300ms var(--ease-entrance) both;
+}
+
+@keyframes swap-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swap-in {
+    animation: fade-only 200ms linear both;
+  }
+  .slot-btn,
+  .choice {
+    transition-duration: 1ms;
+  }
+  .slot-btn:active:not(:disabled),
+  .choice:active {
+    transform: none;
+  }
+}
+
+/* =========================================================================
+   NAV
+   Baren står fra første frame. Hårstregen tegnes, når indholdet er begyndt
+   at glide op under den; understregningen er ét element, der glider mellem
+   linkene.
+   ========================================================================= */
+
+.js-motion .nav {
+  animation: fade-only var(--dur-reveal) var(--ease-entrance) 300ms both;
+}
+
 .nav-line {
   position: absolute;
   inset-inline: 0;
@@ -410,15 +355,13 @@
   background: var(--color-rule);
   transform: scaleX(0);
   transform-origin: 0 50%;
-  transition: transform var(--dur-reveal-lg) var(--ease-entrance);
+  transition: transform var(--dur-reveal) var(--ease-entrance);
 }
 
 .nav[data-scrolled='true'] .nav-line {
   transform: scaleX(1);
 }
 
-/* Links: dæmpede, blæk når de er aktive eller peges på. Farven skifter med
-   hover-varigheden; ingen bevægelse på selve linket. */
 .nav-link {
   color: var(--color-muted);
   transition: color var(--dur-hover) var(--ease-entrance);
@@ -434,10 +377,6 @@
   }
 }
 
-/* Understregningen er ÉT element, som glider mellem linkene. Position og
-   bredde kommer som --ix og --iw fra Nav.jsx; her er kun bevægelsen.
-   Samme kurve og varighed som resten af siden. Overgangen tændes først, når
-   stregen står på sin første plads (data-ready), så den ikke vokser ind. */
 .nav-indicator {
   position: absolute;
   left: 0;
@@ -453,9 +392,8 @@
   transition: transform var(--dur-reveal) var(--ease-entrance);
 }
 
-/* Mobil-overlay. Fuldskærm i papir. Linjerne kommer ind med samme maskerede
-   rise som heroen — .mask klipper, .menu-rise rejser sig. Ind: hero-varigheden
-   og indgangskurven. Ud: kort og hurtigt, så menuen ikke hænger efter valget. */
+/* Mobil-overlay: fuldskærm. Ind: kort fade og linjer, der rejser sig. Ud:
+   hurtigt, så menuen ikke hænger efter valget. */
 .menu-overlay {
   visibility: hidden;
   opacity: 0;
@@ -490,6 +428,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .js-motion .nav {
+    animation-duration: 200ms;
+    animation-delay: 0ms;
+  }
   .nav-line,
   .nav-indicator[data-ready='true'],
   .menu-rise,
@@ -498,113 +440,6 @@
     transition-delay: 0ms;
   }
   .menu-rise {
-    transform: none;
-  }
-}
-
-/* =========================================================================
-   SIGNATURE MOMENT 03 — PALMY MASKEREVEAL
-   overflow:hidden + translateY frem for clip-path: visuelt identisk for en
-   lige kant, men garanteret compositor-only.
-   Modbevægelsen indeni gør, at billedet virker forankret bag masken
-   frem for slæbt op.
-   ========================================================================= */
-
-.reveal-mask {
-  overflow: hidden;
-}
-
-.js-motion .reveal-mask-inner {
-  transform: translate3d(0, calc((1 - var(--p)) * 100%), 0);
-}
-
-.js-motion .reveal-mask-media {
-  transform: translate3d(0, calc((1 - var(--p)) * -6%), 0)
-    scale(calc(1.1 - 0.1 * var(--p)));
-}
-
-:root:not(.js-motion) .reveal-mask-inner,
-:root:not(.js-motion) .reveal-mask-media {
-  transform: none;
-}
-
-.is-live .reveal-mask-inner,
-.is-live .reveal-mask-media {
-  will-change: transform;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .js-motion .reveal-mask-inner,
-  .js-motion .reveal-mask-media {
-    transform: none;
-  }
-}
-
-/* =========================================================================
-   SIGNATURE MOMENT 04 — LOGOET
-   Samme maskerede rise som heroen og kontakt-overskriften (se
-   [data-reveal='rise'] ovenfor), bogstav for bogstav: logoet rejser sig ét
-   tegn ad gangen fra en fælles grundlinje. Ingen ny
-   kurve og ingen ny varighed — --ease-entrance og --dur-reveal-lg kommer
-   derfra, og --d sættes pr. tegn i Logo.jsx. SVG'ets egen kant er masken.
-   Kun logoet bevæger sig: én gestus, ét sted, og resten står stille.
-   Tekstkolonnen kører sin egen svage parallax og overlapper logoet.
-   Cursor ligger på et element udenom, så de to transforms ikke kæmper.
-   ========================================================================= */
-
-.js-motion .par-txt {
-  transform: translate3d(0, calc((0.5 - var(--p)) * var(--par-txt)), 0);
-}
-
-.pointer-shift {
-  transform: translate3d(var(--mx, 0px), var(--my, 0px), 0);
-  transition: transform 0s;
-}
-
-.is-live .par-txt {
-  will-change: transform;
-}
-
-/* =========================================================================
-   MICRO-INTERACTIONS
-   Hover kun hvor der findes en hover-enhed. Tap-feedback overalt.
-   Ingen magnetiske knapper, ingen custom cursor, ingen lyd.
-   ========================================================================= */
-
-.btn {
-  transition:
-    background-color var(--dur-hover) var(--ease-hover),
-    color var(--dur-hover) var(--ease-hover),
-    border-color var(--dur-hover) var(--ease-hover),
-    transform var(--dur-hover) var(--ease-hover);
-}
-
-.btn:active {
-  transform: scale(0.98);
-  transition-duration: var(--dur-tap);
-}
-
-.link-underline {
-  background-image: linear-gradient(currentColor, currentColor);
-  background-repeat: no-repeat;
-  background-position: 0 100%;
-  background-size: 100% 1px;
-  transition: background-size var(--dur-hover) var(--ease-entrance);
-}
-
-@media (hover: hover) {
-  .link-underline:hover {
-    background-size: 0% 1px;
-    background-position: 100% 100%;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .btn,
-  .link-underline {
-    transition-duration: 1ms;
-  }
-  .btn:active {
     transform: none;
   }
 }

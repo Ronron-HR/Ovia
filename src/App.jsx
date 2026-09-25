@@ -1,20 +1,16 @@
-import { useEffect, useRef } from 'react'
-import Case from './components/Case.jsx'
+import { useEffect } from 'react'
+import Faq from './components/Faq.jsx'
 import Hero from './components/Hero.jsx'
-import Kontakt from './components/Kontakt.jsx'
+import Kontakt, { Footer } from './components/Kontakt.jsx'
 import Nav from './components/Nav.jsx'
 import Om from './components/Om.jsx'
-import Proces from './components/Proces.jsx'
+import Rail from './components/Rail.jsx'
+import Samarbejde from './components/Samarbejde.jsx'
+import Work from './components/Work.jsx'
 import Ydelser from './components/Ydelser.jsx'
-import { casePalmy } from './content.js'
-import { useLayer } from './motion/useLayer.js'
 import { useReveal } from './motion/useReveal.js'
-import { useSequence } from './motion/useSequence.js'
 
 export default function App() {
-  const stage = useRef(null)
-
-  useLayer(stage)
   useReveal()
 
   // Fortæller vagthunden i index.html, at motion-koden lever. Sker det
@@ -25,36 +21,30 @@ export default function App() {
 
   return (
     <>
-      <a href="#ydelser" className="skip-link">
+      <a href="#main" className="skip-link">
         Spring til indhold
       </a>
 
       <Nav />
 
-      <main className="layer-host">
-        {/* Scenen fylder i flowet, så anchor- og deep-links lander korrekt.
-            Heroen holdes fast indeni, mens laget nedenfor skubber ind over. */}
-        <div ref={stage} className="layer-stage">
-          <Hero />
-        </div>
-
-        {/* Ét lag. Sektioner kan tilføjes, fjernes og byttes rundt herinde
-            uden at lagovergangen skal røres — den ligger mellem heroen og
-            det, der tilfældigvis står først. */}
-        <div className="layer-rest">
-          {/* Vagt til nav'ens hårstreg — se useNavSpy. */}
-          <span
-            aria-hidden="true"
-            data-nav-sentinel
-            className="pointer-events-none absolute top-0 left-0 h-px w-px"
-          />
-          <Ydelser />
-          {casePalmy.enabled && <Case />}
-          <Om />
-          <Proces />
-          <Kontakt />
-        </div>
+      <main id="main" className="relative">
+        {/* Vagt til nav'ens hårstreg — se useNavSpy. */}
+        <span
+          aria-hidden="true"
+          data-nav-sentinel
+          className="pointer-events-none absolute top-2 left-0 h-px w-px"
+        />
+        <Hero />
+        <Rail />
+        <Work />
+        <Ydelser />
+        <Samarbejde />
+        <Om />
+        <Faq />
+        <Kontakt />
       </main>
+
+      <Footer />
     </>
   )
 }

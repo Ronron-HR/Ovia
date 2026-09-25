@@ -1,117 +1,122 @@
+import { Fragment, useRef } from 'react'
+import { ConceptWindow } from '../concepts/index.jsx'
 import { hero } from '../content.js'
-import Slot from './Slot.jsx'
+import { useScene } from '../motion/useScene.js'
+import { Arrow, Browser, Phone } from './Shots.jsx'
 
 /**
- * SIGNATURE MOMENT 01 — HERO LOAD
+ * FØRSTE SKÆRMBILLEDE
+ *
+ * Tilbud, målgruppe, to handlinger og et motiv, der viser arbejdet: tre
+ * konceptillustrationer af tre forskellige designretninger i tre lag —
+ * frisør på computer bagest, brasserie og café på telefon foran. Tre udtryk
+ * på ét blik viser, at siderne ikke ligner hinanden. Illustrationerne er
+ * tegnet til siden (src/concepts), er mærket "Konceptillustration" og fylder
+ * ingen billedfiler: første skærm er tekst og HTML.
  *
  * Koreografien er ren CSS (se motion.css) og starter på første frame,
- * uafhængigt af React. Delays sættes her, fordi det er her, rækkefølgen
- * giver mening at læse:
+ * uafhængigt af React:
  *
- *   0ms    overskrift linje 1   ── typografien leder
- *   70ms   overskrift linje 2
- *   140ms  underrubrik
- *   220ms  portræt              ── billedet er anden stemme
- *   380ms  CTA
- *   460ms  nav (mærket bor der; se motion.css)
+ *   0ms    overskrift, række 1     typografien leder
+ *   80ms   overskrift, række 2
+ *   200ms  underrubrik
+ *   240ms  skærmen
+ *   340ms  knapperne
+ *   420ms  første telefon
+ *   560ms  anden telefon
  *
- * Linje 1 står reelt læsbar efter ~300ms. Kravet er 400ms.
- *
- * LINJELÅSEN: antallet af maskerede rækker er låst til to af strukturen —
- * hero.lines skal være præcis to strenge. Overskriften får hele bredden,
- * så de to strenge også bliver til to VISUELLE linjer på desktop.
- * På mobil brækker række 1 til to linjer (3 i alt, som aftalt) og rejser
- * sig som én blok. Koreografien kan altså ikke brække, uanset hvor lang
- * din endelige tekst bliver — kun antallet af visuelle linjer flytter sig.
+ * Bagefter giver scroll dybde: de tre lag glider med hver sin hastighed
+ * (useScene, mode "leave"), så telefonerne løfter sig hurtigere end skærmen.
+ * Skærmen løber ud til skærmkanten på brede skærme (--gutter).
  */
 export default function Hero() {
+  const stage = useRef(null)
+  useScene(stage, { mode: 'leave' })
+
   return (
-    <section id="hero" className="layer-sticky bg-paper">
-      <div className="layer-sink flex flex-1 flex-col justify-center">
-        {/* Toppolstringen på mobil er nav'ens egen højde, ikke et gæt.
-            Heroen centrerer sit indhold i 100svh, og baren svæver ovenpå:
-            bliver indholdet højt nok, skubbes første linje ind under den.
-            Med --nav-h som polstring centreres der i det, der er tilbage,
-            og overlappet kan ikke opstå. På desktop er der luft nok. */}
-        <div className="shell w-full pt-[var(--nav-h)] pb-10 md:py-14">
-          {/* Loftet på 80px er ikke tilfældigt: det er den største grad,
-              hvor en linje på ~29 tegn stadig holder på én linje i den
-              fulde bredde. Skriver du længere linjer, skal loftet ned.
-              Gulvet er 36 og ikke 32: under ~515px vinder gulvet over
-              7vw, så det er ALENE gulvet, der sætter graden på telefon. */}
-          <h1 className="t-display text-[clamp(36px,7vw,80px)]">
-            {hero.lines.map((line, i) => (
-              <span key={line} className="mask">
-                <span className="hero-rise" style={{ '--d': `${i * 70}ms` }}>
-                  {line}
-                </span>
-              </span>
-            ))}
-          </h1>
+    <section
+      id="hero"
+      className="relative overflow-x-clip pt-[calc(var(--nav-h)+32px)] pb-12 md:pb-16 lg:pt-[calc(var(--nav-h)+56px)] lg:pb-20"
+    >
+      <div aria-hidden="true" className="spec-grid" />
 
-          {/* Underrubrik og CTA ligger i SAMME kolonne. Lå de i hver sin
-              gridcelle, ville portrættets højde gøre rækken høj og
-              efterlade et tomt hul mellem dem. */}
-          <div className="mt-6 grid grid-cols-12 gap-x-6 gap-y-6 md:mt-10 md:gap-y-8">
-            <div className="col-span-12 md:col-span-6 md:row-start-1">
-              <p
-                data-hero="fade"
-                style={{ '--d': '140ms' }}
-                className="t-body max-w-[48ch] text-[16px] md:text-[17px]"
-              >
-                {hero.deck}
-              </p>
+      <div className="shell relative z-10">
+        <div className="grid grid-cols-1 gap-y-10 lg:grid-cols-12 lg:items-center lg:gap-x-10">
+          <div className="lg:col-span-6">
+            <p data-hero="fade" className="t-eyebrow">
+              {hero.eyebrow}
+            </p>
 
-              <div
-                data-hero="fade"
-                style={{ '--d': '380ms' }}
-                className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3 md:mt-9"
-              >
-                <a
-                  href={hero.primary.href}
-                  className="btn bg-ink px-6 py-3.5 text-[14px] font-medium text-paper hover:bg-accent"
-                >
-                  {hero.primary.label}
-                </a>
-                {hero.secondary && (
-                  <a
-                    href={hero.secondary.href}
-                    className="link-underline text-[14px] font-medium text-ink"
-                  >
-                    {hero.secondary.label}
-                  </a>
-                )}
-              </div>
+            <h1 className="t-display mt-5 text-[clamp(35px,4.1vw,58px)]">
+              {hero.lines.map((line, i) => (
+                <Fragment key={line}>
+                  {/* Mellemrummet gør, at rækkerne læses som ét udsagn. */}
+                  {i > 0 && ' '}
+                  <span className="mask">
+                    <span className="hero-rise" style={{ '--d': `${i * 80}ms` }}>
+                      {line}
+                    </span>
+                  </span>
+                </Fragment>
+              ))}
+            </h1>
+
+            <p
+              data-hero="fade"
+              style={{ '--d': '200ms' }}
+              className="t-body mt-6 max-w-[46ch] text-[17px] md:text-[18px]"
+            >
+              {hero.deck}
+            </p>
+
+            <div
+              data-hero="fade"
+              style={{ '--d': '340ms' }}
+              className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center md:mt-10"
+            >
+              <a href={hero.primary.href} className="btn btn-primary">
+                {hero.primary.label}
+              </a>
+              <a href={hero.secondary.href} className="btn btn-ghost">
+                {hero.secondary.label}
+              </a>
             </div>
+          </div>
 
-            {/* Heroen bæres af typografien. Portrættet er en lille,
-                forskudt detalje ved siden af — derfor tre kolonner yderst
-                til højre, et loft på 26svh og en nedrykning, så det
-                bevidst ikke flugter med tekstblokken.
-
-                PÅ MOBIL kan det ikke være kolonner. Gitteret er 12 spalter
-                med 24px mellemrum, og på 390px æder mellemrummene 264 af
-                350 — fire spalter er derfor ~100px, og portrættet blev en
-                miniature. Her får rækken hele bredden, og BREDDEN sættes
-                direkte: 38vw, loft 168px. Slot lægger selv min(100%, 26svh)
-                ovenpå, så et lavt vindue skrumper billedet frem for at
-                sprænge heroens 100svh. */}
-            <div className="col-span-12 md:col-span-3 md:col-start-10 md:row-start-1 md:mt-12">
-              <div
-                data-hero="media"
-                style={{ '--d': '220ms' }}
-                className="mask ml-auto w-[38vw] max-w-[168px] md:w-full md:max-w-none"
-              >
-                <div data-hero="media-inner" style={{ '--d': '220ms' }}>
-                  <Slot
-                    image={hero.portrait}
-                    maxVh={26}
-                    priority
-                    framed
-                    className="ml-auto"
-                  />
+          <div className="lg:col-span-6 lg:-mr-[var(--gutter)]">
+            <div ref={stage} className="hero-stage">
+              <div data-hero="media" style={{ '--d': '240ms' }} className="hero-inner">
+                <div className="hero-browser" data-par="34">
+                  <Browser label={hero.labels.browser}>
+                    <ConceptWindow id={hero.shots.browser} mode="desktop" />
+                  </Browser>
                 </div>
+
+                {hero.shots.phones.map((id, i) => (
+                  <div
+                    key={id}
+                    className={`hero-phone ${i === 0 ? 'hero-phone-a' : 'hero-phone-b'}`}
+                    data-par={i === 0 ? 72 : 120}
+                  >
+                    <div data-hero="phone" style={{ '--d': `${180 + i * 140}ms` }}>
+                      <Phone label={hero.labels.phones[i]}>
+                        <ConceptWindow id={id} mode="mobile" />
+                      </Phone>
+                    </div>
+                  </div>
+                ))}
               </div>
+
+              <p className="mt-3 flex max-w-[58%] flex-wrap items-center gap-x-3 gap-y-2 text-[13px] leading-snug text-muted md:max-w-[62%]">
+                <span className="tag">{hero.tag}</span>
+                <a
+                  href={hero.captionHref}
+                  className="link-underline hit inline-flex items-center gap-1.5 text-ink"
+                >
+                  {hero.caption}
+                  <Arrow />
+                </a>
+              </p>
             </div>
           </div>
         </div>

@@ -1,0 +1,415 @@
+/* =========================================================================
+   SCENER, ARK OG DYBDE
+   Sidens dybde kommer af lagene: fladerne (ark) skubber ind over hinanden,
+   enhederne (skærm og telefon) står i lag i en scene, og hvert lag bevæger
+   sig med sin egen hastighed, mens man scroller forbi. Bevægelsen er
+   scroll-drevet og lineær (useScene) — uden scroll-kapring.
+   ========================================================================= */
+
+/* ---- Ark: sektioner, der skubber ind over den forrige ------------------- */
+.sheet {
+  position: relative;
+  z-index: 1;
+  margin-top: -28px;
+  border-radius: 28px 28px 0 0;
+}
+
+@media (min-width: 768px) {
+  .sheet {
+    margin-top: -40px;
+    border-radius: 40px 40px 0 0;
+  }
+}
+
+/* Den sektion, et ark lægger sig over, får 28/40px ekstra i bunden, så
+   indholdet ikke skjules. */
+.under-sheet {
+  padding-bottom: calc(var(--pad-b, 4rem) + 28px);
+}
+
+@media (min-width: 768px) {
+  .under-sheet {
+    padding-bottom: calc(var(--pad-b, 6rem) + 40px);
+  }
+}
+
+/* ---- Millimeterpapir: en svag, teknisk baggrund ------------------------- */
+.spec-grid {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, rgb(16 19 23 / 0.055) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(16 19 23 / 0.055) 1px, transparent 1px);
+  background-size: 56px 56px;
+  background-position: -1px -1px;
+  -webkit-mask-image: radial-gradient(ellipse 70% 80% at 72% 42%, #000 15%, transparent 72%);
+  mask-image: radial-gradient(ellipse 70% 80% at 72% 42%, #000 15%, transparent 72%);
+}
+
+.spec-grid-dark {
+  background-image:
+    linear-gradient(to right, rgb(245 245 242 / 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(245 245 242 / 0.06) 1px, transparent 1px);
+  -webkit-mask-image: radial-gradient(ellipse 80% 90% at 20% 20%, #000 10%, transparent 70%);
+  mask-image: radial-gradient(ellipse 80% 90% at 20% 20%, #000 10%, transparent 70%);
+}
+
+/* Bagplade bag bookingeksemplet og skitsen: en flade, der løfter kortet. */
+.backdrop {
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px;
+  background: var(--color-paper-2);
+  padding: 14px;
+}
+
+@media (min-width: 768px) {
+  .backdrop {
+    border-radius: 32px;
+    padding: 36px;
+  }
+}
+
+.backdrop::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, rgb(16 19 23 / 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(16 19 23 / 0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+.backdrop > * {
+  position: relative;
+}
+
+/* ---- Hero-scene --------------------------------------------------------- */
+.hero-stage {
+  container-type: inline-size;
+}
+
+.hero-inner {
+  position: relative;
+  padding-bottom: 17cqw;
+}
+
+.hero-browser {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-phone {
+  position: absolute;
+  z-index: 2;
+  width: 27cqw;
+  max-width: 220px;
+}
+
+.hero-phone-a {
+  right: 24cqw;
+  bottom: 2cqw;
+}
+
+.hero-phone-b {
+  right: 4cqw;
+  bottom: -4cqw;
+}
+
+@media (min-width: 768px) {
+  .hero-phone {
+    width: 24cqw;
+  }
+  .hero-phone-a {
+    right: 22cqw;
+    bottom: 1cqw;
+  }
+  .hero-phone-b {
+    right: 3cqw;
+    bottom: -6cqw;
+  }
+}
+
+.hero-inner .stage-in {
+  transition-delay: var(--d, 0ms);
+}
+
+/* ---- Projektscener ------------------------------------------------------ */
+.stage {
+  position: relative;
+  overflow: hidden;
+  /* Uden for skærmen springer browseren layout og maling over: illustrationerne
+     er mange elementer, og de behøver først at blive tegnet, når man nærmer sig. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 560px;
+  container-type: inline-size;
+  border-radius: 22px;
+  background: var(--panel);
+  aspect-ratio: 4 / 5;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
+}
+
+@media (min-width: 768px) {
+  .stage {
+    border-radius: 32px;
+  }
+  .stage--feature {
+    aspect-ratio: 2 / 1;
+  }
+  .stage--wide {
+    aspect-ratio: 7 / 6;
+  }
+  .stage--tall {
+    aspect-ratio: 5 / 6;
+  }
+}
+
+.stage-dev {
+  position: absolute;
+  will-change: auto;
+}
+
+.stage-browser {
+  z-index: 1;
+}
+
+.stage-phone {
+  z-index: 2;
+}
+
+.is-live .stage-dev,
+.is-live .scroll-img {
+  will-change: transform;
+}
+
+/* Mobil: samme komposition for alle tre, skaleret efter fladen. */
+.stage-browser {
+  width: 94cqw;
+  left: 3cqw;
+  top: 6cqw;
+}
+
+.stage-phone {
+  width: 30cqw;
+  right: 5cqw;
+  bottom: 7cqw;
+}
+
+@media (min-width: 768px) {
+  /* Salon Matin: bred flade, skærmen til venstre og telefonen foran. */
+  .stage--feature .stage-browser {
+    width: 62cqw;
+    left: 6cqw;
+    top: 5cqw;
+  }
+  .stage--feature .stage-phone {
+    width: 19cqw;
+    right: 7cqw;
+    top: 6cqw;
+    bottom: auto;
+  }
+
+  /* Belli: skærmen løber ud over kanten, telefonen står nederst til venstre. */
+  .stage--wide .stage-browser {
+    width: 80cqw;
+    left: auto;
+    right: -3cqw;
+    top: 8cqw;
+  }
+  .stage--wide .stage-phone {
+    width: 24cqw;
+    left: 6cqw;
+    right: auto;
+    bottom: 7cqw;
+  }
+
+  /* Café: telefonen er hovedpersonen, skærmen står bag og skæres af. */
+  .stage--tall .stage-phone {
+    width: 42cqw;
+    right: 9cqw;
+    top: 8cqw;
+    bottom: auto;
+  }
+  .stage--tall .stage-browser {
+    width: 74cqw;
+    left: 5cqw;
+    bottom: 9cqw;
+    top: auto;
+  }
+}
+
+.scroll-view {
+  position: relative;
+  container-type: inline-size;
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+  background: #fff;
+}
+
+.scroll-view--phone {
+  aspect-ratio: 9 / 19.5;
+  border-radius: 21px;
+}
+
+.scroll-img {
+  width: 100%;
+}
+
+/* Indgang: enhederne kommer op efter hinanden, når scenen tændes. */
+.js-motion [data-stage]:not(.is-in) .stage-in {
+  opacity: 0;
+  transform: translate3d(0, 40px, 0);
+}
+
+.stage-in {
+  transition:
+    opacity 700ms var(--ease-entrance) var(--d, 0ms),
+    transform 900ms var(--ease-entrance) var(--d, 0ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js-motion [data-stage]:not(.is-in) .stage-in {
+    transform: none;
+  }
+  .stage-in {
+    transition: opacity 200ms linear;
+  }
+}
+
+/* ---- Annoteret skærmbillede -------------------------------------------- */
+.pin {
+  position: absolute;
+  z-index: 5;
+  display: flex;
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1;
+  color: #fff;
+  box-shadow: 0 0 0 3px #fff, 0 4px 12px rgb(16 19 23 / 0.3);
+  transform: translate(-50%, -50%);
+}
+
+/* ---- Søgeskitse --------------------------------------------------------- */
+.serp-line {
+  height: 7px;
+  border-radius: 4px;
+  background: var(--color-rule);
+}
+
+/* ---- Mørk flade: sektionens mærkater, lister og knapper --------------- */
+.on-dark .t-eyebrow {
+  color: rgb(245 245 242 / 0.6);
+}
+
+.on-dark .tag {
+  border-color: rgb(245 245 242 / 0.3);
+  background: transparent;
+  color: var(--color-paper);
+}
+
+.on-dark .tag::before {
+  background: var(--color-accent-soft);
+}
+
+.on-dark .t-body {
+  color: rgb(245 245 242 / 0.7);
+}
+
+.on-dark .spec-list > li,
+.on-dark .spec-list > li:last-child {
+  border-color: rgb(245 245 242 / 0.18);
+}
+
+.on-dark .spec-list > li::before {
+  color: var(--color-accent-soft);
+}
+
+/* ---- Konceptillustrationer ---------------------------------------------- */
+.cp {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  font-family: var(--font-sans);
+  user-select: none;
+  pointer-events: none;
+}
+
+.cp * {
+  box-sizing: border-box;
+}
+
+.cp-d {
+  --u: calc(100cqw / 1440);
+}
+
+.cp-m {
+  --u: calc(100cqw / 390);
+}
+
+/* ---- Udsnit under en scene: statiske, så arbejdet kan vurderes uden scroll */
+.excerpt {
+  min-width: 0;
+}
+
+.excerpt .scroll-view {
+  border: 1px solid rgb(245 245 242 / 0.14);
+  border-radius: 10px;
+  box-shadow: 0 10px 24px -12px rgb(0 0 0 / 0.5);
+}
+
+/* Korte klasser til konceptillustrationerne (se concepts/kit.jsx). Værdierne
+   kommer som --x, --y, --w, --h, --r og --s i designenheder. */
+.b {
+  position: absolute;
+  left: calc(var(--x, 0) * var(--u));
+  top: calc(var(--y, 0) * var(--u));
+  width: calc(var(--w) * var(--u));
+  height: calc(var(--h) * var(--u));
+  border-radius: calc(var(--r, 0) * var(--u));
+}
+
+.t {
+  position: absolute;
+  left: calc(var(--x, 0) * var(--u));
+  top: calc(var(--y, 0) * var(--u));
+  width: calc(var(--w) * var(--u));
+  font-size: calc(var(--s) * var(--u));
+  line-height: var(--lh, 1.15);
+}
+
+.t-serif {
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.t-nowrap {
+  white-space: nowrap;
+}
+
+.bt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(var(--s) * var(--u));
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* Tekstlinjer som streger: ét element med gentagne striber. */
+.sk {
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--sc) 0,
+    var(--sc) calc(var(--sh) * var(--u)),
+    transparent calc(var(--sh) * var(--u)),
+    transparent calc(var(--sg) * var(--u))
+  );
+}

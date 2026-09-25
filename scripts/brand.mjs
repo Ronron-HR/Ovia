@@ -9,7 +9,9 @@
  *
  *   public/favicon.svg, logo*.svg, maerke*.svg   (SVG, farverne sat ind)
  *   public/apple-touch-icon.png                  (180 × 180)
- *   public/og.jpg                                (1200 × 630, til delinger)
+ *
+ * Delingsbilledet (public/og.jpg) tegnes af scripts/og.mjs (npm run og), fordi
+ * det indeholder tekst i sidens skrift.
  *
  * Bogstavformerne er Instrument Serif tegnet som stier, så intet af det
  * afhænger af, at skriften er hentet. Skift tegningen ved at ændre
@@ -29,7 +31,6 @@ const fill = (svg) => svg.replace(/\{\{(ink|paper|accent)\}\}/g, (_, k) => color
 
 const RASTER = {
   'apple-touch-icon': { to: 'public/apple-touch-icon.png', w: 180, h: 180, png: true },
-  og: { to: 'public/og.jpg', w: 1200, h: 630 },
 }
 
 console.log('farver', colors)

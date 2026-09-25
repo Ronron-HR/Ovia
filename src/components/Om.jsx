@@ -1,63 +1,47 @@
-import { useRef } from 'react'
 import { om } from '../content.js'
-import { useProgress } from '../motion/useProgress.js'
-import { usePointer } from '../motion/usePointer.js'
-import Logo from './Logo.jsx'
+import { Pic } from './Shots.jsx'
 
 /**
- * SIGNATURE MOMENT 04 — LOGOET
- *
- * OviaSpecs-logoet er sektionens visuelle fokus. Bogstaverne rejser sig ét ad
- * gangen op fra en fælles grundlinje — samme maskerede rise som heroen og
- * kontakt-overskriften, bare tegn for tegn. Det er en indgang, der kører én
- * gang, når logoet kommer til syne, og derefter står helt stille.
- *
- * Selve animationen bor i Logo.jsx (reveal) og bruger det eksisterende
- * [data-reveal='rise'] i motion.css, så kurve, varighed og reduced-motion
- * følger med uden ny kode.
- *
- * Tekstkolonnen kører sin egen svage parallax og overlapper logoet.
- * Logoet reagerer desuden på cursoren, som billedet gjorde: maks 10px,
- * lerpet, og ikke på touch.
+ * OM OVIASPECS — portrættet er kilden i 500 × 625 og vises aldrig større end
+ * 1:1 af sin egen opløsning (max-width), så det ikke bliver blødt. Alder og
+ * skole er bevidst udeladt.
  */
 export default function Om() {
-  const scene = useRef(null)
-  const logo = useRef(null)
-
-  useProgress(scene, { mode: 'pass' })
-  usePointer(scene, logo)
-
   return (
-    <section id={om.id} ref={scene} className="bg-paper">
-      <div className="shell py-28 md:py-44">
-        <div className="grid grid-cols-12 items-start">
-          <div className="col-span-12 md:col-span-5 md:col-start-1 md:row-start-1">
-            <div ref={logo} className="pointer-shift">
-              <Logo reveal className="block h-[min(clamp(92px,15.5vw,190px),calc((100vw_-_40px)*0.295))] text-ink" />
+    <section id={om.id} className="border-y border-rule bg-surface">
+      <div className="shell py-24 md:py-32">
+        <div className="grid gap-x-14 gap-y-10 grid-cols-1 lg:grid-cols-12 lg:items-start">
+          <div data-reveal className="lg:col-span-4">
+            <div className="w-full max-w-[300px] overflow-hidden rounded-xl bg-paper shadow-[14px_14px_0_var(--color-accent)] lg:max-w-[360px]">
+              <Pic
+                image={om.portrait}
+                fallback="jpg"
+                sizes="(min-width: 1024px) 360px, 300px"
+                className="block h-auto w-full"
+              />
             </div>
           </div>
 
-          <div className="par-txt relative z-10 col-span-12 mt-8 bg-paper md:col-span-8 md:col-start-5 md:row-start-1 md:mt-[22vh] md:pl-10">
-            <p data-reveal className="t-eyebrow eyebrow-rule">
-              {om.eyebrow}
-            </p>
-            <h2
-              data-reveal="lg"
-              style={{ '--d': '60ms' }}
-              className="t-display mt-5 max-w-[16ch] text-[clamp(32px,5.6vw,60px)]"
-            >
-              {om.title}
-            </h2>
-            {om.body.map((p, i) => (
-              <p
-                key={p.slice(0, 24)}
-                data-reveal
-                style={{ '--d': `${Math.min(i + 2, 4) * 60}ms` }}
-                className="t-body mt-5 max-w-[50ch] text-[16px]"
-              >
+          <div data-reveal style={{ '--d': '80ms' }} className="lg:col-span-7 lg:col-start-6">
+            <p className="t-eyebrow">{om.eyebrow}</p>
+            <h2 className="t-display mt-4 text-[clamp(30px,4vw,52px)]">{om.title}</h2>
+            {om.body.map((p) => (
+              <p key={p.slice(0, 24)} className="t-body mt-5 max-w-[54ch] text-[17px]">
                 {p}
               </p>
             ))}
+
+            <dl className="mt-9 max-w-[54ch] border-t border-rule">
+              {om.facts.map(([k, v]) => (
+                <div
+                  key={k}
+                  className="grid grid-cols-[130px_1fr] gap-x-4 border-b border-rule py-3 text-[15px] sm:grid-cols-[170px_1fr]"
+                >
+                  <dt className="t-eyebrow self-center">{k}</dt>
+                  <dd>{v}</dd>
+                </div>
+              ))}
+            </dl>
           </div>
         </div>
       </div>

@@ -4,14 +4,14 @@ import { useEffect, useState } from 'react'
  * Nav-tilstande, der afhænger af scroll — uden scroll-listeners.
  *
  * active   id på det link, man befinder sig i — højst ét. Rækken af sektioner
- *          læses fra DOM'en, og en sektion uden eget link (Sådan foregår det)
- *          hører til det link, man kom fra. I heroen er active null: baren er
- *          synlig dér, men man står ikke i noget afsnit, og et understreget
- *          "Hvad jeg laver" ville pege på noget, man ikke har nået. Fra og med
- *          første sektion er der altid præcis ét aktivt link, aldrig to.
+ *          læses fra DOM'en, og en sektion uden eget link (Sammenhængen,
+ *          Samarbejdet, Spørgsmål) hører til det link, man kom fra. Før
+ *          første linkede sektion er active null: man står ikke i noget
+ *          afsnit, og et understreget link ville pege på noget, man ikke har
+ *          nået. Derefter er der altid præcis ét aktivt link, aldrig to.
  * scrolled sand, når indholdet er begyndt at glide op under baren. Bruges til
- *          at tegne hårstregen. Aflæses på en 1px-vagt øverst i laget frem
- *          for et scroll-tal, så tærsklen følger lagovergangen af sig selv.
+ *          at tegne hårstregen. Aflæses på en 1px-vagt øverst på siden frem
+ *          for et scroll-tal.
  *
  * Aktiv sektion: den, der krydser et smalt bånd ved 40% af skærmhøjden.
  * Båndet ligger lavere end baren, så et link skifter, når sektionen
@@ -58,8 +58,7 @@ export function useNavSpy(linkIds) {
     if (!sentinel) return
 
     const observer = new IntersectionObserver(([entry]) => {
-      // Ude af billedet OVER skærmen, ikke under: før lagovergangen ligger
-      // vagten under skærmen, og der er baren skjult.
+      // Ude af billedet OVER skærmen, ikke under.
       setScrolled(!entry.isIntersecting && entry.boundingClientRect.top < 0)
     })
     observer.observe(sentinel)

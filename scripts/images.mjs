@@ -20,7 +20,7 @@ import { mkdirSync } from 'node:fs'
 import sharp from 'sharp'
 
 /** Papirfarven fra index.css. Ændrer du den dér, så ændr den her. */
-const PAPER = { r: 0xf5, g: 0xf2, b: 0xec }
+const PAPER = { r: 0xf5, g: 0xf5, b: 0xf2 }
 
 /** Hvor hvidt et pixel skal være for at tælle som baggrund. */
 const WHITE = 248

@@ -13,6 +13,10 @@ export default defineConfig({
   // opdage projekttypen og kunne ikke parse den version, der brugte dem.
   build: {
     rollupOptions: {
+      output: {
+        // React ligger i sin egen, cache-venlige fil frem for i en fil opkaldt efter en komponent.
+        manualChunks: (id) => (id.includes('node_modules') ? 'vendor' : undefined),
+      },
       input: {
         main: 'index.html',
         privatlivspolitik: 'privatlivspolitik/index.html',

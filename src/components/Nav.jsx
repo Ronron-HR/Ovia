@@ -4,26 +4,28 @@ import Logo from './Logo.jsx'
 import { useNavSpy } from '../motion/useNavSpy.js'
 
 /**
- * Nav: mærke til venstre, tre ankerlinks og ét CTA til højre.
+ * Nav: mærke til venstre, tre ankerlinks og én kontaktknap til højre.
  *
- * Tre tilstande:
- *   1. Øverst, i heroen: baren står der fra start og fader ind med heroen.
- *      Papir med gennemsigtighed, ingen streg — der er intet under den at
- *      adskille fra — og intet aktivt link, for man står ikke i et afsnit.
+ * Tilstande:
+ *   1. Øverst: baren står der fra start og fader ind med heroen. Papir med
+ *      gennemsigtighed, ingen streg — der er intet under den at adskille fra
+ *      — og intet aktivt link, for man står ikke i et afsnit.
  *   2. Når indholdet glider op under: hårstregen tegnes i bunden. Baggrunden
  *      er papir med gennemsigtighed og blur, så den aldrig er en hård kasse.
  *   3. Aktivt afsnit: scrollspy (useNavSpy) markerer ét link, og en enkelt
- *      streg i accentfarven glider derhen. Stregen er ét element, ikke ét pr. link —
- *      derfor kan den glide i stedet for at blinke.
+ *      streg i accentfarven glider derhen. Stregen er ét element, ikke ét pr.
+ *      link — derfor kan den glide i stedet for at blinke.
  *
  * MOBIL: ordet "Menu" i stedet for et ikon. Overlayet er et SØSKENDE til
- * baren, ikke et barn af den: baren har transform og backdrop-filter, og
- * begge gør den til containing block for position:fixed. Et fixed overlay
- * indeni ville være 64px højt. Baren ligger i z-50 over overlayet, så
- * mærket og "Luk" står det samme sted, uanset om menuen er åben.
+ * baren, ikke et barn af den: baren har backdrop-filter, og det gør den til
+ * containing block for position:fixed. Et fixed overlay indeni ville være
+ * 64px højt. Baren ligger i z-50 over overlayet, så mærket og "Luk" står det
+ * samme sted, uanset om menuen er åben. Menuen lukker med Escape og "Luk";
+ * fokus fanges, mens den er åben, og går tilbage til knappen bagefter.
  */
 
-const LINK_IDS = nav.links.map((l) => l.href.slice(1))
+// Kontakt-knappen er ikke et link i rækken, men tæller med som sin egen sektion.
+const LINK_IDS = [...nav.links, nav.cta].map((l) => l.href.slice(1))
 const FOCUSABLE = 'a[href], button:not([disabled])'
 
 export default function Nav() {
@@ -147,14 +149,14 @@ export default function Nav() {
       <header
         ref={header}
         data-scrolled={scrolled}
-        className="nav fixed inset-x-0 top-0 z-50 bg-paper/80 backdrop-blur-md"
+        className="nav fixed inset-x-0 top-0 z-50 bg-paper/95 backdrop-blur-md"
       >
         <div className="nav-bar shell flex h-[var(--nav-h)] items-center justify-between gap-6">
-          <a href="#hero" onClick={close} aria-label={nav.brand} className="text-ink">
+          <a href="#hero" onClick={close} aria-label={nav.brand} className="inline-flex min-h-11 items-center text-ink">
             <Logo className="block h-[26px]" />
           </a>
 
-          <div className="hidden items-center gap-10 md:flex">
+          <div className="hidden items-center gap-9 md:flex">
             <nav aria-label="Hovednavigation">
               <div ref={track} className="relative">
                 <ul className="flex items-center gap-8">
@@ -168,7 +170,7 @@ export default function Nav() {
                           }}
                           href={link.href}
                           aria-current={active === id ? 'location' : undefined}
-                          className="nav-link block py-2 text-[12px] font-medium uppercase tracking-[0.08em]"
+                          className="nav-link flex min-h-11 items-center text-[14px] font-medium"
                         >
                           {link.label}
                         </a>
@@ -182,7 +184,7 @@ export default function Nav() {
 
             <a
               href={nav.cta.href}
-              className="btn border border-ink px-4 py-2 text-[13px] font-medium text-ink hover:bg-ink hover:text-paper"
+              className="btn btn-primary min-h-11 px-5 text-[14px]"
             >
               {nav.cta.label}
             </a>
@@ -194,7 +196,7 @@ export default function Nav() {
             aria-expanded={open}
             aria-controls="menu"
             onClick={() => setOpen((v) => !v)}
-            className="-mr-2 inline-flex min-h-11 min-w-11 items-center justify-end px-2 text-[12px] font-medium uppercase tracking-[0.08em] text-ink md:hidden"
+            className="-mr-2 inline-flex min-h-11 min-w-11 items-center justify-end px-2 text-[15px] font-medium text-ink md:hidden"
           >
             {open ? nav.close : nav.menu}
           </button>
@@ -242,7 +244,7 @@ export default function Nav() {
             <a
               href={nav.cta.href}
               onClick={close}
-              className="btn block bg-ink px-6 py-4 text-center text-[15px] font-medium text-paper"
+              className="btn btn-primary w-full"
             >
               {nav.cta.label}
             </a>

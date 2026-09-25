@@ -1,20 +1,18 @@
-import { kontakt, legal, site } from '../content.js'
+import { legal, site, work } from '../content.js'
 import Logo from './Logo.jsx'
 
 /**
  * Privatlivspolitik.
  *
  * Skrevet ud fra, hvad siden FAKTISK gør: ingen cookies, ingen analyse, ingen
- * tredjepartsskrifter (de er selvhostede), og kun to veje ind for personlige
- * oplysninger — mail/telefon og, når den er slået til, kontaktformularen.
- * Ændrer det sig (analyse, nyhedsbrev, indlejret video), skal politikken
- * ændres SAMTIDIG, ellers står der noget forkert.
+ * tredjepartsskrifter (de er selvhostede), ingen formular og kun én vej ind
+ * for personlige oplysninger: mail og telefon. Ændrer det sig (formular,
+ * analyse, nyhedsbrev, indlejret video), skal politikken ændres SAMTIDIG,
+ * ellers står der noget forkert.
  *
  * Det er en fornuftig standardtekst, ikke juridisk rådgivning. Navn, adresse
  * og CVR-nr. hentes fra `legal` i content.js.
  */
-
-const formOn = Boolean(kontakt.form.endpoint)
 
 function Section({ title, children }) {
   return (
@@ -34,10 +32,10 @@ export default function Privatlivspolitik() {
     <>
       <header className="border-b border-rule">
         <div className="shell flex h-[64px] items-center justify-between">
-          <a href="/" aria-label="OviaSpecs, til forsiden" className="text-ink">
+          <a href="/" aria-label="OviaSpecs, til forsiden" className="inline-flex min-h-11 items-center text-ink">
             <Logo className="block h-[26px]" />
           </a>
-          <a href="/" className="link-underline text-[13px] font-medium text-ink">
+          <a href="/" className="link-underline hit text-[13px] font-medium text-ink">
             Til forsiden
           </a>
         </div>
@@ -85,12 +83,6 @@ export default function Privatlivspolitik() {
                 <strong className="font-medium text-ink">Når du skriver eller ringer:</strong> dit
                 navn, din mailadresse, dit telefonnummer og det, du selv fortæller mig.
               </li>
-              {formOn && (
-                <li>
-                  <strong className="font-medium text-ink">Kontaktformularen:</strong> navn,
-                  mailadresse og din besked.
-                </li>
-              )}
               <li>
                 <strong className="font-medium text-ink">Hvis vi laver en aftale:</strong>{' '}
                 virksomhedens navn, kontaktperson og de oplysninger, der skal bruges til at skrive
@@ -143,12 +135,6 @@ export default function Privatlivspolitik() {
                 <strong className="font-medium text-ink">{legal.mailProvider}</strong> — modtagelse
                 af mails.
               </li>
-              {formOn && (
-                <li>
-                  <strong className="font-medium text-ink">Formspree</strong> — videresender
-                  beskeder fra kontaktformularen til min mail.
-                </li>
-              )}
             </ul>
             <p>
               Derudover videregiver jeg kun oplysninger, hvis jeg er retligt forpligtet til det,
@@ -183,6 +169,10 @@ export default function Privatlivspolitik() {
               Siden bruger ingen cookies og ingen analyse- eller reklameværktøjer. Skrifterne
               ligger på siden selv og hentes ikke fra Google eller andre, så din IP-adresse ikke
               sendes videre. Derfor er der intet cookiebanner.
+            </p>
+            <p>
+              Siden har ingen formular. Skriver du til mig, sker det i din egen mailapp eller på
+              telefonen, og der sendes intet fra siden.{work.showDemoLinks && ' Under "Udvalgt arbejde" er der links til tre demoer, der ligger hos GitHub Pages. Åbner du dem, forlader du oviaspecs.com, og de behandler dine oplysninger efter deres egne regler.'}
             </p>
           </Section>
 
