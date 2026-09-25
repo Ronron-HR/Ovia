@@ -1,0 +1,13 @@
+{
+  // Cloudflare Workers Static Assets: uploader den byggede side (dist/).
+  // Bygget køres af Cloudflares build-kommando (npm run build) FØR deploy.
+  // Filen findes, så `wrangler deploy` ikke autokonfigurerer projektet og
+  // kører bygget igen med et andet Vite-setup (det brød forudrenderingen).
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ovia",
+  "compatibility_date": "2026-09-25",
+  "observability": { "enabled": true },
+  "assets": {
+    "directory": "./dist"
+  }
+}
