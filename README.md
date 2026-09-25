@@ -2,7 +2,7 @@
 
 Hjemmesiden for OviaSpecs (oviaspecs.com): hjemmesider, booking og markedsføring til mindre danske virksomheder. React 19, Vite og Tailwind 4, uden animationsbiblioteker. Al tekst ligger i `src/content.js`.
 
-Status: **færdig til gennemgang, ikke udgivet.** Se "Før udgivelse" nederst.
+Status: **færdig og pushet til GitHub (main).** Se "Før udgivelse" nederst.
 
 ## Kommandoer
 
@@ -37,9 +37,9 @@ Sektioner: Hero, Sammenhængen, Udvalgt arbejde (mørkt ark), Ydelser (lyst ark:
 
 ## Portfolioen: konceptillustrationer, ikke skærmbilleder
 
-Demoerne (Salon Matin, Brasserie Belli, Den Gule Café) bruger de omtalte virksomheders egne fotos, logoer, menukort og tekster. Der er ingen dokumenteret tilladelse til at vise dem, så **siden bruger ingen af dem**. Projekterne vises som **konceptillustrationer** af designretningen, tegnet til siden i `src/concepts` med egne former, egen tekst og egne farver. De er mærket "Konceptillustration" og må ikke fremstilles som skærmbilleder.
+Demoerne bruger de omtalte virksomheders egne fotos, logoer, menukort og tekster. Der er ingen dokumenteret tilladelse til at vise dem, så **siden bruger ingen af dem**. Projekterne vises som **konceptillustrationer** af designretningen, tegnet til siden i `src/concepts` med egne former, egen tekst og egne farver. De er mærket "Konceptillustration" og må ikke fremstilles som skærmbilleder.
 
-- Salon Matin-konceptet har egen, rigtig tekst; Belli og Café bruger stadig grå tekststreger som pladsholdere og er mindre færdige.
+- Salonkonceptet har egen, rigtig tekst; Restaurant- og Cafékonceptet bruger stadig grå tekststreger som pladsholdere og er mindre færdige.
 - Hver illustration er en HTML/CSS-side, placeret i "designenheder" (`kit.jsx`), så den skalerer skarpt og fylder ingen billedfiler.
 - Ved hvert projekt står tre statiske udsnit (Forside, midterdel, bund), så arbejdet kan vurderes uden at ramme et scrollpunkt, og også med reduceret bevægelse.
 - Alt er mærket "Demo / koncept": ikke en kundeopgave, og virksomhederne er ikke kunder eller samarbejdspartnere.
@@ -105,8 +105,8 @@ Ingen cookies, ingen analyse, ingen tracking og ingen formular. Kontakt sker via
 
 Konkrete, resterende punkter:
 
-1. **Demoerne på GitHub Pages** (`Ronron-HR/salonmatin-demo`, `belli-demo`, `dengulecafe-demo`) indeholder stadig virksomhedernes fotos, logoer, menukort og tekster, og Belli/Café indeholder påstande som prisnominering og Michelin-anbefaling, der ikke er dokumenteret. Siden linker ikke til dem. Ryd dem, eller lad linkene være slået fra. I Salon Matins lokale kilde (`Desktop\Salon Matin\salonmatin-demo`) er stjerner, "4,8", anmeldelsessektionen og Trustpilot-links fjernet (45 linjer, **ikke committet eller pushet**). Originalen ligger i arkivmappen.
+1. **Demoerne på GitHub Pages** (`Ronron-HR/salonmatin-demo`, `belli-demo`, `dengulecafe-demo`) indeholder stadig virksomhedernes fotos, logoer, menukort og tekster, og restaurant- og café-demoen indeholder påstande som prisnominering og Michelin-anbefaling, der ikke er dokumenteret. Siden linker ikke til dem. Ryd dem, eller lad linkene være slået fra. I Salon-demoens lokale kilde (`Desktop\Salon Matin\salonmatin-demo`) er stjerner, "4,8", anmeldelsessektionen og Trustpilot-links fjernet (45 linjer, **ikke committet eller pushet**). Originalen ligger i arkivmappen.
 2. **Løfter:** siden lover hverken ejerskab, support, svartider, leveringstider eller priser. Ronny skal selv afgøre, hvad han vil love, før det skrives ind.
 3. **Adressen** (Hjortshøj Stationsvej 6) står i footeren og i privatlivspolitikken, som på den tidligere side. Den bruges ikke i metadata. Der er intet CVR-nummer (`legal.cvr`).
 4. **Ingen kalender.** Primær handling er "Fortæl om din opgave" (kontakt). Findes der senere en rigtig kalender, kan "Book en samtale" tilføjes.
-5. **Udgivelse:** `git push origin main` udgiver (Cloudflare bygger med `npm run build` og udgiver `dist/`). Brug en anden gren for at få et preview-deploy først. Der er ikke pushet noget.
+5. **Udgivelse:** `git push origin main` udgiver (Cloudflare bygger med `npm run build` og udgiver `dist/`). Brug en anden gren for at få et preview-deploy først. Koden er pushet; Cloudflare bygger selv.

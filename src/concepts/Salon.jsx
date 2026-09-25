@@ -37,7 +37,7 @@ export function SalonDesktop() {
       <Box x={760} y={0} w={680} h={900} style={{ background: `linear-gradient(90deg, ${DARK} 0%, transparent 38%), radial-gradient(ellipse at 62% 40%, #5a4128 0%, #2a1e14 55%, ${DARK} 100%)` }} />
       <Orb x={1010} y={150} d={330} from="#fff7e8" to="#c9a465" ring="#e9d9b8" />
 
-      <Txt x={180} y={36} size={22} serif color={CREAM} track={0.18}>SALON MATIN</Txt>
+      <Txt x={180} y={36} size={22} serif color={CREAM} track={0.18}>SALONKONCEPT</Txt>
       <Txt x={180} y={64} size={10} color={GOLD} track={0.24}>AARHUS C</Txt>
       {['Historien', 'Håndværket', 'Priser', 'Holdet', 'Find os'].map((t, i) => (
         <Txt key={t} x={[884, 972, 1082, 1156, 1230][i]} y={44} size={15} color="rgb(246 241 234 / .75)">{t}</Txt>
@@ -161,7 +161,7 @@ export function SalonMobile() {
       <Orb x={190} y={70} d={230} from="#fff7e8" to="#c9a465" ring="#e9d9b8" />
       <Box x={0} y={0} w={390} h={780} style={{ background: `linear-gradient(180deg, transparent 30%, ${DARK} 78%)` }} />
 
-      <Txt x={24} y={22} size={19} serif color={CREAM} track={0.18}>SALON MATIN</Txt>
+      <Txt x={24} y={22} size={19} serif color={CREAM} track={0.18}>SALONKONCEPT</Txt>
       <Txt x={24} y={46} size={8} color={GOLD} track={0.24}>AARHUS C</Txt>
       {[0, 1, 2].map((i) => (
         <Box key={i} x={342} y={28 + i * 7} w={24} h={1.5} bg={CREAM} />

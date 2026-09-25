@@ -149,7 +149,7 @@ export const work = {
       id: 'salon',
       variant: 'feature',
       panel: '#241b14',
-      name: 'Salon Matin',
+      name: 'Salonkoncept',
       kind: 'Frisør og barber, Aarhus C',
       href: 'https://ronron-hr.github.io/salonmatin-demo/',
       task: 'En frisør, hvor nogle kommer forbi og andre booker. Siden skulle få behandlinger og booking frem, før man begynder at lede.',
@@ -158,8 +158,8 @@ export const work = {
         'Prisliste med en bookingknap ved hver behandling, koblet til salonens eksisterende onlinebooking',
       ],
       label:
-        'Konceptillustration af Salon Matin: mørk forside, historie, tre værdier og en behandlingsliste med bookingknapper.',
-      labelMobile: 'Konceptillustration af Salon Matin på telefon.',
+        'Salonkoncept, konceptillustration: mørk forside, historie, tre værdier og en behandlingsliste med bookingknapper.',
+      labelMobile: 'Salonkoncept, konceptillustration på telefon.',
       // y: hvor langt nede i illustrationen (designenheder) udsnittet står.
       excerpts: [
         { label: 'Forside', text: 'Tilbud og booking på første skærm', y: 0 },
@@ -171,7 +171,7 @@ export const work = {
       id: 'belli',
       variant: 'wide',
       panel: '#6a1b22',
-      name: 'Brasserie Belli',
+      name: 'Restaurantkoncept',
       kind: 'Restaurant, Aarhus C',
       href: 'https://ronron-hr.github.io/belli-demo/',
       task: 'Et hus med en lang historie og et menukort, der skifter. Siden skulle vise stemningen først og gøre det nemt at bestille bord.',
@@ -180,8 +180,8 @@ export const work = {
         'Bordbestilling koblet til restaurantens eksisterende system',
       ],
       label:
-        'Konceptillustration af Brasserie Belli: mørk forside med lamper og ternet dug, præsentation af huset, en bordeauxrød historiesektion og menuen.',
-      labelMobile: 'Konceptillustration af Brasserie Belli på telefon.',
+        'Restaurantkoncept, konceptillustration: mørk forside med lamper og ternet dug, præsentation af huset, en bordeauxrød historiesektion og menuen.',
+      labelMobile: 'Restaurantkoncept, konceptillustration på telefon.',
       excerpts: [
         { label: 'Forside', text: 'Stemning først, bordbestilling lige ved siden af', y: 0 },
         { label: 'Huset', text: 'Kort præsentation og aktuelle beskeder', y: 850 },
@@ -192,7 +192,7 @@ export const work = {
       id: 'cafe',
       variant: 'tall',
       panel: '#f4c343',
-      name: 'Den Gule Café',
+      name: 'Cafékoncept',
       kind: 'Café, Aarhus C',
       href: 'https://ronron-hr.github.io/dengulecafe-demo/',
       task: 'En café uden bordbestilling, hvor gæsten bare skal vide, hvad der er på menuen, hvornår der er åbent, og hvordan man finder derhen.',
@@ -201,8 +201,8 @@ export const work = {
         'Menu og åbningstider samlet på forsiden og en knap, der viser vej',
       ],
       label:
-        'Konceptillustration af Den Gule Café: gul forside med polaroids, lyserød stribe med åbningstider og en lilla menu.',
-      labelMobile: 'Konceptillustration af Den Gule Café på telefon.',
+        'Cafékoncept, konceptillustration: gul forside med polaroids, lyserød stribe med åbningstider og en lilla menu.',
+      labelMobile: 'Cafékoncept, konceptillustration på telefon.',
       excerpts: [
         { label: 'Forside', text: 'Hvad stedet er, og en knap til at finde vej', y: 0 },
         { label: 'Menu', text: 'Seks slags mad og drikke på ét blik', y: 718 },

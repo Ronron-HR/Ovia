@@ -199,7 +199,7 @@
 }
 
 @media (min-width: 768px) {
-  /* Salon Matin: bred flade, skærmen til venstre og telefonen foran. */
+  /* Salon: bred flade, skærmen til venstre og telefonen foran. */
   .stage--feature .stage-browser {
     width: 62cqw;
     left: 6cqw;
@@ -212,7 +212,7 @@
     bottom: auto;
   }
 
-  /* Belli: skærmen løber ud over kanten, telefonen står nederst til venstre. */
+  /* Restaurant: skærmen løber ud over kanten, telefonen står nederst til venstre. */
   .stage--wide .stage-browser {
     width: 80cqw;
     left: auto;

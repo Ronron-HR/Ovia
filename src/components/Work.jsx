@@ -11,9 +11,9 @@ import Stage from './Stage.jsx'
  * scenerne og de tre designretningers egne farver står frem. Hvert projekt er
  * en scene (Stage) i sin egen komposition, så det ikke bliver tre ens kort:
  *
- *   Salon Matin     bred flade, skærm til venstre og telefon foran
- *   Brasserie Belli skærmen står til højre, telefonen nederst til venstre
- *   Den Gule Café   telefonen er hovedpersonen, skærmen står bag
+ *   Salonkoncept    bred flade, skærm til venstre og telefon foran
+ *   Restaurantkoncept skærmen står til højre, telefonen nederst til venstre
+ *   Cafékoncept     telefonen er hovedpersonen, skærmen står bag
  *
  * Under hver scene står tre udsnit af siden (Excerpts): de er statiske, så
  * arbejdet kan vurderes uden at ramme et bestemt scrollpunkt, og de er der
@@ -120,7 +120,7 @@ export default function Work() {
           <p className="mt-5 max-w-[48ch] text-[17px] leading-relaxed text-paper/70">{work.intro}</p>
         </header>
 
-        {/* Salon Matin: sidens store eksempel. */}
+        {/* Salonkoncept: sidens store eksempel. */}
         <article className="mt-12 md:mt-16">
           <Stage project={salon} />
           <Excerpts project={salon} wide />
@@ -137,7 +137,7 @@ export default function Work() {
           </div>
         </article>
 
-        {/* Belli og Café: to bredder, to højder. */}
+        {/* Restaurant og café: to bredder, to højder. */}
         <div className="mt-20 grid grid-cols-1 gap-x-10 gap-y-20 md:mt-28 lg:grid-cols-12">
           <article className="lg:col-span-7">
             <Stage project={belli} />

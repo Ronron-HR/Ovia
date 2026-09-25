@@ -43,15 +43,15 @@ export function BelliDesktop() {
       <Box x={0} y={560} w={1440} h={250} style={{ background: 'linear-gradient(180deg, transparent, rgb(0 0 0 / .55))' }} />
       <Checks x={0} y={690} w={1440} h={120} a="rgb(179 38 45 / .55)" b="rgb(244 236 224 / .32)" size={40} />
 
-      <Txt x={180} y={32} size={12} color={CREAM} track={0.42} serif>BRASSERIE</Txt>
-      <Txt x={180} y={50} size={30} color={CREAM} track={0.06} weight={700} serif>BELLI</Txt>
+      <Txt x={180} y={32} size={12} color={CREAM} track={0.42} serif>RESTAURANT</Txt>
+      <Txt x={180} y={50} size={30} color={CREAM} track={0.06} weight={700} serif>KONCEPT</Txt>
       {['Menu', 'Frokost', 'Aften', 'Historien', 'Huset', 'Kontakt'].map((t, i) => (
         <Txt key={t} x={[760, 826, 904, 966, 1062, 1128][i]} y={46} size={15} color="rgb(250 246 238 / .85)">{t}</Txt>
       ))}
       <Btn x={1230} y={30} w={116} h={46} label="Book bord" color={CREAM} border={[1, 'rgb(250 246 238 / .5)']} size={14} weight={600} />
 
       <Txt x={180} y={340} size={19} serif italic color={BRASS}>Fransk brasserie i Aarhus</Txt>
-      <Txt x={180} y={378} size={150} serif color={CREAM} lh={1} track={-0.02}>Belli</Txt>
+      <Txt x={180} y={400} size={104} serif color={CREAM} lh={1} track={-0.02}>Restaurantkoncept</Txt>
       <Txt x={180} y={550} w={460} size={20} color="rgb(250 246 238 / .82)" lh={1.5}>
         Moules, steak frites og tatar i et hus med sjæl.
       </Txt>
@@ -119,14 +119,14 @@ export function BelliMobile() {
       <Checks x={0} y={600} w={390} h={160} a="rgb(179 38 45 / .5)" b="rgb(244 236 224 / .28)" size={26} />
       <Box x={0} y={420} w={390} h={340} style={{ background: 'linear-gradient(180deg, transparent, rgb(0 0 0 / .6))' }} />
 
-      <Txt x={24} y={22} size={9} color={CREAM} track={0.42} serif>BRASSERIE</Txt>
-      <Txt x={24} y={36} size={24} color={CREAM} track={0.06} weight={700} serif>BELLI</Txt>
+      <Txt x={24} y={22} size={9} color={CREAM} track={0.42} serif>RESTAURANT</Txt>
+      <Txt x={24} y={36} size={24} color={CREAM} track={0.06} weight={700} serif>KONCEPT</Txt>
       {[0, 1, 2].map((i) => (
         <Box key={i} x={342} y={28 + i * 7} w={24} h={1.5} bg={CREAM} />
       ))}
 
       <Txt x={24} y={330} size={15} serif italic color={BRASS}>Fransk brasserie i Aarhus</Txt>
-      <Txt x={24} y={356} size={96} serif color={CREAM} lh={1} track={-0.02}>Belli</Txt>
+      <Txt x={24} y={372} size={38} serif color={CREAM} lh={1} track={-0.02}>Restaurantkoncept</Txt>
       <Txt x={24} y={490} w={330} size={16} color="rgb(250 246 238 / .82)" lh={1.5}>
         Moules, steak frites og tatar i et hus med sjæl.
       </Txt>

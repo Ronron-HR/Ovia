@@ -30,7 +30,7 @@ export function CafeDesktop() {
   return (
     <Page {...CAFE_DESKTOP} mode="d" bg={YELLOW}>
       {/* Hero */}
-      <Txt x={253} y={38} size={22} color={INK} style={H}>Den Gule Café</Txt>
+      <Txt x={253} y={38} size={22} color={INK} style={H}>Cafékoncept</Txt>
       {['Menu', 'Åbningstider', 'Find os'].map((t, i) => (
         <Txt key={t} x={[1010, 1092, 1210][i]} y={44} size={15} color={INK}>{t}</Txt>
       ))}
@@ -116,7 +116,7 @@ export function CafeDesktop() {
 export function CafeMobile() {
   return (
     <Page {...CAFE_MOBILE} mode="m" bg={YELLOW}>
-      <Txt x={24} y={26} size={19} color={INK} style={H}>Den Gule Café</Txt>
+      <Txt x={24} y={26} size={19} color={INK} style={H}>Cafékoncept</Txt>
       <Box x={338} y={24} w={28} h={28} r={14} border={[3, INK]} />
 
       <Polaroid x={24} y={86} w={150} h={184} fill="#3b2a20" rot={-6}>
