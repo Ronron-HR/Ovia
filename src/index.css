@@ -25,7 +25,7 @@
 
 /* =========================================================================
    RETNING — SPECIFIKATION
-   Koldt, næsten hvidt papir, næsten sort blæk og én accent: ler.
+   Koldt, næsten hvidt papir, næsten sort blæk og én accent: logoets grå.
    Instrument Sans bærer overskrifter og tekst. Monoskriften bruges til det,
    navnet lover: specifikationer — mærkater, mål og lister over, hvad man
    får. Skærmbillederne af rigtigt arbejde er sidens billeder.
@@ -37,12 +37,13 @@
   --color-paper-2: #ecece7;
   --color-ink: #101317;
   --color-muted: #545a61;
-  /* Sidens eneste accent. Mod papir 5,0:1 og mod hvid 5,4:1, så den kan bruges
-     til tekst og til flader med hvid tekst. På blæk bruges den lysere
-     --color-accent-soft (7,4:1). Faviconet, apple-touch-icon og og:image
-     tegnes ud fra disse værdier (npm run brand). */
-  --color-accent: #b4472a;
-  --color-accent-soft: #e98a68;
+  /* Sidens eneste accent er logoets grå: "Specs" i wordmarket er blæk ved
+     60 % over papir (#6c6d6f). Mod papir 4,7:1 og mod hvid 5,2:1, så den kan
+     bruges til tekst og til flader med hvid tekst. På blæk bruges den lysere
+     --color-accent-soft (papir ved 60 % over blæk, 6,7:1). Faviconet,
+     apple-touch-icon og og:image tegnes ud fra disse værdier (npm run brand). */
+  --color-accent: #6c6d6f;
+  --color-accent-soft: #999b9a;
   --color-rule: #dcdcd6;
 
   --font-sans: "Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
