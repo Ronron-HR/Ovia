@@ -24,30 +24,49 @@
 }
 
 /* =========================================================================
-   RETNING — SPECIFIKATION
-   Koldt, næsten hvidt papir, næsten sort blæk og én accent: logoets grå.
-   Instrument Sans bærer overskrifter og tekst. Monoskriften bruges til det,
-   navnet lover: specifikationer — mærkater, mål og lister over, hvad man
-   får. Skærmbillederne af rigtigt arbejde er sidens billeder.
+   RETNING — SKANDINAVISK RO
+   Varm offwhite som papir, lys varm grå til adskillelse, koksgrå til tekst,
+   mørke sektioner og primære knapper. Dæmpet bronze er en sparsom accent.
+   Instrument Sans bærer alt; monoskriften bruges kun til små tekniske
+   detaljer (klokkeslæt, adresselinjer i rammer). Højst to skrifttyper.
+
+   DESIGNTOKENS — farver, skrift og afstande defineres her og kun her.
+   Kontrast (målt mod WCAG):
+     ink    på paper    14,6:1        muted  på paper    6,2:1
+     ink    på paper-2  12,7:1        muted  på paper-2  5,4:1
+     accent på paper     4,7:1 (tekst) accent på paper-2  3,9:1 (kun stor
+                                       tekst og streger, aldrig brødtekst)
+     accent-soft på ink  7,2:1 (bronze til tekst på de mørke flader)
+     hvid   på accent    5,2:1 (hover på knapper)
+   npm run brand læser ink, paper og accent herfra.
    ========================================================================= */
 
 @theme {
-  --color-paper: #f5f5f2;
-  --color-surface: #ffffff;
-  --color-paper-2: #ecece7;
-  --color-ink: #101317;
-  --color-muted: #545a61;
-  /* Sidens eneste accent er logoets grå: "Specs" i wordmarket er blæk ved
-     60 % over papir (#6c6d6f). Mod papir 4,7:1 og mod hvid 5,2:1, så den kan
-     bruges til tekst og til flader med hvid tekst. På blæk bruges den lysere
-     --color-accent-soft (papir ved 60 % over blæk, 6,7:1). Faviconet,
-     apple-touch-icon og og:image tegnes ud fra disse værdier (npm run brand). */
-  --color-accent: #6c6d6f;
-  --color-accent-soft: #999b9a;
-  --color-rule: #dcdcd6;
+  --color-paper: #f5f3ef; /* primær baggrund */
+  --color-paper-2: #e5e1db; /* alternative flader og adskillelse */
+  --color-surface: #faf9f6; /* indersiden af rammer og kort: paper, lysnet */
+  --color-ink: #252525; /* tekst, mørke sektioner, primære knapper */
+  --color-muted: #5b5852; /* sekundær tekst */
+  --color-accent: #876747; /* bronze: sparsomme fremhævelser */
+  --color-accent-soft: #c9ad8a; /* bronze på mørk flade */
+  --color-rule: #d6d1c9; /* hårstreger på paper */
 
   --font-sans: "Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Typografisk skala */
+  --text-hero: clamp(2.375rem, 5vw, 4.5rem);
+  --text-h2: clamp(2rem, 3.8vw, 3.25rem);
+  --text-h3: clamp(1.625rem, 2.6vw, 2.25rem);
+  --text-h4: 1.375rem;
+  --text-lead: clamp(1.0625rem, 1.3vw, 1.1875rem);
+  --text-quote: clamp(1.75rem, 3.6vw, 3.25rem);
+
+  /* Afstande */
+  --space-section: clamp(4.5rem, 9vw, 8rem);
+  --space-block: clamp(3.5rem, 7vw, 6rem);
+  --radius-btn: 6px;
+  --radius-panel: 20px;
 }
 
 @layer base {
@@ -82,6 +101,7 @@
   :focus-visible {
     outline: 2px solid var(--color-accent);
     outline-offset: 3px;
+    border-radius: 2px;
   }
 
   /* På den mørke sektion er accenten for mørk til en fokusring. */
@@ -101,28 +121,59 @@
 }
 
 @layer components {
-  /* Overskrifter: tæt sat, ægte 600. */
+  /* Overskrifter: tæt sat, vægt 500 — rolig i stedet for høj. */
   .t-display {
     font-family: var(--font-sans);
-    font-weight: 600;
-    line-height: 1.02;
-    letter-spacing: -0.035em;
+    font-weight: 500;
+    line-height: 1.06;
+    letter-spacing: -0.03em;
     text-wrap: balance;
   }
 
-  /* Mærkat i mono: sektionsnavne, mål og noter. */
+  .t-hero {
+    font-size: var(--text-hero);
+    line-height: 1.02;
+  }
+  .t-h2 {
+    font-size: var(--text-h2);
+  }
+  .t-h3 {
+    font-size: var(--text-h3);
+    line-height: 1.12;
+  }
+  .t-h4 {
+    font-size: var(--text-h4);
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+
+  /* Mærkat over overskrifter: små versaler med luft, i bronze på lyse flader. */
   .t-eyebrow {
-    font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 500;
     line-height: 1.4;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--color-muted);
+  }
+
+  .t-eyebrow-accent {
+    color: var(--color-accent);
   }
 
   .t-body {
     color: var(--color-muted);
     line-height: 1.65;
+  }
+
+  .t-lead {
+    font-size: var(--text-lead);
+    line-height: 1.6;
+  }
+
+  /* Sektionernes lodrette luft. */
+  .section-y {
+    padding-block: var(--space-section);
   }
 
   .shell {
@@ -196,10 +247,10 @@
     min-height: 48px;
     padding: 0 22px;
     border: 1px solid transparent;
-    border-radius: 6px;
+    border-radius: var(--radius-btn);
     font-size: 15px;
     font-weight: 500;
-    line-height: 1;
+    line-height: 1.2;
     text-align: center;
   }
 
@@ -213,6 +264,17 @@
     color: #fff;
   }
 
+  /* Tekstlink med pil: sekundær handling ved en ydelse. */
+  .btn-text {
+    min-height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    color: var(--color-ink);
+    font-size: 15px;
+    font-weight: 500;
+  }
+
   .btn-ghost {
     border-color: var(--color-ink);
     color: var(--color-ink);
@@ -224,7 +286,11 @@
   }
 
   .on-dark .btn-ghost {
-    border-color: rgb(245 245 242 / 0.4);
+    border-color: rgb(245 243 239 / 0.5);
+    color: var(--color-paper);
+  }
+
+  .on-dark .btn-text {
     color: var(--color-paper);
   }
 
@@ -239,6 +305,12 @@
     .btn-ghost:hover {
       background: var(--color-ink);
       color: var(--color-paper);
+    }
+    .btn-text:hover {
+      color: var(--color-accent);
+    }
+    .on-dark .btn-text:hover {
+      color: var(--color-accent-soft);
     }
     .on-dark .btn-primary:hover {
       background: var(--color-accent-soft);
@@ -258,9 +330,9 @@
     border-radius: 12px;
     background: var(--color-surface);
     box-shadow:
-      0 1px 2px rgb(16 19 23 / 0.06),
-      0 12px 24px -12px rgb(16 19 23 / 0.18),
-      0 32px 64px -32px rgb(16 19 23 / 0.32);
+      0 1px 2px rgb(37 37 37 / 0.06),
+      0 12px 24px -12px rgb(37 37 37 / 0.18),
+      0 32px 64px -32px rgb(37 37 37 / 0.32);
   }
 
   .browser-bar {
@@ -270,14 +342,14 @@
     height: 34px;
     padding-inline: 12px;
     border-bottom: 1px solid var(--color-rule);
-    background: #fafaf8;
+    background: var(--color-surface);
   }
 
   .browser-bar > i {
     width: 8px;
     height: 8px;
     border-radius: 999px;
-    background: #d4d4ce;
+    background: #d3cec6;
   }
 
   .browser-url {
@@ -290,7 +362,7 @@
     border-radius: 6px;
     background: var(--color-paper);
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.4;
     color: var(--color-muted);
   }
@@ -307,9 +379,9 @@
     background: var(--color-ink);
     padding: 5px;
     box-shadow:
-      0 1px 2px rgb(16 19 23 / 0.2),
-      0 12px 24px -8px rgb(16 19 23 / 0.35),
-      0 28px 48px -20px rgb(16 19 23 / 0.45);
+      0 1px 2px rgb(37 37 37 / 0.2),
+      0 12px 24px -8px rgb(37 37 37 / 0.35),
+      0 28px 48px -20px rgb(37 37 37 / 0.45);
   }
 
   .phone img {
@@ -330,7 +402,7 @@
     border-radius: 4px;
     background: var(--color-surface);
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.3;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -345,24 +417,196 @@
     background: var(--color-accent);
   }
 
-  /* Liste med mono-mærke: "Det får du". */
+  /* Liste med en kort bronzestreg som mærke. */
   .spec-list > li {
     display: grid;
-    grid-template-columns: 22px 1fr;
+    grid-template-columns: 26px 1fr;
     gap: 0 4px;
-    padding-block: 9px;
+    padding-block: 11px;
     border-top: 1px solid var(--color-rule);
     font-size: 15px;
     line-height: 1.5;
   }
 
   .spec-list > li::before {
-    content: "+";
-    font-family: var(--font-mono);
-    color: var(--color-accent);
+    content: "";
+    width: 12px;
+    height: 1px;
+    margin-top: 0.75em;
+    background: var(--color-accent);
   }
 
   .spec-list > li:last-child {
     border-bottom: 1px solid var(--color-rule);
+  }
+
+  /* ---- Kontaktformular (mørk flade) ------------------------------------ */
+  .field {
+    display: block;
+    width: 100%;
+    min-height: 48px;
+    padding: 12px 14px;
+    border: 1px solid rgb(245 243 239 / 0.45);
+    border-radius: var(--radius-btn);
+    background: rgb(245 243 239 / 0.04);
+    color: var(--color-paper);
+    /* 16px: iOS zoomer ellers ind på feltet. */
+    font: inherit;
+    font-size: 16px;
+    line-height: 1.4;
+    transition:
+      border-color var(--dur-hover) var(--ease-entrance),
+      background-color var(--dur-hover) var(--ease-entrance);
+  }
+
+  .field:hover {
+    border-color: rgb(245 243 239 / 0.75);
+  }
+
+  .field:focus-visible {
+    border-color: var(--color-accent-soft);
+    outline-offset: 1px;
+  }
+
+  textarea.field {
+    min-height: 132px;
+    resize: vertical;
+  }
+
+  /* Emnevalg: radioknapper skjult bag en flade, så piletaster og
+     skærmlæsere virker uden ekstra kode. */
+  .topic {
+    display: flex;
+    min-height: 44px;
+    cursor: pointer;
+    align-items: center;
+    padding: 8px 14px;
+    border: 1px solid rgb(245 243 239 / 0.45);
+    border-radius: var(--radius-btn);
+    font-size: 15px;
+    line-height: 1.3;
+    color: var(--color-paper);
+    transition:
+      background-color var(--dur-hover) var(--ease-entrance),
+      border-color var(--dur-hover) var(--ease-entrance),
+      color var(--dur-hover) var(--ease-entrance);
+  }
+
+  .topic:hover {
+    border-color: rgb(245 243 239 / 0.85);
+  }
+
+  input:checked + .topic {
+    border-color: var(--color-paper);
+    background: var(--color-paper);
+    color: var(--color-ink);
+  }
+
+  input:focus-visible + .topic {
+    outline: 2px solid var(--color-accent-soft);
+    outline-offset: 3px;
+  }
+
+  /* ---- Områdenavigation: figur/grund og glidende markør ------------------ */
+  .area-nav {
+    /* Baren får først baggrund og skygge, når den klistrer: da løfter den sig
+       fra indholdet, der glider forbi under den. */
+    transition:
+      background-color 240ms var(--ease-entrance),
+      box-shadow 240ms var(--ease-entrance);
+  }
+
+  .area-nav[data-stuck='true'] {
+    background: rgb(245 243 239 / 0.94);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 10px 20px -16px rgb(37 37 37 / 0.45);
+  }
+
+  @media (min-width: 768px) {
+    .area-nav[data-stuck='true'] {
+      background: transparent;
+      backdrop-filter: none;
+      box-shadow: none;
+    }
+    .area-nav[data-stuck='true'] .area-nav-row {
+      box-shadow: 0 8px 20px -10px rgb(37 37 37 / 0.35);
+    }
+  }
+
+  .area-nav-row {
+    scrollbar-width: none;
+    max-width: 100%;
+    box-shadow: 0 0 0 1px var(--color-rule);
+    transition: box-shadow 240ms var(--ease-entrance);
+  }
+  .area-nav-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Én markør, som glider. Kun transform og en kort breddeændring. */
+  .area-marker {
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    left: 0;
+    width: var(--mw, 0px);
+    border-radius: 999px;
+    background: var(--color-ink);
+    transform: translate3d(var(--mx, 0px), 0, 0);
+    opacity: 0;
+  }
+  .area-nav-row[data-ready='true'] .area-marker {
+    opacity: 1;
+    transition:
+      transform 420ms var(--ease-entrance),
+      width 420ms var(--ease-entrance),
+      opacity 200ms linear;
+  }
+
+  .area-chip {
+    color: var(--color-muted);
+    transition: color 260ms var(--ease-entrance);
+  }
+
+  .area-chip[aria-current] {
+    color: var(--color-paper);
+  }
+
+  .area-chip-n {
+    opacity: 0.75;
+  }
+
+  @media (hover: hover) {
+    .area-chip:not([aria-current]):hover {
+      color: var(--color-ink);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .area-nav,
+    .area-nav-row,
+    .area-chip,
+    .area-nav-row[data-ready='true'] .area-marker {
+      transition-duration: 1ms;
+    }
+  }
+
+  /* Link til næste område. */
+  .next-area {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--color-ink);
+  }
+
+  /* ---- Citat ------------------------------------------------------------ */
+  .quote-rule {
+    display: block;
+    width: 56px;
+    height: 2px;
+    background: var(--color-accent);
   }
 }

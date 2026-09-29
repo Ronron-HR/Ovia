@@ -158,33 +158,6 @@
   }
 }
 
-/* Sammenhængen: linjen mellem de tre trin tegnes fra venstre, når rækken
-   kommer til syne. Uden JS står den færdigtegnet. Kun transform. */
-.rail-line {
-  transform-origin: 0 50%;
-  transition: transform 900ms var(--ease-entrance) 200ms;
-}
-
-.js-motion [data-rail]:not(.is-in) .rail-line {
-  transform: scaleX(0);
-}
-
-.js-motion [data-rail]:not(.is-in) .rail-line-y {
-  transform: scaleY(0);
-}
-
-.rail-line-y {
-  transform-origin: 50% 0;
-  transition: transform 900ms var(--ease-entrance) 200ms;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .js-motion [data-rail]:not(.is-in) .rail-line,
-  .js-motion [data-rail]:not(.is-in) .rail-line-y {
-    transform: none;
-  }
-}
-
 /* Sådan foregår det: hvert trin tændes, når man selv når ned til det. */
 .js-motion [data-step] {
   opacity: 0;

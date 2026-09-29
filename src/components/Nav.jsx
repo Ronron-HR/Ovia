@@ -221,9 +221,9 @@ export default function Nav() {
               afstanden målt mod arvede 16px, altså 1,3px i stedet for 4,
               og j'et i "Hvad jeg laver" fik halen klippet af. Heroen
               gør det samme; det er derfor den ikke klipper. */}
-          <ul className="flex flex-1 flex-col justify-center gap-3">
+          <ul className="flex flex-1 flex-col justify-center gap-2">
             {nav.links.map((link, i) => (
-              <li key={link.href} className="mask t-display text-[clamp(38px,11vw,58px)]">
+              <li key={link.href} className="mask t-display text-[clamp(34px,9vw,58px)]">
                 <a
                   href={link.href}
                   onClick={close}
@@ -240,7 +240,25 @@ export default function Nav() {
               tre links i den. Handlingen og de to måder at fange mig på
               hører til her: på mobil findes bar-CTA'en ikke, så uden det
               her er der ingen vej videre fra en åben menu. */}
-          <div className="mt-10 border-t border-rule pt-6">
+          <div className="mt-8 border-t border-rule pt-5">
+            <p className="t-eyebrow">{nav.areasLabel}</p>
+            <ul className="mt-1 flex flex-col text-[16px] font-medium">
+              {nav.areas.map((area) => (
+                <li key={area.href}>
+                  <a
+                    href={area.href}
+                    onClick={close}
+                    className="flex min-h-11 items-center justify-between text-ink"
+                  >
+                    {area.label}
+                    <span aria-hidden="true" className="text-accent">→</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="mt-4 border-t border-rule pt-5">
             <a
               href={nav.cta.href}
               onClick={close}
@@ -254,7 +272,7 @@ export default function Nav() {
                 <a
                   href={`mailto:${site.email}`}
                   onClick={close}
-                  className="link-underline inline-block py-1 text-ink"
+                  className="link-underline inline-block py-2.5 text-ink"
                 >
                   {site.email}
                 </a>
@@ -263,7 +281,7 @@ export default function Nav() {
                 <a
                   href={`tel:${site.phoneHref}`}
                   onClick={close}
-                  className="link-underline inline-block py-1 text-ink"
+                  className="link-underline inline-block py-2.5 text-ink"
                 >
                   {site.phone}
                 </a>

@@ -3,34 +3,46 @@ import { samarbejde } from '../content.js'
 /**
  * SAMARBEJDET — fire trin i en rækkefølge, uden leveringstider og priser.
  *
+ * Grå flade. Overskriften står fast i venstre side på bred skærm, mens
+ * trinene løber forbi i højre: en anden opbygning end de øvrige sektioner.
+ *
  * data-step: hvert trin tænder for sig, når man selv er nået ned til det
  * (se useReveal), ikke efter en forsinkelse pr. indeks. Uden JS står alle
  * trin synlige.
  */
 export default function Samarbejde() {
   return (
-    <section id={samarbejde.id} className="bg-paper-2">
-      <div className="shell py-24 md:py-32">
-        <header data-reveal className="max-w-[46ch]">
-          <p className="t-eyebrow">{samarbejde.eyebrow}</p>
-          <h2 className="t-display mt-4 text-[clamp(30px,4vw,52px)]">{samarbejde.title}</h2>
-        </header>
+    <section id={samarbejde.id} className="on-grey">
+      <div className="shell section-y">
+        <div className="grid grid-cols-1 gap-x-14 gap-y-12 lg:grid-cols-12">
+          <header data-reveal className="lg:sticky lg:top-[calc(var(--nav-h)+40px)] lg:col-span-5 lg:self-start">
+            <p className="t-eyebrow t-eyebrow-accent">{samarbejde.eyebrow}</p>
+            <h2 className="t-display t-h2 mt-4">{samarbejde.title}</h2>
+            <p className="t-body t-lead mt-5 max-w-[42ch]">{samarbejde.lead}</p>
+          </header>
 
-        <ol className="mt-14 grid gap-x-8 gap-y-10 md:mt-20 md:grid-cols-2 lg:grid-cols-4">
-          {samarbejde.steps.map((step, i) => (
-            <li key={step.title} data-step className="border-t border-ink pt-5">
-              <span className="block font-mono text-[40px] leading-none text-accent">
-                {String(i + 1).padStart(2, '0')}
-              </span>
-              <h3 className="t-display mt-4 text-[24px]">{step.title}</h3>
-              <p className="t-body mt-3 max-w-[36ch] text-[15px]">{step.body}</p>
-            </li>
-          ))}
-        </ol>
+          <div className="lg:col-span-6 lg:col-start-7">
+            <ol className="border-t border-ink">
+              {samarbejde.steps.map((step, i) => (
+                <li
+                  key={step.title}
+                  data-step
+                  className="grid grid-cols-[52px_1fr] gap-x-4 border-b border-rule py-8 md:grid-cols-[84px_1fr]"
+                >
+                  <span className="text-[34px] leading-none font-medium tracking-tight text-accent md:text-[44px]">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <div>
+                    <h3 className="t-display t-h4">{step.title}</h3>
+                    <p className="t-body mt-2 max-w-[46ch] text-[16px]">{step.body}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
 
-        <p className="rule mt-14 max-w-[62ch] pt-5 text-[16px] md:mt-20">
-          {samarbejde.ownership}
-        </p>
+            <p className="mt-8 max-w-[56ch] text-[15px] text-muted">{samarbejde.ownership}</p>
+          </div>
+        </div>
       </div>
     </section>
   )

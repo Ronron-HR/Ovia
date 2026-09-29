@@ -4,7 +4,7 @@ import Hero from './components/Hero.jsx'
 import Kontakt, { Footer } from './components/Kontakt.jsx'
 import Nav from './components/Nav.jsx'
 import Om from './components/Om.jsx'
-import Rail from './components/Rail.jsx'
+import Review from './components/Review.jsx'
 import Samarbejde from './components/Samarbejde.jsx'
 import Work from './components/Work.jsx'
 import Ydelser from './components/Ydelser.jsx'
@@ -35,10 +35,10 @@ export default function App() {
           className="pointer-events-none absolute top-2 left-0 h-px w-px"
         />
         <Hero />
-        <Rail />
-        <Work />
         <Ydelser />
+        <Work />
         <Samarbejde />
+        <Review />
         <Om />
         <Faq />
         <Kontakt />

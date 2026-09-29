@@ -5,8 +5,9 @@ import Logo from './Logo.jsx'
  * Privatlivspolitik.
  *
  * Skrevet ud fra, hvad siden FAKTISK gør: ingen cookies, ingen analyse, ingen
- * tredjepartsskrifter (de er selvhostede), ingen formular og kun én vej ind
- * for personlige oplysninger: mail og telefon. Ændrer det sig (formular,
+ * tredjepartsskrifter (de er selvhostede), en kontaktformular, der kun åbner
+ * besøgendes egen mailapp (ingen backend), og kun én vej ind for personlige
+ * oplysninger: mail og telefon. Ændrer det sig (formularbackend,
  * analyse, nyhedsbrev, indlejret video), skal politikken ændres SAMTIDIG,
  * ellers står der noget forkert.
  *
@@ -17,7 +18,7 @@ import Logo from './Logo.jsx'
 function Section({ title, children }) {
   return (
     <section className="mt-12 first:mt-0">
-      <h2 className="t-display text-[28px] md:text-[34px]">{title}</h2>
+      <h2 className="t-display t-h3">{title}</h2>
       <div className="mt-4 flex flex-col gap-4 text-[16px] leading-relaxed text-ink/80">
         {children}
       </div>
@@ -171,8 +172,9 @@ export default function Privatlivspolitik() {
               sendes videre. Derfor er der intet cookiebanner.
             </p>
             <p>
-              Siden har ingen formular. Skriver du til mig, sker det i din egen mailapp eller på
-              telefonen, og der sendes intet fra siden.{work.showDemoLinks && ' Under "Udvalgt arbejde" er der links til tre demoer, der ligger hos GitHub Pages. Åbner du dem, forlader du oviaspecs.com, og de behandler dine oplysninger efter deres egne regler.'}
+              Kontaktformularen på siden sender ikke selv noget og gemmer ikke det, du skriver. Den
+              samler beskeden og åbner din egen mailapp, og først når du trykker send dér, når
+              den mig. Du kan også skrive eller ringe direkte.{work.showDemoLinks && ' Under "Arbejde" er der links til tre demoer, der ligger hos GitHub Pages. Åbner du dem, forlader du oviaspecs.com, og de behandler dine oplysninger efter deres egne regler.'}
             </p>
           </Section>
 

@@ -7,7 +7,8 @@ import { Arrow, Browser, Phone } from './Shots.jsx'
 /**
  * FØRSTE SKÆRMBILLEDE
  *
- * Tilbud, målgruppe, to handlinger og et motiv, der viser arbejdet: tre
+ * Tilbud (digital handyman), målgruppe (lokale virksomheder), to handlinger,
+ * tre indgange til ydelserne og et motiv, der viser arbejdet: tre
  * konceptillustrationer af tre forskellige designretninger i tre lag —
  * frisør på computer bagest, brasserie og café på telefon foran. Tre udtryk
  * på ét blik viser, at siderne ikke ligner hinanden. Illustrationerne er
@@ -36,18 +37,16 @@ export default function Hero() {
   return (
     <section
       id="hero"
-      className="relative overflow-x-clip pt-[calc(var(--nav-h)+32px)] pb-12 md:pb-16 lg:pt-[calc(var(--nav-h)+56px)] lg:pb-20"
+      className="relative overflow-x-clip pt-[calc(var(--nav-h)+32px)] pb-14 md:pb-20 lg:pt-[calc(var(--nav-h)+56px)] lg:pb-24"
     >
-      <div aria-hidden="true" className="spec-grid" />
-
       <div className="shell relative z-10">
-        <div className="grid grid-cols-1 gap-y-10 lg:grid-cols-12 lg:items-center lg:gap-x-10">
+        <div className="grid grid-cols-1 gap-y-12 lg:grid-cols-12 lg:items-center lg:gap-x-10">
           <div className="lg:col-span-6">
-            <p data-hero="fade" className="t-eyebrow">
+            <p data-hero="fade" className="t-eyebrow t-eyebrow-accent">
               {hero.eyebrow}
             </p>
 
-            <h1 className="t-display mt-5 text-[clamp(35px,4.1vw,58px)]">
+            <h1 className="t-display t-hero mt-5">
               {hero.lines.map((line, i) => (
                 <Fragment key={line}>
                   {/* Mellemrummet gør, at rækkerne læses som ét udsagn. */}
@@ -64,7 +63,7 @@ export default function Hero() {
             <p
               data-hero="fade"
               style={{ '--d': '200ms' }}
-              className="t-body mt-6 max-w-[46ch] text-[17px] md:text-[18px]"
+              className="t-body t-lead mt-6 max-w-[48ch]"
             >
               {hero.deck}
             </p>
@@ -80,6 +79,26 @@ export default function Hero() {
               <a href={hero.secondary.href} className="btn btn-ghost">
                 {hero.secondary.label}
               </a>
+            </div>
+
+            <div
+              data-hero="fade"
+              style={{ '--d': '420ms' }}
+              className="mt-10 max-w-[48ch] border-t border-rule pt-5 md:mt-12"
+            >
+              <p className="t-eyebrow">{hero.areasLabel}</p>
+              <ul className="mt-2 flex flex-col text-[16px] font-medium sm:flex-row sm:flex-wrap sm:gap-x-7">
+                {hero.areas.map((area) => (
+                  <li key={area.href}>
+                    <a
+                      href={area.href}
+                      className="link-underline hit inline-flex min-h-11 items-center gap-1.5 text-ink"
+                    >
+                      {area.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
 

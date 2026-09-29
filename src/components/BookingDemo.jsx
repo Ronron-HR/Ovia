@@ -73,7 +73,7 @@ export default function BookingDemo() {
         <span className="browser-url">{d.site}</span>
       </div>
 
-      <div className="bg-surface p-5 md:p-8">
+      <div className="bg-surface p-5 md:p-8" role="group" aria-label={d.label}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <span className="tag">{d.label}</span>
           <span className="t-eyebrow">{d.site}</span>

@@ -11,7 +11,7 @@ function Pin({ n, className = '' }) {
   return (
     <span
       aria-hidden="true"
-      className={`absolute z-10 flex h-6 w-6 items-center justify-center rounded-full bg-accent font-mono text-[12px] leading-none text-white ring-2 ring-white ${className}`}
+      className={`absolute z-10 flex h-6 w-6 items-center justify-center rounded-full bg-accent text-[12px] leading-none font-medium text-white ring-2 ring-white ${className}`}
     >
       {n}
     </span>
@@ -24,7 +24,7 @@ export default function SearchSketch() {
   return (
     <figure>
       <div className="backdrop">
-        <div className="mx-auto max-w-[440px] rounded-2xl bg-white p-4 shadow-[0_24px_48px_-24px_rgb(16_19_23/0.35),0_2px_4px_rgb(16_19_23/0.08)] md:p-5" role="img" aria-label={s.label}>
+        <div className="mx-auto max-w-[440px] rounded-2xl bg-white p-4 shadow-[0_24px_48px_-24px_rgb(37_37_37/0.35),0_2px_4px_rgb(37_37_37/0.08)] md:p-5" role="img" aria-label={s.label}>
           <div aria-hidden="true">
             {/* Søgefelt */}
             <div className="flex items-center gap-3 rounded-full border border-rule px-4 py-2.5 text-[14px]">

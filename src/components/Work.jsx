@@ -5,9 +5,9 @@ import { Arrow } from './Shots.jsx'
 import Stage from './Stage.jsx'
 
 /**
- * UDVALGT ARBEJDE
+ * ARBEJDE
  *
- * Sektionen er en mørk flade, der skubber ind over den forrige (.sheet), så
+ * Sektionen er en mørk flade, der skubber ind over ydelserne (.sheet), så
  * scenerne og de tre designretningers egne farver står frem. Hvert projekt er
  * en scene (Stage) i sin egen komposition, så det ikke bliver tre ens kort:
  *
@@ -45,7 +45,7 @@ function Excerpts({ project, wide = false }) {
               <div className="scroll-view" style={{ background: 'rgb(255 255 255 / 0.06)' }} />
             )}
             <p className="mt-2 text-[13px] leading-snug font-medium text-paper">{e.label}</p>
-            <p className={`mt-0.5 text-[12px] leading-snug text-paper/60 ${wide ? '' : 'hidden sm:block'}`}>{e.text}</p>
+            <p className={`mt-0.5 text-[13px] leading-snug text-paper/70 ${wide ? '' : 'hidden sm:block'}`}>{e.text}</p>
           </li>
         ))}
       </ul>
@@ -96,7 +96,7 @@ function Title({ project }) {
   return (
     <div>
       <span className="tag">{work.tag}</span>
-      <h3 className="t-display mt-4 text-[32px] md:text-[42px]">{project.name}</h3>
+      <h3 className="t-display t-h3 mt-4">{project.name}</h3>
       <p className="t-eyebrow mt-2">{project.kind}</p>
     </div>
   )
@@ -108,16 +108,13 @@ export default function Work() {
   return (
     <section
       id={work.id}
-      className="sheet under-sheet on-dark relative bg-ink text-paper"
-      style={{ '--pad-b': '5rem' }}
+      className="sheet on-dark relative bg-ink text-paper"
     >
-      <div aria-hidden="true" className="spec-grid spec-grid-dark" />
-
-      <div className="shell relative z-10 pt-20 md:pt-28">
+      <div className="shell relative z-10 pt-[var(--space-section)] pb-[var(--space-section)]">
         <header data-reveal className="max-w-[54ch]">
-          <p className="t-eyebrow">{work.eyebrow}</p>
-          <h2 className="t-display mt-4 text-[clamp(30px,4vw,52px)]">{work.title}</h2>
-          <p className="mt-5 max-w-[48ch] text-[17px] leading-relaxed text-paper/70">{work.intro}</p>
+          <p className="t-eyebrow t-eyebrow-accent">{work.eyebrow}</p>
+          <h2 className="t-display t-h2 mt-4">{work.title}</h2>
+          <p className="t-lead mt-5 max-w-[52ch] text-paper/75">{work.intro}</p>
         </header>
 
         {/* Salonkoncept: sidens store eksempel. */}
@@ -164,7 +161,7 @@ export default function Work() {
           </article>
         </div>
 
-        <div className="mt-20 max-w-[64ch] border-t border-paper/20 pt-5 text-[14px] leading-relaxed text-paper/60">
+        <div className="mt-20 max-w-[64ch] border-t border-paper/20 pt-5 text-[14px] leading-relaxed text-paper/70">
           <p>{work.note}</p>
           {!work.showDemoLinks && <p className="mt-2">{work.more}</p>}
         </div>
