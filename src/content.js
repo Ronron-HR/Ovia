@@ -482,6 +482,10 @@ export const kontakt = {
     message: 'Hvad vil du have hjælp til?',
     messagePlaceholder: 'Fx: Vi er en café med en gammel hjemmeside og vil gerne kunne tage imod bordbestillinger.',
     submit: 'Åbn mail med din besked',
+    copy: 'Kopiér beskeden',
+    copied: 'Beskeden er kopieret. Indsæt den i en mail til',
+    copyFailed: 'Kunne ikke kopiere automatisk. Skriv i stedet direkte til',
+    noMail: 'Har du ikke et mailprogram sat op?',
     note: 'Beskeden sendes i dit eget mailprogram, ikke fra denne side. Knappen åbner en færdig mail til mig, og først når du trykker send dér, når den mig.',
     opened:
       'Jeg har forsøgt at åbne dit mailprogram med beskeden. Husk at trykke send dér. Åbnede det sig ikke, kan du skrive direkte til',
@@ -497,8 +501,8 @@ export const topics = [
   { id: 'andet', label: 'Noget andet' },
 ]
 
-/** Mailen, formularen samler. */
-export function composeMail({ topic, name, company, message }) {
+/** Mailen, formularen samler: emne og brødtekst. */
+export function composeParts({ topic, name, company, message }) {
   const label = topics.find((t) => t.id === topic)?.label ?? 'Henvendelse'
   const subject = `${label} – henvendelse fra oviaspecs.com`
   const body = [
@@ -513,6 +517,11 @@ export function composeMail({ topic, name, company, message }) {
     'Mvh',
     name || '',
   ].join('\n')
+  return { subject, body }
+}
+
+export function composeMail(fields) {
+  const { subject, body } = composeParts(fields)
   return `mailto:${site.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
 }
 

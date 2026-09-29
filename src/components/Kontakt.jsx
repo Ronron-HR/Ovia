@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { composeMail, footer, kontakt, legal, site, topics } from '../content.js'
+import { useRef, useState } from 'react'
+import { composeMail, composeParts, footer, kontakt, legal, site, topics } from '../content.js'
 import { setTopic, useTopic } from '../topic.js'
 import { Arrow } from './Shots.jsx'
 
@@ -17,23 +17,43 @@ import { Arrow } from './Shots.jsx'
  */
 function Form() {
   const topic = useTopic()
-  const [opened, setOpened] = useState(false)
+  const [note, setNote] = useState(null)
+  const form = useRef(null)
   const f = kontakt.form
 
-  const onSubmit = (event) => {
-    event.preventDefault()
-    const data = new FormData(event.currentTarget)
-    window.location.href = composeMail({
+  const read = () => {
+    const data = new FormData(form.current)
+    return {
       topic,
       name: String(data.get('name') ?? '').trim(),
       company: String(data.get('company') ?? '').trim(),
       message: String(data.get('message') ?? '').trim(),
-    })
-    setOpened(true)
+    }
+  }
+
+  const onSubmit = (event) => {
+    event.preventDefault()
+    window.location.href = composeMail(read())
+    setNote('opened')
+  }
+
+  // Til dem uden mailprogram: kopiér emne og besked, og indsæt dem i en
+  // webmail. Intet sendes; siden siger kun, om kopieringen lykkedes.
+  const onCopy = async () => {
+    if (!form.current.reportValidity()) return
+    const { subject, body } = composeParts(read())
+    try {
+      await navigator.clipboard.writeText(`Emne: ${subject}
+
+${body}`)
+      setNote('copied')
+    } catch {
+      setNote('failed')
+    }
   }
 
   return (
-    <form onSubmit={onSubmit} className="rounded-[var(--radius-panel)] border border-paper/20 bg-paper/[0.04] p-6 md:p-9">
+    <form ref={form} onSubmit={onSubmit} className="rounded-[var(--radius-panel)] border border-paper/20 bg-paper/[0.04] p-6 md:p-9">
       <fieldset>
         <legend className="t-eyebrow">{f.topicLegend}</legend>
         <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -88,10 +108,17 @@ function Form() {
         <p className="max-w-[44ch] text-[13px] leading-snug text-paper/70">{f.note}</p>
       </div>
 
+      <p className="mt-4 text-[14px] leading-snug text-paper/80">
+        {f.noMail}{' '}
+        <button type="button" onClick={onCopy} className="link-underline hit cursor-pointer font-medium text-paper">
+          {f.copy}
+        </button>
+      </p>
+
       <p role="status" aria-live="polite" className="mt-5 text-[14px] leading-snug text-paper/85 empty:hidden">
-        {opened && (
-          <span className="swap-in block">
-            {f.opened}{' '}
+        {note && (
+          <span key={note} className="swap-in block">
+            {note === 'opened' ? f.opened : note === 'copied' ? f.copied : f.copyFailed}{' '}
             <a href={`mailto:${site.email}`} className="link-underline break-all text-paper">
               {site.email}
             </a>

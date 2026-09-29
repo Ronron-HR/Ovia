@@ -64,7 +64,10 @@ function detach() {
 export function useScene(ref, { mode = 'pass', from = 0.18, to = 0.82 } = {}) {
   useEffect(() => {
     const el = ref.current
-    if (!el || reduced()) return
+    // Ingen scroll-scener på telefoner: de er svagest og mærker hvert billede
+    // mest. Rammerne står på toppen af siden, og udsnittene under scenen
+    // viser resten (samme tilstand som ved reduceret bevægelse).
+    if (!el || reduced() || window.matchMedia('(max-width: 767px)').matches) return
 
     const pars = [...el.querySelectorAll('[data-par]')].map((node) => [node, Number(node.dataset.par)])
     const travels = [...el.querySelectorAll('[data-travel]')].map((node) => [node, Number(node.dataset.travel)])
