@@ -517,15 +517,13 @@
   }
 
   .area-nav[data-stuck='true'] {
-    background: rgb(245 243 239 / 0.94);
-    backdrop-filter: blur(8px);
+    background: rgb(245 243 239 / 0.97);
     box-shadow: 0 10px 20px -16px rgb(37 37 37 / 0.45);
   }
 
   @media (min-width: 768px) {
     .area-nav[data-stuck='true'] {
       background: transparent;
-      backdrop-filter: none;
       box-shadow: none;
     }
     .area-nav[data-stuck='true'] .area-nav-row {

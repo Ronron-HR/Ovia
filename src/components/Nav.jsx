@@ -17,7 +17,7 @@ import { useNavSpy } from '../motion/useNavSpy.js'
  *      link — derfor kan den glide i stedet for at blinke.
  *
  * MOBIL: ordet "Menu" i stedet for et ikon. Overlayet er et SØSKENDE til
- * baren, ikke et barn af den: baren har backdrop-filter, og det gør den til
+ * baren, ikke et barn af den: baren havde tidligere backdrop-filter (fjernet: sløring af det, der ruller forbi, er dyrt at male i hvert billede), og det gjorde den til
  * containing block for position:fixed. Et fixed overlay indeni ville være
  * 64px højt. Baren ligger i z-50 over overlayet, så mærket og "Luk" står det
  * samme sted, uanset om menuen er åben. Menuen lukker med Escape og "Luk";
@@ -149,7 +149,7 @@ export default function Nav() {
       <header
         ref={header}
         data-scrolled={scrolled}
-        className="nav fixed inset-x-0 top-0 z-50 bg-paper/95 backdrop-blur-md"
+        className="nav fixed inset-x-0 top-0 z-50 bg-paper/[0.97]"
       >
         <div className="nav-bar shell flex h-[var(--nav-h)] items-center justify-between gap-6">
           <a href="#hero" onClick={close} aria-label={nav.brand} className="inline-flex min-h-11 items-center text-ink">

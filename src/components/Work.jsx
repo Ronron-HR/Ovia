@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ConceptWindow } from '../concepts/index.jsx'
 import { work } from '../content.js'
 import { Arrow } from './Shots.jsx'
@@ -25,16 +25,34 @@ import Stage from './Stage.jsx'
  * virksomhederne (se src/concepts/kit.jsx).
  */
 function Excerpts({ project, wide = false }) {
-  // Udsnittene tegnes først i browseren: de fylder ingen HTML og er bare
-  // en tom, låst ramme, indtil de er der. (Rammens højde er den samme.)
-  const ready = useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false,
-  )
+  // Udsnittene tegnes først, når de nærmer sig skærmen: ni illustrationer på
+  // én gang lige efter indlæsning gav et langt hak. Indtil da er det en tom,
+  // låst ramme med samme højde, så siden ikke hopper. Uden IntersectionObserver
+  // tegnes de med det samme.
+  const box = useRef(null)
+  const [ready, setReady] = useState(false)
+
+  useEffect(() => {
+    const el = box.current
+    if (!el) return
+    if (!('IntersectionObserver' in window)) {
+      const t = setTimeout(() => setReady(true), 0)
+      return () => clearTimeout(t)
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return
+        setReady(true)
+        observer.disconnect()
+      },
+      { rootMargin: '700px 0px' },
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   return (
-    <div className="mt-6 md:mt-8">
+    <div ref={box} className="mt-6 md:mt-8">
       <p className="t-eyebrow">{work.labels.views}</p>
       <ul className="mt-3 grid grid-cols-3 gap-3 md:gap-4">
         {project.excerpts.map((e) => (

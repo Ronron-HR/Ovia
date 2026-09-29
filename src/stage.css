@@ -211,6 +211,9 @@
 
 .scroll-view {
   position: relative;
+  /* Isolerer hver illustration: stil, layout og maling for en illustration
+     smitter ikke af på resten af siden, når den rulles eller ændres. */
+  contain: layout paint style;
   container-type: inline-size;
   overflow: hidden;
   aspect-ratio: 16 / 10;
