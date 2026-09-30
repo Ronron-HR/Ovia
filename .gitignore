@@ -23,3 +23,8 @@ dist-ssr
 *.sln
 *.sw?
 scripts/og/hero.png
+
+# Hemmeligheder og Wrangler-cache
+.env*
+.dev.vars
+.wrangler
