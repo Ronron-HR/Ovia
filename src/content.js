@@ -1,6 +1,7 @@
 /* =========================================================================
-   AL TEKST PÅ SIDEN BOR HER
-   Ret frit — komponenterne indeholder ingen tekst.
+   AL FÆLLES TEKST PÅ SIDEN BOR HER
+   Ret frit — komponenterne indeholder ingen tekst. Tekster til de enkelte
+   ydelsessider ligger i services.js.
 
    Positionering: OviaSpecs er en digital handyman for lokale virksomheder.
    Én kontaktperson til hjemmesider, integrationer, praktisk automatisering
@@ -9,20 +10,21 @@
    Regler for teksten:
    - Skeln mellem det, jeg TILBYDER, og det, jeg HAR LAVET. Eksempler på
      mulige løsninger er ikke kundecases. Demoerne er demoer og skal stå som
-     "Demo / koncept".
+     "Demo – koncept, ikke kundearbejde".
    - Ingen tal, kundenavne, ratings eller løfter, der ikke kan dokumenteres.
      Eneste anmeldelse: Copenhagen Ease (godkendt, se `review`).
    - Ingen løfter om placeringer, salgstal eller garanterede resultater.
-   - Priser: der er ingen prislister på siden. Omfang og pris aftales, før
-     noget går i gang. Skal der senere stå en pris, må den kun stå ved den
-     hjemmesidepakke, den gælder for.
+   - Priser: KUN selve hjemmesiden har en pris (se `pricing`). Booking,
+     integrationer, vedligeholdelse, marketing og automatisering aftales
+     personligt og har ingen pris på siden. Opfind ikke priser på hosting,
+     abonnementer eller bindingsperioder, og gæt ikke momsstatus.
    - Ingen løfter om ejerskab, support, svartider eller leveringstider,
      før Ronny har afklaret dem.
 
    Billeder: siden bruger ingen fotos, logoer, menukort eller tekster fra
-   virksomhederne i portfolioen. Projekterne vises som konceptillustrationer,
-   tegnet til siden i src/concepts (HTML/CSS), og er mærket som sådan. Det
-   eneste foto er Ronnys eget portræt.
+   virksomhederne bag demoerne. Demoerne vises som illustrationer, tegnet til
+   siden i src/concepts (HTML/CSS), og er mærket som demo. Det eneste foto er
+   Ronnys eget portræt.
    ========================================================================= */
 
 export const site = {
@@ -35,278 +37,320 @@ export const site = {
   place: 'Hjortshøj / Aarhus',
 }
 
-/* Navigation: fire punkter, i den rækkefølge sektionerne står på siden.
-   Sektioner uden eget link (Samarbejdet, Anmeldelsen, Spørgsmål) regnes med
-   under det link, man kom fra. */
-export const nav = {
-  brand: 'OviaSpecs',
-  links: [
-    { label: 'Ydelser', href: '#ydelser' },
-    { label: 'Arbejde', href: '#arbejde' },
-    { label: 'Om', href: '#om' },
-  ],
-  cta: { label: 'Kontakt', href: '#kontakt' },
-  // Genveje i mobilmenuen: overblik over, hvad jeg hjælper med.
-  areasLabel: 'Jeg hjælper med',
-  areas: [
-    { label: 'Hjemmesider og booking', href: '#hjemmesider' },
-    { label: 'Systemer og automatisering', href: '#systemer' },
-    { label: 'Synlighed og annoncering', href: '#synlighed' },
-  ],
-  menu: 'Menu',
-  close: 'Luk',
+/** Adresser til de faste sider. Bruges af navigation, knapper og sitemap. */
+export const paths = {
+  home: '/',
+  hjemmesider: '/hjemmesider/',
+  booking: '/booking-integrationer/',
+  seo: '/seo/',
+  googleAds: '/google-ads/',
+  sociale: '/sociale-medier-annoncering/',
+  ai: '/ai-automatisering/',
+  demoer: '/demoer/',
+  om: '/om/',
+  kontakt: '/kontakt/',
+  prisberegner: '/prisberegner/',
+  privatliv: '/privatlivspolitik/',
 }
 
 /* -------------------------------------------------------------------------
-   HERO
-   To rækker i overskriften (koreografien er bygget på to maskerede rækker).
-   Rækkerne må gerne brække til flere linjer.
+   NAVIGATION
+   Hjemmesider · Marketing ▾ · Integrationer ▾ · Demoer · Om OviaSpecs ·
+   Kontakt · [Beregn din pris]
+------------------------------------------------------------------------- */
+export const nav = {
+  brand: 'OviaSpecs',
+  items: [
+    { label: 'Hjemmesider', href: paths.hjemmesider },
+    {
+      label: 'Marketing',
+      children: [
+        { label: 'SEO', href: paths.seo, text: 'Bliv lettere at finde i Google' },
+        { label: 'Google Ads', href: paths.googleAds, text: 'Annoncer i søgeresultaterne' },
+        {
+          label: 'Annoncering på sociale medier',
+          href: paths.sociale,
+          text: 'Meta (Facebook og Instagram) og TikTok',
+        },
+      ],
+    },
+    {
+      label: 'Integrationer',
+      children: [
+        { label: 'Booking og integrationer', href: paths.booking, text: 'Koble booking og værktøjer på siden' },
+        { label: 'AI-automatisering', href: paths.ai, text: 'Færre gentagne opgaver' },
+      ],
+    },
+    { label: 'Demoer', href: paths.demoer },
+    { label: 'Om OviaSpecs', href: paths.om },
+    { label: 'Kontakt', href: paths.kontakt },
+  ],
+  cta: { label: 'Beregn din pris', href: paths.prisberegner },
+  menu: 'Menu',
+  close: 'Luk',
+  mobileMore: 'Andet',
+}
 
-   Motivet er tre konceptillustrationer af tre forskellige designretninger:
-   frisør på computer, brasserie og café på telefon. De viser, hvad jeg kan
-   bygge til en hjemmeside, og er mærket "Konceptillustration".
+/* -------------------------------------------------------------------------
+   PRISBEREGNER — kun selve hjemmesiden.
+
+   Prismodellen er samlet her og er den ENESTE kilde: heroen, hjemmesidesiden
+   og beregneren bruger alle priceFor(). Ret tallene her.
+   Forsiden tæller med i antallet af sider. Virksomhedstype, formål og valgt
+   demo ændrer aldrig prisen. Mere end seks sider, webshop og specialudvikling
+   giver ikke en pris, men "Særskilt tilbud".
+------------------------------------------------------------------------- */
+export const pricing = {
+  tiers: [
+    { id: '1-3', label: '1–3 sider', range: 'Forside og op til to undersider', price: 4000 },
+    { id: '4-5', label: '4–5 sider', range: 'Forside og tre til fire undersider', price: 4500 },
+    { id: '6', label: '6 sider', range: 'Forside og fem undersider', price: 5000 },
+  ],
+  custom: {
+    id: 'custom',
+    label: 'Mere end 6 sider, webshop eller specialudvikling',
+    range: 'Større opgaver får et særskilt tilbud',
+  },
+}
+
+/** Pris i kroner for et valg af sideantal, eller null (= særskilt tilbud). */
+export function priceFor(pagesId) {
+  return pricing.tiers.find((t) => t.id === pagesId)?.price ?? null
+}
+
+/** 4500 -> "4.500 kr." (manuelt, så server og klient altid giver samme tekst). */
+export function formatKr(n) {
+  return `${String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.')} kr.`
+}
+
+export const businessTypes = [
+  { id: 'mad', label: 'Café, restaurant eller bar' },
+  { id: 'salon', label: 'Frisør, salon eller klinik' },
+  { id: 'service', label: 'Håndværker eller servicefirma' },
+  { id: 'butik', label: 'Butik' },
+  { id: 'andet', label: 'Noget andet' },
+]
+
+/** Formål. `short` bruges i heroen, `label` i beregneren. */
+export const purposes = [
+  { id: 'praesentere', short: 'Vise, hvem vi er', label: 'Vise, hvem vi er, og hvad vi tilbyder' },
+  { id: 'henvendelser', short: 'Få flere henvendelser', label: 'Få flere henvendelser' },
+  { id: 'menu', short: 'Vise menu og tider', label: 'Vise menu, priser eller åbningstider' },
+  { id: 'booking', short: 'Gøre booking nemt', label: 'Gøre det nemt at booke' },
+]
+
+export const calc = {
+  title: 'Beregn din hjemmesidepris',
+  intro:
+    'Tre korte trin til prisen på selve hjemmesiden. Du behøver ikke oplyse noget for at se den.',
+  scope: 'Beregneren gælder almindelige virksomhedshjemmesider. Andre opgaver aftaler vi personligt.',
+  progress: (n) => `Trin ${n} af 3`,
+  steps: ['Om din virksomhed', 'Antal sider', 'Din pris'],
+  back: 'Tilbage',
+  next: 'Næste',
+  s1: {
+    title: 'Hvem er du, og hvad skal siden hjælpe med?',
+    type: 'Virksomhedstype',
+    purpose: 'Formål',
+    note: 'Svarene ændrer ikke prisen. De hjælper mig med at forstå, hvad siden skal kunne.',
+    fromDemo: (name) =>
+      `Udfyldt ud fra ${name}. Ret svarene, så de passer til din virksomhed.`,
+  },
+  s2: {
+    title: 'Hvor mange sider skal hjemmesiden have?',
+    hint: 'Forsiden tæller med. En side kan fx være Forside, Om os, Menu eller Kontakt.',
+    customNote:
+      'Webshop, specialudvikling og større opgaver passer ikke ind i standardprisen. Du får et særskilt tilbud, når vi har talt om opgaven.',
+  },
+  s3: {
+    title: 'Din pris',
+    yourChoice: 'Din valgte løsning',
+    type: 'Virksomhed',
+    purpose: 'Formål',
+    pages: 'Sider (forsiden med)',
+    demo: 'Inspireret af',
+    edit: 'Ret',
+    oneTime: 'Engangspris for selve hjemmesiden',
+    quoteTitle: 'Særskilt tilbud',
+    quoteText:
+      'Det, du har valgt, ligger uden for standardprisen. Fortæl mig om opgaven, så vurderer jeg omfanget og giver dig et skriftligt tilbud.',
+    includedTitle: 'Det er med',
+    included: [
+      'Mobiltilpasset hjemmeside',
+      'De aftalte sider, forsiden med',
+      'Kontaktmulighed på siden: telefon, mail eller en knap til jeres kontaktvej',
+      'Sidetitler og metabeskrivelser sat op til hver side',
+    ],
+    yourPartTitle: 'Det sørger du for',
+    yourPart: [
+      'Tekst og billeder til siden. Skal jeg hjælpe med indholdet, aftaler vi det separat.',
+      'Feedback undervejs. Antallet af korrekturrunder står i tilbuddet, og rettelser uden for det aftalte er en ny opgave.',
+    ],
+    notIncludedTitle: 'Det er ikke med i prisen',
+    notIncluded: [
+      'Booking, integrationer og vedligeholdelse. Det aftaler vi personligt ud fra dine behov.',
+      'Webshop, betalingsløsninger og specialfunktioner.',
+    ],
+    separateTitle: 'Udgifter til andre udbydere',
+    separate:
+      'Domæne, hosting og eksterne systemer betales til udbyderne, ikke til mig. Hvad du får brug for, gennemgår vi sammen, før noget aftales. Moms og betalingsvilkår står i det skriftlige tilbud.',
+    statement:
+      'Prisen gælder selve hjemmesiden. Booking, integrationer og vedligeholdelse aftaler vi sammen ud fra dine behov.',
+    demoNote:
+      'En demo er inspiration. Specialfunktioner, som demoen viser, er ikke automatisk med i standardprisen.',
+    bookingNote: 'Du valgte booking som formål. Selve bookingen er ikke med i prisen, men vi taler om den bagefter.',
+    cta: 'Tal med mig om din hjemmeside',
+    ctaQuote: 'Beskriv din opgave',
+    restart: 'Start forfra',
+  },
+  faq: [
+    {
+      q: 'Hvad er med i prisen?',
+      a: 'Selve hjemmesiden: mobiltilpasset design, de aftalte sider med forsiden, en kontaktmulighed og sidetitler og metabeskrivelser. Tekst og billeder leverer du. Se hele oversigten på resultatsiden.',
+    },
+    {
+      q: 'Skal jeg oplyse noget for at se prisen?',
+      a: 'Nej. Du ser prisen efter tre spørgsmål uden at oplyse navn, mail eller telefon. Først hvis du vil tale med mig, udfylder du en kort formular.',
+    },
+    {
+      q: 'Hvad hvis jeg også har brug for booking eller vedligeholdelse?',
+      a: 'Det er ikke med i prisen og har ingen pris i beregneren. Det taler vi om personligt, ud fra dit system og dine behov.',
+    },
+    {
+      q: 'Er prisen det, jeg ender med at betale?',
+      a: 'Beregneren giver prisen på selve hjemmesiden ud fra de valg, du har lavet. Omfang, vilkår, moms og betaling står i det skriftlige tilbud, før noget går i gang. Domæne, hosting og eksterne systemer betales til udbyderne.',
+    },
+  ],
+  form: {
+    title: 'Tal med mig om din hjemmeside',
+    intro: 'Dine valg og prisestimatet følger med i mailen. Du behøver ikke skrive mere, end du har lyst til.',
+    name: 'Dit navn',
+    email: 'Din e-mail',
+    phone: 'Telefon (valgfrit)',
+    wishes: 'Ønsker og spørgsmål (valgfrit)',
+    wishesPlaceholder: 'Fx: Vi vil gerne have menuen på forsiden, og vi bruger allerede et bookingsystem.',
+  },
+}
+
+/* -------------------------------------------------------------------------
+   HERO — ingen pris. Spørgsmålet er beregnerens første trin; svaret følger
+   med til /prisberegner/.
 ------------------------------------------------------------------------- */
 export const hero = {
   eyebrow: 'Til lokale virksomheder · Hjortshøj og Aarhus',
   lines: ['Din virksomheds', 'digitale handyman.'],
-  deck: 'Jeg hjælper lokale virksomheder med hjemmesider, bookingsystemer, integrationer og online markedsføring — og får de digitale løsninger til at spille sammen.',
-  primary: { label: 'Fortæl om din opgave', href: '#kontakt' },
-  secondary: { label: 'Se hvad jeg hjælper med', href: '#ydelser' },
-  // Tre indgange til ydelserne, så bredden kan ses på første skærm.
-  areasLabel: 'Jeg hjælper med',
-  areas: [
-    { label: 'Hjemmesider og booking', href: '#hjemmesider' },
-    { label: 'Systemer og automatisering', href: '#systemer' },
-    { label: 'Synlighed og annoncering', href: '#synlighed' },
-  ],
+  deck: 'Jeg bygger hjemmesider til lokale virksomheder og får booking, annoncering og automatisering til at spille sammen.',
+  question: 'Hvad skal din nye hjemmeside hjælpe med?',
+  questionHint: 'Vælg det, der passer bedst, så går du videre til prisen.',
+  primary: { label: 'Beregn din hjemmesidepris', href: paths.prisberegner },
+  secondary: { label: 'Se demoer', href: paths.demoer },
+  other: { text: 'Brug for noget andet end en hjemmeside?', label: 'Skriv til mig', href: paths.kontakt },
   shots: { browser: 'salon', phones: ['belli', 'cafe'] },
   labels: {
-    browser: 'Konceptillustration af en hjemmeside til en frisør, set på computer.',
+    browser: 'Illustration af en frisør-hjemmeside, set på computer.',
     phones: [
-      'Konceptillustration af en hjemmeside til en brasserie, set på telefon.',
-      'Konceptillustration af en hjemmeside til en café, set på telefon.',
+      'Illustration af en restaurant-hjemmeside, set på telefon.',
+      'Illustration af en café-hjemmeside, set på telefon.',
     ],
   },
-  tag: 'Konceptillustration',
-  caption: 'Eksempler på hjemmesider, jeg har designet',
-  captionHref: '#arbejde',
+  tag: 'Demo · koncept',
+  caption: 'Se alle demoer',
+  captionHref: paths.demoer,
 }
 
 /* -------------------------------------------------------------------------
-   YDELSER — tre områder, organiseret efter kundens behov.
-
-   Eksemplerne under hvert område er mulige løsninger, ikke færdige
-   kundecases (det siger `examplesNote`). Hvert område har en kontaktknap, der
-   forvælger emnet i kontaktformularen (topic = id i `topics` nedenfor).
+   FORSIDEN: OVERBLIK OVER YDELSERNE
 ------------------------------------------------------------------------- */
-export const ydelser = {
-  id: 'ydelser',
-  eyebrow: 'Ydelser',
-  title: 'Tre områder. Du vælger det, du har brug for.',
-  intro:
-    'Du behøver ikke vide, hvad løsningen hedder. Fortæl, hvad der driller, så finder vi ud af, hvad der giver mening. Du skal hverken have det hele eller være på alle platforme.',
-  labels: {
-    examples: 'Eksempler',
-    price: 'Pris og forventninger',
-  },
-  examplesNote: 'Eksempler på mulige løsninger, ikke færdige kundecases.',
-
-  // Områdenavigation: klistret række af knapper øverst i sektionen.
-  areaNav: {
-    label: 'Spring til område',
-    next: 'Næste område',
-    items: [
-      { id: 'hjemmesider', n: '01', label: 'Hjemmesider', long: 'Hjemmesider og booking' },
-      { id: 'systemer', n: '02', label: 'Systemer', long: 'Systemer og automatisering' },
-      { id: 'synlighed', n: '03', label: 'Synlighed', long: 'Synlighed og annoncering' },
-      { id: 'andet', n: '', label: 'Andet', long: 'Noget andet' },
-    ],
-  },
-
-  hjemmesider: {
-    id: 'hjemmesider',
+export const overview = {
+  eyebrow: 'Hvad jeg hjælper med',
+  title: 'Tre indgange. Vælg den, du har brug for.',
+  intro: 'Du behøver ikke vide, hvad løsningen hedder. Start dér, hvor det driller, så finder vi resten sammen.',
+  main: {
     n: '01',
-    eyebrow: 'Hjemmesider og booking',
-    title: 'En hjemmeside, hvor kunden kan handle.',
-    body: 'Jeg designer og bygger hjemmesider, landingssider og webshops. Og jeg kobler booking på, så kunden kan bestille bord eller tid uden at ringe først.',
-    examples: [
-      'Hjemmeside til en frisør, café, restaurant eller butik',
-      'Landingsside til en kampagne eller en enkelt ydelse',
-      'Webshop til en mindre butik',
-      'Bordbooking til restauranten, tidsbestilling til salonen og en kontaktformular, der virker',
-    ],
-    price:
-      'Omfang og pris aftales, før noget går i gang. Domæne, hosting og bookingsystemets abonnement betales til udbyderen. Jeg kobler eksisterende bookingsystemer på hjemmesiden og udvikler ikke selv bookingsoftware.',
-    cta: { label: 'Spørg om hjemmeside og booking', topic: 'hjemmeside' },
+    title: 'Hjemmesider',
+    text: 'En hjemmeside, hvor kunden hurtigt kan se, hvad I laver, og hvordan man tager kontakt. Bygget i kode, tilpasset jeres virksomhed.',
+    cta: { label: 'Se hjemmesider', href: paths.hjemmesider },
+    calc: { label: 'Beregn din pris', href: paths.prisberegner },
   },
-
-  systemer: {
-    id: 'systemer',
-    n: '02',
-    eyebrow: 'Systemer og automatisering',
-    title: 'Værktøjer, der arbejder sammen, og færre gentagne opgaver.',
-    body: 'Jeg forbinder virksomhedens digitale værktøjer og gør de opgaver lettere, der ellers tager tid hver uge.',
-    // Fire eksempler, hver med en kort forklaring af, hvad arbejdet er.
-    items: [
-      {
-        title: 'Lageroverblik',
-        text: 'Et samlet overblik over varer og beholdning, så I kan se, hvad der er på lager, uden at lede flere steder.',
-      },
-      {
-        title: 'Registrering og optælling',
-        text: 'Værktøjer, der gør det lettere at registrere og tælle produkter. Selve optællingen foregår stadig i hånden, medmindre vi konkret aftaler andet.',
-      },
-      {
-        title: 'Dataoverførsel mellem systemer',
-        text: 'Oplysninger flyttes fra det ene system til det andet, i stedet for at nogen skriver dem ind to gange.',
-      },
-      {
-        title: 'Beskeder og påmindelser',
-        text: 'Automatiske beskeder, fx en bekræftelse til kunden eller en påmindelse, der ellers skulle sendes i hånden.',
-      },
-    ],
-    price:
-      'Vurderes efter opgavens omfang, så der er ingen fast pris. Abonnementer og eksterne systemer betales til udbyderen.',
-    cta: { label: 'Spørg om systemer og automatisering', topic: 'systemer' },
-  },
-
-  synlighed: {
-    id: 'synlighed',
-    n: '03',
-    eyebrow: 'Synlighed og annoncering',
-    title: 'Bliv fundet af dem, der leder efter jer.',
-    body: 'En hjemmeside hjælper først, når kunderne kan finde den. Her er tre veje, og hvad arbejdet består i. Jeg anbefaler kun dem, der passer til jer.',
-    rows: [
-      {
-        n: 1,
-        label: 'Google-virksomhedsprofil',
-        kind: 'Gratis at have',
-        text: 'Jeg opretter eller rydder op i profilen: åbningstider, kategorier, billeder, beskrivelse og links, så oplysningerne er rigtige, når nogen søger på jer i Google og på kortet.',
-      },
-      {
-        n: 2,
-        label: 'SEO',
-        kind: 'Søgemaskiner',
-        text: 'Jeg gennemgår hjemmesidens tekster, titler, hastighed og opbygning og retter det, der gør den svær at finde og bruge. Det tager tid, og ingen kan love en bestemt placering.',
-      },
-      {
-        n: 3,
-        label: 'Annoncering',
-        kind: 'Google, TikTok og Meta',
-        text: 'Jeg opsætter og justerer annoncer til en kampagne eller et tilbud: målgruppe, tekst, billeder og budget. Annoncebudgettet betales til platformen og kommer oven i mit arbejde.',
-      },
-    ],
-    price:
-      'Jeg lover ingen bestemte placeringer, salgstal eller resultater. Omfang og pris vurderes efter opgaven. Jeg starter ikke annoncer, før vi har aftalt kanal og budget.',
-    cta: { label: 'Spørg om synlighed og annoncering', topic: 'synlighed' },
-    search: {
-      label: 'Eksempel: sådan kan en søgning se ud',
-      note: 'Illustration med opdigtede navne. Den viser forskellen på de tre veje og er ikke et rigtigt søgeresultat eller en placering.',
-      query: 'brunch nær mig',
-      brand: 'Eksempelcafé',
-      ad: {
-        tag: 'Annonce',
-        title: 'Eksempelcafé | Brunch i centrum',
-        url: 'eksempelcafe.dk',
-        text: 'Se menuen og find vej.',
-      },
-      profile: {
-        kind: 'Café',
-        hours: 'Åbningstider',
-        actions: ['Rute', 'Ring', 'Hjemmeside'],
-      },
-      organic: {
-        title: 'Menu og åbningstider | Eksempelcafé',
-        url: 'eksempelcafe.dk › menu',
-        text: 'Morgenmad, brunch og kaffe. Adresse og åbningstider.',
-      },
+  groups: [
+    {
+      n: '02',
+      title: 'Marketing',
+      text: 'Bliv fundet af dem, der leder efter jer, og vist for dem, der endnu ikke gør.',
+      links: [
+        { label: 'SEO', href: paths.seo },
+        { label: 'Google Ads', href: paths.googleAds },
+        { label: 'Annoncering på sociale medier', href: paths.sociale, note: 'Meta og TikTok' },
+      ],
     },
-  },
-
-  // Åben indgang til opgaver, der ikke står ovenfor.
-  open: {
-    text: 'Har du en digital opgave, du ikke kan finde her? Fortæl mig, hvad der driller, så undersøger jeg, hvordan jeg kan hjælpe.',
-    cta: { label: 'Beskriv din opgave', topic: 'andet' },
-  },
-}
-
-/* Bookingeksemplet. Opdigtede tider og behandlinger uden priser. Intet
-   sendes nogen steder, og der vises ingen bekræftelse. */
-export const bookingDemo = {
-  label: 'Eksempel på bookingflow',
-  site: 'Eksempelsalon',
-  step1: 'Vælg behandling',
-  step2: 'Vælg dag og tidspunkt',
-  services: [
-    { id: 'klip', name: 'Herreklip', minutes: 30 },
-    { id: 'skaeg', name: 'Skægtrim', minutes: 15 },
-    { id: 'begge', name: 'Klip og skæg', minutes: 45 },
+    {
+      n: '03',
+      title: 'Integrationer',
+      text: 'Booking på hjemmesiden og værktøjer, der arbejder sammen, så der er færre ting at gøre i hånden.',
+      links: [
+        { label: 'Booking og integrationer', href: paths.booking },
+        { label: 'AI-automatisering', href: paths.ai },
+      ],
+    },
   ],
-  days: [
-    { id: 'man', short: 'Man', long: 'mandag', busy: ['09:00', '10:30', '13:00'] },
-    { id: 'tir', short: 'Tir', long: 'tirsdag', busy: ['09:30', '11:00', '14:00', '14:30'] },
-    { id: 'ons', short: 'Ons', long: 'onsdag', busy: ['10:00', '10:30', '15:00'] },
-    { id: 'tor', short: 'Tor', long: 'torsdag', busy: ['09:00', '09:30', '12:30'] },
-    { id: 'fre', short: 'Fre', long: 'fredag', busy: ['11:30', '12:00', '13:30'] },
-  ],
-  times: ['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30'],
-  summary: {
-    title: 'Dit valg',
-    treatment: 'Behandling',
-    when: 'Tid',
-    empty: 'Vælg et tidspunkt',
-    busy: 'Optaget',
-    minutes: 'min.',
-    note: 'Kun et eksempel. Der er ikke reserveret noget, og der sendes ingenting. I et rigtigt flow går valget videre til jeres eget bookingsystem.',
-    hint: 'Nogle tider er optaget. Længere behandlinger kan ikke ligge oven i en optaget tid.',
-  },
 }
 
 /* -------------------------------------------------------------------------
-   UDVALGT ARBEJDE — kun tre demoer, ingen kunder.
+   DEMOER — mine egne demoer, ingen kunder.
 
-   Hvert projekt vises som en scene med en konceptillustration af
-   designretningen på computer og telefon. Illustrationen er tegnet til
-   siden og bruger ingen fotos, logoer, menukort, priser, anmeldelser eller
-   tekster fra virksomheden. Den er ikke et skærmbillede. Sidens ramme ruller
-   med, mens man scroller forbi, og tre udsnit står altid stille under scenen.
+   Hver demo vises som en illustration, tegnet til siden i src/concepts. De
+   fire demoer findes som færdige sider hos GitHub Pages (`href`), men de
+   indeholder virksomhedernes egne fotos, logoer, menukort og tekster, som
+   jeg ikke har dokumenteret tilladelse til at vise. Derfor:
+     - siden bruger intet af det materiale,
+     - virksomhedernes navne står ikke på siden (generiske visningsnavne),
+     - "Se live-demo" vises kun, når showLiveLinks er true.
+   Sæt showLiveLinks til true, når demoerne er ryddet for tredjepartsmateriale
+   OG de valgte adresser er kontrolleret. Privatlivspolitikken ændrer sig selv.
 
-   Alle tre er "Demo / koncept". Virksomhederne står ikke som kunder,
-   samarbejdspartnere eller anbefalinger.
-
-   showDemoLinks: sæt til true, når demoerne på GitHub Pages er ryddet for
-   fotos, logoer, menukort og anmeldelser, som Ronny ikke har tilladelse til
-   at vise. Indtil da linker siden ikke til dem.
+   `features` må kun nævne det, kilde-demoen faktisk indeholder.
+   calcType / calcPurpose forudfylder beregneren; kunden kan ændre dem.
 ------------------------------------------------------------------------- */
-export const work = {
-  id: 'arbejde',
-  eyebrow: 'Arbejde',
-  title: 'Tre hjemmesider, jeg har designet og kodet.',
+export const demos = {
+  id: 'demoer',
+  eyebrow: 'Demoer',
+  title: 'Sådan kan en hjemmeside se ud.',
   intro:
-    'Det er mine egne demoer, ikke kundeopgaver. De viser, hvordan jeg griber en hjemmeside an, når en frisør, en restaurant og en café har hver sin stemning og hvert sit behov.',
-  tag: 'Demo / koncept',
-  note: 'Demo / koncept betyder, at siden er lavet som eksempel på mit arbejde. Den er ikke en kundeopgave, og virksomheden er ikke kunde eller samarbejdspartner. Illustrationerne er tegnet til denne side og bruger ingen fotos, logoer eller tekster fra virksomhederne.',
-  showDemoLinks: false,
-  open: 'Åbn demoen',
-  more: 'Vil du se hele demoen, så skriv til mig.',
-  labels: { task: 'Opgaven', made: 'Det har jeg lavet', views: 'Udsnit' },
+    'Det er mine egne demoer, ikke kundeopgaver. De viser, hvordan jeg griber en hjemmeside an, når en frisør, en restaurant, en café og en vinbar har hver sin stemning og hvert sit behov.',
+  homeTitle: 'Tre demoer af mit arbejde.',
+  homeIntro:
+    'Tre forskellige retninger: en mørk og redaktionel frisørside, en varm restaurant og en farverig café.',
+  tag: 'Demo – koncept, ikke kundearbejde',
+  tagShort: 'Demo · koncept',
+  note: 'Demoerne viser eksempler på design og funktioner. Din hjemmeside tilpasses din virksomhed, og standardprisen indeholder ikke automatisk alle de funktioner, en demo viser. Illustrationerne er tegnet til denne side og er ikke skærmbilleder: de bruger ingen fotos, logoer, menukort eller tekster fra virksomhederne.',
+  showLiveLinks: false,
+  open: 'Se live-demo',
+  more: 'Vil du se en demo i en rigtig browser, så skriv til mig, så viser jeg den.',
+  calcCta: 'Beregn en lignende hjemmeside',
+  labels: { task: 'Formål', features: 'Funktioner i demoen', views: 'Udsnit', design: 'Design' },
+  seeAll: { label: 'Se alle demoer', href: paths.demoer },
   projects: [
     {
       id: 'salon',
       variant: 'feature',
       panel: '#241b14',
-      name: 'Salonkoncept',
-      kind: 'Frisør og barber, Aarhus C',
+      name: 'Frisør- og barberdemo',
+      kind: 'Frisør og barber',
       href: 'https://ronron-hr.github.io/salonmatin-demo/',
-      task: 'En frisør, hvor nogle kommer forbi og andre booker. Siden skulle få behandlinger og booking frem, før man begynder at lede.',
-      made: [
-        'Design og kode af hele siden, mørkt og redaktionelt',
-        'Prisliste med en bookingknap ved hver behandling, koblet til salonens eksisterende onlinebooking',
+      calcType: 'salon',
+      calcPurpose: 'booking',
+      design:
+        'Mørkt og redaktionelt: store overskrifter, rolige flader og god plads til billeder.',
+      task: 'En frisør, hvor nogle kommer forbi, og andre booker. Siden skal få behandlinger og booking frem, før man begynder at lede.',
+      features: [
+        'Behandlinger med priser og varighed',
+        'Bookingknap ved hver behandling, der fører til et eksisterende bookingsystem',
+        'Holdet, historie og galleri',
+        'Åbningstider, kort og kontaktoplysninger',
       ],
       label:
-        'Salonkoncept, konceptillustration: mørk forside, historie, tre værdier og en behandlingsliste med bookingknapper.',
-      labelMobile: 'Salonkoncept, konceptillustration på telefon.',
-      // y: hvor langt nede i illustrationen (designenheder) udsnittet står.
+        'Illustration af frisør- og barberdemoen: mørk forside, historie, tre værdier og en behandlingsliste med bookingknapper.',
+      labelMobile: 'Frisør- og barberdemoen, illustration på telefon.',
       excerpts: [
         { label: 'Forside', text: 'Tilbud og booking på første skærm', y: 0 },
         { label: 'Historien', text: 'Kort om salonen og håndværket', y: 1000 },
@@ -317,17 +361,22 @@ export const work = {
       id: 'belli',
       variant: 'wide',
       panel: '#6a1b22',
-      name: 'Restaurantkoncept',
-      kind: 'Restaurant, Aarhus C',
+      name: 'Restaurantdemo',
+      kind: 'Fransk brasserie',
       href: 'https://ronron-hr.github.io/belli-demo/',
-      task: 'Et hus med en lang historie og et menukort, der skifter. Siden skulle vise stemningen først og gøre det nemt at bestille bord.',
-      made: [
-        'Design og kode af hele siden, med store billedflader og en tidslinje for husets historie',
-        'Bordbestilling koblet til restaurantens eksisterende system',
+      calcType: 'mad',
+      calcPurpose: 'menu',
+      design:
+        'Bordeaux og lyse flader, stor typografi og en tidslinje, der fortæller husets historie.',
+      task: 'Et hus med en lang historie og et menukort, der skifter. Siden skal vise stemningen først og gøre det nemt at bestille bord.',
+      features: [
+        'Menukort med faner til frokost, aften og vin',
+        'Links til et eksisterende bordbookingsystem',
+        'Historie, åbningstider og kort',
       ],
       label:
-        'Restaurantkoncept, konceptillustration: mørk forside med lamper og ternet dug, præsentation af huset, en bordeauxrød historiesektion og menuen.',
-      labelMobile: 'Restaurantkoncept, konceptillustration på telefon.',
+        'Illustration af restaurantdemoen: mørk forside med lamper og ternet dug, præsentation af huset, en bordeauxrød historiesektion og menuen.',
+      labelMobile: 'Restaurantdemoen, illustration på telefon.',
       excerpts: [
         { label: 'Forside', text: 'Stemning først, bordbestilling lige ved siden af', y: 0 },
         { label: 'Huset', text: 'Kort præsentation og aktuelle beskeder', y: 850 },
@@ -338,24 +387,71 @@ export const work = {
       id: 'cafe',
       variant: 'tall',
       panel: '#f4c343',
-      name: 'Cafékoncept',
-      kind: 'Café, Aarhus C',
+      name: 'Cafédemo',
+      kind: 'Café uden bordbestilling',
       href: 'https://ronron-hr.github.io/dengulecafe-demo/',
-      task: 'En café uden bordbestilling, hvor gæsten bare skal vide, hvad der er på menuen, hvornår der er åbent, og hvordan man finder derhen.',
-      made: [
-        'Design og kode af hele siden, med kraftige farveflader',
-        'Menu og åbningstider samlet på forsiden og en knap, der viser vej',
+      calcType: 'mad',
+      calcPurpose: 'menu',
+      design: 'Kraftige farver i gul, lilla og rosa, runde former og billeder, der kastes ind som fotos på et bord.',
+      task: 'En café, hvor gæsten bare skal vide, hvad der er på menuen, hvornår der er åbent, og hvordan man finder derhen.',
+      features: [
+        'Menu og åbningstider samlet på forsiden',
+        'Billedgalleri',
+        'Vejvisning med kort',
       ],
       label:
-        'Cafékoncept, konceptillustration: gul forside med polaroids, lyserød stribe med åbningstider og en lilla menu.',
-      labelMobile: 'Cafékoncept, konceptillustration på telefon.',
+        'Illustration af cafédemoen: gul forside med polaroids, lyserød stribe med åbningstider og en lilla menu.',
+      labelMobile: 'Cafédemoen, illustration på telefon.',
       excerpts: [
         { label: 'Forside', text: 'Hvad stedet er, og en knap til at finde vej', y: 0 },
         { label: 'Menu', text: 'Seks slags mad og drikke på ét blik', y: 718 },
         { label: 'Åbningstider', text: 'Dage og tider uden at lede', y: 1600 },
       ],
     },
+    {
+      id: 'vinbar',
+      variant: 'feature',
+      panel: '#1f221b',
+      name: 'Vinbardemo',
+      kind: 'Vinbar med cocktails',
+      href: 'https://ronron-hr.github.io/manon-demo/',
+      calcType: 'mad',
+      calcPurpose: 'menu',
+      design: 'Grønne og cremefarvede flader med serifskrift: stille og eftertænksomt.',
+      task: 'En bar, hvor gæsten kan se, hvad der er åbent lige nu, og hvordan man kommer forbi eller booker til en gruppe.',
+      features: [
+        'Månedens vin og årstidens drink',
+        'Kort med vin og cocktails',
+        'Åbningstider med besked om, om der er åbent lige nu',
+        'Kort, der først indlæses, når man trykker på det',
+        'Bookinghenvendelse via e-mail',
+      ],
+      label:
+        'Illustration af vinbardemoen: mørkegrøn forside med serifskrift, månedens vin og drink, et kort med vin og cocktails og en fortælling om stedet.',
+      labelMobile: 'Vinbardemoen, illustration på telefon.',
+      excerpts: [
+        { label: 'Forside', text: 'Stemning og åbningstider først', y: 0 },
+        { label: 'Denne måned', text: 'Månedens vin og årstidens drink', y: 900 },
+        { label: 'Kortet', text: 'Vin og cocktails på et roligt kort', y: 1500 },
+      ],
+    },
   ],
+}
+
+export function demoById(id) {
+  return demos.projects.find((p) => p.id === id) ?? null
+}
+
+/** Adresse til beregneren med valg med i adresselinjen. */
+export function calcHref({ type, purpose, pages, demo, step } = {}) {
+  const q = new URLSearchParams()
+  if (type) q.set('virksomhed', type)
+  if (purpose) q.set('formaal', purpose)
+  if (pages) q.set('sider', pages)
+  if (demo) q.set('demo', demo)
+  if (step) q.set('trin', String(step))
+  const s = q.toString()
+  return `${paths.prisberegner}${s ? `?${s}` : ''}`
 }
 
 /* -------------------------------------------------------------------------
@@ -392,8 +488,8 @@ export const samarbejde = {
 /* -------------------------------------------------------------------------
    ANMELDELSE — Copenhagen Ease har givet tilladelse til at bruge feedbacken
    som anmeldelse og virksomheden som reference. Citatet er ordret fra deres
-   besked. Ingen stjerner, personnavne, tal eller flere udtalelser. Virksomheds-
-   navnet står som tekst: der er intet godkendt logo i projektet.
+   besked og handler om en SAMTALE, ikke om en leveret hjemmeside. Ingen
+   stjerner, personnavne, tal eller flere udtalelser.
 ------------------------------------------------------------------------- */
 export const review = {
   id: 'anmeldelse',
@@ -425,13 +521,21 @@ export const om = {
   facts: [
     ['Kontaktperson', 'Ronny Hong'],
     ['Sted', 'Hjortshøj / Aarhus'],
-    ['Arbejder med', 'Hjemmesider, booking, systemer og synlighed'],
+    ['Arbejder med', 'Hjemmesider, booking, marketing og automatisering'],
   ],
+  principles: {
+    title: 'Sådan arbejder jeg',
+    items: [
+      { title: 'Skriftligt, før jeg går i gang', text: 'Omfang, pris og afgrænsning står på skrift, så vi begge ved, hvad der er aftalt.' },
+      { title: 'Ærlig om det, jeg ikke kan love', text: 'Jeg lover ingen placeringer i Google, salgstal eller resultater. Jeg fortæller, hvad jeg gør, og hvorfor.' },
+      { title: 'Du bestiller kun det, du har brug for', text: 'Du behøver hverken have det hele eller være på alle platforme.' },
+    ],
+  },
   portrait,
 }
 
 /* -------------------------------------------------------------------------
-   SPØRGSMÅL — kun det, der reelt afgør, om man skriver.
+   SPØRGSMÅL på kontaktsiden — kun det, der reelt afgør, om man skriver.
 ------------------------------------------------------------------------- */
 export const faq = {
   id: 'sporgsmaal',
@@ -441,10 +545,6 @@ export const faq = {
     {
       q: 'Kan du hjælpe med en hjemmeside, jeg allerede har?',
       a: 'Ja. Vi ser på, hvad der virker, og hvad der ikke gør. Nogle gange er få rettelser nok, andre gange giver en ny side mere mening. Du får at vide, hvilket, før noget aftales.',
-    },
-    {
-      q: 'Kan du sætte booking op i det system, jeg bruger?',
-      a: 'Det er det typiske. Jeg lægger bookingknappen eller flowet ind på hjemmesiden, så kunderne kommer direkte til dit eksisterende system. Hvad der kan lade sig gøre, afhænger af systemet, så skriv, hvilket du bruger. Jeg udvikler ikke nye bookingsystemer.',
     },
     {
       q: 'Kan jeg nøjes med én opgave?',
@@ -460,7 +560,7 @@ export const faq = {
     },
     {
       q: 'Hvad koster det?',
-      a: 'Det afhænger af opgavens omfang, så der er ingen prisliste. Vi aftaler omfang og pris, før noget går i gang. Annoncebudget, abonnementer og eksterne systemer betales separat til udbyderen.',
+      a: 'En almindelig virksomhedshjemmeside kan du få prisen på i prisberegneren, uden at oplyse noget. Booking, integrationer, vedligeholdelse, marketing og automatisering aftaler vi personligt. Annoncebudget, abonnementer og eksterne systemer betales til udbyderen.',
     },
   ],
 }
@@ -475,13 +575,15 @@ export const kontakt = {
   eyebrow: 'Kontakt',
   title: 'Fortæl om din opgave.',
   body: 'Skriv et par linjer om, hvad virksomheden laver, og hvad du gerne vil have hjælp til. Du får svar fra mig, og vi ser på, hvad der giver mening at starte med.',
+  bodyShort: 'Fortæl om virksomheden og opgaven. Du får svar fra mig, og vi finder ud af, hvad der giver mening at starte med.',
+  ctaTitle: 'Skal vi tale om din opgave?',
   form: {
     topicLegend: 'Hvad drejer det sig om?',
     name: 'Dit navn',
     company: 'Virksomhed',
     message: 'Hvad vil du have hjælp til?',
     messagePlaceholder: 'Fx: Vi er en café med en gammel hjemmeside og vil gerne kunne tage imod bordbestillinger.',
-    submit: 'Åbn mail med din besked',
+    submit: 'Åbn e-mail med din besked',
     copy: 'Kopiér beskeden',
     copied: 'Beskeden er kopieret. Indsæt den i en mail til',
     copyFailed: 'Kunne ikke kopiere automatisk. Skriv i stedet direkte til',
@@ -491,19 +593,29 @@ export const kontakt = {
       'Jeg har forsøgt at åbne dit mailprogram med beskeden. Husk at trykke send dér. Åbnede det sig ikke, kan du skrive direkte til',
   },
   phoneLabel: 'Foretrækker du at ringe?',
+  inline: {
+    title: 'Beskriv din opgave',
+    intro: 'Skriv et par linjer, så vender jeg tilbage. Ingen pris og ingen binding, før vi har talt sammen.',
+  },
 }
 
-/** Emner i kontaktformularen. Ydelsesknapperne forvælger et af dem. */
+/** Emner i kontaktformularen. Ydelsessiderne forvælger et af dem. */
 export const topics = [
-  { id: 'hjemmeside', label: 'Hjemmeside og booking' },
-  { id: 'systemer', label: 'Systemer og automatisering' },
-  { id: 'synlighed', label: 'Synlighed og annoncering' },
+  { id: 'hjemmeside', label: 'Hjemmeside' },
+  { id: 'booking', label: 'Booking og integrationer' },
+  { id: 'vedligeholdelse', label: 'Vedligeholdelse' },
+  { id: 'seo', label: 'SEO' },
+  { id: 'google-ads', label: 'Google Ads' },
+  { id: 'sociale', label: 'Annoncering på sociale medier' },
+  { id: 'ai', label: 'AI-automatisering' },
   { id: 'andet', label: 'Noget andet' },
 ]
 
-/** Mailen, formularen samler: emne og brødtekst. */
+const topicLabel = (id) => topics.find((t) => t.id === id)?.label ?? 'Henvendelse'
+
+/** Mailen, kontaktformularen samler: emne og brødtekst. */
 export function composeParts({ topic, name, company, message }) {
-  const label = topics.find((t) => t.id === topic)?.label ?? 'Henvendelse'
+  const label = topicLabel(topic)
   const subject = `${label} – henvendelse fra oviaspecs.com`
   const body = [
     'Hej Ronny,',
@@ -520,8 +632,41 @@ export function composeParts({ topic, name, company, message }) {
   return { subject, body }
 }
 
-export function composeMail(fields) {
-  const { subject, body } = composeParts(fields)
+/** Mailen, der følger med fra beregneren: valg, prisestimat og eventuel demo. */
+export function composeCalcParts({ name, email, phone, wishes, type, purpose, pages, demo }) {
+  const tier = pricing.tiers.find((t) => t.id === pages)
+  const price = tier ? formatKr(tier.price) : null
+  const subject = price
+    ? `Hjemmeside, ${tier.label.toLowerCase()} (${price}) – henvendelse fra oviaspecs.com`
+    : 'Hjemmeside, særskilt tilbud – henvendelse fra oviaspecs.com'
+  const lines = [
+    'Hej Ronny,',
+    '',
+    'Jeg har brugt prisberegneren på oviaspecs.com og vil gerne tale om min hjemmeside.',
+    '',
+    `Virksomhedstype: ${businessTypes.find((b) => b.id === type)?.label ?? ''}`,
+    `Formål: ${purposes.find((p) => p.id === purpose)?.label ?? ''}`,
+    `Antal sider (forsiden med): ${tier ? tier.label : pricing.custom.label}`,
+    price
+      ? `Prisestimat for selve hjemmesiden: ${price}`
+      : 'Prisestimat: særskilt tilbud (opgaven ligger uden for standardprisen)',
+  ]
+  if (demo) lines.push(`Inspireret af: ${demoById(demo)?.name ?? demo}`)
+  lines.push(
+    '',
+    `Navn: ${name || ''}`,
+    `E-mail: ${email || ''}`,
+    `Telefon: ${phone || ''}`,
+    '',
+    wishes || 'Ønsker og spørgsmål:',
+    '',
+    'Mvh',
+    name || '',
+  )
+  return { subject, body: lines.join('\n') }
+}
+
+export function mailtoFrom({ subject, body }) {
   return `mailto:${site.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
 }
 
@@ -538,10 +683,43 @@ export const legal = {
   hosting: 'Cloudflare',
   mailProvider: 'Google (Gmail)',
   retentionMonths: 12,
-  updated: '29. september 2026',
+  updated: '30. september 2026',
 }
 
 export const footer = {
   left: '© 2026 OviaSpecs',
-  links: [{ label: 'Privatlivspolitik', href: '/privatlivspolitik/' }],
+  tagline: 'Hjemmesider, marketing og integrationer til lokale virksomheder.',
+  columns: [
+    {
+      title: 'Hjemmesider',
+      links: [
+        { label: 'Hjemmesider', href: paths.hjemmesider },
+        { label: 'Beregn din pris', href: paths.prisberegner },
+        { label: 'Demoer', href: paths.demoer },
+      ],
+    },
+    {
+      title: 'Marketing',
+      links: [
+        { label: 'SEO', href: paths.seo },
+        { label: 'Google Ads', href: paths.googleAds },
+        { label: 'Annoncering på sociale medier', href: paths.sociale },
+      ],
+    },
+    {
+      title: 'Integrationer',
+      links: [
+        { label: 'Booking og integrationer', href: paths.booking },
+        { label: 'AI-automatisering', href: paths.ai },
+      ],
+    },
+    {
+      title: 'OviaSpecs',
+      links: [
+        { label: 'Om OviaSpecs', href: paths.om },
+        { label: 'Kontakt', href: paths.kontakt },
+        { label: 'Privatlivspolitik', href: paths.privatliv },
+      ],
+    },
+  ],
 }

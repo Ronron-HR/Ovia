@@ -1,4 +1,4 @@
-import { legal, site, work } from '../content.js'
+import { demos, legal, site } from '../content.js'
 import Logo from './Logo.jsx'
 
 /**
@@ -172,9 +172,11 @@ export default function Privatlivspolitik() {
               sendes videre. Derfor er der intet cookiebanner.
             </p>
             <p>
-              Kontaktformularen på siden sender ikke selv noget og gemmer ikke det, du skriver. Den
-              samler beskeden og åbner din egen mailapp, og først når du trykker send dér, når
-              den mig. Du kan også skrive eller ringe direkte.{work.showDemoLinks && ' Under "Arbejde" er der links til tre demoer, der ligger hos GitHub Pages. Åbner du dem, forlader du oviaspecs.com, og de behandler dine oplysninger efter deres egne regler.'}
+              Kontaktformularerne på siden og formularen efter prisberegneren sender ikke selv noget og
+              gemmer ikke det, du skriver. De samler beskeden og åbner din egen mailapp, og først
+              når du trykker send dér, når den mig. Prisberegneren gemmer ikke dine valg: de står
+              kun i adresselinjen i din egen browser, og i mailen, hvis du selv åbner den. Du kan
+              også skrive eller ringe direkte.{demos.showLiveLinks && ' Under Demoer er der links til demoer, der ligger hos GitHub Pages. Åbner du dem, forlader du oviaspecs.com, og de behandler dine oplysninger efter deres egne regler.'}
             </p>
           </Section>
 

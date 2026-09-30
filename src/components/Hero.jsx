@@ -2,33 +2,27 @@ import { Fragment, useRef } from 'react'
 import { ConceptWindow } from '../concepts/index.jsx'
 import { hero } from '../content.js'
 import { useScene } from '../motion/useScene.js'
+import CalcStart from './CalcStart.jsx'
 import { Arrow, Browser, Phone } from './Shots.jsx'
 
 /**
  * FØRSTE SKÆRMBILLEDE
  *
- * Tilbud (digital handyman), målgruppe (lokale virksomheder), to handlinger,
- * tre indgange til ydelserne og et motiv, der viser arbejdet: tre
- * konceptillustrationer af tre forskellige designretninger i tre lag —
- * frisør på computer bagest, brasserie og café på telefon foran. Tre udtryk
- * på ét blik viser, at siderne ikke ligner hinanden. Illustrationerne er
- * tegnet til siden (src/concepts), er mærket "Konceptillustration" og fylder
- * ingen billedfiler: første skærm er tekst og HTML.
+ * Handling først, ingen pris. Heroen fortæller kort, hvem jeg hjælper og med
+ * hvad, og stiller beregnerens første spørgsmål direkte: "Hvad skal din nye
+ * hjemmeside hjælpe med?" Et svar er et link til /prisberegner/ med formålet i
+ * adresselinjen, så valget følger med og ikke nulstilles. Bagved står de to
+ * knapper (Beregn din hjemmesidepris, Se demoer) og en let vej til kontakt om
+ * andre opgaver. Der er ingen pris og ingen liste over alle ydelser her.
+ *
+ * Motivet er tre illustrationer af tre forskellige designretninger (frisør på
+ * computer, restaurant og café på telefon) i tre lag. De er tegnet til siden
+ * (src/concepts), er mærket "Demo · koncept" og fylder ingen billedfiler.
  *
  * Koreografien er ren CSS (se motion.css) og starter på første frame,
- * uafhængigt af React:
- *
- *   0ms    overskrift, række 1     typografien leder
- *   80ms   overskrift, række 2
- *   200ms  underrubrik
- *   240ms  skærmen
- *   340ms  knapperne
- *   420ms  første telefon
- *   560ms  anden telefon
- *
- * Bagefter giver scroll dybde: de tre lag glider med hver sin hastighed
- * (useScene, mode "leave"), så telefonerne løfter sig hurtigere end skærmen.
- * Skærmen løber ud til skærmkanten på brede skærme (--gutter).
+ * uafhængigt af React. Bagefter giver scroll dybde: de tre lag glider med hver
+ * sin hastighed (useScene, mode "leave"). Skærmen løber ud til skærmkanten på
+ * brede skærme (--gutter).
  */
 export default function Hero() {
   const stage = useRef(null)
@@ -37,7 +31,7 @@ export default function Hero() {
   return (
     <section
       id="hero"
-      className="relative overflow-x-clip pt-[calc(var(--nav-h)+32px)] pb-14 md:pb-20 lg:pt-[calc(var(--nav-h)+56px)] lg:pb-24"
+      className="relative overflow-x-clip pt-[calc(var(--nav-h)+32px)] pb-14 md:pb-20 lg:pt-[calc(var(--nav-h)+48px)] lg:pb-24"
     >
       <div className="shell relative z-10">
         <div className="grid grid-cols-1 gap-y-12 lg:grid-cols-12 lg:items-center lg:gap-x-10">
@@ -63,15 +57,20 @@ export default function Hero() {
             <p
               data-hero="fade"
               style={{ '--d': '200ms' }}
-              className="t-body t-lead mt-6 max-w-[48ch]"
+              className="t-body t-lead mt-6 max-w-[46ch]"
             >
               {hero.deck}
             </p>
 
+            {/* Beregnerens første spørgsmål */}
+            <div data-hero="fade" style={{ '--d': '300ms' }} className="mt-8">
+              <CalcStart />
+            </div>
+
             <div
               data-hero="fade"
-              style={{ '--d': '340ms' }}
-              className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center md:mt-10"
+              style={{ '--d': '400ms' }}
+              className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center"
             >
               <a href={hero.primary.href} className="btn btn-primary">
                 {hero.primary.label}
@@ -81,25 +80,16 @@ export default function Hero() {
               </a>
             </div>
 
-            <div
+            <p
               data-hero="fade"
-              style={{ '--d': '420ms' }}
-              className="mt-10 max-w-[48ch] border-t border-rule pt-5 md:mt-12"
+              style={{ '--d': '480ms' }}
+              className="mt-5 text-[14px] text-muted"
             >
-              <p className="t-eyebrow">{hero.areasLabel}</p>
-              <ul className="mt-2 flex flex-col text-[16px] font-medium sm:flex-row sm:flex-wrap sm:gap-x-7">
-                {hero.areas.map((area) => (
-                  <li key={area.href}>
-                    <a
-                      href={area.href}
-                      className="link-underline hit inline-flex min-h-11 items-center gap-1.5 text-ink"
-                    >
-                      {area.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
+              {hero.other.text}{' '}
+              <a href={hero.other.href} className="link-underline hit font-medium text-ink">
+                {hero.other.label}
+              </a>
+            </p>
           </div>
 
           <div className="lg:col-span-6 lg:-mr-[var(--gutter)]">

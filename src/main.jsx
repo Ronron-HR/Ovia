@@ -1,12 +1,31 @@
 import { StrictMode } from 'react'
 import { createRoot, hydrateRoot } from 'react-dom/client'
 import './index.css'
-import App from './App.jsx'
+import Site from './Site.jsx'
+
+/**
+ * Gamle ankerlinks til den lange forside (fx oviaspecs.com/#ydelser) føres
+ * videre til den nye side, så delte og gemte links stadig virker.
+ */
+const OLD_ANCHORS = {
+  '#ydelser': '/hjemmesider/',
+  '#hjemmesider': '/hjemmesider/',
+  '#systemer': '/ai-automatisering/',
+  '#synlighed': '/seo/',
+  '#arbejde': '/demoer/',
+  '#om': '/om/',
+  '#sporgsmaal': '/kontakt/',
+}
+
+const { pathname, hash } = window.location
+if (pathname === '/' && OLD_ANCHORS[hash]) {
+  window.location.replace(OLD_ANCHORS[hash])
+}
 
 const root = document.getElementById('root')
 const app = (
   <StrictMode>
-    <App />
+    <Site path={pathname} />
   </StrictMode>
 )
 

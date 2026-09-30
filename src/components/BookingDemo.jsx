@@ -1,5 +1,5 @@
 import { useId, useState } from 'react'
-import { bookingDemo as d } from '../content.js'
+import { bookingDemo as d } from '../sketches.js'
 
 /**
  * EKSEMPEL PÅ BOOKINGFLOW

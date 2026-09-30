@@ -1,34 +1,34 @@
 import { useEffect, useRef, useState } from 'react'
 import { ConceptWindow } from '../concepts/index.jsx'
-import { work } from '../content.js'
+import { calcHref, demos } from '../content.js'
 import { Arrow } from './Shots.jsx'
 import Stage from './Stage.jsx'
 
 /**
- * ARBEJDE
+ * DEMOER (siden /demoer/)
  *
- * Sektionen er en mørk flade, der skubber ind over ydelserne (.sheet), så
- * scenerne og de tre designretningers egne farver står frem. Hvert projekt er
- * en scene (Stage) i sin egen komposition, så det ikke bliver tre ens kort:
+ * En mørk flade (.sheet), så scenerne og designretningernes egne farver står
+ * frem. Hvert projekt er en scene (Stage) i sin egen komposition, så det ikke
+ * bliver fire ens kort:
  *
- *   Salonkoncept    bred flade, skærm til venstre og telefon foran
- *   Restaurantkoncept skærmen står til højre, telefonen nederst til venstre
- *   Cafékoncept     telefonen er hovedpersonen, skærmen står bag
+ *   Frisør- og barberdemo   bred flade, skærm til venstre og telefon foran
+ *   Restaurantdemo          skærmen til højre, telefonen nederst til venstre
+ *   Cafédemo                telefonen er hovedpersonen, skærmen står bag
+ *   Vinbardemo              bred flade som den første
  *
  * Under hver scene står tre udsnit af siden (Excerpts): de er statiske, så
  * arbejdet kan vurderes uden at ramme et bestemt scrollpunkt, og de er der
- * også med reduceret bevægelse og uden JavaScript. Teksten er holdt kort:
- * opgaven og to ting, der faktisk er lavet.
+ * også med reduceret bevægelse. Alt er "Demo – koncept, ikke kundearbejde".
  *
- * Alt er "Demo / koncept" og står ikke som kunder eller anbefalinger.
  * Illustrationerne er tegnet til siden og bruger intet materiale fra
- * virksomhederne (se src/concepts/kit.jsx).
+ * virksomhederne (se src/concepts/kit.jsx). "Se live-demo" vises kun, når
+ * demos.showLiveLinks er true. "Beregn en lignende hjemmeside" åbner
+ * beregneren med demoens branche og formål valgt; kunden kan ændre dem.
  */
 function Excerpts({ project, wide = false }) {
-  // Udsnittene tegnes først, når de nærmer sig skærmen: ni illustrationer på
-  // én gang lige efter indlæsning gav et langt hak. Indtil da er det en tom,
-  // låst ramme med samme højde, så siden ikke hopper. Uden IntersectionObserver
-  // tegnes de med det samme.
+  // Udsnittene tegnes først, når de nærmer sig skærmen: mange illustrationer
+  // på én gang lige efter indlæsning gav et langt hak. Indtil da er det en
+  // tom, låst ramme med samme højde, så siden ikke hopper.
   const box = useRef(null)
   const [ready, setReady] = useState(false)
 
@@ -53,7 +53,7 @@ function Excerpts({ project, wide = false }) {
 
   return (
     <div ref={box} className="mt-6 md:mt-8">
-      <p className="t-eyebrow">{work.labels.views}</p>
+      <p className="t-eyebrow">{demos.labels.views}</p>
       <ul className="mt-3 grid grid-cols-3 gap-3 md:gap-4">
         {project.excerpts.map((e) => (
           <li key={e.label} className="excerpt">
@@ -75,14 +75,18 @@ function Facts({ project, className = '' }) {
   return (
     <dl className={className}>
       <div>
-        <dt className="t-eyebrow">{work.labels.task}</dt>
-        <dd className="t-body mt-2 max-w-[44ch] text-[15px]">{project.task}</dd>
+        <dt className="t-eyebrow">{demos.labels.task}</dt>
+        <dd className="t-body mt-2 max-w-[46ch] text-[15px]">{project.task}</dd>
+      </div>
+      <div className="mt-5">
+        <dt className="t-eyebrow">{demos.labels.design}</dt>
+        <dd className="t-body mt-2 max-w-[46ch] text-[15px]">{project.design}</dd>
       </div>
       <div className="mt-6">
-        <dt className="t-eyebrow">{work.labels.made}</dt>
+        <dt className="t-eyebrow">{demos.labels.features}</dt>
         <dd className="mt-2">
-          <ul className="spec-list max-w-[50ch]">
-            {project.made.map((m) => (
+          <ul className="spec-list max-w-[52ch]">
+            {project.features.map((m) => (
               <li key={m}>
                 <span>{m}</span>
               </li>
@@ -94,26 +98,34 @@ function Facts({ project, className = '' }) {
   )
 }
 
-function OpenLink({ project }) {
-  if (!work.showDemoLinks) return null
+/** Handlinger til en demo: live-demo (kun hvis slået til) og beregneren. */
+export function DemoActions({ project, className = '' }) {
   return (
-    <a
-      href={project.href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="btn btn-ghost min-h-11 whitespace-nowrap"
-    >
-      {work.open}
-      <Arrow />
-      <span className="sr-only"> ({project.name}, åbner i et nyt vindue)</span>
-    </a>
+    <div className={`flex flex-col gap-3 sm:flex-row sm:flex-wrap ${className}`}>
+      <a href={calcHref({ demo: project.id })} className="btn btn-primary min-h-11">
+        {demos.calcCta}
+        <Arrow />
+      </a>
+      {demos.showLiveLinks && (
+        <a
+          href={project.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn btn-ghost min-h-11 whitespace-nowrap"
+        >
+          {demos.open}
+          <Arrow />
+          <span className="sr-only"> ({project.name}, åbner i et nyt vindue)</span>
+        </a>
+      )}
+    </div>
   )
 }
 
 function Title({ project }) {
   return (
     <div>
-      <span className="tag">{work.tag}</span>
+      <span className="tag">{demos.tag}</span>
       <h3 className="t-display t-h3 mt-4">{project.name}</h3>
       <p className="t-eyebrow mt-2">{project.kind}</p>
     </div>
@@ -121,33 +133,22 @@ function Title({ project }) {
 }
 
 export default function Work() {
-  const [salon, belli, cafe] = work.projects
+  const [salon, belli, cafe, vinbar] = demos.projects
 
   return (
-    <section
-      id={work.id}
-      className="sheet on-dark relative bg-ink text-paper"
-    >
+    <section id={demos.id} className="sheet on-dark relative bg-ink text-paper">
       <div className="shell relative z-10 pt-[var(--space-section)] pb-[var(--space-section)]">
-        <header data-reveal className="max-w-[54ch]">
-          <p className="t-eyebrow t-eyebrow-accent">{work.eyebrow}</p>
-          <h2 className="t-display t-h2 mt-4">{work.title}</h2>
-          <p className="t-lead mt-5 max-w-[52ch] text-paper/75">{work.intro}</p>
-        </header>
-
-        {/* Salonkoncept: sidens store eksempel. */}
-        <article className="mt-12 md:mt-16">
+        {/* Frisør- og barberdemo: sidens store eksempel. */}
+        <article>
           <Stage project={salon} />
           <Excerpts project={salon} wide />
           <div className="mt-10 grid grid-cols-1 gap-x-10 gap-y-8 lg:grid-cols-12">
             <div className="lg:col-span-5">
               <Title project={salon} />
+              <DemoActions project={salon} className="mt-7" />
             </div>
             <div className="lg:col-span-6 lg:col-start-7">
               <Facts project={salon} />
-              <div className="mt-7">
-                <OpenLink project={salon} />
-              </div>
             </div>
           </div>
         </article>
@@ -160,9 +161,7 @@ export default function Work() {
               <Title project={belli} />
               <Excerpts project={belli} />
               <Facts project={belli} className="mt-8" />
-              <div className="mt-7">
-                <OpenLink project={belli} />
-              </div>
+              <DemoActions project={belli} className="mt-7" />
             </div>
           </article>
 
@@ -172,16 +171,29 @@ export default function Work() {
               <Title project={cafe} />
               <Excerpts project={cafe} />
               <Facts project={cafe} className="mt-8" />
-              <div className="mt-7">
-                <OpenLink project={cafe} />
-              </div>
+              <DemoActions project={cafe} className="mt-7" />
             </div>
           </article>
         </div>
 
+        {/* Vinbardemo: bred flade, tekst og udsnit i omvendt rækkefølge. */}
+        <article className="mt-20 md:mt-28">
+          <Stage project={vinbar} />
+          <Excerpts project={vinbar} wide />
+          <div className="mt-10 grid grid-cols-1 gap-x-10 gap-y-8 lg:grid-cols-12">
+            <div className="lg:col-span-6">
+              <Facts project={vinbar} />
+            </div>
+            <div className="lg:col-span-5 lg:col-start-8">
+              <Title project={vinbar} />
+              <DemoActions project={vinbar} className="mt-7" />
+            </div>
+          </div>
+        </article>
+
         <div className="mt-20 max-w-[64ch] border-t border-paper/20 pt-5 text-[14px] leading-relaxed text-paper/70">
-          <p>{work.note}</p>
-          {!work.showDemoLinks && <p className="mt-2">{work.more}</p>}
+          <p>{demos.note}</p>
+          {!demos.showLiveLinks && <p className="mt-2">{demos.more}</p>}
         </div>
       </div>
     </section>

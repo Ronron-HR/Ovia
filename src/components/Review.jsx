@@ -3,16 +3,21 @@ import { review } from '../content.js'
 /**
  * ANMELDELSE — Copenhagen Ease.
  *
- * Godkendt feedback på siden, brugt som anmeldelse. Én udtalelse, stort sat på
- * en rolig paper-flade med god luft: ingen stjerner, ingen tal og ingen
- * flere citater. Virksomhedsnavnet står som tekst; der er intet godkendt logo.
- * Den diskrete betegnelse over citatet gør sammenhængen klar: det er feedback
- * på OviaSpecs' egen hjemmeside.
+ * Godkendt feedback på siden, brugt som feedback efter en SAMTALE, ikke som en
+ * udtalelse om en leveret hjemmeside. Én udtalelse, stort sat på en rolig
+ * paper-flade med god luft: ingen stjerner, ingen tal og ingen flere citater.
+ * Virksomhedsnavnet står som tekst; der er intet godkendt logo. Den diskrete
+ * betegnelse over citatet gør sammenhængen klar.
+ *
+ * `under` gør plads i bunden, når næste sektion er et ark (.sheet).
  */
-export default function Review() {
+export default function Review({ under = false }) {
   return (
-    <section id={review.id} className="bg-paper">
-      <div className="shell section-y">
+    <section
+      id={review.id}
+      className={`bg-paper ${under ? 'under-sheet pt-[var(--space-section)]' : ''}`}
+    >
+      <div className={`shell ${under ? '' : 'section-y'}`}>
         <figure data-reveal className="mx-auto max-w-[62rem]">
           <p className="t-eyebrow">{review.eyebrow}</p>
           <span aria-hidden="true" className="quote-rule mt-6" />

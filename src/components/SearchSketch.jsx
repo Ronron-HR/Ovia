@@ -1,4 +1,4 @@
-import { ydelser } from '../content.js'
+import { searchSketch } from '../sketches.js'
 
 /**
  * Skitse af en søgning, der viser de tre veje til at blive fundet: annoncen
@@ -19,7 +19,7 @@ function Pin({ n, className = '' }) {
 }
 
 export default function SearchSketch() {
-  const s = ydelser.synlighed.search
+  const s = searchSketch
 
   return (
     <figure>

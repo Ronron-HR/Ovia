@@ -608,3 +608,94 @@
     background: var(--color-accent);
   }
 }
+
+@layer components {
+  /* ---- Navigation: aktiv side og rullemenuer ------------------------------ */
+  .nav-label {
+    padding-bottom: 3px;
+    border-bottom: 1px solid transparent;
+    transition: border-color var(--dur-hover) var(--ease-entrance);
+  }
+
+  .nav-link[aria-current] .nav-label {
+    border-bottom-color: var(--color-accent);
+  }
+
+  .dd-caret {
+    transition: transform var(--dur-hover) var(--ease-entrance);
+  }
+
+  .dd[data-open='true'] .dd-caret {
+    transform: rotate(180deg);
+  }
+
+  /* Panelet ligger altid i HTML'en; visibility skjuler det (og fjerner
+     linkene fra tabulatorrækkefølgen), mens det er lukket. */
+  .dd-panel {
+    visibility: hidden;
+    opacity: 0;
+    transform: translate3d(0, 6px, 0);
+    transition:
+      opacity var(--dur-hover) var(--ease-entrance),
+      transform var(--dur-hover) var(--ease-entrance),
+      visibility 0s linear var(--dur-hover);
+  }
+
+  .dd[data-open='true'] .dd-panel {
+    visibility: visible;
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    transition:
+      opacity var(--dur-hover) var(--ease-entrance),
+      transform var(--dur-hover) var(--ease-entrance),
+      visibility 0s;
+  }
+
+  .dd-link {
+    transition: background-color var(--dur-hover) var(--ease-entrance);
+  }
+
+  .dd-link:hover,
+  .dd-link:focus-visible,
+  .dd-link[aria-current] {
+    background: var(--color-paper);
+  }
+
+  /* ---- Valg i heroen og på demoerne ------------------------------------ */
+  .opt {
+    transition:
+      border-color var(--dur-hover) var(--ease-entrance),
+      background-color var(--dur-hover) var(--ease-entrance);
+  }
+
+  @media (hover: hover) {
+    .opt:hover {
+      border-color: var(--color-ink);
+      background: var(--color-surface);
+    }
+  }
+
+  /* ---- Demo på forsiden --------------------------------------------------- */
+  .teaser .browser,
+  .teaser-phone {
+    transition: transform 500ms var(--ease-entrance);
+  }
+
+  @media (hover: hover) {
+    .teaser:hover .browser {
+      transform: translate3d(0, -4px, 0);
+    }
+    .teaser:hover .teaser-phone {
+      transform: translate3d(0, -8px, 0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .teaser .browser,
+    .teaser-phone,
+    .dd-panel,
+    .dd-caret {
+      transition-duration: 1ms;
+    }
+  }
+}

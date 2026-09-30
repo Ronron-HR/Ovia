@@ -1,26 +1,32 @@
-import { faq } from '../content.js'
+import { faq as defaults } from '../content.js'
 
 /**
  * SPØRGSMÅL — native <details>, så det virker uden JavaScript, med tastatur
- * og i skærmlæsere. Kun spørgsmål, der reelt afgør, om man skriver. Sektionen
- * ligger under kontaktfladen, som skubber ind over den (.under-sheet).
+ * og i skærmlæsere. Kun spørgsmål, der reelt afgør, om man skriver.
+ * `under` gør plads i bunden, når næste sektion er et ark (.sheet).
  */
-export default function Faq() {
+export default function Faq({
+  items = defaults.items,
+  title = defaults.title,
+  eyebrow = defaults.eyebrow,
+  id = defaults.id,
+  under = false,
+}) {
   return (
     <section
-      id={faq.id}
-      className="under-sheet bg-paper pt-[var(--space-section)]"
-      style={{ '--pad-b': '5rem' }}
+      id={id}
+      className={`bg-paper pt-[var(--space-section)] ${under ? 'under-sheet' : 'pb-[var(--space-section)]'}`}
+      style={under ? { '--pad-b': '5rem' } : undefined}
     >
       <div className="shell">
         <div className="grid grid-cols-1 gap-x-14 gap-y-10 lg:grid-cols-12">
           <header data-reveal className="lg:col-span-4">
-            <p className="t-eyebrow t-eyebrow-accent">{faq.eyebrow}</p>
-            <h2 className="t-display t-h3 mt-4">{faq.title}</h2>
+            <p className="t-eyebrow t-eyebrow-accent">{eyebrow}</p>
+            <h2 className="t-display t-h3 mt-4">{title}</h2>
           </header>
 
           <div data-reveal style={{ '--d': '80ms' }} className="border-t border-ink lg:col-span-8">
-            {faq.items.map((item) => (
+            {items.map((item) => (
               <details key={item.q} className="faq border-b border-rule">
                 <summary className="flex min-h-14 cursor-pointer items-center justify-between gap-6 py-4 text-[18px] leading-snug font-medium">
                   {item.q}

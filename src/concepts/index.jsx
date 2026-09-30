@@ -1,5 +1,6 @@
 import { BELLI_DESKTOP, BELLI_MOBILE, BelliDesktop, BelliMobile } from './Belli.jsx'
 import { CAFE_DESKTOP, CAFE_MOBILE, CafeDesktop, CafeMobile } from './Cafe.jsx'
+import { VINBAR_DESKTOP, VINBAR_MOBILE, VinbarDesktop, VinbarMobile } from './Vinbar.jsx'
 import { SALON_DESKTOP, SALON_MOBILE, SalonDesktop, SalonMobile } from './Salon.jsx'
 
 /**
@@ -18,6 +19,10 @@ export const concepts = {
   cafe: {
     desktop: { Comp: CafeDesktop, ...CAFE_DESKTOP },
     mobile: { Comp: CafeMobile, ...CAFE_MOBILE },
+  },
+  vinbar: {
+    desktop: { Comp: VinbarDesktop, ...VINBAR_DESKTOP },
+    mobile: { Comp: VinbarMobile, ...VINBAR_MOBILE },
   },
 }
 

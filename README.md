@@ -4,6 +4,12 @@ Hjemmesiden for OviaSpecs (oviaspecs.com): hjemmesider, booking og markedsførin
 
 Status: **færdig og pushet til GitHub (main).** Se "Før udgivelse" nederst.
 
+## Sidestruktur (gren ny-struktur)
+
+Hver adresse har sin egen forudrenderede HTML-fil: / , /hjemmesider/ , /booking-integrationer/ , /seo/ , /google-ads/ , /sociale-medier-annoncering/ , /ai-automatisering/ , /demoer/ , /om/ , /kontakt/ , /prisberegner/ og /privatlivspolitik/. Adresserne og metadata står i `src/routes.js`; `scripts/prerender.mjs` skriver siderne og sitemap.xml ved build. Tekster: `src/content.js` (fælles, prismodel `pricing`, demoer `demos`) og `src/services.*.js` (ydelsessiderne). Gamle ankerlinks på forsiden (#ydelser, #arbejde …) føres videre i `src/main.jsx`.
+
+Prisberegneren (`components/Calculator.jsx`) gælder kun selve hjemmesiden: 1–3 sider 4.000 kr., 4–5 sider 4.500 kr., 6 sider 5.000 kr.; mere, webshop og specialudvikling giver særskilt tilbud. Ret priserne i `pricing`. Demoerne vises som egne illustrationer (`src/concepts`, nu også Vinbardemo); live-links er slået fra (`demos.showLiveLinks`).
+
 ## Kommandoer
 
 | Kommando | Hvad den gør |
