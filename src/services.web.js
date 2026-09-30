@@ -12,13 +12,13 @@ const contactCta = (topic, label = 'Beskriv din opgave') => ({ label, topic })
 
 export const hjemmesider = {
   path: paths.hjemmesider,
-  metaTitle: 'Hjemmesider til lokale virksomheder | OviaSpecs',
+  metaTitle: 'Hjemmesider til virksomheder | OviaSpecs',
   metaDescription:
     'Få en mobiltilpasset hjemmeside, bygget i kode og tilpasset din virksomhed. Se hvad der er med, se demoer og beregn prisen på selve hjemmesiden.',
   eyebrow: 'Hjemmesider',
   title: 'En hjemmeside, der gør det nemt at tage kontakt.',
   lead: 'Kunden leder efter åbningstider, menu eller en måde at skrive på. Jeg bygger hjemmesiden, så det står øverst, og så den er let at bruge på telefonen.',
-  primary: { label: 'Beregn din hjemmesidepris', href: paths.prisberegner },
+  primary: { label: 'Beregn din hjemmesidepris', href: paths.beregner },
   secondary: { label: 'Se demoer', href: paths.demoer },
   visual: 'demos',
   need: {
@@ -44,32 +44,33 @@ export const hjemmesider = {
     eyebrow: 'Det får du',
     title: 'Standardhjemmesiden',
     items: [
-      'Mobiltilpasset design',
-      'De aftalte sider, op til seks med forsiden',
-      'Kontaktmulighed på siden: telefon, mail eller en knap til jeres kontaktvej',
-      'Sidetitler og metabeskrivelser sat op til hver side',
+      'Mobiltilpasset design med ét fælles design til alle sider',
+      'De aftalte almindelige indholdssider, op til seks med forsiden',
+      'Sidetitler og metabeskrivelser til hver side',
+      'Den aftalte kontaktmulighed på siden',
+      'To samlede korrekturrunder inden for det aftalte omfang',
     ],
     limitsTitle: 'Afgrænsning',
     limits: [
       'Tekst og billeder leverer du. Skal jeg hjælpe med indholdet, aftaler vi det separat.',
-      'Antallet af korrekturrunder står i tilbuddet. Rettelser uden for det aftalte er en ny opgave.',
-      'Booking, integrationer og vedligeholdelse er ikke med i prisen. Dem aftaler vi personligt.',
-      'Webshop og specialudvikling får et særskilt tilbud.',
+      'Ekstra sider, nye funktioner og større ændringer uden for aftalen er ekstraarbejde med et særskilt tilbud. Vedligeholdelse omfatter ikke automatisk nye sider eller et nyt design.',
+      'Booking, integrationer, marketing og vedligeholdelse er ikke med i prisen. Dem aftaler jeg personligt med dig.',
+      'Mere end seks sider, webshop, betaling, login og specialudvikling får et særskilt tilbud.',
     ],
   },
   uses: {
     eyebrow: 'Eksempler',
     title: 'Hvad siden kan bruges til',
-    intro: 'Mulige løsninger, ikke færdige kundecases. Demoerne viser designretninger, ikke leverede opgaver.',
+    intro: 'Mulige løsninger, ikke færdige kundecases. Demoerne er fiktive koncepter, ikke leverede opgaver.',
     items: [
-      { title: 'Café, restaurant eller bar', text: 'Menu, åbningstider og vej hen til jer samlet på ét sted, så gæsten ikke skal lede.', demo: 'belli' },
+      { title: 'Café, restaurant eller bar', text: 'Menu, åbningstider og vej hen til jer samlet på ét sted, så gæsten ikke skal lede.', demo: 'restaurant' },
       { title: 'Frisør eller salon', text: 'Behandlinger og priser, og et link til jeres eksisterende booking, hvis I har et.', demo: 'salon' },
       { title: 'Håndværker eller servicefirma', text: 'Hvad I laver, hvor I kører, og en nem måde at skrive eller ringe på.' },
       { title: 'Butik', text: 'Åbningstider, sortiment og adresse, så kunden ved, om det er turen værd.' },
     ],
   },
   steps: [
-    { title: 'Du beregner din pris', body: 'Tre korte spørgsmål, og du ser prisen på selve hjemmesiden uden at oplyse noget.' },
+    { title: 'Du beregner din pris', body: 'To korte valg, og du ser prisen på selve hjemmesiden uden at oplyse noget.' },
     { title: 'Du får et skriftligt tilbud', body: 'Med sider, det der er med, og det der ikke er. Først når du siger ja, går jeg i gang.' },
     { title: 'Du leverer tekst og billeder', body: 'Jeg bygger siden, og du følger med i en rigtig browser undervejs.' },
     { title: 'Rettelser og aflevering', body: 'Vi retter inden for det aftalte, og jeg viser, hvordan siden hænger sammen.' },
@@ -93,7 +94,7 @@ export const hjemmesider = {
     },
     {
       q: 'Er en demo det, min side kommer til at se ud som?',
-      a: 'Nej. Demoerne viser designretninger og funktioner. Din side tilpasses din virksomhed, og standardprisen indeholder ikke automatisk alle de funktioner, en demo viser.',
+      a: 'Nej. Demoerne er fiktive koncepter, der viser designretninger og funktioner. Din side tilpasses din virksomhed. Booking og andre ekstra funktioner, en demo viser, aftales separat og er ikke med i standardprisen.',
     },
   ],
   contact: contactCta('hjemmeside', 'Skriv til mig om din hjemmeside'),
@@ -150,7 +151,7 @@ export const booking = {
     intro:
       'Mulige løsninger, ikke færdige kundecases. Demoerne viser, hvordan link og bookinghenvendelser kan sidde på siden i mine egne eksempler.',
     items: [
-      { title: 'Bordbooking til restauranten', text: 'Knappen fører til jeres eksisterende bordbookingsystem, uden at gæsten skal lede.', demo: 'belli' },
+      { title: 'Bordbooking til restauranten', text: 'Knappen fører til jeres eksisterende bordbookingsystem, uden at gæsten skal lede.', demo: 'restaurant' },
       { title: 'Tidsbestilling til salonen', text: 'En bookingknap ved hver behandling, koblet til salonens eksisterende system.', demo: 'salon' },
       { title: 'Bookinghenvendelse på mail', text: 'Har I ikke et system, kan en færdig mail være en enkel start.', demo: 'vinbar' },
     ],

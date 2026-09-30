@@ -1,0 +1,963 @@
+/* =========================================================================
+   DEMOERNE (src/demos) — fire fiktive koncepter udviklet af OviaSpecs.
+
+   Alt her er afgrænset af .dm og hører kun til demoerne. Hver demo sætter sine
+   egne farver og sin egen skrift (.dm-cafe, .dm-restaurant, .dm-salon,
+   .dm-vinbar). Ingen webskrifter hentes: Instrument Sans ligger på siden, og
+   de to serifskrifter er systemskrifter. Bevægelse er dæmpet og slås fra med
+   prefers-reduced-motion.
+   ========================================================================= */
+
+.dm {
+  --dm-bg: #fff;
+  --dm-fg: #222;
+  --dm-muted: #555;
+  --dm-accent: #222;
+  --dm-accent-fg: #fff;
+  --dm-soft: #f3f3f3;
+  --dm-line: #ddd;
+  --dm-card: #fff;
+  --dm-focus: #222;
+  --dm-radius: 12px;
+  --dm-head: var(--font-sans);
+  --nav-h: 72px;
+  background: var(--dm-bg);
+  color: var(--dm-fg);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+}
+
+.dm *,
+.dm *::before,
+.dm *::after {
+  box-sizing: border-box;
+}
+
+.dm :focus-visible {
+  outline: 3px solid var(--dm-focus);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+:where(.dm) a {
+  color: inherit;
+}
+
+.dm-wrap {
+  width: 100%;
+  max-width: 1120px;
+  margin-inline: auto;
+  padding-inline: 20px;
+}
+
+@media (min-width: 768px) {
+  .dm-wrap {
+    padding-inline: 40px;
+  }
+}
+
+/* ---- OviaSpecs-stribe: mærkning af demoen --------------------------------- */
+.dm-strip {
+  background: #252525;
+  color: #f5f3ef;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.dm-strip-in {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-block: 10px;
+}
+
+@media (min-width: 900px) {
+  .dm-strip-in {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+}
+
+.dm-strip p {
+  margin: 0;
+}
+
+.dm-strip strong {
+  font-weight: 600;
+}
+
+.dm-strip-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 18px;
+}
+
+.dm-strip a {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  color: #f5f3ef;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Tydelig vej tilbage: en knap, ikke et tekstlink. Ligger i stribens normale flow, aldrig fast over indholdet. */
+.dm-strip a.dm-strip-back {
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1.5px solid #f5f3ef;
+  border-radius: 999px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+@media (hover: hover) {
+  .dm-strip a.dm-strip-back:hover {
+    background: #f5f3ef;
+    color: #252525;
+  }
+}
+
+.dm-strip :focus-visible {
+  outline-color: #c9ad8a;
+}
+
+/* ---- Hoved og menu --------------------------------------------------------- */
+.dm-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--dm-bg);
+  border-bottom: 1px solid var(--dm-line);
+}
+
+.dm-header-in {
+  display: flex;
+  min-height: var(--nav-h);
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.dm-brand {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--dm-head);
+  font-size: 20px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.dm-brand svg {
+  flex: none;
+}
+
+.dm-menu-btn {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid currentColor;
+  border-radius: var(--dm-radius);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dm-nav {
+  display: none;
+}
+
+.dm-nav[data-open='true'] {
+  display: block;
+  position: absolute;
+  inset: 100% 0 auto 0;
+  padding: 8px 20px 20px;
+  background: var(--dm-bg);
+  border-bottom: 1px solid var(--dm-line);
+}
+
+.dm-nav ul {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dm-nav a {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  border-bottom: 1px solid var(--dm-line);
+  font-size: 17px;
+  text-decoration: none;
+}
+
+@media (min-width: 860px) {
+  .dm-menu-btn {
+    display: none;
+  }
+  .dm-nav,
+  .dm-nav[data-open='true'] {
+    display: block;
+    position: static;
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+  .dm-nav ul {
+    flex-direction: row;
+    gap: 28px;
+  }
+  .dm-nav a {
+    min-height: 44px;
+    border: 0;
+    font-size: 15px;
+    font-weight: 500;
+  }
+  .dm-nav a:hover {
+    text-decoration: underline;
+    text-underline-offset: 6px;
+  }
+}
+
+/* Uden JavaScript er menuen altid åben, så ingen links gemmes. */
+.dm-noscript .dm-menu-btn {
+  display: none;
+}
+.dm-noscript .dm-nav {
+  display: block;
+  position: static;
+  padding: 0 0 12px;
+}
+
+/* ---- Typografi ------------------------------------------------------------ */
+.dm-eyebrow {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.dm h1,
+.dm h2,
+.dm h3 {
+  font-family: var(--dm-head);
+  text-wrap: balance;
+}
+
+.dm-h1 {
+  font-size: clamp(2.2rem, 5.4vw, 3.8rem);
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+}
+
+.dm-h2 {
+  font-size: clamp(1.75rem, 3.6vw, 2.6rem);
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+}
+
+.dm-h3 {
+  font-size: 1.2rem;
+  line-height: 1.25;
+}
+
+.dm-lead {
+  max-width: 46ch;
+  margin: 20px 0 0;
+  font-size: 1.125rem;
+  color: var(--dm-muted);
+}
+
+.dm-section {
+  padding-block: clamp(2.75rem, 6vw, 4.5rem);
+}
+
+.dm-section-head {
+  max-width: 58ch;
+  margin-bottom: 24px;
+}
+
+.dm-section-head .dm-h2 {
+  margin-top: 10px;
+}
+
+/* ---- Knapper ---------------------------------------------------------------- */
+.dm-btn {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 22px;
+  border: 2px solid var(--dm-accent);
+  border-radius: var(--dm-radius);
+  background: var(--dm-accent);
+  color: var(--dm-accent-fg);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.dm-btn-ghost {
+  background: transparent;
+  color: var(--dm-accent);
+}
+
+@media (hover: hover) {
+  .dm-btn:hover {
+    transform: translateY(-1px);
+  }
+}
+
+.dm-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+@media (min-width: 560px) {
+  .dm-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}
+
+/* ---- Hero ------------------------------------------------------------------ */
+.dm-hero {
+  padding-block: clamp(2.25rem, 5vw, 4rem);
+}
+
+.dm-hero-grid {
+  display: grid;
+  gap: 40px;
+  align-items: center;
+}
+
+@media (min-width: 900px) {
+  .dm-hero-grid {
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 64px;
+  }
+}
+
+.dm-art {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ---- Faner og filtre --------------------------------------------------------- */
+.dm-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 28px;
+}
+
+.dm-tab {
+  min-height: 44px;
+  padding: 0 18px;
+  border: 2px solid var(--dm-line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--dm-fg);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+.dm-tab[aria-selected='true'],
+.dm-tab[aria-pressed='true'] {
+  border-color: var(--dm-accent);
+  background: var(--dm-accent);
+  color: var(--dm-accent-fg);
+}
+
+@media (hover: hover) {
+  .dm-tab:not([aria-selected='true']):not([aria-pressed='true']):hover {
+    border-color: var(--dm-fg);
+  }
+}
+
+/* ---- Menu- og prislister -------------------------------------------------- */
+.dm-list {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 800px) {
+  .dm-list-2 {
+    grid-template-columns: 1fr 1fr;
+    column-gap: 56px;
+  }
+}
+
+.dm-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 20px;
+  padding-block: 18px;
+  border-bottom: 1px solid var(--dm-line);
+}
+
+.dm-item h3 {
+  font-size: 1.1rem;
+}
+
+.dm-item .dm-price {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.dm-item p {
+  grid-column: 1;
+  color: var(--dm-muted);
+  font-size: 15px;
+}
+
+.dm-meta {
+  color: var(--dm-muted);
+  font-size: 14px;
+}
+
+.dm-note {
+  margin-top: 20px;
+  color: var(--dm-muted);
+  font-size: 14px;
+}
+
+/* ---- Åbningstider ------------------------------------------------------------ */
+.dm-hours {
+  width: 100%;
+  max-width: 460px;
+  border-collapse: collapse;
+}
+
+.dm-hours th,
+.dm-hours td {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--dm-line);
+  text-align: left;
+  font-weight: 500;
+}
+
+.dm-hours td {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Formularer ---------------------------------------------------------------- */
+.dm-card {
+  padding: clamp(20px, 4vw, 36px);
+  border: 1px solid var(--dm-line);
+  border-radius: calc(var(--dm-radius) + 6px);
+  background: var(--dm-card);
+}
+
+.dm-form {
+  display: grid;
+  gap: 18px;
+}
+
+.dm-row {
+  display: grid;
+  gap: 18px;
+}
+
+@media (min-width: 560px) {
+  .dm-row-2 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.dm-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.dm-input {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 14px;
+  border: 1.5px solid var(--dm-muted);
+  border-radius: var(--dm-radius);
+  background: #fff;
+  color: #1c1c1c;
+  font: inherit;
+  font-size: 16px;
+}
+
+textarea.dm-input {
+  min-height: 112px;
+  resize: vertical;
+}
+
+.dm-input[aria-invalid='true'] {
+  border-color: #b3261e;
+}
+
+.dm-error {
+  margin-top: 6px;
+  color: #b3261e;
+  font-size: 14px;
+}
+
+.dm-choices {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.dm-choices legend {
+  margin-bottom: 8px;
+  padding: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.dm-choice {
+  position: relative;
+  display: block;
+}
+
+.dm-choice input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  cursor: pointer;
+}
+
+.dm-choice > span {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 14px;
+  border: 1.5px solid var(--dm-line);
+  border-radius: var(--dm-radius);
+  background: var(--dm-card);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.dm-choice input:checked + span {
+  border-color: var(--dm-accent);
+  box-shadow: inset 0 0 0 1.5px var(--dm-accent);
+  background: var(--dm-soft);
+}
+
+.dm-choice input:focus-visible + span {
+  outline: 3px solid var(--dm-focus);
+  outline-offset: 2px;
+}
+
+.dm-choice input:disabled + span {
+  opacity: 0.45;
+  text-decoration: line-through;
+  cursor: not-allowed;
+}
+
+.dm-slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.dm-slots .dm-choice > span {
+  min-width: 84px;
+  justify-content: center;
+}
+
+/* Besked om, at intet er sendt eller booket. Står ved selve handlingen. */
+.dm-notice {
+  margin-top: 4px;
+  padding: 14px 16px;
+  border-left: 4px solid var(--dm-accent);
+  border-radius: 0 var(--dm-radius) var(--dm-radius) 0;
+  background: var(--dm-soft);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.dm-notice strong {
+  display: block;
+  margin-bottom: 2px;
+}
+
+.dm-notice:empty {
+  display: none;
+}
+
+.dm-inline-note {
+  color: var(--dm-muted);
+  font-size: 14px;
+}
+
+/* ---- Bund ------------------------------------------------------------------------ */
+.dm-footer {
+  padding-block: 40px;
+  border-top: 1px solid var(--dm-line);
+  font-size: 14px;
+  color: var(--dm-muted);
+}
+
+.dm-footer-in {
+  display: grid;
+  gap: 12px;
+}
+
+@media (min-width: 768px) {
+  .dm-footer-in {
+    grid-template-columns: 1fr auto;
+    align-items: end;
+  }
+}
+
+/* ---- Vagt mod bevægelse ---------------------------------------------------------- */
+.dm-rise {
+  animation: dm-rise 520ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes dm-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dm-rise {
+    animation: none;
+  }
+  .dm-btn,
+  .dm-tab {
+    transition: none;
+  }
+  .dm-btn:hover {
+    transform: none;
+  }
+}
+
+/* ===================== CAFÉDEMO ===========================================
+   Smørgul, varm hvid og mørkeblå. Venlig typografi og runde former. */
+.dm-cafe {
+  --dm-bg: #fff8ea;
+  --dm-fg: #1b2a41;
+  --dm-muted: #4a5568;
+  --dm-accent: #1b2a41;
+  --dm-accent-fg: #fff8ea;
+  --dm-soft: #fbeebd;
+  --dm-line: #ead9a8;
+  --dm-card: #fffdf5;
+  --dm-focus: #1b2a41;
+  --dm-radius: 16px;
+  --dm-head: var(--font-sans);
+}
+
+.dm-cafe .dm-h1,
+.dm-cafe .dm-h2 {
+  font-weight: 700;
+}
+
+.dm-cafe .dm-hero {
+  background: #f4d35e;
+}
+
+.dm-cafe .dm-hero .dm-lead {
+  color: #1b2a41;
+}
+
+.dm-cafe .dm-btn-ghost {
+  border-color: #1b2a41;
+}
+
+.dm-cafe .dm-tab {
+  border-color: #e0c970;
+}
+
+.dm-cafe .dm-band {
+  background: #1b2a41;
+  color: #fff8ea;
+}
+
+.dm-cafe .dm-band .dm-hours th,
+.dm-cafe .dm-band .dm-hours td {
+  border-color: rgb(255 248 234 / 0.25);
+}
+
+.dm-cafe .dm-band .dm-eyebrow {
+  color: #f4d35e;
+}
+
+/* ===================== RESTAURANTDEMO =====================================
+   Terracotta, creme og mørk brun. Store flader og rolig serifskrift. */
+.dm-restaurant {
+  --dm-bg: #f6ecdd;
+  --dm-fg: #3a2418;
+  --dm-muted: #6a4d3c;
+  --dm-accent: #a64b2a;
+  --dm-accent-fg: #fbf3e6;
+  --dm-soft: #ecd9bf;
+  --dm-line: #dcc6a8;
+  --dm-card: #fbf3e6;
+  --dm-focus: #3a2418;
+  --dm-radius: 4px;
+  --dm-head: Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
+}
+
+.dm-restaurant .dm-h1,
+.dm-restaurant .dm-h2 {
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+.dm-restaurant .dm-hero {
+  background: #a64b2a;
+  color: #fbf3e6;
+}
+
+.dm-restaurant .dm-hero .dm-lead {
+  color: #fbf3e6;
+}
+
+.dm-restaurant .dm-hero .dm-btn {
+  background: #fbf3e6;
+  border-color: #fbf3e6;
+  color: #3a2418;
+}
+
+.dm-restaurant .dm-hero .dm-btn-ghost {
+  background: transparent;
+  color: #fbf3e6;
+}
+
+.dm-restaurant .dm-hero :focus-visible {
+  outline-color: #fbf3e6;
+}
+
+.dm-restaurant .dm-tab {
+  border-radius: 4px;
+}
+
+.dm-restaurant .dm-band {
+  background: #3a2418;
+  color: #fbf3e6;
+}
+
+.dm-restaurant .dm-band .dm-eyebrow {
+  color: #e7b48f;
+}
+
+.dm-restaurant .dm-band .dm-lead,
+.dm-restaurant .dm-band .dm-meta {
+  color: rgb(251 243 230 / 0.82);
+}
+
+.dm-restaurant .dm-band .dm-card {
+  background: #4a3022;
+  border-color: rgb(251 243 230 / 0.2);
+  color: #fbf3e6;
+}
+
+.dm-restaurant .dm-band .dm-choice span {
+  background: #3a2418;
+  border-color: rgb(251 243 230 / 0.3);
+  color: #fbf3e6;
+}
+
+.dm-restaurant .dm-band .dm-input {
+  border-color: #cdb79f;
+}
+
+.dm-restaurant .dm-band .dm-btn {
+  background: #fbf3e6;
+  border-color: #fbf3e6;
+  color: #3a2418;
+}
+
+.dm-restaurant .dm-band .dm-notice {
+  background: #3a2418;
+  border-color: #e7b48f;
+  color: #fbf3e6;
+}
+
+.dm-restaurant .dm-band .dm-label,
+.dm-restaurant .dm-band .dm-inline-note {
+  color: #fbf3e6;
+}
+
+.dm-restaurant .dm-band :focus-visible {
+  outline-color: #fbf3e6;
+}
+
+/* ===================== SALONDEMO ==========================================
+   Grå, knækket hvid og en diskret grøn accent. Stramt og enkelt. */
+.dm-salon {
+  --dm-bg: #f6f5f1;
+  --dm-fg: #2b2e31;
+  --dm-muted: #5c6166;
+  --dm-accent: #2b2e31;
+  --dm-accent-fg: #f6f5f1;
+  --dm-soft: #ebeae5;
+  --dm-line: #d8d7d1;
+  --dm-card: #fbfaf7;
+  --dm-focus: #3d6a57;
+  --dm-radius: 2px;
+  --dm-green: #3d6a57;
+  --dm-head: var(--font-sans);
+}
+
+.dm-salon .dm-h1,
+.dm-salon .dm-h2 {
+  font-weight: 500;
+  letter-spacing: -0.03em;
+}
+
+.dm-salon .dm-eyebrow {
+  color: var(--dm-green);
+  letter-spacing: 0.18em;
+}
+
+.dm-salon .dm-hero {
+  border-bottom: 1px solid var(--dm-line);
+}
+
+.dm-salon .dm-tab {
+  border-radius: 2px;
+}
+
+.dm-salon .dm-btn:hover {
+  background: var(--dm-green);
+  border-color: var(--dm-green);
+}
+
+.dm-salon .dm-btn-ghost:hover {
+  background: var(--dm-fg);
+  border-color: var(--dm-fg);
+}
+
+.dm-salon .dm-choice input:checked + span {
+  border-color: var(--dm-green);
+  box-shadow: inset 0 0 0 1.5px var(--dm-green);
+}
+
+.dm-salon .dm-notice {
+  border-color: var(--dm-green);
+}
+
+.dm-salon .dm-card {
+  border-radius: 2px;
+}
+
+/* ===================== VINBARDEMO =========================================
+   Blommefarvet, elfenben og kobber. Elegant serifskrift og luft. */
+.dm-vinbar {
+  --dm-bg: #f8f2e4;
+  --dm-fg: #36142f;
+  --dm-muted: #5d4358;
+  --dm-accent: #4a1942;
+  --dm-accent-fg: #f8f2e4;
+  --dm-soft: #efe5d0;
+  --dm-line: #dccfb4;
+  --dm-card: #fcf8ee;
+  --dm-focus: #4a1942;
+  --dm-copper: #8c5523;
+  --dm-radius: 2px;
+  --dm-head: 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
+}
+
+.dm-vinbar .dm-h1,
+.dm-vinbar .dm-h2 {
+  font-weight: 400;
+  font-style: italic;
+  letter-spacing: 0;
+}
+
+.dm-vinbar .dm-eyebrow {
+  color: var(--dm-copper);
+  letter-spacing: 0.22em;
+}
+
+.dm-vinbar .dm-hero {
+  background: #4a1942;
+  color: #f8f2e4;
+}
+
+.dm-vinbar .dm-hero .dm-lead {
+  color: #f1e6d0;
+}
+
+.dm-vinbar .dm-hero .dm-eyebrow {
+  color: #e0a66a;
+}
+
+.dm-vinbar .dm-hero .dm-btn {
+  background: #e0a66a;
+  border-color: #e0a66a;
+  color: #2b0e26;
+}
+
+.dm-vinbar .dm-hero .dm-btn-ghost {
+  background: transparent;
+  color: #f8f2e4;
+  border-color: #f8f2e4;
+}
+
+.dm-vinbar .dm-hero :focus-visible {
+  outline-color: #f8f2e4;
+}
+
+.dm-vinbar .dm-tab {
+  border-radius: 2px;
+}
+
+.dm-vinbar .dm-price {
+  color: var(--dm-copper);
+}
+
+.dm-vinbar .dm-item h3 {
+  font-family: var(--dm-head);
+  font-weight: 400;
+  font-size: 1.25rem;
+}
+
+.dm-vinbar .dm-band {
+  background: #ece1c9;
+}

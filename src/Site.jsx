@@ -1,9 +1,8 @@
 import { useEffect } from 'react'
-import { Footer } from './components/Kontakt.jsx'
+import Footer from './components/Footer.jsx'
 import Nav from './components/Nav.jsx'
 import { useReveal } from './motion/useReveal.js'
-import { pages } from './pages.jsx'
-import { findRoute } from './routes.js'
+import { pageKeyFor } from './pageKeys.js'
 
 /**
  * Hele siden for en adresse: navigation, indhold og fodfelt. `path` afgør,
@@ -11,7 +10,7 @@ import { findRoute } from './routes.js'
  * forudrenderingen (entry-server.jsx), så HTML'en fra serveren og første
  * klient-render er ens.
  */
-export default function Site({ path }) {
+export default function Site({ path, Page: Current }) {
   useReveal()
 
   // Fortæller vagthunden i index.html, at motion-koden lever. Sker det
@@ -20,8 +19,34 @@ export default function Site({ path }) {
     window.__oviaSpecsReady?.()
   }, [])
 
-  const route = findRoute(path)
-  const Page = route ? pages[route.page] : NotFound
+  // Retur fra en demo lander ved demoen (#demo-<id>). Beregnerens gemte valg
+  // gør heroen højere, når siden hydreres, og det flytter demoen ned, efter at
+  // browseren har scrollet til ankeret. Derfor scrolles der igen, når siden står.
+  useEffect(() => {
+    const id = window.location.hash.startsWith('#demo-') ? window.location.hash.slice(1) : null
+    if (!id) return
+    const frame = window.requestAnimationFrame(() =>
+      window.requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ block: 'start', behavior: 'instant' })),
+    )
+    return () => window.cancelAnimationFrame(frame)
+  }, [])
+
+  // Siden (Page) gives udefra: forudrenderingen har alle sider (pages.jsx), og
+  // klienten henter kun den ene (pageLoaders.js) før hydreringen. Uden en side: 404.
+  const Page = Current ?? NotFound
+
+  // Demoerne er små hjemmesider for sig selv, med eget hoved, egen bund og en
+  // stribe fra OviaSpecs (src/demos). De får ikke OviaSpecs' navigation.
+  if (pageKeyFor(path)?.startsWith('demo-')) {
+    return (
+      <>
+        <a href="#main" className="skip-link">
+          Spring til indhold
+        </a>
+        <Page />
+      </>
+    )
+  }
 
   return (
     <>

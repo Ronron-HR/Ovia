@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "./motion/motion.css";
 @import "./stage.css";
+@import "./demos/demos.css";
 
 /* Selvhostede skrifter (latin dækker æ, ø, å, € og tankestreg). Begge er SIL
    Open Font License; licenserne ligger ved siden af filerne i public/fonts.
@@ -55,16 +56,16 @@
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   /* Typografisk skala */
-  --text-hero: clamp(2.375rem, 5vw, 4.5rem);
-  --text-h2: clamp(2rem, 3.8vw, 3.25rem);
+  --text-hero: clamp(2.125rem, 4.2vw, 3.75rem);
+  --text-h2: clamp(1.75rem, 3.2vw, 2.75rem);
   --text-h3: clamp(1.625rem, 2.6vw, 2.25rem);
   --text-h4: 1.375rem;
   --text-lead: clamp(1.0625rem, 1.3vw, 1.1875rem);
   --text-quote: clamp(1.75rem, 3.6vw, 3.25rem);
 
   /* Afstande */
-  --space-section: clamp(4.5rem, 9vw, 8rem);
-  --space-block: clamp(3.5rem, 7vw, 6rem);
+  --space-section: clamp(3.25rem, 6.5vw, 5.75rem);
+  --space-block: clamp(2.5rem, 5vw, 4.25rem);
   --radius-btn: 6px;
   --radius-panel: 20px;
 }
@@ -675,24 +676,7 @@
     }
   }
 
-  /* ---- Demo på forsiden --------------------------------------------------- */
-  .teaser .browser,
-  .teaser-phone {
-    transition: transform 500ms var(--ease-entrance);
-  }
-
-  @media (hover: hover) {
-    .teaser:hover .browser {
-      transform: translate3d(0, -4px, 0);
-    }
-    .teaser:hover .teaser-phone {
-      transform: translate3d(0, -8px, 0);
-    }
-  }
-
   @media (prefers-reduced-motion: reduce) {
-    .teaser .browser,
-    .teaser-phone,
     .dd-panel,
     .dd-caret {
       transition-duration: 1ms;

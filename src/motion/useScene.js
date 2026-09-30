@@ -27,6 +27,10 @@ import { reduced } from './motion.js'
  * og siden scroller præcis, som browseren vil. Der lyttes kun, mens en scene
  * er i nærheden, og alle scener deler ét scroll-lyt og én rAF.
  *
+ * Telefoner: parallaxen (data-par) er slået fra, fordi den er dyrest at tegne;
+ * kun data-travel kører (én transform pr. billede, og kun mens scenen er nær
+ * skærmen). Skal en scene slet ikke køre på telefon, sættes { mobile: false }.
+ *
  * Reduceret bevægelse: intet kører. Siderne står på deres top, og alt står
  * stille.
  */
@@ -61,15 +65,13 @@ function detach() {
   window.removeEventListener('resize', schedule)
 }
 
-export function useScene(ref, { mode = 'pass', from = 0.18, to = 0.82 } = {}) {
+export function useScene(ref, { mode = 'pass', from = 0.18, to = 0.82, mobile = true } = {}) {
   useEffect(() => {
     const el = ref.current
-    // Ingen scroll-scener på telefoner: de er svagest og mærker hvert billede
-    // mest. Rammerne står på toppen af siden, og udsnittene under scenen
-    // viser resten (samme tilstand som ved reduceret bevægelse).
-    if (!el || reduced() || window.matchMedia('(max-width: 767px)').matches) return
+    const small = window.matchMedia('(max-width: 767px)').matches
+    if (!el || reduced() || (small && !mobile)) return
 
-    const pars = [...el.querySelectorAll('[data-par]')].map((node) => [node, Number(node.dataset.par)])
+    const pars = small ? [] : [...el.querySelectorAll('[data-par]')].map((node) => [node, Number(node.dataset.par)])
     const travels = [...el.querySelectorAll('[data-travel]')].map((node) => [node, Number(node.dataset.travel)])
 
     const measure = (vh) => {
@@ -113,5 +115,5 @@ export function useScene(ref, { mode = 'pass', from = 0.18, to = 0.82 } = {}) {
       el.classList.remove('is-live')
       detach()
     }
-  }, [ref, mode, from, to])
+  }, [ref, mode, from, to, mobile])
 }

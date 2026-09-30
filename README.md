@@ -8,7 +8,7 @@ Status: **færdig og pushet til GitHub (main).** Se "Før udgivelse" nederst.
 
 Hver adresse har sin egen forudrenderede HTML-fil: / , /hjemmesider/ , /booking-integrationer/ , /seo/ , /google-ads/ , /sociale-medier-annoncering/ , /ai-automatisering/ , /demoer/ , /om/ , /kontakt/ , /prisberegner/ og /privatlivspolitik/. Adresserne og metadata står i `src/routes.js`; `scripts/prerender.mjs` skriver siderne og sitemap.xml ved build. Tekster: `src/content.js` (fælles, prismodel `pricing`, demoer `demos`) og `src/services.*.js` (ydelsessiderne). Gamle ankerlinks på forsiden (#ydelser, #arbejde …) føres videre i `src/main.jsx`.
 
-Prisberegneren (`components/Calculator.jsx`) gælder kun selve hjemmesiden: 1–3 sider 4.000 kr., 4–5 sider 4.500 kr., 6 sider 5.000 kr.; mere, webshop og specialudvikling giver særskilt tilbud. Ret priserne i `pricing`. Demoerne vises som egne illustrationer (`src/concepts`, nu også Vinbardemo); live-links er slået fra (`demos.showLiveLinks`).
+Prisberegneren (`components/Calculator.jsx`) gælder kun selve hjemmesiden: 1–3 sider 4.000 kr., 4–5 sider 4.500 kr., 6 sider 5.000 kr.; mere, webshop og specialudvikling giver særskilt tilbud. Ret priserne i `pricing`. Demoerne er egne, fungerende sider under /demoer/.
 
 ## Kommandoer
 
@@ -29,7 +29,9 @@ Prisberegneren (`components/Calculator.jsx`) gælder kun selve hjemmesiden: 1–
 src/content.js          Al tekst, links og indstillinger. Ret her.
 src/index.css           Farver, skrifter, knapper, rammer (Tailwind @theme)
 src/stage.css           Ark, scener, annoteringer og reglerne til illustrationerne
-src/concepts/           Konceptillustrationerne (HTML/CSS) af de tre designretninger
+src/demos/              De fire fiktive demoer (sider, SVG-illustrationer, demos.css)
+src/calcStore.js        Beregnerens tilstand (adresselinje + sessionStorage)
+worker/index.js         POST /api/kontakt (formularer)
 src/motion/             Bevægelse: motion.css og hooks (useScene, useReveal, useNavSpy)
 src/components/         Hero, Rail, Work + Stage, Ydelser, Annotated, BookingDemo,
                         SearchSketch, Samarbejde, Om, Faq, Kontakt, Nav, Privatlivspolitik
@@ -41,18 +43,14 @@ privatlivspolitik/      Egen indgang, så politikken kan deles som link
 
 Sektioner: Hero, Sammenhængen, Udvalgt arbejde (mørkt ark), Ydelser (lyst ark: Hjemmesider, Booking med eksempel, Synlighed), Samarbejdet, Om OviaSpecs, Spørgsmål, Kontakt.
 
-## Portfolioen: konceptillustrationer, ikke skærmbilleder
+## Demoer: fire fiktive koncepter
 
-Demoerne bruger de omtalte virksomheders egne fotos, logoer, menukort og tekster. Der er ingen dokumenteret tilladelse til at vise dem, så **siden bruger ingen af dem**. Projekterne vises som **konceptillustrationer** af designretningen, tegnet til siden i `src/concepts` med egne former, egen tekst og egne farver. De er mærket "Konceptillustration" og må ikke fremstilles som skærmbilleder.
+De fire demoer (Cafédemo, Restaurantdemo, Salondemo, Vinbardemo) er mine egne, fiktive koncepter med egne tekster, SVG-/CSS-illustrationer og farver. De bygger ikke på rigtige virksomheder og bruger ingen virksomhedsnavne, adresser, telefonnumre, logoer, anmeldelser, menukort eller fotos. De tidligere demoer (og deres illustrationer) er fjernet fra siden. GitHub-demoerne er ikke aktiveret, og ingen repositories er slettet.
 
-- Salonkonceptet har egen, rigtig tekst; Restaurant- og Cafékonceptet bruger stadig grå tekststreger som pladsholdere og er mindre færdige.
-- Hver illustration er en HTML/CSS-side, placeret i "designenheder" (`kit.jsx`), så den skalerer skarpt og fylder ingen billedfiler.
-- Ved hvert projekt står tre statiske udsnit (Forside, midterdel, bund), så arbejdet kan vurderes uden at ramme et scrollpunkt, og også med reduceret bevægelse.
-- Alt er mærket "Demo / koncept": ikke en kundeopgave, og virksomhederne er ikke kunder eller samarbejdspartnere.
-- Siden linker **ikke** til demoerne på GitHub Pages, fordi de stadig indeholder det uafklarede materiale. Slå linkene til med `work.showDemoLinks = true` i `content.js`, når demoerne er ryddet.
-- Søgeskitsen under Synlighed og bookingeksemplet er illustrationer med opdigtede navne og tider og er mærket som eksempler. De viser ikke rigtige søgeresultater, placeringer eller bookinger.
-
-De tidligere skærmbilleder og optagelsesscripts ligger uden for projektet i `C:\Users\Ronny\Desktop\Webly\arkiv-uafklarede-billeder` og bruges ikke.
+- Hver demo er en lille side med mobilmenu og lokale funktioner på /demoer/cafe/, /restaurant/, /salon/ og /vinbar/ (`src/demos`). Formularer sender intet, bookinger reserverer intet, og ingen knap fører til en rigtig virksomhed; hver handling viser en besked om det.
+- Alle er mærket "Fiktiv demo – koncept udviklet af OviaSpecs, ikke kundearbejde." (stribe øverst på demoen og i præsentationerne).
+- Præsentationen (forside og /demoer/) bruger skærmbilleder af netop demoerne: `npm run build && npm run preview`, derefter `npm run demo-shots` (skriver `public/demoer/*.webp`). Kør igen, hvis en demo ændres.
+- "Beregn en lignende hjemmeside" åbner `/prisberegner/?demo=<id>#beregner`. Ukendte eller udgåede id'er (også gamle) giver en neutral beregning.
 
 ## Bevægelse
 
@@ -97,22 +95,35 @@ Kontrolleret lokalt på den byggede side:
 | Fil | Kilde |
 | --- | --- |
 | `public/ronny.*` | Ronnys eget portræt (`Pictures/brugerfoto (1).jpg`), beskåret med `npm run images`. Kilden er 500 × 625 px, så det vises højst i 1:1. |
-| `public/og.jpg` | Tegnet af `scripts/og.mjs` ud fra logo, sidens skrifter og heroens konceptillustration. |
+| `public/og.jpg` | Tegnet af `scripts/og.mjs` ud fra logo, sidens skrifter og skærmbilleder af to af de fiktive demoer. |
 | `public/logo*.svg`, `maerke*.svg`, `favicon.svg`, `apple-touch-icon.png` | Ronnys wordmark, tegnet som SVG-stier (`scripts/brand/`). |
-| `src/concepts/*` | Egne illustrationer. Ingen fotos, logoer, menukort, priser, anmeldelser eller tekster fra virksomheder. |
+| `public/demoer/*` | Skærmbilleder af de fiktive demoer (`npm run demo-shots`). |
 
 Ingen stockfotos, ingen AI-genererede billeder, ingen hotlinking.
 
 Skrifter (selvhostet i `public/fonts`, SIL Open Font License 1.1, licenstekster ved siden af): Instrument Sans (variabel, `@fontsource-variable/instrument-sans` 5.3.0) og JetBrains Mono 400 (`@fontsource/jetbrains-mono` 5.3.0). Ingen kald til Google Fonts.
 
-Ingen cookies, ingen analyse, ingen tracking og ingen formular. Kontakt sker via `mailto:` og `tel:`. Hosting er Cloudflare. Privatlivspolitikken (`Privatlivspolitik.jsx`) beskriver præcis dette; ændres noget, skal den ændres samtidig.
+Ingen cookies, ingen analyse og ingen tracking. Formularerne sender via `/api/kontakt`; mail og telefon virker altid. Hosting er Cloudflare. Privatlivspolitikken (`Privatlivspolitik.jsx`) beskriver præcis dette; ændres noget, skal den ændres samtidig.
 
-## Før udgivelse
+## Prisberegner og formularer
 
-Konkrete, resterende punkter:
+Beregneren (`components/Calculator.jsx`) er én komponent, der bruges i forsidens hero og på /prisberegner/. Tilstanden (`src/calcStore.js`) lever i adresselinjen (stien ændres aldrig) og i sessionStorage, så valg bevares ved genindlæsning og skift mellem siderne. Prisen (`src/content.calc.js`): 1–3 sider 4.000 kr., 4–5 sider 4.500 kr., 6 sider 5.000 kr.; mere end seks sider, webshop, betaling, login og specialudvikling giver "Særskilt tilbud", og "Jeg ved det ikke" giver en personlig afklaring uden pris. Moms: `vat.status` (se nedenfor).
 
-1. **Demoerne på GitHub Pages** (`Ronron-HR/salonmatin-demo`, `belli-demo`, `dengulecafe-demo`) indeholder stadig virksomhedernes fotos, logoer, menukort og tekster, og restaurant- og café-demoen indeholder påstande som prisnominering og Michelin-anbefaling, der ikke er dokumenteret. Siden linker ikke til dem. Ryd dem, eller lad linkene være slået fra. I Salon-demoens lokale kilde (`Desktop\Salon Matin\salonmatin-demo`) er stjerner, "4,8", anmeldelsessektionen og Trustpilot-links fjernet (45 linjer, **ikke committet eller pushet**). Originalen ligger i arkivmappen.
-2. **Løfter:** siden lover hverken ejerskab, support, svartider, leveringstider eller priser. Ronny skal selv afgøre, hvad han vil love, før det skrives ind.
-3. **Adressen** (Hjortshøj Stationsvej 6) står i footeren og i privatlivspolitikken, som på den tidligere side. Den bruges ikke i metadata. Der er intet CVR-nummer (`legal.cvr`).
-4. **Ingen kalender.** Primær handling er "Fortæl om din opgave" (kontakt). Findes der senere en rigtig kalender, kan "Book en samtale" tilføjes.
-5. **Udgivelse:** `git push origin main` udgiver (Cloudflare bygger med `npm run build` og udgiver `dist/`). Brug en anden gren for at få et preview-deploy først. Koden er pushet; Cloudflare bygger selv.
+Formularerne sender til `/api/kontakt` (`worker/index.js`, Cloudflare Worker): validering på både klient og server (`src/inquiry.js`), skjult felt og tidsstempel mod spam, same-origin-tjek og størrelsesgrænse. "Sendt" vises kun, når serveren har accepteret beskeden. Er afsendelse ikke sat op, svarer workeren 503, og siden siger ærligt, at beskeden ikke er sendt, og tilbyder mailprogram og kopiering.
+
+## Før udgivelse (afklar)
+
+1. **Afsendelse af formularer er ikke sat op.** Vælg én (se `wrangler.jsonc`): A) Cloudflare Email Routing med `send_email`-binding (gratis; kræver Email Routing på domænet og bekræftet modtager) og variablen `MAIL_FROM`, eller B) Resend (`RESEND_API_KEY` som hemmelighed og `MAIL_FROM`). Test bagefter med en rigtig afsendelse til dig selv, og opdatér privatlivspolitikken med navnet på tjenesten. Valgfrit: Cloudflare Turnstile eller en rate limiting-binding (`RATE_LIMITER`).
+2. **Moms og CVR.** `vat.status` i `src/content.calc.js` er `null`: resultatet siger da kun, at moms og vilkår står i tilbuddet. Sæt den til `'excl'`, `'incl'` eller `'exempt'` ud fra den dokumenterede status, og udfyld `legal.cvr` i `src/content.js`, hvis der er et CVR-nr.
+3. **Løfter:** siden lover hverken ejerskab, support, svartider eller leveringstider. Ronny afgør, hvad han vil love.
+4. **Adressen** (Hjortshøj Stationsvej 6) står i footeren og privatlivspolitikken. Den bruges ikke i metadata.
+5. **Lokale mapper:** `screenshots/` og `Pictures/` i projektmappen er ikke en del af siden, men kan indeholde skærmbilleder af de tidligere demoer. Slet eller flyt dem, før der committes med `git add .`.
+6. **Udgivelse:** `git push origin main` udgiver (Cloudflare bygger med `npm run build`). Brug en anden gren for et preview først.
+
+## Ydelse, bevægelse og sikkerhed
+
+- **Sider hentes enkeltvis.** `src/pageLoaders.js` henter kun den side, adressen viser (før hydreringen), og `scripts/prerender.mjs` forhåndshenter sidens JS (`modulepreload`, ud fra byggets manifest). Nøglerne står i `src/pageKeys.js`, `src/pages.jsx` og `src/routes.js`; bygget fejler, hvis de ikke passer sammen.
+- **Scroll-effekten** (`src/motion/useScene.js`, hentet fra Git-historikken) bruges af demoscenerne (`components/DemoVisual.jsx`) og demoernes hero (`demos/kit.jsx`). Kun `transform` og `opacity`, kun mens scenen er nær skærmen; på telefon kører kun siden, der ruller igennem sit vindue; slået fra ved `prefers-reduced-motion`.
+- **Skærmbillederne** er høje WebP-udsnit (880 og 340 bred) fra `npm run demo-shots`.
+- **Tilbage til OviaSpecs** i hver demo (`demos/DemoShell.jsx`) går til den side, kunden kom fra, og til demoens plads dér (`#demo-<id>`); åbnes demoen direkte, går den til `/demoer/#demo-<id>`.
+- **Sikkerhedsheaders** (CSP, nosniff, X-Frame-Options, Referrer-Policy, Permissions-Policy, HSTS, COOP) står i `public/_headers`; prerender udfylder script-hashen til det ene indlejrede script.

@@ -1,8 +1,7 @@
-import { demoById, paths } from '../content.js'
+import { calcHref, demoById, paths } from '../content.js'
 import { flows, searchSketch } from '../sketches.js'
 import { services } from '../services.js'
 import BookingDemo from './BookingDemo.jsx'
-import CalcStart from './CalcStart.jsx'
 import DemoTeasers from './DemoTeasers.jsx'
 import Faq from './Faq.jsx'
 import FlowDiagram from './FlowDiagram.jsx'
@@ -266,6 +265,20 @@ function Maintenance({ data }) {
   )
 }
 
+/** Kort vej til beregneren fra hjemmesidesiden: prisen ses i beregneren, ikke her. */
+function CalcTeaser() {
+  return (
+    <div className="rounded-[var(--radius-panel)] border border-rule bg-surface p-5 md:p-6">
+      <p className="text-[17px] font-medium">Se prisen på din hjemmeside</p>
+      <p className="mt-1 text-[14px] text-muted">To valg, og du ser prisen uden at oplyse noget.</p>
+      <a href={calcHref()} className="btn btn-primary mt-4">
+        Beregn din hjemmesidepris
+        <Arrow />
+      </a>
+    </div>
+  )
+}
+
 export default function ServicePage({ id }) {
   const s = services[id]
 
@@ -275,7 +288,7 @@ export default function ServicePage({ id }) {
         eyebrow={s.eyebrow}
         title={s.title}
         lead={s.lead}
-        aside={id === 'hjemmesider' ? <CalcStart /> : null}
+        aside={id === 'hjemmesider' ? <CalcTeaser /> : null}
       >
         <a href={s.primary.href} className="btn btn-primary">
           {s.primary.label}

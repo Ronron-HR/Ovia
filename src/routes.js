@@ -13,9 +13,9 @@ export const routes = [
   {
     path: paths.home,
     page: 'home',
-    title: 'OviaSpecs | Din virksomheds digitale handyman',
+    title: 'OviaSpecs | Hjemmesider til virksomheder',
     description:
-      'Hjemmesider, booking, integrationer, automatisering og online markedsføring til lokale virksomheder i Aarhus-området. Ronny er din faste kontaktperson.',
+      'Se prisen på din hjemmeside direkte her. Jeg bygger hjemmesider til virksomheder i alle brancher og hjælper også med booking, marketing og automatisering.',
   },
   {
     path: paths.hjemmesider,
@@ -56,9 +56,16 @@ export const routes = [
   {
     path: paths.demoer,
     page: 'demoer',
-    title: 'Demoer: eksempler på hjemmesider | OviaSpecs',
+    title: 'Demoer: fire fiktive hjemmesider at prøve | OviaSpecs',
     description: demos.intro,
   },
+  ...demos.projects.map((p) => ({
+    path: p.path,
+    page: `demo-${p.id}`,
+    demo: p.id,
+    title: p.metaTitle,
+    description: p.metaDescription,
+  })),
   {
     path: paths.om,
     page: 'om',

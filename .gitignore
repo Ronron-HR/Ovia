@@ -28,3 +28,7 @@ scripts/og/hero.png
 .env*
 .dev.vars
 .wrangler
+
+# Lokale agent-skills og skærmbilleder (ikke en del af siden)
+.agents/
+screenshots/

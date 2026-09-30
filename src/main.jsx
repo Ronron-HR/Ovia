@@ -2,6 +2,8 @@ import { StrictMode } from 'react'
 import { createRoot, hydrateRoot } from 'react-dom/client'
 import './index.css'
 import Site from './Site.jsx'
+import { pageKeyFor } from './pageKeys.js'
+import { pageLoaders } from './pageLoaders.js'
 
 /**
  * Gamle ankerlinks til den lange forside (fx oviaspecs.com/#ydelser) føres
@@ -22,10 +24,15 @@ if (pathname === '/' && OLD_ANCHORS[hash]) {
   window.location.replace(OLD_ANCHORS[hash])
 }
 
+// Kun den side, adressen viser, hentes, og den hentes FØR hydreringen, så
+// første render er identisk med den forudrenderede HTML.
+const load = pageLoaders[pageKeyFor(pathname)]
+const Page = load ? await load() : undefined
+
 const root = document.getElementById('root')
 const app = (
   <StrictMode>
-    <Site path={pathname} />
+    <Site path={pathname} Page={Page} />
   </StrictMode>
 )
 

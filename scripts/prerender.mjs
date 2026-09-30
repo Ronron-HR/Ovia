@@ -15,11 +15,12 @@
  *
  * Fejler forudrenderingen, fejler bygget. Så står der aldrig en tom side.
  */
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
+import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
-const { routes, renderPage, renderPrivacy } = await import(
+const { routes, renderPage, renderPrivacy, pageFiles, pageKeyFor } = await import(
   pathToFileURL('dist-ssr/entry-server.js').href
 )
 
@@ -27,6 +28,29 @@ const ORIGIN = 'https://oviaspecs.com'
 const MARK = '<div id="root"></div>'
 const template = readFileSync('dist/index.html', 'utf8')
 if (!template.includes(MARK)) throw new Error(`dist/index.html: fandt ikke ${MARK}`)
+
+// Sidenøglerne i routes.js, pages.jsx og pageKeys.js/pageLoaders.js skal passe sammen.
+for (const route of routes) {
+  if (pageKeyFor(route.path) !== route.page || !pageFiles[route.page]) {
+    throw new Error(`routes.js og pageKeys.js er uenige om ${route.path} (${route.page} / ${pageKeyFor(route.path)})`)
+  }
+}
+
+// Byggets manifest: hvilke JS-filer hører til hvilken side. Siden hentes af main.js
+// (dynamisk import), så uden et hint bliver hentningen en vandfald efter main.js.
+const manifest = JSON.parse(readFileSync('dist/.vite/manifest.json', 'utf8'))
+function chunksFor(file) {
+  const seen = new Set()
+  const walk = (key) => {
+    const c = manifest[key]
+    if (!c || seen.has(c.file)) return
+    seen.add(c.file)
+    for (const i of c.imports ?? []) walk(i)
+  }
+  walk(file)
+  return [...seen]
+}
+const entryChunks = new Set(chunksFor('index.html'))
 
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
 
@@ -64,6 +88,13 @@ function build(route) {
     html = html.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/, '')
   }
 
+  // Sidens egne JS-filer (ud over dem, forsiden allerede henter) forhåndshentes.
+  const hints = chunksFor(pageFiles[route.page])
+    .filter((f) => !entryChunks.has(f))
+    .map((f) => `<link rel="modulepreload" crossorigin href="/${f}">`)
+    .join('')
+  if (hints) html = html.replace('</head>', () => `${hints}</head>`)
+
   return html.replace(MARK, () => `<div id="root">${renderPage(route.path)}</div>`)
 }
 
@@ -94,4 +125,22 @@ writeFileSync(
 )
 console.log(`  dist/sitemap.xml  ${urls.length} adresser`)
 
+// Sikkerhedsheaders: indlejrede scripts tillades med hash (public/_headers).
+const htmlFiles = (dir) =>
+  readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
+    e.isDirectory() ? htmlFiles(`${dir}/${e.name}`) : e.name.endsWith('.html') ? [`${dir}/${e.name}`] : [],
+  )
+const hashes = new Set()
+for (const file of htmlFiles('dist')) {
+  const html = readFileSync(file, 'utf8')
+  for (const m of html.matchAll(/<script(?![^>]*\bsrc=)(?![^>]*application\/ld\+json)[^>]*>([\s\S]*?)<\/script>/g)) {
+    hashes.add(`'sha256-${createHash('sha256').update(m[1]).digest('base64')}'`)
+  }
+}
+const headers = readFileSync('dist/_headers', 'utf8')
+if (!headers.includes('__SCRIPT_HASHES__')) throw new Error('dist/_headers: __SCRIPT_HASHES__ mangler')
+writeFileSync('dist/_headers', headers.replaceAll('__SCRIPT_HASHES__', [...hashes].join(' ')))
+console.log(`  dist/_headers  CSP med ${hashes.size} script-hash`)
+
 rmSync('dist-ssr', { recursive: true, force: true })
+rmSync('dist/.vite', { recursive: true, force: true })

@@ -10,7 +10,7 @@ export default function PageHead({ eyebrow, title, lead, children, aside, under 
   return (
     <section
       id="top"
-      className={`bg-paper pt-[calc(var(--nav-h)+40px)] pb-14 md:pt-[calc(var(--nav-h)+72px)] md:pb-20 ${under ? 'under-sheet' : ''}`}
+      className={`bg-paper pt-[calc(var(--nav-h)+28px)] pb-10 md:pt-[calc(var(--nav-h)+48px)] md:pb-14 ${under ? 'under-sheet' : ''}`}
       style={under ? { '--pad-b': '3.5rem' } : undefined}
     >
       <div className="shell">

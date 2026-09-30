@@ -1,65 +1,43 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import {
   businessTypes,
   calc,
-  calcHref,
-  composeCalcParts,
   demoById,
   formatKr,
-  mailtoFrom,
+  inquiry,
+  pageOptions,
   paths,
   priceFor,
   pricing,
   purposes,
-  site,
+  vatLine,
 } from '../content.js'
-import { useSearch } from '../useSearch.js'
+import { resetCalc, setCalc, useCalc } from '../calcStore.js'
+import { useInquiryForm } from '../useInquiryForm.js'
+import { ErrorSummary, FieldError, Honeypot, SendResult } from './FormBits.jsx'
 import { Arrow } from './Shots.jsx'
 
 /**
- * PRISBEREGNER — kun selve hjemmesiden.
+ * PRISBEREGNER — kun selve hjemmesiden. ÉN komponent, brugt i forsidens hero
+ * og på /prisberegner/. Tilstanden ligger i calcStore.js, så begge steder har
+ * samme valg, og forsiden bliver på sin adresse.
  *
- * Ét trin ad gangen:
- *   1  virksomhedstype og formål (ændrer ikke prisen)
- *   2  antal sider, forsiden med
- *   3  resultat: pris, valgt løsning og leveranceoversigt
+ *   1  Hvad skal din nye hjemmeside hjælpe med? (virksomhedstype er valgfri)
+ *   2  Hvor mange sider? (forsiden tæller med; ingen beløb her)
+ *   3  Resultat: pris, valg, det der er med, og én kontaktknap
  *
- * Prisen vises først på trin 3 og kræver ingen kontaktoplysninger. Prisen kommer
- * fra priceFor() i content.js: samme logik overalt, og ét sted at ændre den.
- * Mere end seks sider, webshop og specialudvikling giver "Særskilt tilbud" og
- * aldrig en pris, der stopper på 5.000 kr.
+ * Prisen vises først på trin 3 og kræver ingen kontaktoplysninger. Den kommer
+ * fra priceFor() i content.calc.js. "Mere end seks sider, webshop …" giver
+ * "Særskilt tilbud", og "Jeg ved det ikke" giver en personlig afklaring: aldrig
+ * en pris, der stopper på 5.000 kr., og aldrig en opfundet pris.
  *
- * Valgene lever i adresselinjen (?virksomhed=…&formaal=…&sider=…&demo=…&trin=…),
- * så heroens spørgsmål og "Beregn en lignende hjemmeside" på en demo kan starte
- * beregneren med det rigtige valgt, og så en genindlæsning ikke nulstiller. Der
- * gemmes intet i cookies eller browserens lager. Kunden kan altid gå tilbage og
- * rette.
+ * Fokus: et trinskift flytter fokus til overskriften; et link til #beregner
+ * (også fra samme side) scroller hertil og sætter fokus på overskriften.
+ * Bookingløsning, integrationer og vedligeholdelse har ingen pris her.
  *
- * Bookingintegration, vedligeholdelse og hosting er ikke prissatte tilvalg.
- *
- * Efter resultatet kan kunden åbne en kort formular (navn, e-mail, valgfri
- * telefon, ønsker). Der er ingen formularbackend: knappen åbner kundens
- * mailprogram med valgene, prisestimatet og en eventuel demo. Siden viser
- * derfor aldrig en "sendt"-besked.
+ * Layoutet bruger en container-forespørgsel (@container), så komponenten ser
+ * rigtig ud både i heroens smalle kolonne og på den brede side.
  */
-
-const emptyState = { type: '', purpose: '', pages: '', demo: '' }
-
-function readUrl(search) {
-  const q = new URLSearchParams(search)
-  const demo = demoById(q.get('demo') ?? '')
-  const pick = (list, v) => (list.some((x) => x.id === v) ? v : '')
-  const state = {
-    type: pick(businessTypes, q.get('virksomhed')) || demo?.calcType || '',
-    purpose: pick(purposes, q.get('formaal')) || demo?.calcPurpose || '',
-    pages: [...pricing.tiers, pricing.custom].some((t) => t.id === q.get('sider')) ? q.get('sider') : '',
-    demo: demo?.id ?? '',
-  }
-  const wanted = Number(q.get('trin')) || 1
-  const hasAll = state.type && state.purpose
-  const step = wanted === 3 && hasAll && state.pages ? 3 : wanted === 2 && hasAll ? 2 : 1
-  return { state, step }
-}
 
 function Opt({ name, value, checked, onChange, title, sub, className = '' }) {
   return (
@@ -97,14 +75,16 @@ function Progress({ step }) {
 
 function Row({ label, value, onEdit }) {
   return (
-    <div className="grid grid-cols-[130px_1fr_auto] items-baseline gap-x-4 border-b border-rule py-3 text-[15px] sm:grid-cols-[170px_1fr_auto]">
+    <div className="grid grid-cols-[110px_1fr_auto] items-baseline gap-x-4 border-b border-rule py-3 text-[15px] @md:grid-cols-[170px_1fr_auto]">
       <dt className="t-eyebrow self-center">{label}</dt>
       <dd className="font-medium">{value}</dd>
       <dd>
-        <button type="button" onClick={onEdit} className="link-underline hit cursor-pointer text-[14px] text-muted">
-          {calc.s3.edit}
-          <span className="sr-only"> {label.toLowerCase()}</span>
-        </button>
+        {onEdit && (
+          <button type="button" onClick={onEdit} className="link-underline hit cursor-pointer text-[14px] text-muted">
+            {calc.s3.edit}
+            <span className="sr-only"> {label.toLowerCase()}</span>
+          </button>
+        )}
       </dd>
     </div>
   )
@@ -122,88 +102,91 @@ function List({ items, mark = 'spec' }) {
   )
 }
 
+/** Formularen efter resultatet: navn, e-mail og eventuelt ønsker. Sender direkte. */
 function InquiryForm({ state, onClose }) {
-  const [note, setNote] = useState(null)
-  const form = useRef(null)
   const first = useRef(null)
   const f = calc.form
   const custom = state.pages === pricing.custom.id
+  const unsure = state.pages === pricing.unsure.id
+
+  const read = useCallback(
+    (d) => ({
+      source: 'beregner',
+      topic: 'hjemmeside',
+      name: d.get('name'),
+      email: d.get('email'),
+      phone: d.get('phone'),
+      message: d.get('wishes'),
+      calc: { type: state.type, purpose: state.purpose, pages: state.pages, demo: state.demo },
+    }),
+    [state],
+  )
+  const { form, status, errors, note, tooFast, submit, openMail, copy } = useInquiryForm({ read })
+  const sending = status === 'sending'
+  const fieldProps = (name) => ({
+    'aria-invalid': errors[name] ? true : undefined,
+    'aria-describedby': errors[name] ? `q-${name}-error` : undefined,
+  })
 
   useEffect(() => {
-    first.current?.focus({ preventScroll: false })
+    first.current?.focus()
   }, [])
-
-  const read = () => {
-    const d = new FormData(form.current)
-    return {
-      ...state,
-      name: String(d.get('name') ?? '').trim(),
-      email: String(d.get('email') ?? '').trim(),
-      phone: String(d.get('phone') ?? '').trim(),
-      wishes: String(d.get('wishes') ?? '').trim(),
-    }
-  }
-
-  const onSubmit = (e) => {
-    e.preventDefault()
-    window.location.href = mailtoFrom(composeCalcParts(read()))
-    setNote('opened')
-  }
-
-  const onCopy = async () => {
-    if (!form.current.reportValidity()) return
-    const { subject, body } = composeCalcParts(read())
-    try {
-      await navigator.clipboard.writeText(`Emne: ${subject}\n\n${body}`)
-      setNote('copied')
-    } catch {
-      setNote('failed')
-    }
-  }
 
   return (
     <form
       ref={form}
-      onSubmit={onSubmit}
+      onSubmit={submit}
+      noValidate
       aria-labelledby="calc-form-title"
-      className="swap-in mt-8 rounded-[var(--radius-panel)] bg-ink p-6 text-paper md:p-9 on-dark"
+      className="swap-in on-dark relative mt-8 rounded-[var(--radius-panel)] bg-ink p-6 text-paper md:p-9"
     >
       <h3 id="calc-form-title" className="t-display t-h3">
-        {custom ? calc.s3.ctaQuote : f.title}
+        {custom ? f.titleQuote : unsure ? f.titleUnsure : f.title}
       </h3>
       <p className="mt-3 max-w-[54ch] text-[15px] text-paper/75">{f.intro}</p>
 
-      <div className="mt-7 grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2">
+      <ErrorSummary errors={errors} />
+
+      <div className="mt-7 grid grid-cols-1 gap-x-4 gap-y-5 @lg:grid-cols-2">
         <div>
           <label htmlFor="q-name" className="mb-2 block text-[15px] font-medium">
             {f.name}
           </label>
-          <input ref={first} id="q-name" name="name" type="text" required autoComplete="name" className="field" />
+          <input ref={first} id="q-name" name="name" type="text" autoComplete="name" className="field" {...fieldProps('name')} />
+          <FieldError id="q-name-error" message={errors.name} />
         </div>
         <div>
           <label htmlFor="q-email" className="mb-2 block text-[15px] font-medium">
             {f.email}
           </label>
-          <input id="q-email" name="email" type="email" required autoComplete="email" className="field" />
+          <input id="q-email" name="email" type="email" autoComplete="email" className="field" {...fieldProps('email')} />
+          <FieldError id="q-email-error" message={errors.email} />
         </div>
-        <div className="sm:col-span-2 sm:max-w-[calc(50%-8px)]">
+        <div className="@lg:col-span-2 @lg:max-w-[calc(50%-8px)]">
           <label htmlFor="q-phone" className="mb-2 block text-[15px] font-medium">
             {f.phone}
           </label>
-          <input id="q-phone" name="phone" type="tel" autoComplete="tel" className="field" />
+          <input id="q-phone" name="phone" type="tel" autoComplete="tel" className="field" {...fieldProps('phone')} />
+          <FieldError id="q-phone-error" message={errors.phone} />
         </div>
-        <div className="sm:col-span-2">
+        <div className="@lg:col-span-2">
           <label htmlFor="q-wishes" className="mb-2 block text-[15px] font-medium">
             {f.wishes}
           </label>
-          <textarea id="q-wishes" name="wishes" placeholder={f.wishesPlaceholder} className="field" />
+          <textarea id="q-wishes" name="wishes" placeholder={f.wishesPlaceholder} className="field" {...fieldProps('message')} />
+          <FieldError id="q-message-error" message={errors.message} />
         </div>
       </div>
+      <Honeypot />
 
       <div className="mt-7 flex flex-col gap-4 sm:flex-row sm:items-center">
-        <button type="submit" className="btn btn-primary shrink-0 cursor-pointer whitespace-nowrap">
-          Åbn e-mail med mine valg
-          <Arrow />
+        <button
+          type="submit"
+          disabled={sending || status === 'sent'}
+          className="btn btn-primary shrink-0 cursor-pointer whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {sending ? inquiry.sending : f.submit}
+          {!sending && <Arrow />}
         </button>
         <button type="button" onClick={onClose} className="btn btn-text cursor-pointer">
           Luk formularen
@@ -211,74 +194,39 @@ function InquiryForm({ state, onClose }) {
       </div>
 
       <p className="mt-5 max-w-[60ch] text-[13px] leading-snug text-paper/70">
-        Beskeden sendes i dit eget mailprogram, ikke fra denne side. Knappen åbner en færdig mail til mig med dine valg og prisestimatet, og først når du trykker send dér, når den mig.
-      </p>
-      <p className="mt-3 text-[14px] leading-snug text-paper/80">
-        Har du ikke et mailprogram sat op?{' '}
-        <button type="button" onClick={onCopy} className="link-underline hit cursor-pointer font-medium text-paper">
-          Kopiér beskeden
-        </button>
-        . Eller ring på{' '}
-        <a href={`tel:${site.phoneHref}`} className="link-underline font-medium text-paper">
-          +45 {site.phone}
-        </a>
-        .
+        Dine valg og din pris følger med beskeden. Jeg bruger dine oplysninger til at svare dig, og ikke til andet.
       </p>
 
-      <p role="status" aria-live="polite" className="mt-4 text-[14px] leading-snug text-paper/85 empty:hidden">
-        {note && (
-          <span key={note} className="swap-in block">
-            {note === 'opened'
-              ? 'Jeg har forsøgt at åbne dit mailprogram med beskeden. Husk at trykke send dér. Åbnede det sig ikke, kan du skrive direkte til'
-              : note === 'copied'
-                ? 'Beskeden er kopieret. Indsæt den i en mail til'
-                : 'Kunne ikke kopiere automatisk. Skriv i stedet direkte til'}{' '}
-            <a href={`mailto:${site.email}`} className="link-underline break-all text-paper">
-              {site.email}
-            </a>
-            .
-          </span>
-        )}
-      </p>
+      <SendResult status={status} note={note} tooFast={tooFast} onOpenMail={openMail} onCopy={copy} />
     </form>
   )
 }
 
-function Result({ state, onEdit, onRestart }) {
+function Result({ state, onEdit, onBack, onRestart }) {
   const [formOpen, setFormOpen] = useState(false)
   const price = priceFor(state.pages)
   const tier = pricing.tiers.find((t) => t.id === state.pages)
   const type = businessTypes.find((b) => b.id === state.type)
   const purpose = purposes.find((p) => p.id === state.purpose)
   const demo = demoById(state.demo)
-  const custom = price === null
+  const unsure = state.pages === pricing.unsure.id
+  const custom = state.pages === pricing.custom.id
   const s = calc.s3
 
   return (
     <div>
-      <div className="grid grid-cols-1 gap-x-12 gap-y-10 lg:grid-cols-12">
-        <div className="lg:col-span-6">
+      <div className="grid grid-cols-1 gap-x-12 gap-y-10 @2xl:grid-cols-12">
+        <div className="@2xl:col-span-6">
           <p className="t-eyebrow">{s.yourChoice}</p>
           <dl className="mt-3 border-t border-ink">
-            <Row label={s.type} value={type?.label} onEdit={() => onEdit(1)} />
             <Row label={s.purpose} value={purpose?.label} onEdit={() => onEdit(1)} />
-            <Row label={s.pages} value={custom ? pricing.custom.label : tier?.label} onEdit={() => onEdit(2)} />
-            {demo && (
-              <div className="grid grid-cols-[130px_1fr] items-baseline gap-x-4 border-b border-rule py-3 text-[15px] sm:grid-cols-[170px_1fr]">
-                <dt className="t-eyebrow self-center">{s.demo}</dt>
-                <dd className="font-medium">{demo.name}</dd>
-              </div>
-            )}
+            <Row label={s.pages} value={unsure ? pricing.unsure.label : custom ? pricing.custom.label : tier?.label} onEdit={() => onEdit(2)} />
+            {type && <Row label={s.type} value={type.label} onEdit={() => onEdit(1)} />}
+            {demo && <Row label={s.demo} value={demo.name} />}
           </dl>
 
           <div className="mt-8 rounded-[var(--radius-panel)] bg-paper-2 p-6 md:p-8">
-            {custom ? (
-              <>
-                <p className="t-eyebrow">{s.quoteTitle}</p>
-                <p className="t-display mt-3 text-[clamp(1.75rem,3.4vw,2.5rem)] leading-tight">{s.quoteTitle}</p>
-                <p className="t-body mt-3 max-w-[46ch] text-[16px]">{s.quoteText}</p>
-              </>
-            ) : (
+            {price !== null ? (
               <>
                 <p className="t-eyebrow">{s.oneTime}</p>
                 <p
@@ -287,9 +235,22 @@ function Result({ state, onEdit, onRestart }) {
                 >
                   {formatKr(price)}
                 </p>
+                <p className="mt-3 text-[14px] leading-snug text-muted">{vatLine()}</p>
+              </>
+            ) : custom ? (
+              <>
+                <p className="t-eyebrow">{s.quoteTitle}</p>
+                <p className="t-display mt-3 text-[clamp(1.75rem,3.4vw,2.5rem)] leading-tight">{s.quoteTitle}</p>
+                <p className="t-body mt-3 max-w-[46ch] text-[16px]">{s.quoteText}</p>
+              </>
+            ) : (
+              <>
+                <p className="t-eyebrow">{s.unsureTitle}</p>
+                <p className="t-display mt-3 text-[clamp(1.75rem,3.4vw,2.5rem)] leading-tight">{calc.s3.titleUnsure}</p>
+                <p className="t-body mt-3 max-w-[46ch] text-[16px]">{s.unsureText}</p>
               </>
             )}
-            <p className="mt-5 max-w-[52ch] text-[15px] leading-relaxed font-medium">{s.statement}</p>
+            {price !== null && <p className="mt-5 max-w-[52ch] text-[15px] leading-relaxed font-medium">{s.statement}</p>}
           </div>
 
           {(demo || state.purpose === 'booking') && (
@@ -307,26 +268,24 @@ function Result({ state, onEdit, onRestart }) {
             </div>
           )}
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+          <div className="mt-8 flex flex-col gap-3 @lg:flex-row @lg:flex-wrap @lg:items-center">
             {!formOpen && (
               <button type="button" onClick={() => setFormOpen(true)} className="btn btn-primary cursor-pointer">
-                {custom ? s.ctaQuote : s.cta}
+                {custom ? s.ctaQuote : unsure ? s.ctaUnsure : s.cta}
                 <Arrow />
               </button>
             )}
+            <button type="button" onClick={onBack} className="btn btn-text cursor-pointer">
+              {calc.back}
+            </button>
             <button type="button" onClick={onRestart} className="btn btn-text cursor-pointer">
               {s.restart}
             </button>
           </div>
         </div>
 
-        <div className="lg:col-span-6">
-          {custom ? (
-            <>
-              <p className="t-eyebrow">{s.separateTitle}</p>
-              <p className="t-body mt-3 max-w-[54ch] text-[15px]">{s.separate}</p>
-            </>
-          ) : (
+        <div className="@2xl:col-span-6">
+          {price !== null ? (
             <>
               <p className="t-eyebrow mb-3">{s.includedTitle}</p>
               <List items={s.included} />
@@ -340,6 +299,13 @@ function Result({ state, onEdit, onRestart }) {
               <p className="t-eyebrow mt-8 mb-3">{s.separateTitle}</p>
               <p className="t-body max-w-[54ch] text-[15px]">{s.separate}</p>
             </>
+          ) : (
+            <>
+              <p className="t-eyebrow mb-3">{s.notIncludedTitle}</p>
+              <List items={s.notIncluded.slice(1)} mark="plain" />
+              <p className="t-eyebrow mt-8 mb-3">{s.separateTitle}</p>
+              <p className="t-body max-w-[54ch] text-[15px]">{s.separate}</p>
+            </>
           )}
         </div>
       </div>
@@ -349,127 +315,160 @@ function Result({ state, onEdit, onRestart }) {
   )
 }
 
-export default function Calculator() {
-  // Startværdier fra adresselinjen (se useSearch). Så snart kunden ændrer noget,
-  // overtager `edit`, og adresselinjen opdateres, så en genindlæsning ikke nulstiller.
-  const search = useSearch()
-  const fromUrl = useMemo(() => readUrl(search), [search])
-  const [edit, setEdit] = useState(null)
-  const state = edit?.state ?? fromUrl.state
-  const step = edit?.step ?? fromUrl.step
+export default function Calculator({ compact = false }) {
+  const state = useCalc()
+  const { step } = state
+  const root = useRef(null)
   const title = useRef(null)
   const moved = useRef(false)
   const uid = useId()
 
-  useEffect(() => {
-    if (!edit) return
-    window.history.replaceState(null, '', calcHref({ ...edit.state, step: edit.step > 1 ? edit.step : 0 }))
-  }, [edit])
-
-  // Ved et trinskift flyttes fokus til overskriften, så tastatur og skærmlæser følger med.
+  // Et trinskift flytter fokus til overskriften, så tastatur og skærmlæser følger med.
   useEffect(() => {
     if (!moved.current) return
     title.current?.focus({ preventScroll: true })
     title.current?.scrollIntoView({ block: 'nearest' })
   }, [step])
 
+  // Links til #beregner (fra samme side eller ved ankomst) scroller hertil og
+  // sætter fokus på overskriften. Gælder også et klik på et link, der allerede
+  // peger på #beregner (hashchange udløses da ikke).
+  useEffect(() => {
+    const focus = () => {
+      root.current?.scrollIntoView({ block: 'start' })
+      title.current?.focus({ preventScroll: true })
+    }
+    const onClick = (e) => {
+      const a = e.target instanceof Element ? e.target.closest('a[href]') : null
+      if (!a) return
+      const u = new URL(a.href, window.location.href)
+      if (u.hash === '#beregner' && u.pathname === window.location.pathname) window.setTimeout(focus, 0)
+    }
+    const onHash = () => window.location.hash === '#beregner' && focus()
+    if (window.location.hash === '#beregner') window.requestAnimationFrame(focus)
+    document.addEventListener('click', onClick)
+    window.addEventListener('hashchange', onHash)
+    return () => {
+      document.removeEventListener('click', onClick)
+      window.removeEventListener('hashchange', onHash)
+    }
+  }, [])
+
   const go = (n) => {
     moved.current = true
-    setEdit({ state, step: n })
+    setCalc({ step: n })
   }
-  const set = (patch) => setEdit({ state: { ...state, ...patch }, step })
   const restart = () => {
     moved.current = true
-    setEdit({ state: emptyState, step: 1 })
+    resetCalc()
   }
 
-  const s1ok = Boolean(state.type && state.purpose)
   const demo = demoById(state.demo)
+  const purpose = purposes.find((p) => p.id === state.purpose)
   const heading = [calc.s1.title, calc.s2.title, calc.s3.title][step - 1]
 
   return (
-    <div className="rounded-[var(--radius-panel)] border border-rule bg-surface p-5 md:p-10">
+    <div
+      ref={root}
+      id="beregner"
+      role="group"
+      aria-labelledby={`${uid}-title`}
+      className={`@container rounded-[var(--radius-panel)] border border-rule bg-surface ${compact ? 'p-5 md:p-7' : 'p-5 md:p-10'}`}
+    >
       <Progress step={step} />
 
-      <div className="mt-8">
+      <div className="mt-7">
         <p className="t-eyebrow">{calc.progress(step)}</p>
-        <h2 ref={title} tabIndex={-1} className="t-display t-h3 mt-2 outline-none">
+        <h2
+          id={`${uid}-title`}
+          ref={title}
+          tabIndex={-1}
+          className={`t-display mt-2 outline-none ${compact ? 'text-[clamp(1.5rem,2.4vw,1.875rem)] leading-[1.15]' : 't-h3'}`}
+        >
           {heading}
         </h2>
       </div>
 
-      <div key={step} className="swap-in mt-7">
+      <div key={step} className="swap-in mt-6">
         {step === 1 && (
           <div>
             {demo && (
-              <p className="mb-6 rounded-md bg-paper-2 px-4 py-3 text-[14px] leading-snug">{calc.s1.fromDemo(demo.name)}</p>
+              <p className="mb-5 rounded-md bg-paper-2 px-4 py-3 text-[14px] leading-snug">{calc.s1.fromDemo(demo.name)}</p>
             )}
-            <div className="grid grid-cols-1 gap-x-10 gap-y-8 lg:grid-cols-2">
-              <fieldset>
-                <legend className="mb-3 text-[15px] font-medium">{calc.s1.type}</legend>
-                <div className="grid grid-cols-1 gap-2">
-                  {businessTypes.map((b) => (
-                    <Opt
-                      key={b.id}
-                      name={`${uid}-type`}
-                      value={b.id}
-                      checked={state.type === b.id}
-                      onChange={() => set({ type: b.id })}
-                      title={b.label}
-                    />
-                  ))}
-                </div>
-              </fieldset>
-              <fieldset>
-                <legend className="mb-3 text-[15px] font-medium">{calc.s1.purpose}</legend>
-                <div className="grid grid-cols-1 gap-2">
-                  {purposes.map((p) => (
-                    <Opt
-                      key={p.id}
-                      name={`${uid}-purpose`}
-                      value={p.id}
-                      checked={state.purpose === p.id}
-                      onChange={() => set({ purpose: p.id })}
-                      title={p.label}
-                    />
-                  ))}
-                </div>
-              </fieldset>
+            <fieldset>
+              <legend className="sr-only">{calc.s1.title}</legend>
+              <div className="grid grid-cols-1 gap-2 @lg:grid-cols-2">
+                {purposes.map((p) => (
+                  <Opt
+                    key={p.id}
+                    name={`${uid}-purpose`}
+                    value={p.id}
+                    checked={state.purpose === p.id}
+                    onChange={() => setCalc({ purpose: p.id })}
+                    title={p.label}
+                  />
+                ))}
+              </div>
+            </fieldset>
+            <p aria-live="polite" className="mt-3 text-[14px] leading-snug text-muted empty:hidden">
+              {purpose?.note}
+            </p>
+
+            <div className="mt-6">
+              <label htmlFor={`${uid}-type`} className="mb-2 block text-[14px] font-medium">
+                {calc.s1.typeLabel}
+              </label>
+              <select
+                id={`${uid}-type`}
+                value={state.type}
+                onChange={(e) => setCalc({ type: e.target.value })}
+                className="min-h-12 w-full rounded-md border border-rule bg-paper px-3 text-[16px] text-ink"
+              >
+                <option value="">{calc.s1.typeNone}</option>
+                {businessTypes.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.label}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-2 max-w-[60ch] text-[13px] text-muted">{calc.s1.note}</p>
             </div>
-            <p className="mt-6 max-w-[60ch] text-[13px] text-muted">{calc.s1.note}</p>
           </div>
         )}
 
         {step === 2 && (
           <fieldset>
             <legend className="mb-1 max-w-[60ch] text-[15px] text-muted">{calc.s2.hint}</legend>
-            <div className="mt-4 grid grid-cols-1 gap-2 md:grid-cols-2">
-              {[...pricing.tiers, pricing.custom].map((t) => (
+            <div className="mt-4 grid grid-cols-1 gap-2 @lg:grid-cols-2">
+              {pageOptions.map((t) => (
                 <Opt
                   key={t.id}
                   name={`${uid}-pages`}
                   value={t.id}
                   checked={state.pages === t.id}
-                  onChange={() => set({ pages: t.id })}
+                  onChange={() => setCalc({ pages: t.id })}
                   title={t.label}
                   sub={t.range}
-                  className={t.id === pricing.custom.id ? 'md:col-span-2' : ''}
+                  className={t.id === pricing.custom.id ? '@lg:col-span-2' : ''}
                 />
               ))}
             </div>
-            {state.pages === pricing.custom.id && (
-              <p className="swap-in mt-4 max-w-[62ch] rounded-md bg-paper-2 px-4 py-3 text-[14px] leading-snug">
-                {calc.s2.customNote}
-              </p>
-            )}
+            <p aria-live="polite" className="mt-4 max-w-[62ch] text-[14px] leading-snug empty:hidden">
+              {state.pages === pricing.custom.id && (
+                <span className="swap-in block rounded-md bg-paper-2 px-4 py-3">{calc.s2.customNote}</span>
+              )}
+              {state.pages === pricing.unsure.id && (
+                <span className="swap-in block rounded-md bg-paper-2 px-4 py-3">{calc.s2.unsureNote}</span>
+              )}
+            </p>
           </fieldset>
         )}
 
-        {step === 3 && <Result state={state} onEdit={go} onRestart={restart} />}
+        {step === 3 && <Result state={state} onEdit={go} onBack={() => go(2)} onRestart={restart} />}
       </div>
 
       {step < 3 && (
-        <div className="mt-9 flex flex-col-reverse gap-3 border-t border-rule pt-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-8 flex flex-col-reverse gap-3 border-t border-rule pt-6 @lg:flex-row @lg:items-center @lg:justify-between">
           {step > 1 ? (
             <button type="button" onClick={() => go(step - 1)} className="btn btn-ghost cursor-pointer">
               {calc.back}
@@ -477,18 +476,18 @@ export default function Calculator() {
           ) : (
             <span className="text-[13px] text-muted">{calc.scope}</span>
           )}
-          <div className="flex flex-col gap-2 sm:items-end">
+          <div className="flex flex-col gap-2 @lg:items-end">
             <button
               type="button"
-              disabled={step === 1 ? !s1ok : !state.pages}
+              disabled={step === 1 ? !state.purpose : !state.pages}
               onClick={() => go(step + 1)}
               className="btn btn-primary cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
             >
-              {step === 2 ? 'Se din pris' : calc.next}
+              {step === 2 ? calc.seeResult : calc.next}
               <Arrow />
             </button>
-            {step === 1 && !s1ok && <span className="text-[12px] text-muted">Vælg både virksomhedstype og formål.</span>}
-            {step === 2 && !state.pages && <span className="text-[12px] text-muted">Vælg, hvor mange sider du skal bruge.</span>}
+            {step === 1 && !state.purpose && <span className="text-[12px] text-muted">{calc.s1.needPurpose}</span>}
+            {step === 2 && !state.pages && <span className="text-[12px] text-muted">{calc.s2.needPages}</span>}
           </div>
         </div>
       )}

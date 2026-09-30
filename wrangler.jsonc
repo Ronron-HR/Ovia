@@ -3,12 +3,32 @@
   // Bygget køres af Cloudflares build-kommando (npm run build) FØR deploy.
   // Filen findes, så `wrangler deploy` ikke autokonfigurerer projektet og
   // kører bygget igen med et andet Vite-setup (det brød forudrenderingen).
+  //
+  // Siden er statiske filer. Kun POST /api/kontakt (formularerne) rammer
+  // workeren i worker/index.js (run_worker_first); alt andet serveres som
+  // statiske filer uden at køre kode.
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "ovia",
+  "main": "worker/index.js",
   "compatibility_date": "2026-09-25",
   "observability": { "enabled": true },
   "assets": {
     "directory": "./dist",
-    "not_found_handling": "404-page"
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    "run_worker_first": ["/api/*"]
   }
+
+  // AFSENDELSE AF FORMULARER — IKKE SAT OP ENDNU. Indtil en af to veje er sat op,
+  // svarer /api/kontakt 503, og siden fortæller ærligt, at beskeden ikke er sendt,
+  // og tilbyder mailprogram og kopiering (se README, "Formularer").
+  //
+  // A. Cloudflare Email Routing (gratis, ingen nøgle). Slå Email Routing til for
+  //    domænet, bekræft modtageradressen, og fjern kommentaren her:
+  //
+  // "send_email": [{ "name": "SEND_EMAIL", "destination_address": "ronnyhong723@gmail.com" }],
+  // "vars": { "MAIL_FROM": "kontakt@oviaspecs.com" }
+  //
+  // B. Resend: opret konto, bekræft domænet, og sæt hemmeligheden
+  //    (npx wrangler secret put RESEND_API_KEY) samt variablen MAIL_FROM.
 }

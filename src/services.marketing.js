@@ -96,7 +96,7 @@ export const seo = {
 
 export const googleAds = {
   path: paths.googleAds,
-  metaTitle: 'Google Ads til lokale virksomheder | OviaSpecs',
+  metaTitle: 'Google Ads til virksomheder | OviaSpecs',
   metaDescription:
     'Få sat søgeannoncer op i Google, så din virksomhed vises, når nogen søger efter det, du tilbyder. Budgettet betales til Google og aftales, før noget starter.',
   eyebrow: 'Google Ads',

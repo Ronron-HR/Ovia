@@ -12,6 +12,8 @@ export default defineConfig({
   // node:path: Cloudflares `wrangler deploy` læser denne fil for at
   // opdage projekttypen og kunne ikke parse den version, der brugte dem.
   build: {
+    // Manifestet bruges af scripts/prerender.mjs til at forhåndshente sidens JS.
+    manifest: true,
     rollupOptions: {
       output: {
         // React ligger i sin egen, cache-venlige fil frem for i en fil opkaldt efter en komponent.

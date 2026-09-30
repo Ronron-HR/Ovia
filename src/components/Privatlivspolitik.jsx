@@ -1,15 +1,18 @@
-import { demos, legal, site } from '../content.js'
+import { legal, site } from '../content.js'
 import Logo from './Logo.jsx'
 
 /**
  * Privatlivspolitik.
  *
  * Skrevet ud fra, hvad siden FAKTISK gør: ingen cookies, ingen analyse, ingen
- * tredjepartsskrifter (de er selvhostede), en kontaktformular, der kun åbner
- * besøgendes egen mailapp (ingen backend), og kun én vej ind for personlige
- * oplysninger: mail og telefon. Ændrer det sig (formularbackend,
- * analyse, nyhedsbrev, indlejret video), skal politikken ændres SAMTIDIG,
- * ellers står der noget forkert.
+ * tredjepartsskrifter (de er selvhostede), formularer, der sender direkte til
+ * mig via siden selv (worker/index.js) og videre til min mail, og beregnerens
+ * valg i browserens sessionStorage (kun i fanen, aldrig sendt noget sted hen).
+ * Ændrer det sig (en anden afsendelsestjeneste end hostingudbyderen, analyse,
+ * nyhedsbrev, indlejret video), skal politikken ændres SAMTIDIG, ellers står
+ * der noget forkert. TODO(afklar ved opsætning af afsendelse): navnet på den
+ * tjeneste, der sender formularens mail (Cloudflare Email Routing eller
+ * Resend), og hvor den behandler oplysninger.
  *
  * Det er en fornuftig standardtekst, ikke juridisk rådgivning. Navn, adresse
  * og CVR-nr. hentes fra `legal` i content.js.
@@ -172,11 +175,14 @@ export default function Privatlivspolitik() {
               sendes videre. Derfor er der intet cookiebanner.
             </p>
             <p>
-              Kontaktformularerne på siden og formularen efter prisberegneren sender ikke selv noget og
-              gemmer ikke det, du skriver. De samler beskeden og åbner din egen mailapp, og først
-              når du trykker send dér, når den mig. Prisberegneren gemmer ikke dine valg: de står
-              kun i adresselinjen i din egen browser, og i mailen, hvis du selv åbner den. Du kan
-              også skrive eller ringe direkte.{demos.showLiveLinks && ' Under Demoer er der links til demoer, der ligger hos GitHub Pages. Åbner du dem, forlader du oviaspecs.com, og de behandler dine oplysninger efter deres egne regler.'}
+              Kontaktformularerne på siden og formularen efter prisberegneren sender det, du skriver
+              og vælger, fra siden selv og videre som en mail til mig. Jeg gemmer beskeden i min
+              mailkonto og ikke andre steder. Først når siden har fået svar om, at beskeden er
+              modtaget, står der, at den er sendt. Virker afsendelsen ikke, står det, og du kan i
+              stedet åbne dit eget mailprogram eller kopiere beskeden. Prisberegneren husker dine
+              valg i din egen browserfane (sessionStorage) og i adresselinjen, så de ikke forsvinder,
+              når du skifter side eller genindlæser. Det forlader ikke din browser, er ikke en cookie
+              og slettes, når du lukker fanen. Du kan også skrive eller ringe direkte. Demoerne under Demoer ligger på oviaspecs.com og er fiktive: formularer og knapper i dem sender og gemmer intet.
             </p>
           </Section>
 

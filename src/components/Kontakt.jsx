@@ -1,16 +1,8 @@
-import { useRef, useState } from 'react'
-import {
-  composeParts,
-  footer,
-  kontakt,
-  legal,
-  mailtoFrom,
-  paths,
-  site,
-  topics,
-} from '../content.js'
+import { useCallback, useState } from 'react'
+import { inquiry, kontakt, paths, site, topics } from '../content.js'
+import { useInquiryForm } from '../useInquiryForm.js'
 import { useSearch } from '../useSearch.js'
-import Logo from './Logo.jsx'
+import { ErrorSummary, FieldError, Honeypot, SendResult } from './FormBits.jsx'
 import { Arrow } from './Shots.jsx'
 
 /**
@@ -21,49 +13,45 @@ import { Arrow } from './Shots.jsx'
  * valgt på forhånd og låst, så en henvendelse om SEO aldrig får en
  * hjemmesidepris eller et forkert emne).
  *
- * Der findes ingen formularbackend, så formularen sender ikke noget selv: den
- * samler beskeden i en mail og åbner besøgendes mailapp (mailto). Derfor viser
- * den aldrig en "sendt"-besked, kun en neutral note om, at mailappen er åbnet,
- * og adressen til dem, hvor mailappen ikke reagerer. Mail og telefon virker
- * altid, også uden JavaScript.
+ * Formularen sender direkte til /api/kontakt (worker/index.js) og viser først
+ * "sendt", når serveren har accepteret beskeden. Er afsendelsen ikke sat op
+ * eller fejler den, står det, at beskeden IKKE er sendt, og mailprogram og
+ * kopiering tilbydes som reserve (FormBits.jsx). Mail og telefon virker altid,
+ * også uden JavaScript.
  */
 function Form({ topic, setTopic, selectable }) {
-  const [note, setNote] = useState(null)
-  const form = useRef(null)
   const f = kontakt.form
   const current = topics.find((t) => t.id === topic)
 
-  const read = () => {
-    const data = new FormData(form.current)
-    return {
+  const read = useCallback(
+    (d) => ({
+      source: 'kontakt',
       topic,
-      name: String(data.get('name') ?? '').trim(),
-      company: String(data.get('company') ?? '').trim(),
-      message: String(data.get('message') ?? '').trim(),
-    }
-  }
-
-  const onSubmit = (event) => {
-    event.preventDefault()
-    window.location.href = mailtoFrom(composeParts(read()))
-    setNote('opened')
-  }
-
-  // Til dem uden mailprogram: kopiér emne og besked, og indsæt dem i en
-  // webmail. Intet sendes; siden siger kun, om kopieringen lykkedes.
-  const onCopy = async () => {
-    if (!form.current.reportValidity()) return
-    const { subject, body } = composeParts(read())
-    try {
-      await navigator.clipboard.writeText(`Emne: ${subject}\n\n${body}`)
-      setNote('copied')
-    } catch {
-      setNote('failed')
-    }
-  }
+      name: d.get('name'),
+      email: d.get('email'),
+      phone: d.get('phone'),
+      company: d.get('company'),
+      message: d.get('message'),
+    }),
+    [topic],
+  )
+  const { form, status, errors, note, tooFast, submit, openMail, copy } = useInquiryForm({
+    read,
+    messageRequired: true,
+  })
+  const sending = status === 'sending'
+  const fieldProps = (name) => ({
+    'aria-invalid': errors[name] ? true : undefined,
+    'aria-describedby': errors[name] ? `c-${name}-error` : undefined,
+  })
 
   return (
-    <form ref={form} onSubmit={onSubmit} className="rounded-[var(--radius-panel)] border border-paper/20 bg-paper/[0.04] p-6 md:p-9">
+    <form
+      ref={form}
+      onSubmit={submit}
+      noValidate
+      className="relative rounded-[var(--radius-panel)] border border-paper/20 bg-paper/[0.04] p-6 md:p-9"
+    >
       {selectable ? (
         <fieldset>
           <legend className="t-eyebrow">{f.topicLegend}</legend>
@@ -89,18 +77,36 @@ function Form({ topic, setTopic, selectable }) {
         </p>
       )}
 
+      <ErrorSummary errors={errors} />
+
       <div className="mt-7 grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2">
         <div>
           <label htmlFor="c-name" className="mb-2 block text-[15px] font-medium">
             {f.name}
           </label>
-          <input id="c-name" name="name" type="text" autoComplete="name" className="field" />
+          <input id="c-name" name="name" type="text" autoComplete="name" className="field" {...fieldProps('name')} />
+          <FieldError id="c-name-error" message={errors.name} />
+        </div>
+        <div>
+          <label htmlFor="c-email" className="mb-2 block text-[15px] font-medium">
+            {f.email}
+          </label>
+          <input id="c-email" name="email" type="email" autoComplete="email" className="field" {...fieldProps('email')} />
+          <FieldError id="c-email-error" message={errors.email} />
+        </div>
+        <div>
+          <label htmlFor="c-phone" className="mb-2 block text-[15px] font-medium">
+            {f.phone}
+          </label>
+          <input id="c-phone" name="phone" type="tel" autoComplete="tel" className="field" {...fieldProps('phone')} />
+          <FieldError id="c-phone-error" message={errors.phone} />
         </div>
         <div>
           <label htmlFor="c-company" className="mb-2 block text-[15px] font-medium">
             {f.company}
           </label>
-          <input id="c-company" name="company" type="text" autoComplete="organization" className="field" />
+          <input id="c-company" name="company" type="text" autoComplete="organization" className="field" {...fieldProps('company')} />
+          <FieldError id="c-company-error" message={errors.company} />
         </div>
         <div className="sm:col-span-2">
           <label htmlFor="c-message" className="mb-2 block text-[15px] font-medium">
@@ -109,39 +115,28 @@ function Form({ topic, setTopic, selectable }) {
           <textarea
             id="c-message"
             name="message"
-            required
             placeholder={f.messagePlaceholder}
             className="field"
+            {...fieldProps('message')}
           />
+          <FieldError id="c-message-error" message={errors.message} />
         </div>
       </div>
+      <Honeypot />
 
       <div className="mt-7 flex flex-col gap-4 sm:flex-row sm:items-center">
-        <button type="submit" className="btn btn-primary shrink-0 cursor-pointer whitespace-nowrap">
-          {f.submit}
-          <Arrow />
+        <button
+          type="submit"
+          disabled={sending || status === 'sent'}
+          className="btn btn-primary shrink-0 cursor-pointer whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {sending ? inquiry.sending : f.submit}
+          {!sending && <Arrow />}
         </button>
         <p className="max-w-[44ch] text-[13px] leading-snug text-paper/70">{f.note}</p>
       </div>
 
-      <p className="mt-4 text-[14px] leading-snug text-paper/80">
-        {f.noMail}{' '}
-        <button type="button" onClick={onCopy} className="link-underline hit cursor-pointer font-medium text-paper">
-          {f.copy}
-        </button>
-      </p>
-
-      <p role="status" aria-live="polite" className="mt-5 text-[14px] leading-snug text-paper/85 empty:hidden">
-        {note && (
-          <span key={note} className="swap-in block">
-            {note === 'opened' ? f.opened : note === 'copied' ? f.copied : f.copyFailed}{' '}
-            <a href={`mailto:${site.email}`} className="link-underline break-all text-paper">
-              {site.email}
-            </a>
-            .
-          </span>
-        )}
-      </p>
+      <SendResult status={status} note={note} tooFast={tooFast} onOpenMail={openMail} onCopy={copy} />
     </form>
   )
 }
@@ -224,7 +219,7 @@ export function ContactCta() {
                 Beskriv din opgave
                 <Arrow />
               </a>
-              <a href={paths.prisberegner} className="btn btn-ghost">
+              <a href={paths.beregner} className="btn btn-ghost">
                 Beregn din hjemmesidepris
               </a>
             </div>
@@ -251,52 +246,5 @@ export function ContactCta() {
         </div>
       </div>
     </section>
-  )
-}
-
-export function Footer() {
-  return (
-    <footer className="on-dark bg-ink text-[14px] leading-relaxed text-paper/70">
-      <div className="shell">
-        <div className="grid grid-cols-2 gap-x-8 gap-y-10 border-t border-paper/15 py-12 md:grid-cols-12">
-          <div className="col-span-2 md:col-span-4">
-            <Logo className="block h-[24px] text-paper" />
-            <p className="mt-4 max-w-[30ch]">{footer.tagline}</p>
-            <p className="mt-4">
-              <a href={`mailto:${site.email}`} className="link-underline hit break-all text-paper/90">
-                {site.email}
-              </a>
-              <br />
-              <a href={`tel:${site.phoneHref}`} className="link-underline hit text-paper/90">
-                +45 {site.phone}
-              </a>
-            </p>
-          </div>
-
-          {footer.columns.map((col, i) => (
-            <nav key={col.title} aria-label={col.title} className={`md:col-span-2 ${i === 0 ? 'md:col-start-6' : ''}`}>
-              <p className="t-eyebrow">{col.title}</p>
-              <ul className="mt-3 flex flex-col">
-                {col.links.map((link) => (
-                  <li key={link.href}>
-                    <a href={link.href} className="inline-flex min-h-9 items-center text-paper/85 hover:text-paper">
-                      {link.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-          ))}
-        </div>
-
-        <div className="flex flex-col gap-1 border-t border-paper/15 py-6 text-[13px] md:flex-row md:justify-between">
-          <p>{footer.left}</p>
-          <p>
-            {legal.owner} · {legal.address}
-            {legal.cvr && ` · CVR ${legal.cvr}`}
-          </p>
-        </div>
-      </div>
-    </footer>
   )
 }

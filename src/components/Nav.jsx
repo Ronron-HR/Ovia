@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
-import { nav, site } from '../content.js'
+import { nav, paths, site } from '../content.js'
 import { useScrolled } from '../motion/useScrolled.js'
 import Logo from './Logo.jsx'
 import { Arrow } from './Shots.jsx'
@@ -118,6 +118,9 @@ function Group({ item, path }) {
 }
 
 export default function Nav({ path }) {
+  // På siderne med beregneren (forsiden og /prisberegner/) fører knappen til
+  // beregneren på siden og sætter fokus dér; ellers til /prisberegner/.
+  const ctaHref = clean(path) === '/' || isHere(paths.prisberegner, path) ? '#beregner' : nav.cta.href
   const scrolled = useScrolled()
   const [open, setOpen] = useState(false)
 
@@ -224,7 +227,7 @@ export default function Nav({ path }) {
               </ul>
             </nav>
 
-            <a href={nav.cta.href} className="btn btn-accent min-h-11 px-5 text-[14px]">
+            <a href={ctaHref} className="btn btn-accent min-h-11 px-5 text-[14px]">
               {nav.cta.label}
             </a>
           </div>
@@ -292,7 +295,7 @@ export default function Nav({ path }) {
           </ul>
 
           <div className="mt-6">
-            <a href={nav.cta.href} onClick={close} className="btn btn-accent w-full">
+            <a href={ctaHref} onClick={close} className="btn btn-accent w-full">
               {nav.cta.label}
             </a>
 
