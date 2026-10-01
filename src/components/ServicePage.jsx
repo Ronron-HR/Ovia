@@ -1,8 +1,9 @@
-import { services } from '../data/pricing.js'
-import { home } from '../data/texts.js'
+import { introText, services } from '../data/pricing.js'
+import { calcIntro, home } from '../data/texts.js'
 import ContactButtons from './ContactButtons.jsx'
 import ContactSection from './ContactSection.jsx'
 import Faq from './Faq.jsx'
+import PriceCalculator from './PriceCalculator.jsx'
 import { Addons, DriftTerms, PackageGrid, PriceNote } from './Packages.jsx'
 import { Arrow } from './Shots.jsx'
 import Steps from './Steps.jsx'
@@ -10,7 +11,8 @@ import Steps from './Steps.jsx'
 /**
  * FÆLLES SKABELON FOR YDELSESSIDERNE
  *
- * Problemet → hvad du får → [ekstra sektion] → 3 pakker → sådan foregår det
+ * Overskrift + én linje → prisberegneren (sidens ydelse forvalgt) → problemet
+ * og kontakt → hvad du får → [ekstra sektion] → 3 pakker → sådan foregår det
  * → FAQ → kontakt. Teksterne står i src/data/services.js, alle priser og
  * pakker i src/data/pricing.js. `extra` er sidens egen sektion (koncepter,
  * pilotforløb eller gratis Google-tjek) og står før pakkerne.
@@ -19,25 +21,39 @@ export default function ServicePage({ page, extra = null }) {
   const service = services[page.service]
   return (
     <>
-      <section className="pt-[calc(var(--nav-h)+36px)] pb-12 md:pt-[calc(var(--nav-h)+64px)] md:pb-16">
+      {/* Først overskrift, én kort linje og beregneren med sidens ydelse forvalgt. */}
+      <section className="pt-[calc(var(--nav-h)+20px)] pb-10 md:pt-[calc(var(--nav-h)+48px)] md:pb-14">
         <div className="shell">
-          <p data-hero="fade" className="t-eyebrow t-eyebrow-accent">
-            {page.eyebrow}
-          </p>
-          <h1 data-hero="fade" style={{ '--d': '60ms' }} className="t-display t-hero mt-5 max-w-[20ch]">
-            {page.title}
-          </h1>
-          <div data-hero="fade" style={{ '--d': '140ms' }} className="mt-6 max-w-[52ch]">
+          <div className="max-w-[880px]">
+            <p data-hero="fade" className="t-eyebrow t-eyebrow-accent">
+              {page.eyebrow}
+            </p>
+            <h1 data-hero="fade" style={{ '--d': '60ms' }} className="t-display mt-3 max-w-[22ch] text-[clamp(1.75rem,4vw,2.75rem)] leading-[1.06]">
+              {page.title}
+            </h1>
+            <p data-hero="fade" style={{ '--d': '100ms' }} className="t-body mt-2.5 text-[16px] md:text-[18px]">
+              {calcIntro}
+            </p>
+            <div data-hero="fade" style={{ '--d': '140ms' }} className="mt-4 md:mt-6">
+              <PriceCalculator defaults={[page.service]} />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section aria-label={page.eyebrow} className="pb-[var(--space-section)]">
+        <div className="shell">
+          <div data-reveal className="max-w-[52ch]">
             {page.problem.map((p) => (
               <p key={p.slice(0, 24)} className="t-body t-lead mt-3 first:mt-0">
                 {p}
               </p>
             ))}
           </div>
-          <div data-hero="fade" style={{ '--d': '220ms' }} data-callbar-hide>
+          <div data-reveal data-callbar-hide>
             <ContactButtons className="mt-8" stretch />
           </div>
-          <div data-hero="fade" style={{ '--d': '300ms' }} className="mt-6 flex flex-col items-start gap-x-8 gap-y-2 sm:flex-row sm:flex-wrap">
+          <div data-reveal className="mt-6 flex flex-col items-start gap-x-8 gap-y-2 sm:flex-row sm:flex-wrap">
             {page.heroLink && (
               <a href={page.heroLink.href} className="btn-text inline-flex items-center gap-2 text-accent">
                 {page.heroLink.label}
@@ -78,7 +94,10 @@ export default function ServicePage({ page, extra = null }) {
       <section id="pakker" aria-labelledby="pakker-titel" className="section-y bg-paper">
         <div className="shell">
           <header data-reveal className="max-w-[46ch]">
-            <p className="t-eyebrow t-eyebrow-accent">{page.packages.eyebrow}</p>
+            <div className="flex flex-wrap items-center gap-3">
+              <p className="t-eyebrow t-eyebrow-accent">{page.packages.eyebrow}</p>
+              {introText && <span className="badge">{introText}</span>}
+            </div>
             <h2 id="pakker-titel" className="t-display t-h2 mt-4">
               {page.packages.title}
             </h2>

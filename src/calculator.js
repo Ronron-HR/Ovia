@@ -8,7 +8,12 @@ import { bookingSubscriptionNote, calculator, components, formatKr, overlap, ser
  * TILSTAND: kun i adresselinjen (?ydelser=hjemmeside,marketing&sider=2-5&…&trin=3),
  * sat med replaceState, så et link med valgene virker, og intet gemmes andre
  * steder. Ingen cookies, intet lager, intet sendes nogen steder hen.
- * Serveren og første klient-render får EMPTY (forudrendering og hydrering er ens).
+ * Serveren og første klient-render får starttilstanden (forudrendering og
+ * hydrering er ens).
+ *
+ * FORVALG: på ydelsessiderne er sidens ydelse valgt på forhånd (`defaults`).
+ * Står der intet `ydelser` i adresselinjen, bruges forvalget; har kunden
+ * fravalgt alt, skrives `ydelser=` (tom), så forvalget ikke kommer tilbage.
  */
 
 /** Ydelsernes rækkefølge i beregneren. */
@@ -18,25 +23,92 @@ const RANK = ['start', 'vaekst', 'fuld-fart']
 const allQuestions = ORDER.flatMap((key) => calculator.questions[key])
 
 export const EMPTY = Object.freeze({ selected: [], answers: {}, step: 0 })
+const NONE = Object.freeze([])
+
+/* ---- Spørgsmål, der vises, og svar, der må vælges ----------------------- */
+
+/** Spørgsmålene for en ydelse, der vises med de givne svar (`showIf` i pricing.js). */
+export function visibleQuestions(key, answers) {
+  return calculator.questions[key].filter(
+    (q) => !q.showIf || Object.entries(q.showIf).every(([id, v]) => answers[id] === v),
+  )
+}
+
+const optionOf = (q, answers) => q.options.find((o) => o.id === answers[q.id])
+
+/**
+ * Pakken, svarene peger på: den højeste `tier` blandt de valgte svar. Svar med
+ * `onlyTiers` (fx egen konto) bestemmer ikke pakken, de begrænses af den.
+ */
+export function tierFor(key, answers) {
+  const tiers = visibleQuestions(key, answers)
+    .map((q) => optionOf(q, answers))
+    .filter((o) => o && o.tier)
+    .map((o) => RANK.indexOf(o.tier))
+  return RANK[Math.max(0, ...tiers)]
+}
+
+/**
+ * Får hjemmesiden booking via Booking & Google? Kun når begge ydelser er valgt,
+ * og Booking & Google-pakken indeholder booking (Vækst eller Fuld fart).
+ */
+export function bookingOnWebsite(selected, answers) {
+  if (!selected.includes('hjemmeside') || !selected.includes('bookingGoogle')) return false
+  const bg = services.bookingGoogle.tiers.find((t) => t.id === tierFor('bookingGoogle', answers))
+  return bg.includes.includes('booking')
+}
+
+/**
+ * Må svaret vælges? `onlyTiers`: kun med de pakker (egen konto: Start og Vækst).
+ * `notWithBooking`: ikke når hjemmesiden får booking via Booking & Google.
+ */
+export const allowed = (option, tierId, booking = false) =>
+  (!option.onlyTiers || option.onlyTiers.includes(tierId)) && !(option.notWithBooking && booking)
+
+/**
+ * Fjerner svar på skjulte spørgsmål. Et svar, der ikke er tilladt (fx egen konto
+ * til Fuld fart eller sammen med booking), skiftes til spørgsmålets `fallback`
+ * (drift) eller fjernes, hvis der ikke er en.
+ */
+export function cleanAnswers(answers, selected = ORDER) {
+  const out = { ...answers }
+  const booking = bookingOnWebsite(selected, out)
+  for (const key of ORDER) {
+    const visible = visibleQuestions(key, out)
+    for (const q of calculator.questions[key]) {
+      if (!visible.includes(q)) delete out[q.id]
+    }
+    const tier = tierFor(key, out)
+    for (const q of visible) {
+      const o = optionOf(q, out)
+      if (o && !allowed(o, tier, key === 'hjemmeside' && booking)) {
+        if (q.fallback) out[q.id] = q.fallback
+        else delete out[q.id]
+      }
+    }
+  }
+  return out
+}
 
 /* ---- Adresselinje ------------------------------------------------------ */
 
 /** Trinnet må ikke vise noget, der kræver svar, som mangler. */
 function fit(state) {
-  const { selected, answers } = state
+  const { selected } = state
+  const answers = cleanAnswers(state.answers, selected)
   const last = selected.length + 1 // resultatet
   let step = Math.min(Math.max(0, state.step), last)
-  if (!selected.length) return { ...state, step: 0 }
+  if (!selected.length) return { ...state, answers, step: 0 }
   for (let i = 0; i < selected.length && step > i + 1; i++) {
-    const missing = calculator.questions[selected[i]].some((q) => !answers[q.id])
+    const missing = visibleQuestions(selected[i], answers).some((q) => !answers[q.id])
     if (missing) step = i + 1
   }
-  return { ...state, step }
+  return { ...state, answers, step }
 }
 
-export function parse(search) {
+export function parse(search, defaults = NONE) {
   const q = new URLSearchParams(search)
-  const wanted = (q.get('ydelser') ?? '').split(',')
+  const wanted = q.has('ydelser') ? q.get('ydelser').split(',') : defaults
   const selected = ORDER.filter((k) => wanted.includes(k))
   const answers = {}
   for (const question of allQuestions) {
@@ -46,11 +118,12 @@ export function parse(search) {
   return fit({ selected, answers, step: (Number(q.get('trin')) || 1) - 1 })
 }
 
-export function serialize({ selected, answers, step }) {
+export function serialize({ selected, answers, step }, defaults = NONE) {
   const q = new URLSearchParams()
-  if (selected.length) q.set('ydelser', selected.join(','))
+  const isDefault = selected.join(',') === ORDER.filter((k) => defaults.includes(k)).join(',')
+  if (!isDefault || step > 0 || Object.keys(answers).length) q.set('ydelser', selected.join(','))
   for (const key of selected) {
-    for (const question of calculator.questions[key]) {
+    for (const question of visibleQuestions(key, answers)) {
       if (answers[question.id]) q.set(question.id, answers[question.id])
     }
   }
@@ -62,12 +135,25 @@ export function serialize({ selected, answers, step }) {
 /* ---- Lager (useSyncExternalStore over adresselinjen) ------------------- */
 
 const listeners = new Set()
-let cache = { search: null, state: EMPTY }
+/** Én gemt tilstand pr. forvalg, så useSyncExternalStore får samme objekt igen. */
+const cache = new Map()
 
-function snapshot() {
+function snapshot(defaults) {
+  const key = defaults.join(',')
   const { search } = window.location
-  if (cache.search !== search) cache = { search, state: parse(search) }
-  return cache.state
+  const hit = cache.get(key)
+  if (hit?.search === search) return hit.state
+  const state = parse(search, defaults)
+  cache.set(key, { search, state })
+  return state
+}
+
+const initial = new Map()
+/** Starttilstanden (server og første klient-render): kun forvalget. */
+function initialState(defaults) {
+  const key = defaults.join(',')
+  if (!initial.has(key)) initial.set(key, defaults.length ? fit({ ...EMPTY, selected: ORDER.filter((k) => defaults.includes(k)) }) : EMPTY)
+  return initial.get(key)
 }
 
 function subscribe(fn) {
@@ -79,10 +165,14 @@ function subscribe(fn) {
   }
 }
 
-export function useCalc() {
-  const state = useSyncExternalStore(subscribe, snapshot, () => EMPTY)
+export function useCalc(defaults = NONE) {
+  const state = useSyncExternalStore(
+    subscribe,
+    () => snapshot(defaults),
+    () => initialState(defaults),
+  )
   const set = (next) => {
-    const url = `${window.location.pathname}${serialize(fit(next))}${window.location.hash}`
+    const url = `${window.location.pathname}${serialize(fit(next), defaults)}${window.location.hash}`
     window.history.replaceState(window.history.state, '', url)
     listeners.forEach((fn) => fn())
   }
@@ -91,35 +181,40 @@ export function useCalc() {
 
 /* ---- Beregning ---------------------------------------------------------- */
 
-/** Pris for én ydelse ud fra svarene. */
-function line(key, answers) {
+/**
+ * Pris for én ydelse ud fra svarene. Alle priser er faste: `once` er det, der
+ * betales nu (pakke + tilvalg), `monthly` det, der betales pr. måned.
+ */
+function line(key, answers, booking = false) {
   const service = services[key]
-  const chosen = calculator.questions[key].map((q) => ({
-    question: q,
-    option: q.options.find((o) => o.id === answers[q.id]),
-  }))
-  const options = chosen.map((c) => c.option).filter(Boolean)
-  const tierId = RANK[Math.max(0, ...options.map((o) => RANK.indexOf(o.tier)))]
+  const tierId = tierFor(key, answers)
   const tier = service.tiers.find((t) => t.id === tierId)
+  const chosen = visibleQuestions(key, answers).map((q) => ({ question: q, option: optionOf(q, answers) }))
+  // Svar, der ikke er tilladt med pakken (fx egen konto til Fuld fart), tæller ikke.
+  const options = chosen.map((c) => c.option).filter((o) => o && allowed(o, tierId, booking))
+  const notes = options.map((o) => o.note).filter(Boolean)
 
   let once = 0
   let monthly = 0
+  let noDrift = false
   if (service.billing === 'monthly') {
     monthly = tier.price
   } else {
-    once = tier.price + options.reduce((sum, o) => sum + (o.addon ? service.addons[o.addon].price : 0), 0)
-    monthly = options.some((o) => o.noDrift) ? 0 : (tier.monthly ?? 0)
+    once = tier.price
+    for (const o of options) {
+      if (o.addon) once += service.addons[o.addon].price
+      if (o.extraPages) {
+        const page = service.addons.extraPage
+        once += o.extraPages * page.price
+        notes.push(calculator.extraPagesNote(o.extraPages, formatKr(page.price)))
+      }
+    }
+    noDrift = options.some((o) => o.noDrift)
+    monthly = noDrift ? 0 : (tier.monthly ?? 0)
+    // Booking (Fuld fart eller via Booking & Google) = altid drift; sig hvorfor.
+    if (key === 'hjemmeside' && (booking || tier.includes.includes('booking'))) notes.push(calculator.driftWithBooking)
   }
-  return {
-    key,
-    service,
-    tier,
-    chosen,
-    low: once,
-    high: once ? once + service.buffer : 0,
-    monthly,
-    notes: options.map((o) => o.note).filter(Boolean),
-  }
+  return { key, service, tier, chosen, once, monthly, noDrift, notes }
 }
 
 /** "Google-profil", "Google-profil og booking", "Google-profil, booking og …" med stort forbogstav. */
@@ -132,28 +227,25 @@ function partList(ids) {
 /**
  * Komponenter tælles kun én gang: de dele af Booking & Google, der allerede er
  * med i den valgte hjemmesidepakke (`includes` i pricing.js), trækkes fra
- * Booking & Google-prisen, og noten nævner hvilke. Er hele pakken dækket,
- * bliver prisen 0, linjen får `allIncluded`, og intet lægges til totalen.
+ * Booking & Google-prisen, og noten siger, hvad og hvorfor. Prisen bliver
+ * aldrig negativ: er hele pakken dækket, koster den ingenting, linjen får
+ * `allIncluded`, og intet lægges til totalen.
  */
 function applyOverlap(web, bg) {
   if (!web || !bg) return
   const shared = bg.tier.includes.filter((id) => web.tier.includes.includes(id))
   if (!shared.length) return
-  const amount = shared.reduce((sum, id) => sum + components[id].price, 0)
-  bg.notes.push(overlap.note(partList(shared), tierName(web.tier)))
-  if (amount >= bg.low) {
-    bg.low = 0
-    bg.high = 0
-    bg.allIncluded = true
-  } else {
-    bg.low -= amount
-    bg.high -= amount
-  }
+  const amount = Math.min(bg.once, shared.reduce((sum, id) => sum + components[id].price, 0))
+  bg.notes.push(overlap.note(partList(shared), formatKr(amount), tierName(web.tier)))
+  bg.once = Math.max(0, bg.once - amount)
+  if (bg.once === 0) bg.allIncluded = true
 }
 
 /** Hele tilbuddet: én linje pr. valgt ydelse, en samlet pris og fælles noter. */
 export function quote({ selected, answers }) {
-  const lines = selected.map((key) => line(key, answers))
+  const clean = cleanAnswers(answers, selected)
+  const booking = bookingOnWebsite(selected, clean)
+  const lines = selected.map((key) => line(key, clean, key === 'hjemmeside' && booking))
   const web = lines.find((l) => l.key === 'hjemmeside')
   const bg = lines.find((l) => l.key === 'bookingGoogle')
   applyOverlap(web, bg)
@@ -162,31 +254,37 @@ export function quote({ selected, answers }) {
     lines,
     notes: hasBooking ? [bookingSubscriptionNote] : [],
     total: {
-      low: lines.reduce((s, l) => s + l.low, 0),
-      high: lines.reduce((s, l) => s + l.high, 0),
+      once: lines.reduce((s, l) => s + l.once, 0),
       monthly: lines.reduce((s, l) => s + l.monthly, 0),
+      noDrift: lines.some((l) => l.noDrift),
     },
   }
 }
 
-const plain = (n) => formatKr(n).replace(' kr.', '')
-
-/** Engangsdelen og månedsdelen hver for sig: { once: "ca. 5.500–6.500 kr.", month: "400 kr./md" }. */
-export function priceParts({ low, high, monthly }) {
+/** Engangsdelen og månedsdelen hver for sig som tekst (formatKr); et beløb på 0 giver tom tekst. */
+export function priceParts({ once, monthly }) {
   return {
-    once: low ? (high > low ? `ca. ${plain(low)}–${formatKr(high)}` : formatKr(low)) : '',
+    once: once ? formatKr(once) : '',
     month: monthly ? `${formatKr(monthly)}/md` : '',
   }
 }
 
 /**
- * "ca. 5.500–6.500 kr. + 400 kr./md", "3.500 kr./md" eller "ca. 1.000–1.500 kr.".
- * En linje, der er helt dækket af hjemmesidepakken, får overlap.allIncluded.
+ * En linjes pris: engangsbeløb + månedsbeløb, kun månedsbeløb eller kun
+ * engangsbeløb. Egen konto: beløbet + calculator.noDriftSuffix. En Booking & Google-
+ * linje, der er helt dækket af hjemmesiden, får overlap.allIncluded.
  */
 export function priceText(price) {
   if (price.allIncluded) return overlap.allIncluded
   const { once, month } = priceParts(price)
+  if (price.noDrift && once && !month) return `${once} ${calculator.noDriftSuffix}`
   return once && month ? `${once} + ${month}` : once || month
+}
+
+/** Totalen: engangsbeløbet + calculator.nowLabel og månedsbeløbet (et beløb på 0 udelades). */
+export function totalText(total) {
+  const { once, month } = priceParts(total)
+  return [once && `${once} ${calculator.nowLabel}`, month].filter(Boolean).join(' + ')
 }
 
 /** Opsummering til SMS og mail. */
@@ -198,7 +296,7 @@ export function summaryLines(q) {
       .join('; ')
     return `${l.service.name}, ${tierName(l.tier)}: ${priceText(l)} (${answers})`
   })
-  if (q.lines.length > 1) out.push(`I alt: ${priceText(q.total)}`)
+  out.push(`I alt: ${totalText(q.total)}`)
   return out
 }
 
@@ -221,7 +319,7 @@ export function mailBody(q) {
     ...summaryLines(q).map((s) => `- ${s}`),
     '',
     ...allNotes(q).map((n) => sentence(n)),
-    `${calculator.finalNote}.`,
+    ...(calculator.finalNote ? [sentence(calculator.finalNote)] : []),
     '',
     ...calculator.mailOutro,
   ].join('\n')

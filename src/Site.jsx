@@ -68,7 +68,7 @@ export default function Site({ path, Page: Current }) {
       </main>
 
       <Footer />
-      <MobileCallBar />
+      <MobileCallBar path={path} />
     </>
   )
 }

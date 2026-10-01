@@ -64,7 +64,7 @@ export function PackageGrid({ service, headingLevel = 3 }) {
   )
 }
 
-/** "Priserne er endelige. OviaSpecs er ikke momsregistreret." (styres i pricing.js) */
+/** Momslinjen, fx "Alle priser er ekskl. moms." (priceNote i pricing.js) */
 export function PriceNote({ className = '' }) {
   if (!priceNote) return null
   return <p className={`text-[14px] text-muted ${className}`}>{priceNote}</p>
@@ -78,9 +78,13 @@ export function Addons({ service }) {
       {Object.values(service.addons).map((a) => (
         <li key={a.label} className="flex items-baseline justify-between gap-4 border-b border-rule py-3 text-[15px]">
           <span>{a.label}</span>
-          <span className="shrink-0 font-medium tabular-nums">+{formatPrice(service, a.price)}</span>
+          <span className="shrink-0 font-medium tabular-nums">
+            +{formatPrice(service, a.price)}
+            {a.unit && ` ${a.unit}`}
+          </span>
         </li>
       ))}
+      {service.upgradeNote && <li className="py-3 text-[15px] md:col-span-2">{service.upgradeNote}</li>}
     </ul>
   )
 }
@@ -104,7 +108,7 @@ export function DriftTerms({ service, className = '', headingLevel = 3 }) {
         <li>{d.notIncluded}</li>
         <li>{d.domain}</li>
         <li>{d.binding}</li>
-        <li>{d.buyout(formatKr(service.addons.ownAccount.price))}</li>
+        <li>{d.buyout(formatKr(d.buyoutPrice))}</li>
       </ul>
     </div>
   )

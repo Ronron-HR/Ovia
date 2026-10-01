@@ -18,7 +18,7 @@ import { paths } from '../data/texts.js'
 const WITH_ANCHOR = ['/demoer/']
 
 /** Priserne på en hjemmeside i beregneren. */
-const PRICES = `${paths.priser}?ydelser=hjemmeside`
+const PRICES = `${paths.priser}?ydelser=hjemmeside#beregner`
 const FROM = 'oviaspecs-demo-from'
 
 /** En af selve demoerne (/demoer/cafe/ …), ikke oversigten /demoer/. */

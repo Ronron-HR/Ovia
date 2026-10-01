@@ -2,7 +2,7 @@ import ContactSection from '../components/ContactSection.jsx'
 import { Addons, DriftTerms, PackageGrid, PriceNote } from '../components/Packages.jsx'
 import PriceCalculator from '../components/PriceCalculator.jsx'
 import { Arrow } from '../components/Shots.jsx'
-import { services } from '../data/pricing.js'
+import { introText, services } from '../data/pricing.js'
 import { priser as p } from '../data/services.js'
 import { paths } from '../data/texts.js'
 
@@ -16,23 +16,17 @@ const SERVICES = [
 export default function Priser() {
   return (
     <>
-      <section className="pt-[calc(var(--nav-h)+36px)] pb-[var(--space-section)] md:pt-[calc(var(--nav-h)+64px)]">
+      {/* Overskriften og så straks beregneren; forklaringen står under den. */}
+      <section className="pt-[calc(var(--nav-h)+20px)] pb-[var(--space-section)] md:pt-[calc(var(--nav-h)+48px)]">
         <div className="shell">
-          <div className="grid grid-cols-1 gap-x-12 gap-y-8 lg:grid-cols-12">
-            <header className="lg:col-span-4">
-              <p data-hero="fade" className="t-eyebrow t-eyebrow-accent">
-                {p.eyebrow}
-              </p>
-              <h1 data-hero="fade" style={{ '--d': '60ms' }} className="t-display t-hero mt-5">
-                {p.title}
-              </h1>
-              <p data-hero="fade" style={{ '--d': '140ms' }} className="t-body t-lead mt-5 max-w-[40ch]">
-                {p.lead}
-              </p>
-            </header>
-            <div data-hero="fade" style={{ '--d': '200ms' }} className="lg:col-span-8">
+          <div className="max-w-[880px]">
+            <h1 data-hero="fade" className="t-display text-[clamp(1.75rem,4vw,2.75rem)] leading-[1.06]">
+              {p.title}
+            </h1>
+            <div data-hero="fade" style={{ '--d': '80ms' }} className="mt-4 md:mt-6">
               <PriceCalculator />
             </div>
+            <p className="t-body mt-4 text-[15px]">{p.lead}</p>
           </div>
         </div>
       </section>
@@ -40,7 +34,10 @@ export default function Priser() {
       <section id="pakker" aria-labelledby="alle-titel" className="section-y bg-paper-2">
         <div className="shell">
           <header data-reveal>
-            <p className="t-eyebrow t-eyebrow-accent">{p.all.eyebrow}</p>
+            <div className="flex flex-wrap items-center gap-3">
+              <p className="t-eyebrow t-eyebrow-accent">{p.all.eyebrow}</p>
+              {introText && <span className="badge">{introText}</span>}
+            </div>
             <h2 id="alle-titel" className="t-display t-h2 mt-4">
               {p.all.title}
             </h2>

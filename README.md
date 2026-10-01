@@ -6,7 +6,7 @@ Hjemmesiden for OviaSpecs (oviaspecs.com): hjemmeside, marketing og booking & Go
 
 | Fil | Indhold |
 | --- | --- |
-| `src/data/pricing.js` | **Alle priser og pakker**, drift, tilvalg, buffere til prisberegneren, beregnerens spørgsmål, pilotvilkår, gratis Google-tjek, momstekst (`priceNote`), `paidStartText`, `flags.hasMarketingCases`, telefon, mail og CVR (`company.cvr`, vises i footeren, når det er udfyldt). |
+| `src/data/pricing.js` | **Alle priser og pakker**, drift, tilvalg, beregnerens spørgsmål, pilotvilkår, gratis Google-tjek, momstekst (`priceNote`), `paidStartText`, `flags.hasMarketingCases`, telefon, mail og CVR (`company.cvr`, vises i footeren, når det er udfyldt). |
 | `src/data/texts.js` | Forsiden, navigation, kontakt, footer, privatlivspolitikkens udbydere og metadata for forsiden. |
 | `src/data/services.js` | Ydelsessiderne (/hjemmeside/, /marketing/, /booking-google/) og /priser/: problem, "det får du", FAQ og metadata. |
 | `src/content.demos.js` | De fire koncepter under /demoer/. |
@@ -21,7 +21,7 @@ Adresser og metadata: `src/routes.js`. Nøglerne skal passe med `src/pageKeys.js
 
 ## Prisberegneren
 
-`src/components/PriceCalculator.jsx` + `src/calculator.js`. Trin 1 er flervalg af ydelser, derefter ét trin pr. valgt ydelse og så resultatet (højst 5 trin). Hvert svar peger på en pakke, og den højeste vinder. Intervallet er pakkeprisen plus ydelsens `buffer`; marketing har buffer 0 (fast månedspris). Valgene står kun i adresselinjen. Resultatet har Ring, SMS og "Send mig tilbuddet" (mailto) med forudfyldt opsummering.
+`src/components/PriceCalculator.jsx` + `src/calculator.js`. Trin 1 er flervalg af ydelser, derefter ét trin pr. valgt ydelse og så resultatet (højst 5 trin). Hvert svar peger på en pakke, og den højeste vinder. Prisen er fast: pakkeprisen plus eventuelle tilvalg (fx egen konto). Alle ydelser har `buffer: 0`, og `npm test` fejler, hvis et interval sniger sig ind. Valgene står kun i adresselinjen. Resultatet har Ring, SMS og "Send mig tilbuddet" (mailto) med forudfyldt opsummering.
 
 ## Kommandoer
 

@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { contact } from '../data/pricing.js'
-import { cta, links } from '../data/texts.js'
+import { calcHref, cta, links } from '../data/texts.js'
 import { MailIcon, PhoneIcon } from './ContactButtons.jsx'
 
 /**
- * Fast bjælke i bunden på mobil med "Ring" og "Skriv", så kontakt altid er ét
+ * Fast bjælke i bunden på mobil med "Ring", "Skriv" og "Se pris", så kontakt altid er ét
  * tryk væk. Den skjules, mens elementer med [data-callbar-hide] er på skærmen
  * (heroens knapper, kontaktsektionen og footeren), så den aldrig står oven i
  * de samme knapper. Uden JavaScript vises den ikke; knapperne på siden virker
@@ -13,7 +13,7 @@ import { MailIcon, PhoneIcon } from './ContactButtons.jsx'
  * Mens bjælken er synlig, står <html data-callbar="on">, så "Ring" i toppen
  * (Nav, .nav-call) skjules, og knappen ikke står to gange (index.css).
  */
-export default function MobileCallBar() {
+export default function MobileCallBar({ path }) {
   const [show, setShow] = useState(false)
 
   useEffect(() => {
@@ -38,14 +38,17 @@ export default function MobileCallBar() {
 
   return (
     <div className="callbar md:hidden" data-show={show} aria-hidden={!show} inert={!show}>
-      <div className="grid grid-cols-2 gap-2">
-        <a href={links.tel} className="btn btn-primary" aria-label={`${cta.call} ${contact.phone}`}>
+      <div className="grid grid-cols-3 gap-2">
+        <a href={links.tel} className="btn btn-primary gap-1.5 px-2" aria-label={`${cta.call} ${contact.phone}`}>
           <PhoneIcon />
           {cta.call}
         </a>
-        <a href={links.mail} className="btn btn-surface">
+        <a href={links.mail} className="btn btn-surface gap-1.5 px-2">
           <MailIcon />
           {cta.write}
+        </a>
+        <a href={calcHref(path)} className="btn btn-accent px-2 whitespace-nowrap">
+          {cta.price}
         </a>
       </div>
     </div>

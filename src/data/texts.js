@@ -20,6 +20,15 @@ export const paths = {
   privatliv: '/privatlivspolitik/',
 }
 
+/** Sider med prisberegneren. "Se din pris" hopper til den på siden, ellers til /priser/. */
+const calcPages = [paths.home, paths.hjemmeside, paths.marketing, paths.bookingGoogle, paths.priser]
+
+/** Adressen til prisberegneren set fra en given side. */
+export const calcHref = (path) => {
+  const clean = path.endsWith('/') ? path : `${path}/`
+  return calcPages.includes(clean) ? '#beregner' : `${paths.priser}#beregner`
+}
+
 /** Klikbare kontaktadresser. Bruges af alle knapper. */
 export const links = {
   tel: `tel:${contact.phoneHref}`,
@@ -36,26 +45,31 @@ export const nav = {
     { label: 'Priser', href: paths.priser },
   ],
   call: 'Ring',
+  /** Knappen til prisberegneren: lang på desktop, kort på mobil. */
+  price: 'Se din pris',
+  priceShort: 'Se pris',
   menu: 'Menu',
   close: 'Luk',
 }
+
+/** Den korte linje over prisberegneren på ydelsessiderne. */
+export const calcIntro = 'Svar på et par spørgsmål, så ser du prisen med det samme.'
 
 /** Teksterne på knapperne "Ring" og "Skriv". */
 export const cta = {
   call: 'Ring',
   write: 'Skriv',
   sms: 'SMS',
+  price: 'Se pris',
 }
 
 /* ---- Forsiden ---------------------------------------------------------- */
 
 export const home = {
   hero: {
-    eyebrow: 'Til lokale virksomheder',
     title: 'Jeg sørger for, at kunderne finder dig online og har let ved at tage kontakt.',
-    lead: 'Hjemmeside, Google-profil, booking og korte videoer. Du får klare priser, og det er mig, der laver arbejdet.',
-    who: `Du taler med mig, ${contact.name.split(' ')[0]}. Hele vejen.`,
-    prices: { label: 'Se priser', href: paths.priser },
+    /** Den ene korte linje under overskriften. */
+    short: 'Hjemmeside, Google-profil, booking og korte videoer. Se din pris med det samme.',
   },
 
   cards: {
