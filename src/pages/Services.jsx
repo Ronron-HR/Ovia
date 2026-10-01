@@ -1,4 +1,4 @@
-import ServicePage from '../components/ServicePage.jsx'
+import ServicePage from '../components/LegacyServicePage.jsx'
 
 /** De seks ydelsessider deler skabelon og ét modul (én fil at hente). */
 export const hjemmesider = () => <ServicePage id="hjemmesider" />

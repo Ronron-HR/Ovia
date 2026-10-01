@@ -8,6 +8,7 @@ import Kontakt from './pages/Kontakt.jsx'
 import Om from './pages/Om.jsx'
 import Prisberegner from './pages/Prisberegner.jsx'
 import * as services from './pages/Services.jsx'
+import * as service from './pages/Service.jsx'
 
 /**
  * SIDERNE, alle samlet. Bruges kun af forudrenderingen (entry-server.jsx).
@@ -16,6 +17,7 @@ import * as services from './pages/Services.jsx'
  */
 export const pages = {
   home: Home,
+  hjemmeside: service.hjemmeside,
   hjemmesider: services.hjemmesider,
   booking: services.booking,
   seo: services.seo,

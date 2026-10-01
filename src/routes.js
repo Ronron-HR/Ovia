@@ -1,6 +1,7 @@
 import { demos, kontakt, paths } from './content.js'
 import { services } from './services.js'
-import { meta } from './data/texts.js'
+import { meta, paths as newPaths } from './data/texts.js'
+import * as pages from './data/services.js'
 
 /**
  * Sidernes adresser og metadata. Bruges af klienten (hvilken side skal
@@ -16,6 +17,12 @@ export const routes = [
     page: 'home',
     title: meta.home.title,
     description: meta.home.description,
+  },
+  {
+    path: newPaths.hjemmeside,
+    page: 'hjemmeside',
+    title: pages.hjemmeside.meta.title,
+    description: pages.hjemmeside.meta.description,
   },
   {
     path: paths.hjemmesider,

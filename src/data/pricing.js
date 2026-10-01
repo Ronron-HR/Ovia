@@ -31,6 +31,9 @@ export const company = {
 /** Står under alle priser. */
 export const priceNote = 'Priserne er endelige. OviaSpecs er ikke momsregistreret.'
 
+/** Vises i FAQ'en "Hvornår kan vi starte?" på alle ydelsessider. Tom streng = spørgsmålet skjules. */
+export const paidStartText = 'Betalte opgaver fra februar 2027. Indtil da tilbyder jeg pilotforløb.'
+
 /** Mærket på den anbefalede pakke. */
 export const recommendedLabel = 'Anbefalet'
 export const recommendedTier = 'vaekst'
@@ -74,7 +77,7 @@ export const services = {
         id: 'fuld-fart',
         price: 8500,
         monthly: 600,
-        monthlyNote: 'med rettelser inden 48 timer',
+        monthlyNote: 'ændringer laves inden 2 hverdage',
         summary: 'Hele pakken, med booking eller bestilling.',
         features: [
           'Op til 8 sider',
@@ -86,10 +89,25 @@ export const services = {
       },
     ],
     addons: {
-      /** Alternativ til månedlig drift. */
+      /** Alternativ til månedlig drift. Samme beløb, hvis man stopper drift og vil købe siden fri. */
       ownAccount: { label: 'Engangskøb: siden lægges på din egen konto i stedet for drift', price: 1500 },
       extraPage: { label: 'Ekstra underside', price: 500 },
     },
+    /** Hvad drift dækker. Prisen pr. måned står på pakkerne (monthly). */
+    drift: {
+      included: [
+        'Hosting, domæne, SSL og backup',
+        'Op til 2 små ændringer om måneden (tekst, billeder, mindre designjusteringer)',
+      ],
+      fast: 'På Fuld fart laves ændringerne inden 2 hverdage.',
+      notIncluded: 'Ubrugte ændringer overføres ikke. Nyt design eller nye sider aftales separat.',
+      domain: 'Domænet registreres i dit navn.',
+      binding: 'Ingen binding. Opsigelse med 1 måneds varsel.',
+      /** Prisen indsættes fra addons.ownAccount.price. */
+      buyout: (price) => `Stopper du drift, kan du købe siden fri for ${price} og få den overført til din egen konto.`,
+    },
+    /** Svaret på "Hvor lang tid tager det?" */
+    leadTime: 'Typisk 1-2 uger efter vi har mødtes.',
   },
 
   marketing: {
@@ -131,7 +149,16 @@ export const services = {
       sameAs: 'vaekst',
       scope: '4 korte videoer + 4 opslag',
       maxAtOnce: 2,
+      terms: [
+        'Gratis i 4 uger',
+        'Samme omfang som Vækst: 4 korte videoer + 4 opslag',
+        'Til gengæld må jeg bruge resultaterne som case',
+        'Er du tilfreds, giver du en ærlig udtalelse',
+        'Uforpligtende. Efter piloten kan du fortsætte på Vækst',
+      ],
+      limitText: 'Max 2 piloter ad gangen',
     },
+    binding: 'Ingen binding. Opsigelse med 1 måneds varsel.',
   },
 
   bookingGoogle: {
@@ -139,6 +166,12 @@ export const services = {
     name: 'Booking & Google',
     billing: 'once',
     buffer: 500,
+    /** Uforpligtende indgang, der fremhæves på siden. */
+    freeCheck: {
+      price: 0,
+      title: 'Gratis tjek af din Google-profil',
+      text: 'Jeg kigger din Google-profil igennem og fortæller, hvad der mangler eller er forkert. Det er uforpligtende.',
+    },
     tiers: [
       {
         id: 'start',

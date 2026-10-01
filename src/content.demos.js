@@ -33,7 +33,7 @@ export const demos = {
   homeIntro:
     'Fire fiktive koncepter med hver sin stemning og hver sine funktioner. Åbn en demo og prøv den, som kunden ville.',
   banner: 'Fiktiv demo – koncept udviklet af OviaSpecs, ikke kundearbejde.',
-  tag: 'Fiktiv demo – koncept udviklet af OviaSpecs, ikke kundearbejde.',
+  tag: 'Koncept – ikke en kundeopgave',
   tagShort: 'Fiktiv demo · koncept',
   note: 'Demoerne viser eksempler på design og funktioner. Din hjemmeside tilpasses din virksomhed. Standardprisen indeholder ikke automatisk de funktioner, en demo viser: booking og andre ekstra funktioner aftales separat. Skærmbillederne er taget af demoerne selv.',
   localNote:
