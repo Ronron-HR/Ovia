@@ -31,6 +31,12 @@ export const routes = [
     description: pages.marketing.meta.description,
   },
   {
+    path: newPaths.bookingGoogle,
+    page: 'bookingGoogle',
+    title: pages.bookingGoogle.meta.title,
+    description: pages.bookingGoogle.meta.description,
+  },
+  {
     path: paths.hjemmesider,
     page: 'hjemmesider',
     title: services.hjemmesider.metaTitle,

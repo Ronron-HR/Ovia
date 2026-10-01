@@ -161,3 +161,64 @@ export const marketing = {
     body: 'Ring eller skriv, så finder vi ud af, om en pilot eller en pakke passer til dig.',
   },
 }
+
+/* ---- Booking & Google -------------------------------------------------- */
+
+const bg = services.bookingGoogle
+
+export const bookingGoogle = {
+  service: 'bookingGoogle',
+  meta: {
+    title: 'Booking & Google-profil til lokale virksomheder | OviaSpecs',
+    description: `Google-profil i orden, online booking og et QR-skilt til anmeldelser. Faste priser fra ${formatKr(bg.tiers[0].price)}. Start med et gratis tjek af din Google-profil.`,
+  },
+  eyebrow: 'Booking & Google',
+  title: 'Det første, kunderne ser, er din Google-profil.',
+  problem: [
+    'Forkerte åbningstider, få billeder eller ingen booking-knap koster dig henvendelser.',
+    'Jeg sætter profilen i orden og gør det nemt at booke dig og at give dig en anmeldelse.',
+  ],
+  toPackages: 'Se pakker og priser',
+  /** Ekstra link i toppen til det gratis tjek (#tjek). */
+  heroLink: { label: 'Start med et gratis tjek af din Google-profil', href: '#tjek' },
+  get: {
+    eyebrow: 'Det får du',
+    title: 'En profil, der passer, og en nem vej ind.',
+    items: [
+      { title: 'Rigtige oplysninger', text: 'Åbningstider, kontakt og billeder på din Google-profil, så de passer.' },
+      { title: 'Booking-knap', text: 'I Vækst og Fuld fart kobler jeg booking på din hjemmeside eller Instagram.' },
+      { title: 'QR-skilt', text: 'I Fuld fart får du et skilt, der beder alle kunder om en anmeldelse.' },
+      { title: 'Opfølgning', text: 'I Fuld fart følger jeg op efter 30 dage og viser dig tallene.' },
+    ],
+  },
+  check: {
+    eyebrow: 'Start her',
+    priceLabel: '0 kr.',
+    mailSubject: 'Gratis tjek af min Google-profil',
+    smsText: 'Hej Ronny. Vil du tjekke min Google-profil?',
+  },
+  packages: {
+    eyebrow: 'Pakker',
+    title: 'Tre pakker. Du betaler én gang.',
+  },
+  toCalculator,
+  faq: {
+    eyebrow: 'Spørgsmål',
+    title: 'Det, du sikkert vil vide.',
+    items: [
+      {
+        q: 'Hvilke bookingsystemer kan du koble på?',
+        a: 'Fx Planway, Booksy eller det system, du allerede bruger. Bookingsystemerne er lavet af andre firmaer, så jeg kan ikke give garanti for dem.',
+      },
+      {
+        q: 'Kan du skaffe mig anmeldelser?',
+        a: 'Nej. Jeg gør det nemt for alle dine kunder at give en anmeldelse, fx med QR-skiltet. Jeg køber ikke anmeldelser, og jeg sorterer ikke i, hvem der bliver spurgt.',
+      },
+      ...startFaq,
+    ],
+  },
+  contact: {
+    title: 'Skal jeg kigge på din Google-profil?',
+    body: 'Ring eller skriv, så tjekker jeg den gratis og fortæller, hvad der mangler.',
+  },
+}

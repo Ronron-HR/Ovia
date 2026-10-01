@@ -37,10 +37,18 @@ export default function ServicePage({ page, extra = null }) {
           <div data-hero="fade" style={{ '--d': '220ms' }} data-callbar-hide>
             <ContactButtons className="mt-8" stretch />
           </div>
-          <a data-hero="fade" style={{ '--d': '300ms' }} href="#pakker" className="btn-text mt-6 inline-flex items-center gap-2">
-            {page.toPackages}
-            <Arrow className="rotate-90" />
-          </a>
+          <div data-hero="fade" style={{ '--d': '300ms' }} className="mt-6 flex flex-col items-start gap-x-8 gap-y-2 sm:flex-row sm:flex-wrap">
+            {page.heroLink && (
+              <a href={page.heroLink.href} className="btn-text inline-flex items-center gap-2 text-accent">
+                {page.heroLink.label}
+                <Arrow className="rotate-90" />
+              </a>
+            )}
+            <a href="#pakker" className="btn-text inline-flex items-center gap-2">
+              {page.toPackages}
+              <Arrow className="rotate-90" />
+            </a>
+          </div>
         </div>
       </section>
 

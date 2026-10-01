@@ -880,3 +880,19 @@
     }
   }
 }
+
+@layer components {
+  /* Gratis Google-tjek: fremhævet flade med bronzekant. */
+  .free-check {
+    padding: 24px;
+    border: 1px solid var(--color-accent);
+    border-radius: var(--radius-panel);
+    background: var(--color-surface);
+  }
+
+  @media (min-width: 768px) {
+    .free-check {
+      padding: 40px;
+    }
+  }
+}

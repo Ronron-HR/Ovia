@@ -19,6 +19,7 @@ export const pages = {
   home: Home,
   hjemmeside: service.hjemmeside,
   marketing: service.marketing,
+  bookingGoogle: service.bookingGoogle,
   hjemmesider: services.hjemmesider,
   booking: services.booking,
   seo: services.seo,

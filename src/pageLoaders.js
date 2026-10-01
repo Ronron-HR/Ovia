@@ -10,6 +10,7 @@ export const pageLoaders = {
   home: () => import('./pages/Home.jsx').then((m) => m.default),
   hjemmeside: () => service().then((m) => m.hjemmeside),
   marketing: () => service().then((m) => m.marketing),
+  bookingGoogle: () => service().then((m) => m.bookingGoogle),
   hjemmesider: () => services().then((m) => m.hjemmesider),
   booking: () => services().then((m) => m.booking),
   seo: () => services().then((m) => m.seo),
