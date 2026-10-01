@@ -30,8 +30,8 @@ export const company = {
 
 /* ---- Fælles tekster og flag -------------------------------------------- */
 
-/** Står under alle priser. */
-export const priceNote = 'Priserne er endelige. OviaSpecs er ikke momsregistreret.'
+/** Momsstatus: én diskret linje ved priserne (beregnerens resultat, /priser/ og ydelsessiderne). Tom = skjult. */
+export const priceNote = 'Momsfri – OviaSpecs er ikke momsregistreret'
 
 /** Mærke ved pakkerne og i beregneren. Tom = skjult. */
 export const introText = 'Introduktionspriser'
