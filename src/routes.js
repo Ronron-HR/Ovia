@@ -37,6 +37,12 @@ export const routes = [
     description: pages.bookingGoogle.meta.description,
   },
   {
+    path: newPaths.priser,
+    page: 'priser',
+    title: pages.priser.meta.title,
+    description: pages.priser.meta.description,
+  },
+  {
     path: paths.hjemmesider,
     page: 'hjemmesider',
     title: services.hjemmesider.metaTitle,

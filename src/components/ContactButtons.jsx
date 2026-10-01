@@ -6,6 +6,7 @@ import { cta, links } from '../data/texts.js'
  * så det også kan læses og tastes af, og begge er almindelige links
  * (tel:/mailto:/sms:), der virker uden JavaScript.
  *
+ * `stack` lægger alle knapper på hver sin linje på mobil.
  * `sms` tilføjer en tredje knap; `smsText` og `mailSubject`/`mailBody`
  * forudfylder beskeden (bruges af prisberegneren).
  */
@@ -17,6 +18,7 @@ export default function ContactButtons({
   writeLabel = cta.write,
   className = '',
   stretch = false,
+  stack = false,
 }) {
   const query = [
     mailSubject && `subject=${encodeURIComponent(mailSubject)}`,
@@ -29,7 +31,7 @@ export default function ContactButtons({
   // Med SMS deler de to andre knapper rækken under; uden står "Skriv" alene.
   const box = stretch ? 'grid grid-cols-2 gap-3 sm:flex sm:flex-wrap' : 'flex flex-wrap gap-3'
   const wide = stretch ? 'col-span-2 sm:col-auto' : ''
-  const rest = stretch && !sms ? 'col-span-2 sm:col-auto' : ''
+  const rest = stretch && (!sms || stack) ? 'col-span-2 sm:col-auto' : ''
 
   return (
     <div className={`${box} ${className}`}>
@@ -40,7 +42,7 @@ export default function ContactButtons({
         </span>
       </a>
       {sms && (
-        <a href={links.sms(smsText)} className="btn btn-ghost">
+        <a href={links.sms(smsText)} className={`btn btn-ghost ${stack ? rest : ''}`}>
           <SmsIcon />
           {cta.sms}
         </a>

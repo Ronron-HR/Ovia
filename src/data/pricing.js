@@ -200,6 +200,111 @@ export const services = {
   },
 }
 
+/* ---- Prisberegneren (/priser/) ------------------------------------------
+   Trin 1: hvilke ydelser (flervalg). Derefter ét trin pr. valgt ydelse med
+   dens spørgsmål og til sidst resultatet: højst 5 trin.
+
+   Hvert svar peger på en pakke (`tier`); den højeste pakke blandt svarene
+   vinder. `short` er spørgsmålet i opsummeringen (SMS/mail). `addon` lægger et tilvalg til (addons i ydelsen), og `noDrift`
+   fjerner den månedlige drift. `note` vises ved resultatet.
+   Spørgsmålenes `id` skal være unikke, fordi de står i adresselinjen.
+------------------------------------------------------------------------- */
+export const calculator = {
+  servicesQuestion: 'Hvad skal du bruge?',
+  servicesHint: 'Vælg en eller flere.',
+  questions: {
+    hjemmeside: [
+      {
+        id: 'sider',
+        short: 'Sider',
+        label: 'Hvor mange sider skal hjemmesiden have?',
+        options: [
+          { id: '1', label: 'Én side med det hele', tier: 'start' },
+          { id: '2-5', label: '2-5 sider', tier: 'vaekst' },
+          { id: '6-8', label: '6-8 sider', tier: 'fuld-fart' },
+          { id: '9', label: 'Flere end 8 sider', tier: 'fuld-fart', note: 'Ekstra undersider ud over 8 koster 500 kr. stykket.' },
+        ],
+      },
+      {
+        id: 'bestilling',
+        short: 'Booking/bestilling',
+        label: 'Skal kunderne kunne booke eller bestille via siden?',
+        options: [
+          { id: 'nej', label: 'Nej', tier: 'start' },
+          { id: 'ja', label: 'Ja', tier: 'fuld-fart' },
+        ],
+      },
+      {
+        id: 'drift',
+        short: 'Drift',
+        label: 'Hvordan skal siden drives?',
+        options: [
+          { id: 'drift', label: 'Du passer siden for mig (drift pr. måned)', tier: 'start' },
+          { id: 'egen', label: 'Den lægges på min egen konto (engangsbeløb)', tier: 'start', addon: 'ownAccount', noDrift: true },
+        ],
+      },
+    ],
+    marketing: [
+      {
+        id: 'videoer',
+        short: 'Videoer',
+        label: 'Hvor mange korte videoer om måneden?',
+        options: [
+          { id: '2', label: '2 videoer', tier: 'start' },
+          { id: '4', label: '4 videoer', tier: 'vaekst' },
+          { id: '8', label: '8 videoer', tier: 'fuld-fart' },
+        ],
+      },
+      {
+        id: 'poste',
+        short: 'Jeg poster',
+        label: 'Skal jeg lægge indholdet op for dig?',
+        options: [
+          { id: 'nej', label: 'Nej, jeg poster selv', tier: 'start' },
+          { id: 'ja', label: 'Ja, gerne', tier: 'vaekst' },
+        ],
+      },
+      {
+        id: 'annoncer',
+        short: 'Meta-annoncer',
+        label: 'Skal jeg styre annoncer på Meta (Facebook og Instagram)?',
+        options: [
+          { id: 'nej', label: 'Nej', tier: 'start' },
+          { id: 'ja', label: 'Ja', tier: 'fuld-fart', note: 'Annoncebudgettet betaler du selv direkte til Meta.' },
+        ],
+      },
+    ],
+    bookingGoogle: [
+      {
+        id: 'booking',
+        short: 'Online booking',
+        label: 'Skal kunderne kunne booke dig online?',
+        options: [
+          { id: 'nej', label: 'Nej, kun Google-profilen', tier: 'start' },
+          { id: 'ja', label: 'Ja', tier: 'vaekst' },
+        ],
+      },
+      {
+        id: 'anmeldelser',
+        short: 'QR-skilt',
+        label: 'Vil du have et QR-skilt, der beder kunderne om en anmeldelse?',
+        options: [
+          { id: 'nej', label: 'Nej', tier: 'start' },
+          { id: 'ja', label: 'Ja, og opfølgning efter 30 dage', tier: 'fuld-fart' },
+        ],
+      },
+    ],
+  },
+  /** Under prisen. */
+  finalNote: 'Endelig pris aftales efter en snak',
+  /** Forudfyldt start på SMS og mail fra resultatet. */
+  smsIntro: 'Hej Ronny. Jeg har brugt prisberegneren på oviaspecs.com:',
+  mailSubject: 'Tilbud fra prisberegneren',
+  /** Mailens linjer før og efter opsummeringen ('' = tom linje). */
+  mailIntro: ['Hej Ronny,', '', 'Jeg har brugt prisberegneren på oviaspecs.com og vil gerne have et tilbud.'],
+  mailOutro: ['Mit navn:', 'Min virksomhed:', 'Mit telefonnummer:'],
+}
+
 /* =========================================================================
    HJÆLPERE — behøver normalt ikke ændres.
    ========================================================================= */

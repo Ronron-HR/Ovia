@@ -85,13 +85,14 @@ export function Addons({ service }) {
 }
 
 /** Driftsvilkår for hjemmesiden. */
-export function DriftTerms({ service, className = '' }) {
+export function DriftTerms({ service, className = '', headingLevel = 3 }) {
+  const H = `h${headingLevel}`
   const d = service.drift
   if (!d) return null
   const monthly = [...new Set(service.tiers.map((t) => t.monthly))].map((m) => `${formatKr(m)}/md`).join(' eller ')
   return (
     <div className={`rounded-[14px] border border-rule bg-surface p-5 md:p-7 ${className}`}>
-      <h3 className="t-display t-h4">Drift ({monthly})</h3>
+      <H className="t-display t-h4">Drift ({monthly})</H>
       <ul className="spec-list mt-4">
         {d.included.map((x) => (
           <li key={x}>{x}</li>

@@ -6,7 +6,7 @@
    ingen løfter om flere kunder eller mere salg. Lov kun det, der leveres.
    ========================================================================= */
 
-import { contact, formatKr, paidStartText, priceNote, services, tierName } from './pricing.js'
+import { contact, formatKr, fromPrice, paidStartText, priceNote, services, tierName } from './pricing.js'
 import { paths } from './texts.js'
 
 const web = services.hjemmeside
@@ -220,5 +220,28 @@ export const bookingGoogle = {
   contact: {
     title: 'Skal jeg kigge på din Google-profil?',
     body: 'Ring eller skriv, så tjekker jeg den gratis og fortæller, hvad der mangler.',
+  },
+}
+
+/* ---- Priser ------------------------------------------------------------ */
+
+export const priser = {
+  meta: {
+    title: 'Priser og prisberegner | OviaSpecs',
+    description: `Se prisen med det samme. Hjemmeside ${fromPrice(web)}, marketing ${fromPrice(mk)} og booking & Google ${fromPrice(bg)}. Faste pakker, og du skal ikke oplyse noget.`,
+  },
+  eyebrow: 'Priser',
+  title: 'Hvad koster det?',
+  lead: 'Svar på et par spørgsmål, så ser du prisen med det samme. Du skal ikke oplyse navn eller mail.',
+  all: {
+    eyebrow: 'Alle pakker',
+    title: 'Alle pakker side om side.',
+    more: 'Læs mere',
+  },
+  pilotNote: `Marketing kan også starte som et gratis pilotforløb i ${mk.pilot.weeks} uger.`,
+  pilotLink: 'Læs om piloten',
+  contact: {
+    title: 'Spørgsmål til priserne?',
+    body: 'Ring eller skriv, så finder vi den pakke, der passer til dig.',
   },
 }

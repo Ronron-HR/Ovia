@@ -7,6 +7,7 @@ import Home from './pages/Home.jsx'
 import Kontakt from './pages/Kontakt.jsx'
 import Om from './pages/Om.jsx'
 import Prisberegner from './pages/Prisberegner.jsx'
+import Priser from './pages/Priser.jsx'
 import * as services from './pages/Services.jsx'
 import * as service from './pages/Service.jsx'
 
@@ -20,6 +21,7 @@ export const pages = {
   hjemmeside: service.hjemmeside,
   marketing: service.marketing,
   bookingGoogle: service.bookingGoogle,
+  priser: Priser,
   hjemmesider: services.hjemmesider,
   booking: services.booking,
   seo: services.seo,

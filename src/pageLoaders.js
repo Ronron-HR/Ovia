@@ -11,6 +11,7 @@ export const pageLoaders = {
   hjemmeside: () => service().then((m) => m.hjemmeside),
   marketing: () => service().then((m) => m.marketing),
   bookingGoogle: () => service().then((m) => m.bookingGoogle),
+  priser: () => import('./pages/Priser.jsx').then((m) => m.default),
   hjemmesider: () => services().then((m) => m.hjemmesider),
   booking: () => services().then((m) => m.booking),
   seo: () => services().then((m) => m.seo),

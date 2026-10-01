@@ -896,3 +896,147 @@
     }
   }
 }
+
+@layer components {
+  /* ---- Prisberegner ------------------------------------------------------ */
+  .calc {
+    padding: 22px 18px 26px;
+    border: 1px solid var(--color-rule);
+    border-radius: var(--radius-panel);
+    background: var(--color-surface);
+    scroll-margin-top: calc(var(--nav-h) + 12px);
+  }
+
+  @media (min-width: 768px) {
+    .calc {
+      padding: 32px 36px 36px;
+    }
+  }
+
+  .calc-progress {
+    height: 3px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--color-paper-2);
+  }
+
+  .calc-progress > span {
+    display: block;
+    height: 100%;
+    background: var(--color-accent);
+    transition: width 320ms var(--ease-entrance);
+  }
+
+  .calc-link {
+    min-height: 44px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--color-ink);
+    text-decoration: underline;
+    text-decoration-color: var(--color-rule);
+    text-underline-offset: 4px;
+  }
+
+  @media (hover: hover) {
+    .calc-link:hover {
+      text-decoration-color: var(--color-accent);
+    }
+  }
+
+  /* Valg: rigtige checkbokse/radioknapper, skjult bag en flade, så tastatur og
+     skærmlæsere virker uden ekstra kode. Hele fladen er trykbar. */
+  .choice {
+    position: relative;
+    display: block;
+    cursor: pointer;
+  }
+
+  .choice-input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+  }
+
+  .choice-box {
+    display: flex;
+    min-height: 56px;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    border: 1px solid var(--color-rule);
+    border-radius: 12px;
+    background: var(--color-paper);
+    transition:
+      border-color var(--dur-hover) var(--ease-entrance),
+      background-color var(--dur-hover) var(--ease-entrance);
+  }
+
+  @media (hover: hover) {
+    .choice:hover .choice-box {
+      border-color: var(--color-ink);
+    }
+  }
+
+  .choice-input:checked + .choice-box {
+    border-color: var(--color-ink);
+    background: var(--color-surface);
+    box-shadow: 0 0 0 1px var(--color-ink);
+  }
+
+  .choice-input:focus-visible + .choice-box {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+  }
+
+  .choice-mark {
+    position: relative;
+    flex: none;
+    width: 20px;
+    height: 20px;
+    border: 1.5px solid var(--color-muted);
+    border-radius: 5px;
+    background: var(--color-surface);
+  }
+
+  .choice-mark-radio {
+    border-radius: 999px;
+  }
+
+  .choice-input:checked + .choice-box .choice-mark {
+    border-color: var(--color-ink);
+    background: var(--color-ink);
+  }
+
+  /* Flueben (checkboks) og prik (radio). */
+  .choice-input:checked + .choice-box .choice-mark::after {
+    content: "";
+    position: absolute;
+    left: 5.5px;
+    top: 2px;
+    width: 6px;
+    height: 11px;
+    border: solid var(--color-paper);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  .choice-input:checked + .choice-box .choice-mark-radio::after {
+    left: 4.5px;
+    top: 4.5px;
+    width: 8px;
+    height: 8px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--color-paper);
+    transform: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .calc-progress > span,
+    .choice-box {
+      transition-duration: 1ms;
+    }
+  }
+}
