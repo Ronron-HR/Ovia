@@ -48,12 +48,31 @@ export function tierFor(key, answers) {
   return RANK[Math.max(0, ...tiers)]
 }
 
-/** Må svaret vælges med den pakke, de øvrige svar peger på? */
-export const allowed = (option, tierId) => !option.onlyTiers || option.onlyTiers.includes(tierId)
+/**
+ * Får hjemmesiden booking via Booking & Google? Kun når begge ydelser er valgt,
+ * og Booking & Google-pakken indeholder booking (Vækst eller Fuld fart).
+ */
+export function bookingOnWebsite(selected, answers) {
+  if (!selected.includes('hjemmeside') || !selected.includes('bookingGoogle')) return false
+  const bg = services.bookingGoogle.tiers.find((t) => t.id === tierFor('bookingGoogle', answers))
+  return bg.includes.includes('booking')
+}
 
-/** Fjerner svar på skjulte spørgsmål og svar, der ikke er tilladt med pakken. */
-export function cleanAnswers(answers) {
+/**
+ * Må svaret vælges? `onlyTiers`: kun med de pakker (egen konto: Start og Vækst).
+ * `notWithBooking`: ikke når hjemmesiden får booking via Booking & Google.
+ */
+export const allowed = (option, tierId, booking = false) =>
+  (!option.onlyTiers || option.onlyTiers.includes(tierId)) && !(option.notWithBooking && booking)
+
+/**
+ * Fjerner svar på skjulte spørgsmål. Et svar, der ikke er tilladt (fx egen konto
+ * til Fuld fart eller sammen med booking), skiftes til spørgsmålets `fallback`
+ * (drift) eller fjernes, hvis der ikke er en.
+ */
+export function cleanAnswers(answers, selected = ORDER) {
   const out = { ...answers }
+  const booking = bookingOnWebsite(selected, out)
   for (const key of ORDER) {
     const visible = visibleQuestions(key, out)
     for (const q of calculator.questions[key]) {
@@ -62,7 +81,10 @@ export function cleanAnswers(answers) {
     const tier = tierFor(key, out)
     for (const q of visible) {
       const o = optionOf(q, out)
-      if (o && !allowed(o, tier)) delete out[q.id]
+      if (o && !allowed(o, tier, key === 'hjemmeside' && booking)) {
+        if (q.fallback) out[q.id] = q.fallback
+        else delete out[q.id]
+      }
     }
   }
   return out
@@ -73,7 +95,7 @@ export function cleanAnswers(answers) {
 /** Trinnet må ikke vise noget, der kræver svar, som mangler. */
 function fit(state) {
   const { selected } = state
-  const answers = cleanAnswers(state.answers)
+  const answers = cleanAnswers(state.answers, selected)
   const last = selected.length + 1 // resultatet
   let step = Math.min(Math.max(0, state.step), last)
   if (!selected.length) return { ...state, answers, step: 0 }
@@ -163,13 +185,13 @@ export function useCalc(defaults = NONE) {
  * Pris for én ydelse ud fra svarene. Alle priser er faste: `once` er det, der
  * betales nu (pakke + tilvalg), `monthly` det, der betales pr. måned.
  */
-function line(key, answers) {
+function line(key, answers, booking = false) {
   const service = services[key]
   const tierId = tierFor(key, answers)
   const tier = service.tiers.find((t) => t.id === tierId)
   const chosen = visibleQuestions(key, answers).map((q) => ({ question: q, option: optionOf(q, answers) }))
   // Svar, der ikke er tilladt med pakken (fx egen konto til Fuld fart), tæller ikke.
-  const options = chosen.map((c) => c.option).filter((o) => o && allowed(o, tierId))
+  const options = chosen.map((c) => c.option).filter((o) => o && allowed(o, tierId, booking))
   const notes = options.map((o) => o.note).filter(Boolean)
 
   let once = 0
@@ -189,6 +211,8 @@ function line(key, answers) {
     }
     noDrift = options.some((o) => o.noDrift)
     monthly = noDrift ? 0 : (tier.monthly ?? 0)
+    // Booking (Fuld fart eller via Booking & Google) = altid drift; sig hvorfor.
+    if (key === 'hjemmeside' && (booking || tier.includes.includes('booking'))) notes.push(calculator.driftWithBooking)
   }
   return { key, service, tier, chosen, once, monthly, noDrift, notes }
 }
@@ -219,8 +243,9 @@ function applyOverlap(web, bg) {
 
 /** Hele tilbuddet: én linje pr. valgt ydelse, en samlet pris og fælles noter. */
 export function quote({ selected, answers }) {
-  const clean = cleanAnswers(answers)
-  const lines = selected.map((key) => line(key, clean))
+  const clean = cleanAnswers(answers, selected)
+  const booking = bookingOnWebsite(selected, clean)
+  const lines = selected.map((key) => line(key, clean, key === 'hjemmeside' && booking))
   const web = lines.find((l) => l.key === 'hjemmeside')
   const bg = lines.find((l) => l.key === 'bookingGoogle')
   applyOverlap(web, bg)

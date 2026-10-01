@@ -319,6 +319,8 @@ export const calculator = {
         id: 'drift',
         short: 'Drift',
         label: 'Hvordan skal siden drives?',
+        /** Svaret, der bruges i stedet, når et svar ikke længere er tilladt (fx egen konto + booking). */
+        fallback: 'drift',
         options: [
           { id: 'drift', label: 'Du passer siden for mig (drift pr. måned)', tier: 'start' },
           {
@@ -328,7 +330,9 @@ export const calculator = {
             noDrift: true,
             /** Kan kun vælges, når de øvrige svar peger på disse pakker (addons.ownAccount.tiers). */
             onlyTiers: ['start', 'vaekst'],
-            disabledNote: 'Kun Start og Vækst. Fuld fart har booking koblet på og kører altid med drift.',
+            /** Ikke muligt, når hjemmesiden får booking via Booking & Google (Vækst eller Fuld fart). */
+            notWithBooking: true,
+            disabledNote: 'Med booking koblet på kører hjemmesiden med drift, så jeg kan holde det kørende.',
           },
         ],
       },
@@ -390,6 +394,10 @@ export const calculator = {
   /** Når prisen aftales (flere end 8 sider): vises i linjen og i totalen. */
   /** Efter engangsbeløbet i totalen: "5.000 kr. nu". */
   nowLabel: 'nu',
+  /** Vises, når booking gør, at hjemmesiden kører med drift (Fuld fart eller Booking & Google Vækst/Fuld fart). */
+  driftWithBooking: 'Med booking koblet på kører hjemmesiden med drift, så jeg kan holde det kørende.',
+  /** Vises i beregneren, når et valgt "egen konto" automatisk er skiftet til drift. */
+  switchedToDrift: 'Din hjemmeside er skiftet til drift.',
   /** Note ved ekstra undersider i Fuld fart. */
   extraPagesNote: (n, price) => `${n} ekstra ${n === 1 ? 'underside' : 'undersider'} à ${price}`,
   /** Efter prisen, når siden lægges på kundens egen konto (ingen drift). */

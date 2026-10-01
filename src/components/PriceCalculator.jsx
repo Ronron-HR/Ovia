@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import {
   ORDER,
   allowed,
+  bookingOnWebsite,
+  cleanAnswers,
   mailBody,
   priceParts,
   priceText,
@@ -39,6 +41,7 @@ export default function PriceCalculator({ defaults }) {
   const service = step > 0 && step < resultStep ? selected[step - 1] : null
 
   const [missing, setMissing] = useState(null)
+  const [notice, setNotice] = useState(null)
   const heading = useRef(null)
   const form = useRef(null)
   const moved = useRef(false)
@@ -54,6 +57,7 @@ export default function PriceCalculator({ defaults }) {
 
   const go = (next) => {
     setMissing(null)
+    setNotice(null)
     moved.current = true
     set({ ...state, step: next })
   }
@@ -66,7 +70,11 @@ export default function PriceCalculator({ defaults }) {
 
   const answer = (id, value) => {
     setMissing(null)
-    set({ ...state, answers: { ...answers, [id]: value } })
+    const nextAnswers = { ...answers, [id]: value }
+    // Tilføjes booking, efter egen konto er valgt, skifter hjemmesiden til drift: sig det.
+    const clean = cleanAnswers(nextAnswers, selected)
+    setNotice(answers.drift === 'egen' && clean.drift !== 'egen' ? `${calculator.switchedToDrift} ${calculator.driftWithBooking}` : null)
+    set({ ...state, answers: nextAnswers })
   }
 
   const next = (event) => {
@@ -178,7 +186,7 @@ export default function PriceCalculator({ defaults }) {
                     <legend className="text-[17px] leading-snug font-medium">{question.label}</legend>
                     <div className="mt-3 grid grid-cols-1 gap-2.5 @md:grid-cols-2">
                       {question.options.map((o) => {
-                        const off = !allowed(o, tierFor(service, answers))
+                        const off = !allowed(o, tierFor(service, answers), service === 'hjemmeside' && bookingOnWebsite(selected, answers))
                         return (
                           <label key={o.id} className="choice" data-disabled={off || undefined}>
                             <input
@@ -216,6 +224,9 @@ export default function PriceCalculator({ defaults }) {
                 {missing}
               </p>
             )}
+          </div>
+          <div role="status" className="mt-3 text-[15px] font-medium text-ink empty:hidden">
+            {notice}
           </div>
         </form>
       ) : (

@@ -7,6 +7,7 @@
  * - en linje eller totalen er negativ
  * - en hjemmeside uden integrationer (Start/Vækst) overstiger maxWebsiteNoIntegrations
  * - Fuld fart kan vælges med egen konto
+ * - en hjemmeside med Booking & Google Vækst/Fuld fart (booking) har egen konto
  * - "aftales" eller "ca." står ved en pris
  * - drift + frikøb kan blive billigere end egen konto fra start
  * - Booking & Google-pakkernes pris ≠ summen af deres komponenter
@@ -50,6 +51,10 @@ for (const selected of subsets) {
       if (/aftales|ca\./i.test(text)) fail(`"${text}" ${ctx(selected, answers)}`)
       if (l.key === 'hjemmeside') {
         if (l.tier.id === 'fuld-fart' && l.noDrift) fail(`Fuld fart med egen konto ${ctx(selected, answers)}`)
+        const bgLine = q.lines.find((x) => x.key === 'bookingGoogle')
+        if (bgLine && bgLine.tier.includes.includes('booking') && l.noDrift) {
+          fail(`Hjemmeside med egen konto + Booking & Google ${bgLine.tier.id} ${ctx(selected, answers)}`)
+        }
         const integrations = l.tier.includes.includes('booking')
         if (!integrations && l.once > maxWebsiteNoIntegrations) {
           fail(`Hjemmeside uden integrationer ${l.once} kr. > ${maxWebsiteNoIntegrations} kr. ${ctx(selected, answers)}`)
