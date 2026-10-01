@@ -210,7 +210,7 @@ export function quote({ selected, answers }) {
 
 const plain = (n) => formatKr(n).replace(' kr.', '')
 
-/** Engangsdelen og månedsdelen hver for sig: { once: "ca. 4.000–4.500 kr.", month: "300 kr./md" }. */
+/** Engangsdelen og månedsdelen hver for sig: { once: "4.000 kr.", month: "300 kr./md" }. "ca. X–Y" kun ved buffer over 0. */
 export function priceParts({ low, high, monthly }) {
   return {
     once: low ? (high > low ? `ca. ${plain(low)}–${formatKr(high)}` : formatKr(low)) : '',
@@ -219,7 +219,7 @@ export function priceParts({ low, high, monthly }) {
 }
 
 /**
- * "ca. 4.000–4.500 kr. + 300 kr./md", "2.500 kr./md" eller "500 kr.".
+ * "4.000 kr. + 300 kr./md", "2.500 kr./md" eller "500 kr."
  * En linje, der er helt dækket af hjemmesidepakken, får overlap.allIncluded,
  * og en pris, der aftales, får calculator.customPrice (i totalen tilføjes
  * calculator.customTotal).
@@ -228,7 +228,7 @@ export function priceText(price) {
   if (price.allIncluded) return overlap.allIncluded
   const { once, month } = priceParts(price)
   let base = once && month ? `${once} + ${month}` : once || month
-  // Egen konto: "ca. 6.500–7.000 kr. i alt — ingen månedlig drift".
+  // Egen konto: "6.500 kr. i alt — ingen månedlig drift".
   if (price.noDrift && once && !month) base = `${once} ${calculator.noDriftSuffix}`
   if (price.custom) return base ? `${base} + ${calculator.customTotal}` : calculator.customPrice
   return base

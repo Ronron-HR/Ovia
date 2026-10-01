@@ -36,8 +36,8 @@ export const priceNote = 'Momsfri – OviaSpecs er ikke momsregistreret'
 /** Mærke ved pakkerne og i beregneren. Tom = skjult. */
 export const introText = 'Introduktionspriser'
 
-/** Højeste beløb, et hjemmesideinterval i beregneren må vise (scripts/test-pricing.mjs). */
-export const maxWebsiteInterval = 6000
+/** Højeste pakkepris for en hjemmeside (tjekkes af scripts/test-pricing.mjs). */
+export const maxWebsitePackage = 6000
 
 /**
  * Svaret på "Hvornår kan vi starte?" på ydelsessiderne. Har ydelsen sin egen
@@ -82,8 +82,8 @@ export const overlap = {
 
 /* ---- Ydelser og pakker -------------------------------------------------
    billing: 'once' (engangspris) eller 'monthly' (pris pr. måned).
-   buffer:  hvor meget prisberegnerens interval går over pakkeprisen
-            (fx 4.000 kr. + 500 = "ca. 4.000–4.500 kr."). 0 = fast pris.
+   buffer:  0 = fast pris i beregneren (det er det, alle ydelser bruger).
+            Over 0 ville give et interval ("ca. X–Y kr."); pristesten fejler da.
    monthly: løbende drift pr. måned (kun hjemmeside).
    includes: komponenter fra `components`, som pakken indeholder (se overlap).
 ------------------------------------------------------------------------- */
@@ -92,7 +92,7 @@ export const services = {
     id: 'hjemmeside',
     name: 'Hjemmeside',
     billing: 'once',
-    buffer: 500,
+    buffer: 0,
     tiers: [
       {
         id: 'start',
