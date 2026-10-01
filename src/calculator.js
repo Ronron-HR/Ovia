@@ -122,11 +122,26 @@ function line(key, answers) {
   }
 }
 
-/** Hele tilbuddet: én linje pr. valgt ydelse og en samlet pris. */
+/**
+ * Hele tilbuddet: én linje pr. valgt ydelse, en samlet pris og fælles noter.
+ * Booking tælles kun én gang: er den med i Hjemmeside Fuld fart, trækkes
+ * bookingdelen fra Booking & Google (bookingOverlap i pricing.js).
+ */
 export function quote({ selected, answers }) {
   const lines = selected.map((key) => line(key, answers))
+  const web = lines.find((l) => l.key === 'hjemmeside')
+  const bg = lines.find((l) => l.key === 'bookingGoogle')
+  const overlap = services.bookingGoogle.bookingOverlap
+  const webHasBooking = web?.tier.id === overlap.whenHjemmeside
+  const bgHasBooking = bg ? overlap.tiers.includes(bg.tier.id) : false
+  if (webHasBooking && bgHasBooking) {
+    bg.low -= overlap.amount
+    bg.high -= overlap.amount
+    bg.notes.push(overlap.note)
+  }
   return {
     lines,
+    notes: [],
     total: {
       low: lines.reduce((s, l) => s + l.low, 0),
       high: lines.reduce((s, l) => s + l.high, 0),
@@ -164,6 +179,11 @@ export function summaryLines(q) {
   return out
 }
 
+/** Noter til mailen: pr. ydelse og fælles (fx bookingabonnement). */
+function allNotes(q) {
+  return [...q.lines.flatMap((l) => l.notes), ...q.notes]
+}
+
 /** Sætning med punktum til sidst, også når prisen ender på "kr.". */
 export const sentence = (text) => (text.endsWith('.') ? text : `${text}.`)
 
@@ -177,6 +197,7 @@ export function mailBody(q) {
     '',
     ...summaryLines(q).map((s) => `- ${s}`),
     '',
+    ...allNotes(q).map((n) => sentence(n)),
     `${calculator.finalNote}.`,
     '',
     ...calculator.mailOutro,

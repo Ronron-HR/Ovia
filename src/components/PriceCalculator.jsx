@@ -212,6 +212,14 @@ export default function PriceCalculator() {
             ))}
           </ul>
 
+          {q.notes.length > 0 && (
+            <ul className="mt-5 flex flex-col gap-1.5 text-[15px]">
+              {q.notes.map((n) => (
+                <li key={n}>{n}</li>
+              ))}
+            </ul>
+          )}
+
           {showPilot && (
             <p className="mt-5 rounded-[10px] bg-paper-2 px-4 py-3 text-[15px]">
               Marketing kan også starte som et gratis pilotforløb i {services.marketing.pilot.weeks} uger.{' '}

@@ -168,6 +168,17 @@ export const services = {
     name: 'Booking & Google',
     billing: 'once',
     buffer: 500,
+    /**
+     * Booking må ikke tælles to gange: vælger kunden Hjemmeside Fuld fart (booking
+     * er med) sammen med Booking & Google i en af `tiers`, trækkes `amount` fra
+     * Booking & Google-prisen i beregneren, og `note` vises.
+     */
+    bookingOverlap: {
+      whenHjemmeside: 'fuld-fart',
+      tiers: ['vaekst', 'fuld-fart'],
+      amount: 1000,
+      note: 'Booking er allerede med i Hjemmeside Fuld fart',
+    },
     /** Uforpligtende indgang, der fremhæves på siden. */
     freeCheck: {
       price: 0,
