@@ -2,7 +2,7 @@ import { company, contact } from '../data/pricing.js'
 import { footer, links } from '../data/texts.js'
 import Logo from './Logo.jsx'
 
-/** Fodfelt: kontakt, links og CVR + adresse (vises, når begge er udfyldt i pricing.js). */
+/** Fodfelt: kontakt, links, CVR og adresse (hver vises, når den er udfyldt i pricing.js). */
 export default function Footer() {
   return (
     <footer data-callbar-hide className="on-dark bg-ink text-[14px] leading-relaxed text-paper/70">
@@ -42,7 +42,8 @@ export default function Footer() {
           <p>{footer.copyright}</p>
           <p>
             {contact.name}
-            {company.cvr && company.address && ` · CVR ${company.cvr} · ${company.address}`}
+            {company.cvr && ` · CVR ${company.cvr}`}
+            {company.address && ` · ${company.address}`}
           </p>
         </div>
       </div>
