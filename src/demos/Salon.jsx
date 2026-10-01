@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { demoById } from '../content.js'
+import { demoById } from '../content.demos.js'
 import { SalonArt, SalonMark } from './art.jsx'
 import DemoShell from './DemoShell.jsx'
 import { DemoHero, ItemList, Notice } from './kit.jsx'

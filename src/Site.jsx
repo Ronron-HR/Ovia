@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import Footer from './components/Footer.jsx'
+import MobileCallBar from './components/MobileCallBar.jsx'
 import Nav from './components/Nav.jsx'
 import { useReveal } from './motion/useReveal.js'
 import { pageKeyFor } from './pageKeys.js'
@@ -67,6 +68,7 @@ export default function Site({ path, Page: Current }) {
       </main>
 
       <Footer />
+      <MobileCallBar />
     </>
   )
 }

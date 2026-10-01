@@ -1,5 +1,5 @@
 /**
- * Skærmbilleder af de fire fiktive demoer til præsentationen (public/demoer).
+ * Skærmbilleder af de fire koncepter til præsentationen (public/demoer).
  *
  *   npm run build && npm run preview     (i et andet vindue)
  *   npm run demo-shots

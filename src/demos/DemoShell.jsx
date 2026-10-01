@@ -1,11 +1,12 @@
 import { useEffect, useId, useState, useSyncExternalStore } from 'react'
-import { calcHref, demos, paths } from '../content.js'
+import { demos } from '../content.demos.js'
+import { paths } from '../data/texts.js'
 
 /**
  * RAMMEN OM EN DEMO
  *
- * Øverst en stribe fra OviaSpecs, der mærker siden som fiktiv demo og fører
- * tilbage til demoerne og videre til beregneren med demovalget med. Under den
+ * Øverst en stribe fra OviaSpecs, der mærker siden "Koncept – ikke en
+ * kundeopgave" og fører tilbage til koncepterne og videre til priserne. Under den
  * hedder demoens egen hjemmeside: hoved med mobilmenu, indhold og bund.
  *
  * Mobilmenuen er en knap med aria-expanded. Den lukker med Escape og ved klik
@@ -14,7 +15,10 @@ import { calcHref, demos, paths } from '../content.js'
  */
 
 /** Sider, hvor demoen vises med et anker (id="demo-<id>") at lande ved. */
-const WITH_ANCHOR = ['/', '/demoer/', '/hjemmesider/']
+const WITH_ANCHOR = ['/demoer/']
+
+/** Priserne på en hjemmeside i beregneren. */
+const PRICES = `${paths.priser}?ydelser=hjemmeside`
 const FROM = 'oviaspecs-demo-from'
 
 /** En af selve demoerne (/demoer/cafe/ …), ikke oversigten /demoer/. */
@@ -24,8 +28,9 @@ const isDemoPath = (p) => p.startsWith('/demoer/') && p.replace(/\/+$/, '') !== 
  * Hvor "Tilbage til OviaSpecs" fører hen. Som udgangspunkt til demoens plads på
  * /demoer/, så det virker, også hvis demoen åbnes direkte (og uden JavaScript).
  * Kom kunden fra en anden side hos OviaSpecs (forsiden, en ydelsesside eller
- * beregneren), går knappen dertil, og på siderne med demoerne helt hen til den
- * demo, kunden kom fra. Beregnerens valg ligger i sessionStorage og følger med.
+ * /priser/), går knappen dertil, og på /demoer/ helt hen til det koncept,
+ * kunden kom fra. Hvilken side kunden kom fra, huskes i sessionStorage i den
+ * enkelte fane (forlader aldrig browseren).
  */
 /** Hvor "Tilbage til OviaSpecs" fører hen, udregnet i browseren (se useBackHref). */
 function backHref(id) {
@@ -33,7 +38,7 @@ function backHref(id) {
   try {
     const ref = document.referrer ? new URL(document.referrer) : null
     if (ref && ref.origin === window.location.origin && !isDemoPath(ref.pathname)) {
-      from = { path: ref.pathname, search: ref.pathname === paths.prisberegner ? ref.search : '' }
+      from = { path: ref.pathname, search: ref.pathname === paths.priser ? ref.search : '' }
       window.sessionStorage.setItem(FROM, JSON.stringify(from))
     } else {
       from = JSON.parse(window.sessionStorage.getItem(FROM) ?? 'null')
@@ -43,7 +48,7 @@ function backHref(id) {
   }
   const fallback = `${paths.demoer}#demo-${id}`
   if (!from || typeof from.path !== 'string' || !from.path.startsWith('/') || from.path.startsWith('//')) return fallback
-  const anchor = WITH_ANCHOR.includes(from.path) ? `#demo-${id}` : from.path === paths.prisberegner ? '#beregner' : ''
+  const anchor = WITH_ANCHOR.includes(from.path) ? `#demo-${id}` : ''
   return `${from.path}${from.search ?? ''}${anchor}`
 }
 
@@ -109,7 +114,7 @@ export default function DemoShell({ project, links, logo, footer, children }) {
             <a href={back} className="dm-strip-back">
               <span aria-hidden="true">←</span> {demos.backToSite}
             </a>
-            <a href={calcHref({ demo: project.id })}>{demos.calcCta}</a>
+            <a href={PRICES}>{demos.calcCta}</a>
             <a href={paths.demoer}>{demos.allDemos}</a>
           </div>
         </div>
@@ -131,7 +136,7 @@ export default function DemoShell({ project, links, logo, footer, children }) {
         <div className="dm-wrap dm-footer-in">
           <div>
             <p>{footer}</p>
-            <p>Demoen er fiktiv: navne, adresser, tider og priser er opdigtede.</p>
+            <p>Konceptet er fiktivt: navne, adresser, tider og priser er opdigtede.</p>
           </div>
           <p>
             <a href={back} className="underline underline-offset-4">

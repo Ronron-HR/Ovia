@@ -1,5 +1,6 @@
 /* =========================================================================
-   DEMOER — fire fiktive koncepter udviklet af OviaSpecs.
+   KONCEPTER — fire fiktive hjemmesider udviklet af OviaSpecs (siden /demoer/).
+   De mærkes overalt "Koncept – ikke en kundeopgave".
 
    De er ikke kundearbejde og bygger ikke på rigtige virksomheder: ingen
    virksomhedsnavne, adresser, telefonnumre, logoer, anmeldelser, menukort
@@ -25,25 +26,22 @@ const MOBILE = { width: 340, height: 1308 }
 
 export const demos = {
   id: 'demoer',
-  eyebrow: 'Demoer',
-  title: 'Fire fiktive demoer, du kan prøve.',
+  eyebrow: 'Koncepter',
+  title: 'Fire koncepter, du kan prøve.',
   intro:
-    'Fire små hjemmesider, jeg har bygget som koncepter: en café, en restaurant, en salon og en vinbar. De er fiktive og ikke kundearbejde, men de virker, så du kan prøve menuer, faner og bookingeksempler på en telefon eller en computer.',
-  homeTitle: 'Fire demoer, du kan prøve.',
-  homeIntro:
-    'Fire fiktive koncepter med hver sin stemning og hver sine funktioner. Åbn en demo og prøv den, som kunden ville.',
-  banner: 'Fiktiv demo – koncept udviklet af OviaSpecs, ikke kundearbejde.',
-  tag: 'Fiktiv demo – koncept udviklet af OviaSpecs, ikke kundearbejde.',
-  tagShort: 'Fiktiv demo · koncept',
-  note: 'Demoerne viser eksempler på design og funktioner. Din hjemmeside tilpasses din virksomhed. Standardprisen indeholder ikke automatisk de funktioner, en demo viser: booking og andre ekstra funktioner aftales separat. Skærmbillederne er taget af demoerne selv.',
+    'Fire små hjemmesider, jeg har lavet som koncepter: en café, en restaurant, en salon og en vinbar. De er ikke lavet for rigtige kunder, men de virker, så du kan prøve menuer, faner og bookingeksempler på din telefon.',
+  banner: 'Koncept – ikke en kundeopgave.',
+  tag: 'Koncept – ikke en kundeopgave',
+  tagShort: 'Koncept – ikke en kundeopgave',
+  note: 'Koncepterne viser eksempler på design og funktioner. Din hjemmeside tilpasses din virksomhed. Hvilke funktioner der er med, afhænger af pakken: booking og bestilling er fx med i Fuld fart. Skærmbillederne er taget af koncepterne selv.',
   localNote:
-    'Alt i demoen er lokalt: intet bliver sendt, bestilt eller booket, og ingen knap fører til en rigtig virksomhed.',
-  open: 'Åbn demo',
-  calcCta: 'Beregn en lignende hjemmeside',
+    'Alt i koncepterne er lokalt: intet bliver sendt, bestilt eller booket, og ingen knap fører til en rigtig virksomhed.',
+  open: 'Åbn konceptet',
+  calcCta: 'Se priser på en hjemmeside',
   backToSite: 'Tilbage til OviaSpecs',
-  allDemos: 'Alle demoer',
-  labels: { task: 'Formål', features: 'Funktioner i demoen', design: 'Design' },
-  seeAll: { label: 'Se alle demoer', href: '/demoer/' },
+  allDemos: 'Alle koncepter',
+  labels: { task: 'Formål', features: 'Funktioner i konceptet', design: 'Design' },
+  seeAll: { label: 'Se alle koncepter', href: '/demoer/' },
   projects: [
     {
       id: 'cafe',
@@ -60,13 +58,13 @@ export const demos = {
         'Åbningstider',
         'Kontaktsektion med en lokal beskedformular',
       ],
-      label: 'Skærmbillede af den fiktive Cafédemo på computer.',
-      labelMobile: 'Skærmbillede af den fiktive Cafédemo på telefon.',
+      label: 'Skærmbillede af konceptet Cafédemo på computer.',
+      labelMobile: 'Skærmbillede af konceptet Cafédemo på telefon.',
       desktop: { src: '/demoer/cafe-desktop.webp', ...DESKTOP },
       mobile: { src: '/demoer/cafe-mobile.webp', ...MOBILE },
-      metaTitle: 'Cafédemo | Fiktiv demo fra OviaSpecs',
+      metaTitle: 'Cafédemo | Koncept fra OviaSpecs',
       metaDescription:
-        'Fiktiv demo: en café-hjemmeside med menu i kategorier, åbningstider og kontakt. Koncept udviklet af OviaSpecs, ikke kundearbejde.',
+        'Koncept – ikke en kundeopgave: en café-hjemmeside med menu i kategorier, åbningstider og kontakt.',
     },
     {
       id: 'restaurant',
@@ -83,13 +81,13 @@ export const demos = {
         'Tydeligt eksempel på bordbestilling (intet bliver reserveret)',
         'Historie og åbningstider',
       ],
-      label: 'Skærmbillede af den fiktive Restaurantdemo på computer.',
-      labelMobile: 'Skærmbillede af den fiktive Restaurantdemo på telefon.',
+      label: 'Skærmbillede af konceptet Restaurantdemo på computer.',
+      labelMobile: 'Skærmbillede af konceptet Restaurantdemo på telefon.',
       desktop: { src: '/demoer/restaurant-desktop.webp', ...DESKTOP },
       mobile: { src: '/demoer/restaurant-mobile.webp', ...MOBILE },
-      metaTitle: 'Restaurantdemo | Fiktiv demo fra OviaSpecs',
+      metaTitle: 'Restaurantdemo | Koncept fra OviaSpecs',
       metaDescription:
-        'Fiktiv demo: en restaurant-hjemmeside med menukort i faner og et eksempel på bordbestilling. Koncept udviklet af OviaSpecs, ikke kundearbejde.',
+        'Koncept – ikke en kundeopgave: en restaurant-hjemmeside med menukort i faner og et eksempel på bordbestilling.',
     },
     {
       id: 'salon',
@@ -106,13 +104,13 @@ export const demos = {
         'Lokalt bookingeksempel (intet bliver booket)',
         'Åbningstider og kontakt',
       ],
-      label: 'Skærmbillede af den fiktive Salondemo på computer.',
-      labelMobile: 'Skærmbillede af den fiktive Salondemo på telefon.',
+      label: 'Skærmbillede af konceptet Salondemo på computer.',
+      labelMobile: 'Skærmbillede af konceptet Salondemo på telefon.',
       desktop: { src: '/demoer/salon-desktop.webp', ...DESKTOP },
       mobile: { src: '/demoer/salon-mobile.webp', ...MOBILE },
-      metaTitle: 'Salondemo | Fiktiv demo fra OviaSpecs',
+      metaTitle: 'Salondemo | Koncept fra OviaSpecs',
       metaDescription:
-        'Fiktiv demo: en salon-hjemmeside med behandlinger, eksempelpriser og et lokalt bookingeksempel. Koncept udviklet af OviaSpecs, ikke kundearbejde.',
+        'Koncept – ikke en kundeopgave: en salon-hjemmeside med behandlinger, eksempelpriser og et lokalt bookingeksempel.',
     },
     {
       id: 'vinbar',
@@ -129,18 +127,18 @@ export const demos = {
         'Eksempel på gruppehenvendelse (intet bliver sendt)',
         'Åbningstider og kontakt',
       ],
-      label: 'Skærmbillede af den fiktive Vinbardemo på computer.',
-      labelMobile: 'Skærmbillede af den fiktive Vinbardemo på telefon.',
+      label: 'Skærmbillede af konceptet Vinbardemo på computer.',
+      labelMobile: 'Skærmbillede af konceptet Vinbardemo på telefon.',
       desktop: { src: '/demoer/vinbar-desktop.webp', ...DESKTOP },
       mobile: { src: '/demoer/vinbar-mobile.webp', ...MOBILE },
-      metaTitle: 'Vinbardemo | Fiktiv demo fra OviaSpecs',
+      metaTitle: 'Vinbardemo | Koncept fra OviaSpecs',
       metaDescription:
-        'Fiktiv demo: en vinbar-hjemmeside med vinkort i kategorier og et eksempel på en gruppehenvendelse. Koncept udviklet af OviaSpecs, ikke kundearbejde.',
+        'Koncept – ikke en kundeopgave: en vinbar-hjemmeside med vinkort i kategorier og et eksempel på en gruppehenvendelse.',
     },
   ],
 }
 
-/** Finder en demo. Ukendte og udgåede id'er giver null (neutral beregning). */
+/** Finder et koncept. Ukendte id'er giver null. */
 export function demoById(id) {
   return demos.projects.find((p) => p.id === id) ?? null
 }

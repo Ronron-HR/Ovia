@@ -1,16 +1,16 @@
-import { demos } from '../content.js'
+import { demos } from '../content.demos.js'
 import DemoVisual, { DemoActions } from './DemoVisual.jsx'
 
 /**
  * DEMOER (siden /demoer/)
  *
- * De fire fiktive demoer, én ad gangen: skærmbillede af selve demoen på
+ * De fire koncepter, ét ad gangen: skærmbillede af selve demoen på
  * demoens egen farve, hvad den handler om, hvordan den ser ud, og hvad den kan.
  * "Åbn demo" åbner den rigtige, fungerende demo (/demoer/<navn>/), og
- * "Beregn en lignende hjemmeside" tager demovalget med til beregneren.
+ * "Se priser på en hjemmeside" fører til beregneren.
  *
- * Alt er "Fiktiv demo – koncept udviklet af OviaSpecs, ikke kundearbejde."
- * Demoerne bruger intet materiale fra rigtige virksomheder.
+ * Alt er mærket "Koncept – ikke en kundeopgave". Koncepterne bruger intet
+ * materiale fra rigtige virksomheder.
  */
 function Facts({ project }) {
   return (

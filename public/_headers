@@ -4,7 +4,8 @@
 # index.html) tillades med sin hash; scripts/prerender.mjs udfylder
 # pladsholderen i script-src ved build. 'unsafe-inline' i style-src skyldes det indlejrede
 # stylesheet og React's style-attributter; der indsættes aldrig brugerindhold som
-# HTML. Formularerne sender kun til siden selv (connect-src og form-action).
+# HTML. Siden har ingen formularer, der sender noget (form-action 'self' er kun
+# en sikkerhedsgrænse), og ingen eksterne scripts.
 /*
   Content-Security-Policy: default-src 'self'; script-src 'self' __SCRIPT_HASHES__; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
   X-Content-Type-Options: nosniff

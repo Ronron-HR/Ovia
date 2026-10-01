@@ -1,20 +1,18 @@
-import DemoTeasers from '../components/DemoTeasers.jsx'
-import Hero from '../components/Hero.jsx'
-import { ContactCta } from '../components/Kontakt.jsx'
-import Overview from '../components/Overview.jsx'
-import Review from '../components/Review.jsx'
-import Samarbejde from '../components/Samarbejde.jsx'
+import About from '../components/About.jsx'
+import ContactSection from '../components/ContactSection.jsx'
+import HomeHero from '../components/HomeHero.jsx'
+import ServiceCards from '../components/ServiceCards.jsx'
+import Steps from '../components/Steps.jsx'
 
-/** Forsiden: hero med hele prisberegneren, de fire demoer, overblik, proces, feedback og kontakt. */
+/** Forsiden: hero med Ring/Skriv, tre kort, sådan foregår det, om og kontakt. */
 export default function Home() {
   return (
     <>
-      <Hero />
-      <DemoTeasers />
-      <Overview />
-      <Samarbejde />
-      <Review under />
-      <ContactCta />
+      <HomeHero />
+      <ServiceCards />
+      <Steps />
+      <About />
+      <ContactSection />
     </>
   )
 }

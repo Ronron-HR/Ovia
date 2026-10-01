@@ -1,29 +1,22 @@
-import { useCallback, useEffect, useId, useRef, useState } from 'react'
-import { nav, paths, site } from '../content.js'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { contact } from '../data/pricing.js'
+import { links, nav } from '../data/texts.js'
 import { useScrolled } from '../motion/useScrolled.js'
+import ContactButtons, { PhoneIcon } from './ContactButtons.jsx'
 import Logo from './Logo.jsx'
 import { Arrow } from './Shots.jsx'
 
 /**
  * NAVIGATION
  *
- * Mærke til venstre, seks punkter og en fremhævet knap ("Beregn din pris")
- * til højre. Marketing og Integrationer har hver en rullemenu; resten er
- * almindelige links til egne sider. Den side, man står på, markeres med
- * aria-current="page" og en bronzestreg under ordet.
+ * Mærke til venstre, fire links og en "Ring"-knap med nummeret til højre.
+ * Den side, man står på, markeres med aria-current="page" og en bronzestreg
+ * under ordet.
  *
- * RULLEMENUER: knappen åbner og lukker (aria-expanded). Med mus åbner de også
- * ved hover, og de lukker igen med Escape, ved klik udenfor, og når fokus
- * forlader dem. Panelerne ligger altid i HTML'en (skjult med visibility), så
- * de kan læses af søgemaskiner og uden JavaScript findes de samme links i
- * bunden af siden.
- *
- * MOBIL (under lg): ordet "Menu" i stedet for et ikon. Overlayet er et
- * SØSKENDE til baren, ikke et barn af den, så et fixed overlay ikke bliver
- * målt mod baren. Baren ligger i z-50 over overlayet, så mærket og "Luk"
- * står det samme sted, uanset om menuen er åben. Menuen lukker med Escape og
- * "Luk"; fokus fanges, mens den er åben, og går tilbage til knappen. Menuen
- * kan rulle, og der er ingen faste knapper, der dækker indhold.
+ * MOBIL (under lg): mærke, en lille "Ring"-knap (altid synlig) og "Menu".
+ * Overlayet er et SØSKENDE til baren, så et fixed overlay ikke måles mod
+ * baren. Menuen lukker med Escape og "Luk"; fokus fanges, mens den er åben,
+ * og går tilbage til knappen.
  */
 
 const FOCUSABLE = 'a[href], button:not([disabled])'
@@ -31,96 +24,10 @@ const FOCUSABLE = 'a[href], button:not([disabled])'
 const clean = (p) => (p || '/').replace(/\/+$/, '') || '/'
 const isHere = (href, path) => clean(href) === clean(path)
 
-function Group({ item, path }) {
-  const [open, setOpen] = useState(false)
-  const box = useRef(null)
-  const timer = useRef(0)
-  const id = useId()
-  const here = item.children.some((c) => isHere(c.href, path))
-
-  const hoverCapable = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches
-
-  useEffect(() => {
-    if (!open) return
-    const onDown = (e) => {
-      if (box.current && !box.current.contains(e.target)) setOpen(false)
-    }
-    const onKey = (e) => {
-      if (e.key === 'Escape') {
-        setOpen(false)
-        box.current?.querySelector('button')?.focus()
-      }
-    }
-    document.addEventListener('pointerdown', onDown)
-    document.addEventListener('keydown', onKey)
-    return () => {
-      document.removeEventListener('pointerdown', onDown)
-      document.removeEventListener('keydown', onKey)
-    }
-  }, [open])
-
-  useEffect(() => () => window.clearTimeout(timer.current), [])
-
-  const enter = () => {
-    if (!hoverCapable()) return
-    window.clearTimeout(timer.current)
-    setOpen(true)
-  }
-  const leave = () => {
-    if (!hoverCapable()) return
-    window.clearTimeout(timer.current)
-    timer.current = window.setTimeout(() => setOpen(false), 140)
-  }
-
-  return (
-    <li
-      ref={box}
-      className="dd relative"
-      data-open={open}
-      onMouseEnter={enter}
-      onMouseLeave={leave}
-      onBlur={(e) => {
-        if (!box.current?.contains(e.relatedTarget)) setOpen(false)
-      }}
-    >
-      <button
-        type="button"
-        aria-expanded={open}
-        aria-controls={id}
-        aria-current={here ? 'page' : undefined}
-        onClick={() => setOpen((o) => (hoverCapable() ? true : !o))}
-        className="nav-link flex min-h-11 cursor-pointer items-center gap-1.5 text-[14px] font-medium"
-      >
-        <span className="nav-label">{item.label}</span>
-        <svg aria-hidden="true" viewBox="0 0 12 12" width="10" height="10" className="dd-caret" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M2.5 4.5 6 8l3.5-3.5" />
-        </svg>
-      </button>
-
-      <div id={id} className="dd-panel absolute top-full left-1/2 z-50 w-[320px] -translate-x-1/2 pt-2">
-        <ul className="rounded-[14px] border border-rule bg-surface p-2 shadow-[0_18px_40px_-18px_rgb(37_37_37/0.35)]">
-          {item.children.map((child) => (
-            <li key={child.href}>
-              <a
-                href={child.href}
-                aria-current={isHere(child.href, path) ? 'page' : undefined}
-                className="dd-link block rounded-[10px] px-3.5 py-3"
-              >
-                <span className="block text-[15px] font-medium text-ink">{child.label}</span>
-                <span className="mt-0.5 block text-[13px] leading-snug text-muted">{child.text}</span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </li>
-  )
-}
+const bigLink =
+  't-display flex min-h-14 items-center justify-between gap-4 text-[26px] leading-tight aria-[current=page]:text-accent'
 
 export default function Nav({ path }) {
-  // På siderne med beregneren (forsiden og /prisberegner/) fører knappen til
-  // beregneren på siden og sætter fokus dér; ellers til /prisberegner/.
-  const ctaHref = clean(path) === '/' || isHere(paths.prisberegner, path) ? '#beregner' : nav.cta.href
   const scrolled = useScrolled()
   const [open, setOpen] = useState(false)
 
@@ -138,7 +45,6 @@ export default function Nav({ path }) {
     const main = document.querySelector('main')
     const trigger = button.current
 
-    // Body-scroll låses, mens menuen er åben.
     html.style.overflow = 'hidden'
     document.body.style.overflow = 'hidden'
     main?.setAttribute('inert', '')
@@ -196,52 +102,53 @@ export default function Nav({ path }) {
 
   return (
     <>
-      <header
-        ref={header}
-        data-scrolled={scrolled}
-        className="nav fixed inset-x-0 top-0 z-50 bg-paper/[0.97]"
-      >
-        <div className="nav-bar shell flex h-[var(--nav-h)] items-center justify-between gap-6">
+      <header ref={header} data-scrolled={scrolled} className="nav fixed inset-x-0 top-0 z-50 bg-paper/[0.97]">
+        <div className="nav-bar shell flex h-[var(--nav-h)] items-center justify-between gap-4">
           <a href="/" onClick={close} aria-label={`${nav.brand}, til forsiden`} className="inline-flex min-h-11 items-center text-ink">
-            <Logo className="block h-[26px]" />
+            <Logo className="block h-[24px] md:h-[26px]" />
           </a>
 
-          <div className="hidden items-center gap-7 lg:flex xl:gap-9">
+          <div className="hidden items-center gap-8 lg:flex">
             <nav aria-label="Hovednavigation">
-              <ul className="flex items-center gap-6 xl:gap-8">
-                {nav.items.map((item) =>
-                  item.children ? (
-                    <Group key={item.label} item={item} path={path} />
-                  ) : (
-                    <li key={item.href}>
-                      <a
-                        href={item.href}
-                        aria-current={isHere(item.href, path) ? 'page' : undefined}
-                        className="nav-link flex min-h-11 items-center text-[14px] font-medium"
-                      >
-                        <span className="nav-label">{item.label}</span>
-                      </a>
-                    </li>
-                  ),
-                )}
+              <ul className="flex items-center gap-7">
+                {nav.items.map((item) => (
+                  <li key={item.href}>
+                    <a
+                      href={item.href}
+                      aria-current={isHere(item.href, path) ? 'page' : undefined}
+                      className="nav-link flex min-h-11 items-center text-[14px] font-medium"
+                    >
+                      <span className="nav-label">{item.label}</span>
+                    </a>
+                  </li>
+                ))}
               </ul>
             </nav>
 
-            <a href={ctaHref} className="btn btn-accent min-h-11 px-5 text-[14px]">
-              {nav.cta.label}
+            <a href={links.tel} className="btn btn-accent min-h-11 px-5 text-[14px]">
+              <PhoneIcon />
+              <span>
+                {nav.call} <span className="tabular-nums">{contact.phone}</span>
+              </span>
             </a>
           </div>
 
-          <button
-            ref={button}
-            type="button"
-            aria-expanded={open}
-            aria-controls="menu"
-            onClick={() => setOpen((v) => !v)}
-            className="-mr-2 inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-end px-2 text-[15px] font-medium text-ink lg:hidden"
-          >
-            {open ? nav.close : nav.menu}
-          </button>
+          <div className="flex items-center gap-1 lg:hidden">
+            <a href={links.tel} className="nav-call btn btn-accent min-h-10 px-4 text-[14px]" aria-label={`${nav.call} ${contact.phone}`}>
+              <PhoneIcon />
+              {nav.call}
+            </a>
+            <button
+              ref={button}
+              type="button"
+              aria-expanded={open}
+              aria-controls="menu"
+              onClick={() => setOpen((v) => !v)}
+              className="-mr-2 inline-flex min-h-11 min-w-14 cursor-pointer items-center justify-end px-2 text-[15px] font-medium text-ink"
+            >
+              {open ? nav.close : nav.menu}
+            </button>
+          </div>
         </div>
 
         <span aria-hidden="true" className="nav-line" />
@@ -258,60 +165,22 @@ export default function Nav({ path }) {
       >
         <nav aria-label="Mobilmenu" className="shell flex min-h-full flex-col pt-[calc(var(--nav-h)+12px)] pb-8">
           <ul className="flex flex-col">
-            {nav.items.map((item) =>
-              item.children ? (
-                <li key={item.label} className="border-b border-rule py-3">
-                  <p className="t-display text-[26px] leading-tight">{item.label}</p>
-                  <ul className="mt-1 flex flex-col">
-                    {item.children.map((child) => (
-                      <li key={child.href}>
-                        <a
-                          href={child.href}
-                          onClick={close}
-                          aria-current={isHere(child.href, path) ? 'page' : undefined}
-                          className="flex min-h-11 items-center justify-between gap-4 text-[16px] text-muted aria-[current=page]:text-ink"
-                        >
-                          {child.label}
-                          <Arrow className="text-accent" />
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </li>
-              ) : (
-                <li key={item.href} className="border-b border-rule">
-                  <a
-                    href={item.href}
-                    onClick={close}
-                    aria-current={isHere(item.href, path) ? 'page' : undefined}
-                    className="t-display flex min-h-14 items-center justify-between gap-4 text-[26px] leading-tight aria-[current=page]:text-accent"
-                  >
-                    {item.label}
-                    <Arrow className="text-accent" />
-                  </a>
-                </li>
-              ),
-            )}
+            {[{ label: 'Forside', href: '/' }, ...nav.items].map((item) => (
+              <li key={item.href} className="border-b border-rule">
+                <a
+                  href={item.href}
+                  onClick={close}
+                  aria-current={isHere(item.href, path) ? 'page' : undefined}
+                  className={bigLink}
+                >
+                  {item.label}
+                  <Arrow className="text-accent" />
+                </a>
+              </li>
+            ))}
           </ul>
 
-          <div className="mt-6">
-            <a href={ctaHref} onClick={close} className="btn btn-accent w-full">
-              {nav.cta.label}
-            </a>
-
-            <ul className="mt-4 flex flex-col text-[15px]">
-              <li>
-                <a href={`mailto:${site.email}`} className="link-underline inline-block py-2.5 text-ink">
-                  {site.email}
-                </a>
-              </li>
-              <li>
-                <a href={`tel:${site.phoneHref}`} className="link-underline inline-block py-2.5 text-ink">
-                  {site.phone}
-                </a>
-              </li>
-            </ul>
-          </div>
+          <ContactButtons className="mt-8 flex-col [&>a]:w-full" />
         </nav>
       </div>
     </>

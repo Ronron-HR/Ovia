@@ -5,8 +5,8 @@
  *   npm run og
  *
  * Tegnes ud fra scripts/og/og.html i sidens egne skrifter. Motivet er
- * skærmbilleder af to af de fiktive demoer (public/demoer, se
- * `npm run demo-shots`), mærket "Fiktive demoer", så mærkningen følger med,
+ * skærmbilleder af to af koncepterne (public/demoer, se
+ * `npm run demo-shots`), mærket "Koncepter – ikke kundeopgaver", så mærkningen følger med,
  * når siden deles. Ingen fotos, logoer eller materiale fra rigtige virksomheder.
  *
  * Kør igen, hvis farver, logo, tekst eller demoerne ændres (og `npm run brand`
@@ -22,7 +22,7 @@ const CHROME =
 
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: true })
 
-// Delingsbilledet. Motivet er skærmbilleder af de fiktive demoer (public/demoer).
+// Delingsbilledet. Motivet er skærmbilleder af koncepterne (public/demoer).
 const page = await browser.newPage()
 await page.setViewport({ width: 1200, height: 630, deviceScaleFactor: 2 })
 await page.goto(pathToFileURL(resolve('scripts/og/og.html')).href, { waitUntil: 'networkidle0' })

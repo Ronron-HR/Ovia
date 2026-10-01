@@ -1,0 +1,19 @@
+# Gamle adresser (før oktober 2026) -> nye sider. 301 = permanent.
+/hjemmesider/                  /hjemmeside/       301
+/hjemmesider                   /hjemmeside/       301
+/seo/                          /marketing/        301
+/seo                           /marketing/        301
+/google-ads/                   /marketing/        301
+/google-ads                    /marketing/        301
+/sociale-medier-annoncering/   /marketing/        301
+/sociale-medier-annoncering    /marketing/        301
+/booking-integrationer/        /booking-google/   301
+/booking-integrationer         /booking-google/   301
+/prisberegner/                 /priser/           301
+/prisberegner                  /priser/           301
+/ai-automatisering/            /                  301
+/ai-automatisering             /                  301
+/om/                           /#om               301
+/om                            /#om               301
+/kontakt/                      /#kontakt          301
+/kontakt                       /#kontakt          301
