@@ -12,7 +12,8 @@
     "brand": "node scripts/brand.mjs",
     "og": "node scripts/og.mjs",
     "demo-shots": "node scripts/demo-shots.mjs",
-    "test": "node scripts/test-pricing.mjs"
+    "test": "node scripts/test-pricing.mjs",
+    "test:e2e": "node scripts/test-calculator-e2e.mjs"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
