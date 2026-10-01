@@ -17,8 +17,9 @@ const tierList = (service, unit = '') => {
   return s.endsWith('.') ? s : `${s}.`
 }
 
-/** "Hvornår kan vi starte?" — skjules, når paidStartText er tom. */
-const startFaq = paidStartText ? [{ q: 'Hvornår kan vi starte?', a: paidStartText }] : []
+/** "Hvornår kan vi starte?": paidStartText + ydelsens startNow. Skjules, når paidStartText er tom. */
+const startFaq = (service) =>
+  paidStartText ? [{ q: 'Hvornår kan vi starte?', a: [paidStartText, service.startNow].filter(Boolean).join(' ') }] : []
 
 const toCalculator = { label: 'Beregn din pris', href: paths.priser }
 
@@ -83,7 +84,7 @@ export const hjemmeside = {
         a: `${web.drift.binding} ${web.drift.buyout(formatKr(web.addons.ownAccount.price))}`,
       },
       { q: 'Hvor lang tid tager det?', a: web.leadTime },
-      ...startFaq,
+      ...startFaq(web),
     ],
   },
   contact: {
@@ -153,7 +154,7 @@ export const marketing = {
         a: 'Du betaler selv annoncebudgettet direkte til Meta. I Fuld fart styrer jeg annoncerne, og det er med i månedsprisen.',
       },
       { q: 'Er der binding?', a: mk.binding },
-      ...startFaq,
+      ...startFaq(mk),
     ],
   },
   contact: {
@@ -215,7 +216,7 @@ export const bookingGoogle = {
         q: 'Kan du skaffe mig anmeldelser?',
         a: 'Nej. Jeg gør det nemt for alle dine kunder at give en anmeldelse, fx med QR-skiltet. Jeg køber ikke anmeldelser, og jeg sorterer ikke i, hvem der bliver spurgt.',
       },
-      ...startFaq,
+      ...startFaq(bg),
     ],
   },
   contact: {
