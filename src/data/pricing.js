@@ -193,6 +193,8 @@ export const services = {
         'Uforpligtende. Efter piloten kan du fortsætte på Vækst',
       ],
       limitText: 'Max 2 piloter ad gangen',
+      /** Link under marketing-prisen i beregnerens resultat (kun når flags.hasMarketingCases er false). */
+      calcLink: { label: 'Vil du prøve først? Se pilotforløbet', href: '/marketing/#pilot' },
     },
     binding: 'Ingen binding. Opsigelse med 1 måneds varsel.',
     /** Tom = paidStartText bruges. Pilotforløbet står i PilotSection på /marketing/. */

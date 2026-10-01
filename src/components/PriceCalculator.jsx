@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { ORDER, mailBody, priceParts, priceText, quote, sentence, smsBody, useCalc } from '../calculator.js'
-import { calculator, fromPrice, priceNote, services, tierName } from '../data/pricing.js'
+import { calculator, flags, fromPrice, priceNote, services, tierName } from '../data/pricing.js'
 import ContactButtons from './ContactButtons.jsx'
 
 /**
@@ -196,6 +196,13 @@ export default function PriceCalculator() {
                   </p>
                   <p className="text-[16px] tabular-nums">{priceText(l)}</p>
                 </div>
+                {l.key === 'marketing' && !flags.hasMarketingCases && (
+                  <p className="mt-1 text-[15px]">
+                    <a href={services.marketing.pilot.calcLink.href} className="link-underline hit font-medium">
+                      {services.marketing.pilot.calcLink.label}
+                    </a>
+                  </p>
+                )}
                 <ul className="t-body mt-1 text-[14px]">
                   {l.tier.features.map((f) => (
                     <li key={f}>{f}</li>
