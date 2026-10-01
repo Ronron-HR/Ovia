@@ -129,12 +129,8 @@ export const services = {
       },
     ],
     addons: {
-      /** Alternativ til månedlig drift. `calcLabel` står efter beløbet i beregneren. */
-      ownAccount: {
-        label: 'Engangskøb: siden lægges på din egen konto i stedet for drift',
-        price: 1000,
-        calcLabel: 'for egen konto',
-      },
+      /** Alternativ til månedlig drift. Lægges til hjemmesideprisen i beregneren. */
+      ownAccount: { label: 'Engangskøb: siden lægges på din egen konto i stedet for drift', price: 1000 },
       extraPage: { label: 'Ekstra underside', price: 400 },
       /** Uden fast pris: `text` vises i stedet for et beløb. */
       over8: { label: 'Flere end 8 sider', text: 'Aftales' },
@@ -267,8 +263,8 @@ export const services = {
 
    Hvert svar peger på en pakke (`tier`); den højeste pakke blandt svarene
    vinder. `short` er spørgsmålet i opsummeringen (SMS/mail). `addon` lægger
-   et tilvalg til (addons i ydelsen) som et separat beløb ved siden af
-   intervallet, og `noDrift` fjerner den månedlige drift. `custom` betyder, at
+   et tilvalg til (addons i ydelsen) i prisen, så resultatet viser det, kunden
+   reelt betaler, og `noDrift` fjerner den månedlige drift. `custom` betyder, at
    prisen aftales (ingen pris i beregneren). `note` vises ved resultatet.
    Spørgsmålenes `id` skal være unikke, fordi de står i adresselinjen.
 ------------------------------------------------------------------------- */
@@ -364,6 +360,10 @@ export const calculator = {
   customPrice: 'Aftales',
   customTotal: 'hjemmesiden aftales',
   customNote: 'Flere end 8 sider aftales efter en snak.',
+  /** Efter prisen, når siden lægges på kundens egen konto (ingen drift). */
+  noDriftSuffix: 'i alt — ingen månedlig drift',
+  /** Under totalen, når der også er en månedspris fra en anden ydelse. */
+  noDriftWithMonthly: 'Ingen månedlig drift på hjemmesiden',
   /** Forudfyldt start på SMS og mail fra resultatet. */
   smsIntro: 'Hej Ronny. Jeg har brugt prisberegneren på oviaspecs.com:',
   mailSubject: 'Tilbud fra prisberegneren',

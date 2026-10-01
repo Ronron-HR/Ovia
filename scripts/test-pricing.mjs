@@ -2,9 +2,10 @@
  * Test af priserne i src/data/pricing.js. Kører med `npm test` og som første
  * led i `npm run build`, så en pris, der bryder reglerne, stopper udgivelsen.
  *
- * 1. Intet hjemmesideinterval i beregneren må vise over maxWebsiteInterval
- *    (6.000 kr.). Alle kombinationer af svar på hjemmesidespørgsmålene prøves,
- *    alene og sammen med alle Booking & Google-pakker.
+ * 1. Ingen hjemmesidepakke + buffer må gå over maxWebsiteInterval (6.000 kr.).
+ *    Tilvalg som egen konto tæller ikke med i loftet (de vises i resultatet,
+ *    så kunden ser det, der reelt betales). Alle kombinationer af svar på
+ *    hjemmesidespørgsmålene prøves, alene og med alle Booking & Google-pakker.
  * 2. Booking & Google-pakkernes pris = summen af deres komponenter.
  * 3. Booking & Google-prisen bliver aldrig negativ efter overlap.
  */
@@ -33,8 +34,8 @@ for (const web of webAnswers) {
     const line = q.lines.find((l) => l.key === 'hjemmeside')
     checked++
     if (line.custom) continue
-    if (line.low > maxWebsiteInterval || line.high > maxWebsiteInterval) {
-      fail(`Hjemmesideinterval ${line.low}–${line.high} kr. er over ${maxWebsiteInterval} kr. (${JSON.stringify(web)})`)
+    if (line.packageHigh > maxWebsiteInterval) {
+      fail(`Hjemmesidepakke + buffer ${line.packageHigh} kr. er over ${maxWebsiteInterval} kr. (${JSON.stringify(web)})`)
     }
     const bgLine = q.lines.find((l) => l.key === 'bookingGoogle')
     if (bgLine && (bgLine.low < 0 || bgLine.high < 0)) fail(`Negativ Booking & Google-pris (${JSON.stringify({ web, bg })})`)
@@ -56,4 +57,4 @@ if (failures.length) {
   console.error(`Pristest FEJLEDE (${failures.length}):\n- ${failures.join('\n- ')}`)
   process.exit(1)
 }
-console.log(`Pristest bestået: ${checked} kombinationer, intet hjemmesideinterval over ${maxWebsiteInterval} kr.`)
+console.log(`Pristest bestået: ${checked} kombinationer, ingen hjemmesidepakke + buffer over ${maxWebsiteInterval} kr.`)

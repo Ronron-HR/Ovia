@@ -106,22 +106,19 @@ function line(key, answers) {
 
   // Prisen aftales (fx flere end 8 sider): ingen beløb, kun en note.
   if (options.some((o) => o.custom)) {
-    return { key, service, tier, chosen, low: 0, high: 0, monthly: 0, extras: [], custom: true, notes: [...notes, calculator.customNote] }
+    return { key, service, tier, chosen, low: 0, high: 0, monthly: 0, packageHigh: 0, custom: true, notes: [...notes, calculator.customNote] }
   }
 
   let once = 0
   let monthly = 0
-  // Tilvalg (fx egen konto) står som separate beløb ved siden af intervallet,
-  // så intervallet altid er pakkeprisen + buffer.
-  const extras = []
+  let noDrift = false
   if (service.billing === 'monthly') {
     monthly = tier.price
   } else {
-    once = tier.price
-    for (const o of options) {
-      if (o.addon) extras.push({ price: service.addons[o.addon].price, label: service.addons[o.addon].calcLabel })
-    }
-    monthly = options.some((o) => o.noDrift) ? 0 : (tier.monthly ?? 0)
+    // Tilvalg (fx egen konto) lægges i prisen: resultatet viser det, kunden reelt betaler.
+    once = tier.price + options.reduce((sum, o) => sum + (o.addon ? service.addons[o.addon].price : 0), 0)
+    noDrift = options.some((o) => o.noDrift)
+    monthly = noDrift ? 0 : (tier.monthly ?? 0)
   }
   return {
     key,
@@ -131,7 +128,9 @@ function line(key, answers) {
     low: once,
     high: once ? once + service.buffer : 0,
     monthly,
-    extras,
+    noDrift,
+    /** Pakkeprisen + buffer uden tilvalg (loftet i scripts/test-pricing.mjs). */
+    packageHigh: service.billing === 'once' ? tier.price + service.buffer : 0,
     notes,
   }
 }
@@ -179,25 +178,18 @@ export function quote({ selected, answers }) {
       low: lines.reduce((s, l) => s + l.low, 0),
       high: lines.reduce((s, l) => s + l.high, 0),
       monthly: lines.reduce((s, l) => s + l.monthly, 0),
-      extras: lines.flatMap((l) => l.extras),
       custom: lines.some((l) => l.custom),
+      noDrift: lines.some((l) => l.noDrift),
     },
   }
 }
 
 const plain = (n) => formatKr(n).replace(' kr.', '')
 
-/**
- * Engangsdelen og månedsdelen hver for sig, fx
- * { once: "ca. 5.500–6.000 kr. + 1.000 kr. for egen konto", month: "400 kr./md" }.
- */
-export function priceParts({ low, high, monthly, extras = [] }) {
-  const interval = low ? (high > low ? `ca. ${plain(low)}–${formatKr(high)}` : formatKr(low)) : ''
-  const added = extras.map((e) => `${formatKr(e.price)} ${e.label}`)
+/** Engangsdelen og månedsdelen hver for sig: { once: "ca. 4.000–4.500 kr.", month: "300 kr./md" }. */
+export function priceParts({ low, high, monthly }) {
   return {
-    once: [interval, ...added].filter(Boolean).join(' + '),
-    interval,
-    added,
+    once: low ? (high > low ? `ca. ${plain(low)}–${formatKr(high)}` : formatKr(low)) : '',
     month: monthly ? `${formatKr(monthly)}/md` : '',
   }
 }
@@ -211,7 +203,9 @@ export function priceParts({ low, high, monthly, extras = [] }) {
 export function priceText(price) {
   if (price.allIncluded) return overlap.allIncluded
   const { once, month } = priceParts(price)
-  const base = once && month ? `${once} + ${month}` : once || month
+  let base = once && month ? `${once} + ${month}` : once || month
+  // Egen konto: "ca. 6.500–7.000 kr. i alt — ingen månedlig drift".
+  if (price.noDrift && once && !month) base = `${once} ${calculator.noDriftSuffix}`
   if (price.custom) return base ? `${base} + ${calculator.customTotal}` : calculator.customPrice
   return base
 }

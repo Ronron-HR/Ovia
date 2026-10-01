@@ -180,15 +180,16 @@ export default function PriceCalculator() {
           </h2>
           {introText && <p className="badge mt-3">{introText}</p>}
           <p className="mt-4 text-[clamp(1.75rem,5vw,2.5rem)] leading-tight font-medium tracking-tight tabular-nums">
-            {/* Stor linje: intervallet (eller månedsprisen). Tilvalg, måned og "aftales" står hver på en mindre linje. */}
-            {totalParts.interval || totalParts.added[0] || totalParts.month || calculator.customPrice}
+            {/* Stor linje: engangsbeløbet (eller månedsprisen). Resten står hver på en mindre linje. */}
+            {totalParts.once || totalParts.month || calculator.customPrice}
             {[
-              ...(totalParts.interval ? totalParts.added : totalParts.added.slice(1)),
-              ...(totalParts.month && (totalParts.interval || totalParts.added.length) ? [totalParts.month] : []),
-              ...(q.total.custom && (totalParts.once || totalParts.month) ? [calculator.customTotal] : []),
+              ...(q.total.noDrift && totalParts.once && !totalParts.month ? [calculator.noDriftSuffix] : []),
+              ...(totalParts.once && totalParts.month ? [`+ ${totalParts.month}`] : []),
+              ...(q.total.custom && (totalParts.once || totalParts.month) ? [`+ ${calculator.customTotal}`] : []),
+              ...(q.total.noDrift && totalParts.month ? [calculator.noDriftWithMonthly] : []),
             ].map((part) => (
               <span key={part} className="mt-1 block text-[clamp(1.25rem,3vw,1.5rem)] text-muted">
-                + {part}
+                {part}
               </span>
             ))}
           </p>
