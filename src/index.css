@@ -50,6 +50,7 @@
   --color-muted: #5b5852; /* sekundær tekst */
   --color-accent: #876747; /* bronze: sparsomme fremhævelser */
   --color-accent-soft: #c9ad8a; /* bronze på mørk flade */
+  --color-accent-strong: #7a5d40; /* bronze til lille tekst på paper-2 (4,65:1) */
   --color-rule: #d6d1c9; /* hårstreger på paper */
 
   --font-sans: "Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -160,6 +161,11 @@
 
   .t-eyebrow-accent {
     color: var(--color-accent);
+  }
+
+  /* På den grå flade er accenten for lys til lille tekst (3,97:1). */
+  .bg-paper-2 .t-eyebrow-accent {
+    color: var(--color-accent-strong);
   }
 
   .t-body {
