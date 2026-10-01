@@ -1,5 +1,6 @@
 import { demos, kontakt, paths } from './content.js'
 import { services } from './services.js'
+import { meta } from './data/texts.js'
 
 /**
  * Sidernes adresser og metadata. Bruges af klienten (hvilken side skal
@@ -13,9 +14,8 @@ export const routes = [
   {
     path: paths.home,
     page: 'home',
-    title: 'OviaSpecs | Hjemmesider til virksomheder',
-    description:
-      'Se prisen på din hjemmeside direkte her. Jeg bygger hjemmesider til virksomheder i alle brancher og hjælper også med booking, marketing og automatisering.',
+    title: meta.home.title,
+    description: meta.home.description,
   },
   {
     path: paths.hjemmesider,

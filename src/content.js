@@ -38,7 +38,7 @@ export const site = {
   brand: 'OviaSpecs',
   url: 'https://oviaspecs.com/',
   owner: 'Ronny Hong',
-  email: 'ronnyhong723@gmail.com',
+  email: 'kontakt@oviaspecs.com',
   phone: '53 61 36 99',
   phoneHref: '+4553613699',
   place: 'Hjortshøj / Aarhus',
@@ -419,7 +419,7 @@ export function mailtoFrom({ subject, body }) {
 ------------------------------------------------------------------------- */
 export const legal = {
   owner: 'Ronny Hong',
-  address: 'Hjortshøj Stationsvej 6, 8530 Hjortshøj',
+  address: null,
   cvr: null,
   hosting: 'Cloudflare',
   mailProvider: 'Google (Gmail)',
