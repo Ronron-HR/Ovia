@@ -10,7 +10,11 @@
  * - "aftales" eller "ca." står ved en pris
  * - drift + frikøb kan blive billigere end egen konto fra start
  * - Booking & Google-pakkernes pris ≠ summen af deres komponenter
+ * - et beløb ("123 kr.", "1.500 kr./md") står hardkodet uden for pricing.js
+ *   (koncepterne i src/demos er undtaget: deres menupriser er fiktivt indhold)
  */
+import { readFileSync, readdirSync } from 'node:fs'
+import { join } from 'node:path'
 import { calculator, components, maxWebsiteNoIntegrations, services } from '../src/data/pricing.js'
 import { ORDER, priceText, quote, totalText } from '../src/calculator.js'
 
@@ -75,8 +79,26 @@ for (const tier of services.bookingGoogle.tiers) {
   if (sum !== tier.price) fail(`Booking & Google ${tier.id}: pris ${tier.price} kr. ≠ komponenter ${sum} kr.`)
 }
 
+// Ingen hardkodede beløb uden for pricing.js: alle priser skal læses derfra.
+const AMOUNT = /\b\d{1,3}(?:\.\d{3})*\s?kr\b/i
+const SKIP = ['src/data/pricing.js', 'src/demos']
+const files = (dir) =>
+  readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+    const path = join(dir, e.name).replaceAll('\\', '/')
+    if (SKIP.some((x) => path === x || path.startsWith(`${x}/`))) return []
+    return e.isDirectory() ? files(path) : /\.(jsx?|mjs|html|css)$/.test(e.name) ? [path] : []
+  })
+const scanned = [...files('src'), 'index.html', 'privatlivspolitik/index.html', 'public/404.html', 'scripts/og/og.html']
+for (const file of scanned) {
+  readFileSync(file, 'utf8')
+    .split('\n')
+    .forEach((text, i) => {
+      if (AMOUNT.test(text)) fail(`Hardkodet beløb i ${file}:${i + 1}: ${text.trim().slice(0, 100)}`)
+    })
+}
+
 if (failures.length) {
   console.error(`Pristest FEJLEDE (${failures.length}):\n- ${failures.slice(0, 20).join('\n- ')}`)
   process.exit(1)
 }
-console.log(`Pristest bestået: ${checked} kombinationer af ydelser og svar.`)
+console.log(`Pristest bestået: ${checked} kombinationer af ydelser og svar, ${scanned.length} filer uden hardkodede beløb.`)
