@@ -53,7 +53,7 @@ export const home = {
   hero: {
     eyebrow: 'Til lokale virksomheder',
     title: 'Jeg sørger for, at kunderne finder dig online og har let ved at tage kontakt.',
-    lead: 'Hjemmeside, Google-profil, booking og korte videoer. Du får faste priser, og det er mig, der laver arbejdet.',
+    lead: 'Hjemmeside, Google-profil, booking og korte videoer. Du får klare priser, og det er mig, der laver arbejdet.',
     who: `Du taler med mig, ${contact.name.split(' ')[0]}. Hele vejen.`,
     prices: { label: 'Se priser', href: paths.priser },
   },
@@ -112,7 +112,7 @@ export const about = {
   title: 'Jeg er én person. Det er mig, du taler med.',
   body: [
     'Jeg hedder Ronny Hong, og OviaSpecs er mig. Der er ingen sælger, ingen projektleder og ingen kundeservice. Den, du taler med, er den, der laver arbejdet.',
-    'Jeg er en lille virksomhed i Aarhus-området og har ikke en lang kundeliste at vise frem endnu. Til gengæld får du faste priser, et udkast du kan se, før det går live, og én at ringe til, når noget skal rettes.',
+    'Jeg er en lille virksomhed i Aarhus-området og har ikke en lang kundeliste at vise frem endnu. Til gengæld får du klare priser, et udkast du kan se, før det går live, og én at ringe til, når noget skal rettes.',
     'Hvis en opgave ligger uden for det, jeg kan, siger jeg det, før jeg går i gang.',
   ],
   portrait: {
@@ -166,7 +166,7 @@ export const meta = {
   home: {
     title: 'OviaSpecs | Hjemmeside, marketing og booking til lokale virksomheder',
     description:
-      'Jeg hjælper lokale virksomheder med hjemmeside, Google-profil, booking og korte videoer. Faste priser, og du taler med den, der laver arbejdet. Ring 53 61 36 99.',
+      'Jeg hjælper lokale virksomheder med hjemmeside, Google-profil, booking og korte videoer. Klare priser, og du taler med den, der laver arbejdet. Ring 53 61 36 99.',
   },
 }
 

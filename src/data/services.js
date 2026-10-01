@@ -58,7 +58,7 @@ export const hjemmeside = {
   },
   packages: {
     eyebrow: 'Pakker',
-    title: 'Tre pakker. Faste priser.',
+    title: 'Tre pakker. Klare priser.',
     intro: 'Du betaler én gang for siden og derefter drift hver måned.',
   },
   toCalculator,
@@ -170,7 +170,7 @@ export const bookingGoogle = {
   service: 'bookingGoogle',
   meta: {
     title: 'Booking & Google-profil til lokale virksomheder | OviaSpecs',
-    description: `Google-profil i orden, online booking og et QR-skilt til anmeldelser. Faste priser fra ${formatKr(bg.tiers[0].price)}. Start med et gratis tjek af din Google-profil.`,
+    description: `Google-profil i orden, online booking og et QR-skilt til anmeldelser. Klare priser fra ${formatKr(bg.tiers[0].price)}. Start med et gratis tjek af din Google-profil.`,
   },
   eyebrow: 'Booking & Google',
   title: 'Det første, kunderne ser, er din Google-profil.',
