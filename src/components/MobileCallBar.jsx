@@ -9,6 +9,9 @@ import { MailIcon, PhoneIcon } from './ContactButtons.jsx'
  * (heroens knapper, kontaktsektionen og footeren), så den aldrig står oven i
  * de samme knapper. Uden JavaScript vises den ikke; knapperne på siden virker
  * stadig. Kun under md.
+ *
+ * Mens bjælken er synlig, står <html data-callbar="on">, så "Ring" i toppen
+ * (Nav, .nav-call) skjules, og knappen ikke står to gange (index.css).
  */
 export default function MobileCallBar() {
   const [show, setShow] = useState(false)
@@ -21,11 +24,16 @@ export default function MobileCallBar() {
         if (e.isIntersecting) visible.add(e.target)
         else visible.delete(e.target)
       }
-      setShow(visible.size === 0)
+      const on = visible.size === 0
+      setShow(on)
+      document.documentElement.dataset.callbar = on ? 'on' : 'off'
     })
     // Footeren er altid et mål, så listen er aldrig tom.
     targets.forEach((t) => io.observe(t))
-    return () => io.disconnect()
+    return () => {
+      io.disconnect()
+      delete document.documentElement.dataset.callbar
+    }
   }, [])
 
   return (

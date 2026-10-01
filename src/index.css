@@ -819,3 +819,32 @@
     }
   }
 }
+
+@layer components {
+  /* "Ring" i toppen på mobil skjules, mens den faste bundbjælke er synlig
+     (MobileCallBar sætter data-callbar på <html>), så knappen ikke står to gange.
+     visibility bevarer pladsen, så "Menu" ikke flytter sig. */
+  .nav-call {
+    transition:
+      opacity 200ms var(--ease-entrance),
+      visibility 0s linear 0s;
+  }
+
+  @media (max-width: 767.98px) {
+    html[data-callbar='on'] .nav-call {
+      opacity: 0;
+      visibility: hidden;
+      transition:
+        opacity 200ms var(--ease-entrance),
+        visibility 0s linear 200ms;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nav-call,
+    html[data-callbar='on'] .nav-call {
+      transition-duration: 1ms;
+      transition-delay: 0s;
+    }
+  }
+}

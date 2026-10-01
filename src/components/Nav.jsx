@@ -134,7 +134,7 @@ export default function Nav({ path }) {
           </div>
 
           <div className="flex items-center gap-1 lg:hidden">
-            <a href={links.tel} className="btn btn-accent min-h-10 px-4 text-[14px]" aria-label={`${nav.call} ${contact.phone}`}>
+            <a href={links.tel} className="nav-call btn btn-accent min-h-10 px-4 text-[14px]" aria-label={`${nav.call} ${contact.phone}`}>
               <PhoneIcon />
               {nav.call}
             </a>
