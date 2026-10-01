@@ -102,12 +102,25 @@ function line(key, answers) {
   const tierId = RANK[Math.max(0, ...options.map((o) => RANK.indexOf(o.tier)))]
   const tier = service.tiers.find((t) => t.id === tierId)
 
+  const notes = options.map((o) => o.note).filter(Boolean)
+
+  // Prisen aftales (fx flere end 8 sider): ingen beløb, kun en note.
+  if (options.some((o) => o.custom)) {
+    return { key, service, tier, chosen, low: 0, high: 0, monthly: 0, extras: [], custom: true, notes: [...notes, calculator.customNote] }
+  }
+
   let once = 0
   let monthly = 0
+  // Tilvalg (fx egen konto) står som separate beløb ved siden af intervallet,
+  // så intervallet altid er pakkeprisen + buffer.
+  const extras = []
   if (service.billing === 'monthly') {
     monthly = tier.price
   } else {
-    once = tier.price + options.reduce((sum, o) => sum + (o.addon ? service.addons[o.addon].price : 0), 0)
+    once = tier.price
+    for (const o of options) {
+      if (o.addon) extras.push({ price: service.addons[o.addon].price, label: service.addons[o.addon].calcLabel })
+    }
     monthly = options.some((o) => o.noDrift) ? 0 : (tier.monthly ?? 0)
   }
   return {
@@ -118,7 +131,8 @@ function line(key, answers) {
     low: once,
     high: once ? once + service.buffer : 0,
     monthly,
-    notes: options.map((o) => o.note).filter(Boolean),
+    extras,
+    notes,
   }
 }
 
@@ -165,28 +179,41 @@ export function quote({ selected, answers }) {
       low: lines.reduce((s, l) => s + l.low, 0),
       high: lines.reduce((s, l) => s + l.high, 0),
       monthly: lines.reduce((s, l) => s + l.monthly, 0),
+      extras: lines.flatMap((l) => l.extras),
+      custom: lines.some((l) => l.custom),
     },
   }
 }
 
 const plain = (n) => formatKr(n).replace(' kr.', '')
 
-/** Engangsdelen og månedsdelen hver for sig: { once: "ca. 5.500–6.500 kr.", month: "400 kr./md" }. */
-export function priceParts({ low, high, monthly }) {
+/**
+ * Engangsdelen og månedsdelen hver for sig, fx
+ * { once: "ca. 5.500–6.000 kr. + 1.000 kr. for egen konto", month: "400 kr./md" }.
+ */
+export function priceParts({ low, high, monthly, extras = [] }) {
+  const interval = low ? (high > low ? `ca. ${plain(low)}–${formatKr(high)}` : formatKr(low)) : ''
+  const added = extras.map((e) => `${formatKr(e.price)} ${e.label}`)
   return {
-    once: low ? (high > low ? `ca. ${plain(low)}–${formatKr(high)}` : formatKr(low)) : '',
+    once: [interval, ...added].filter(Boolean).join(' + '),
+    interval,
+    added,
     month: monthly ? `${formatKr(monthly)}/md` : '',
   }
 }
 
 /**
- * "ca. 5.500–6.500 kr. + 400 kr./md", "3.500 kr./md" eller "ca. 1.000–1.500 kr.".
- * En linje, der er helt dækket af hjemmesidepakken, får overlap.allIncluded.
+ * "ca. 4.000–4.500 kr. + 300 kr./md", "2.500 kr./md" eller "500 kr.".
+ * En linje, der er helt dækket af hjemmesidepakken, får overlap.allIncluded,
+ * og en pris, der aftales, får calculator.customPrice (i totalen tilføjes
+ * calculator.customTotal).
  */
 export function priceText(price) {
   if (price.allIncluded) return overlap.allIncluded
   const { once, month } = priceParts(price)
-  return once && month ? `${once} + ${month}` : once || month
+  const base = once && month ? `${once} + ${month}` : once || month
+  if (price.custom) return base ? `${base} + ${calculator.customTotal}` : calculator.customPrice
+  return base
 }
 
 /** Opsummering til SMS og mail. */

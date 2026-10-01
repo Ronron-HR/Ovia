@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { ORDER, mailBody, priceParts, priceText, quote, sentence, smsBody, useCalc } from '../calculator.js'
-import { calculator, flags, fromPrice, priceNote, services, tierName } from '../data/pricing.js'
+import { calculator, flags, fromPrice, introText, priceNote, services, tierName } from '../data/pricing.js'
 import ContactButtons from './ContactButtons.jsx'
 
 /**
@@ -178,11 +178,19 @@ export default function PriceCalculator() {
           <h2 ref={heading} tabIndex={-1} className="t-display t-h3 outline-none">
             Din pris
           </h2>
+          {introText && <p className="badge mt-3">{introText}</p>}
           <p className="mt-4 text-[clamp(1.75rem,5vw,2.5rem)] leading-tight font-medium tracking-tight tabular-nums">
-            {totalParts.once || totalParts.month}
-            {totalParts.once && totalParts.month && (
-              <span className="mt-1 block text-[clamp(1.25rem,3vw,1.5rem)] text-muted">+ {totalParts.month}</span>
-            )}
+            {/* Stor linje: intervallet (eller månedsprisen). Tilvalg, måned og "aftales" står hver på en mindre linje. */}
+            {totalParts.interval || totalParts.added[0] || totalParts.month || calculator.customPrice}
+            {[
+              ...(totalParts.interval ? totalParts.added : totalParts.added.slice(1)),
+              ...(totalParts.month && (totalParts.interval || totalParts.added.length) ? [totalParts.month] : []),
+              ...(q.total.custom && (totalParts.once || totalParts.month) ? [calculator.customTotal] : []),
+            ].map((part) => (
+              <span key={part} className="mt-1 block text-[clamp(1.25rem,3vw,1.5rem)] text-muted">
+                + {part}
+              </span>
+            ))}
           </p>
           <p className="mt-2 text-[16px] font-medium">{calculator.finalNote}</p>
           {priceNote && <p className="t-body mt-1 text-[14px]">{priceNote}</p>}

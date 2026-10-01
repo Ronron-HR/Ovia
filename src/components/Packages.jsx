@@ -78,7 +78,7 @@ export function Addons({ service }) {
       {Object.values(service.addons).map((a) => (
         <li key={a.label} className="flex items-baseline justify-between gap-4 border-b border-rule py-3 text-[15px]">
           <span>{a.label}</span>
-          <span className="shrink-0 font-medium tabular-nums">+{formatPrice(service, a.price)}</span>
+          <span className="shrink-0 font-medium tabular-nums">{a.text ?? `+${formatPrice(service, a.price)}`}</span>
         </li>
       ))}
     </ul>
@@ -104,7 +104,7 @@ export function DriftTerms({ service, className = '', headingLevel = 3 }) {
         <li>{d.notIncluded}</li>
         <li>{d.domain}</li>
         <li>{d.binding}</li>
-        <li>{d.buyout(formatKr(service.addons.ownAccount.price))}</li>
+        <li>{d.buyout(formatKr(d.buyoutPrice))}</li>
       </ul>
     </div>
   )

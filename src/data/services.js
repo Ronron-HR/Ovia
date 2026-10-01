@@ -10,7 +10,7 @@ import { bookingSubscriptionNote, contact, formatKr, fromPrice, paidStartText, p
 import { paths } from './texts.js'
 
 const web = services.hjemmeside
-/** "Start koster 3.000 kr., Vækst 5.500 kr. og Fuld fart 8.500 kr." (altid med punktum til sidst). */
+/** "Start koster 2.500 kr., Vækst 4.000 kr. og Fuld fart 5.500 kr." (altid med punktum til sidst). */
 const tierList = (service, unit = '') => {
   const parts = service.tiers.map((t) => `${tierName(t)} ${formatKr(t.price)}${unit}`)
   const s = `${parts.slice(0, -1).join(', ')} og ${parts.at(-1)}`.replace(/^(\S+)/, '$1 koster')
@@ -71,7 +71,7 @@ export const hjemmeside = {
     items: [
       {
         q: 'Hvad koster det?',
-        a: `${tierList(web)} Dertil kommer drift på ${monthlies.map((m) => `${formatKr(m)}/md`).join(' eller ')} alt efter pakke. En ekstra underside koster ${formatKr(web.addons.extraPage.price)}. ${priceNote}`,
+        a: `${tierList(web)} Dertil kommer drift på ${monthlies.map((m) => `${formatKr(m)}/md`).join(' eller ')} alt efter pakke. En ekstra underside koster ${formatKr(web.addons.extraPage.price)} ${web.addons.over8.label} ${web.addons.over8.text.toLowerCase()}. ${priceNote}`,
       },
       {
         q: 'Hvad er inkluderet i drift?',
@@ -79,11 +79,11 @@ export const hjemmeside = {
       },
       {
         q: 'Hvem ejer domænet og siden?',
-        a: `${web.drift.domain} Vil du have siden på din egen konto fra starten, koster det ${formatKr(web.addons.ownAccount.price)} ekstra som engangskøb i stedet for drift. ${web.drift.buyout(formatKr(web.addons.ownAccount.price))}`,
+        a: `${web.drift.domain} Vil du have siden på din egen konto fra starten, koster det ${formatKr(web.addons.ownAccount.price)} ekstra som engangskøb i stedet for drift. ${web.drift.buyout(formatKr(web.drift.buyoutPrice))}`,
       },
       {
         q: 'Hvad hvis jeg vil stoppe?',
-        a: `${web.drift.binding} ${web.drift.buyout(formatKr(web.addons.ownAccount.price))}`,
+        a: `${web.drift.binding} ${web.drift.buyout(formatKr(web.drift.buyoutPrice))}`,
       },
       { q: 'Hvor lang tid tager det?', a: web.leadTime },
       ...startFaq(web),
@@ -118,7 +118,7 @@ export const marketing = {
     title: 'Indhold hver måned. Uden at du skal lave det.',
     items: [
       { title: 'Korte videoer', text: 'Jeg laver korte videoer til dine sociale medier. Antallet står i pakken.' },
-      { title: 'Opslag', text: 'Opslag hver måned ved siden af videoerne.' },
+      { title: 'Opslag', text: 'I Vækst og Fuld fart får du også opslag hver måned.' },
       { title: 'Jeg poster for dig', text: 'I Vækst og Fuld fart lægger jeg indholdet op. I Start poster du selv.' },
       { title: 'Månedsrapport', text: 'I Vækst og Fuld fart får du en rapport hver måned.' },
       { title: 'Meta-annoncer', text: 'I Fuld fart styrer jeg dine annoncer på Meta. Annoncebudgettet betaler du selv.' },
@@ -145,7 +145,7 @@ export const marketing = {
     items: [
       {
         q: 'Hvad er et pilotforløb?',
-        a: `${pilot.weeks} uger gratis med samme omfang som ${tierName({ id: pilot.sameAs })}: ${pilot.scope}. Til gengæld må jeg bruge resultaterne som case, og er du tilfreds, giver du en ærlig udtalelse. Det er uforpligtende, og bagefter kan du fortsætte på ${tierName({ id: pilot.sameAs })}. Jeg har max ${pilot.maxAtOnce} piloter ad gangen.`,
+        a: `${pilot.weeks} uger gratis med ${pilot.scope}. Til gengæld må jeg bruge resultaterne som case, og er du tilfreds, giver du en ærlig udtalelse. Det er uforpligtende, og bagefter kan du fortsætte på ${tierName({ id: pilot.continueOn })}. Jeg har max ${pilot.maxAtOnce} piloter ad gangen.`,
       },
       {
         q: 'Skal jeg selv poste?',
@@ -173,7 +173,7 @@ export const bookingGoogle = {
   service: 'bookingGoogle',
   meta: {
     title: 'Booking & Google-profil til lokale virksomheder | OviaSpecs',
-    description: `Google-profil i orden, online booking og et QR-skilt til anmeldelser. Klare priser fra ${formatKr(bg.tiers[0].price)}. Start med et gratis tjek af din Google-profil.`,
+    description: `Google-profil i orden, online booking og et QR-skilt til anmeldelser. Klare priser fra ${formatKr(bg.tiers[0].price)} Start med et gratis tjek af din Google-profil.`,
   },
   eyebrow: 'Booking & Google',
   title: 'Det første, kunderne ser, er din Google-profil.',
@@ -232,7 +232,7 @@ export const bookingGoogle = {
 export const priser = {
   meta: {
     title: 'Priser og prisberegner | OviaSpecs',
-    description: `Se prisen med det samme. Hjemmeside ${fromPrice(web)}, marketing ${fromPrice(mk)} og booking & Google ${fromPrice(bg)}. Faste pakker, og du skal ikke oplyse noget.`,
+    description: `Se prisen med det samme. Hjemmeside ${fromPrice(web)}, marketing ${fromPrice(mk)} og booking & Google ${fromPrice(bg)} Faste pakker, og du skal ikke oplyse noget.`,
   },
   eyebrow: 'Priser',
   title: 'Hvad koster det?',
