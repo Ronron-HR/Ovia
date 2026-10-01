@@ -8,7 +8,12 @@ import { bookingSubscriptionNote, calculator, components, formatKr, overlap, ser
  * TILSTAND: kun i adresselinjen (?ydelser=hjemmeside,marketing&sider=2-5&…&trin=3),
  * sat med replaceState, så et link med valgene virker, og intet gemmes andre
  * steder. Ingen cookies, intet lager, intet sendes nogen steder hen.
- * Serveren og første klient-render får EMPTY (forudrendering og hydrering er ens).
+ * Serveren og første klient-render får starttilstanden (forudrendering og
+ * hydrering er ens).
+ *
+ * FORVALG: på ydelsessiderne er sidens ydelse valgt på forhånd (`defaults`).
+ * Står der intet `ydelser` i adresselinjen, bruges forvalget; har kunden
+ * fravalgt alt, skrives `ydelser=` (tom), så forvalget ikke kommer tilbage.
  */
 
 /** Ydelsernes rækkefølge i beregneren. */
@@ -18,6 +23,7 @@ const RANK = ['start', 'vaekst', 'fuld-fart']
 const allQuestions = ORDER.flatMap((key) => calculator.questions[key])
 
 export const EMPTY = Object.freeze({ selected: [], answers: {}, step: 0 })
+const NONE = Object.freeze([])
 
 /* ---- Adresselinje ------------------------------------------------------ */
 
@@ -34,9 +40,9 @@ function fit(state) {
   return { ...state, step }
 }
 
-export function parse(search) {
+export function parse(search, defaults = NONE) {
   const q = new URLSearchParams(search)
-  const wanted = (q.get('ydelser') ?? '').split(',')
+  const wanted = q.has('ydelser') ? q.get('ydelser').split(',') : defaults
   const selected = ORDER.filter((k) => wanted.includes(k))
   const answers = {}
   for (const question of allQuestions) {
@@ -46,9 +52,10 @@ export function parse(search) {
   return fit({ selected, answers, step: (Number(q.get('trin')) || 1) - 1 })
 }
 
-export function serialize({ selected, answers, step }) {
+export function serialize({ selected, answers, step }, defaults = NONE) {
   const q = new URLSearchParams()
-  if (selected.length) q.set('ydelser', selected.join(','))
+  const isDefault = selected.join(',') === ORDER.filter((k) => defaults.includes(k)).join(',')
+  if (!isDefault || step > 0 || Object.keys(answers).length) q.set('ydelser', selected.join(','))
   for (const key of selected) {
     for (const question of calculator.questions[key]) {
       if (answers[question.id]) q.set(question.id, answers[question.id])
@@ -62,12 +69,25 @@ export function serialize({ selected, answers, step }) {
 /* ---- Lager (useSyncExternalStore over adresselinjen) ------------------- */
 
 const listeners = new Set()
-let cache = { search: null, state: EMPTY }
+/** Én gemt tilstand pr. forvalg, så useSyncExternalStore får samme objekt igen. */
+const cache = new Map()
 
-function snapshot() {
+function snapshot(defaults) {
+  const key = defaults.join(',')
   const { search } = window.location
-  if (cache.search !== search) cache = { search, state: parse(search) }
-  return cache.state
+  const hit = cache.get(key)
+  if (hit?.search === search) return hit.state
+  const state = parse(search, defaults)
+  cache.set(key, { search, state })
+  return state
+}
+
+const initial = new Map()
+/** Starttilstanden (server og første klient-render): kun forvalget. */
+function initialState(defaults) {
+  const key = defaults.join(',')
+  if (!initial.has(key)) initial.set(key, defaults.length ? fit({ ...EMPTY, selected: ORDER.filter((k) => defaults.includes(k)) }) : EMPTY)
+  return initial.get(key)
 }
 
 function subscribe(fn) {
@@ -79,10 +99,14 @@ function subscribe(fn) {
   }
 }
 
-export function useCalc() {
-  const state = useSyncExternalStore(subscribe, snapshot, () => EMPTY)
+export function useCalc(defaults = NONE) {
+  const state = useSyncExternalStore(
+    subscribe,
+    () => snapshot(defaults),
+    () => initialState(defaults),
+  )
   const set = (next) => {
-    const url = `${window.location.pathname}${serialize(fit(next))}${window.location.hash}`
+    const url = `${window.location.pathname}${serialize(fit(next), defaults)}${window.location.hash}`
     window.history.replaceState(window.history.state, '', url)
     listeners.forEach((fn) => fn())
   }

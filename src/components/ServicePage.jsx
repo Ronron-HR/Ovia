@@ -3,6 +3,7 @@ import { home } from '../data/texts.js'
 import ContactButtons from './ContactButtons.jsx'
 import ContactSection from './ContactSection.jsx'
 import Faq from './Faq.jsx'
+import PriceCalculator from './PriceCalculator.jsx'
 import { Addons, DriftTerms, PackageGrid, PriceNote } from './Packages.jsx'
 import { Arrow } from './Shots.jsx'
 import Steps from './Steps.jsx'
@@ -10,8 +11,8 @@ import Steps from './Steps.jsx'
 /**
  * FÆLLES SKABELON FOR YDELSESSIDERNE
  *
- * Problemet → hvad du får → [ekstra sektion] → 3 pakker → sådan foregår det
- * → FAQ → kontakt. Teksterne står i src/data/services.js, alle priser og
+ * Problemet → prisberegneren (sidens ydelse forvalgt) → hvad du får →
+ * [ekstra sektion] → 3 pakker → sådan foregår det → FAQ → kontakt. Teksterne står i src/data/services.js, alle priser og
  * pakker i src/data/pricing.js. `extra` er sidens egen sektion (koncepter,
  * pilotforløb eller gratis Google-tjek) og står før pakkerne.
  */
@@ -48,6 +49,14 @@ export default function ServicePage({ page, extra = null }) {
               {page.toPackages}
               <Arrow className="rotate-90" />
             </a>
+          </div>
+        </div>
+      </section>
+
+      <section aria-label="Se din pris" className="pb-[var(--space-section)]">
+        <div className="shell">
+          <div data-reveal className="max-w-[880px]">
+            <PriceCalculator defaults={[page.service]} />
           </div>
         </div>
       </section>

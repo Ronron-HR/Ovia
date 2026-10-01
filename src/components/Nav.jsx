@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { contact } from '../data/pricing.js'
-import { links, nav } from '../data/texts.js'
+import { calcHref, links, nav } from '../data/texts.js'
 import { useScrolled } from '../motion/useScrolled.js'
 import ContactButtons, { PhoneIcon } from './ContactButtons.jsx'
 import Logo from './Logo.jsx'
@@ -9,11 +9,12 @@ import { Arrow } from './Shots.jsx'
 /**
  * NAVIGATION
  *
- * Mærke til venstre, fire links og en "Ring"-knap med nummeret til højre.
+ * Mærke til venstre, fire links, "Ring" og "Se din pris" (accent) til højre.
+ * "Se din pris" hopper til prisberegneren på siden (#beregner) eller til /priser/.
  * Den side, man står på, markeres med aria-current="page" og en bronzestreg
  * under ordet.
  *
- * MOBIL (under lg): mærke, en lille "Ring"-knap (altid synlig) og "Menu".
+ * MOBIL (under lg): mærke, "Ring", "Se pris" og "Menu".
  * Overlayet er et SØSKENDE til baren, så et fixed overlay ikke måles mod
  * baren. Menuen lukker med Escape og "Luk"; fokus fanges, mens den er åben,
  * og går tilbage til knappen.
@@ -29,6 +30,7 @@ const bigLink =
 
 export default function Nav({ path }) {
   const scrolled = useScrolled()
+  const price = calcHref(path)
   const [open, setOpen] = useState(false)
 
   const header = useRef(null)
@@ -125,18 +127,28 @@ export default function Nav({ path }) {
               </ul>
             </nav>
 
-            <a href={links.tel} className="btn btn-accent min-h-11 px-5 text-[14px]">
-              <PhoneIcon />
-              <span>
-                {nav.call} <span className="tabular-nums">{contact.phone}</span>
-              </span>
-            </a>
+            <div className="flex items-center gap-2.5">
+              <a href={links.tel} className="btn btn-ghost min-h-11 px-4 text-[14px]" aria-label={`${nav.call} ${contact.phone}`}>
+                <PhoneIcon />
+                <span>
+                  {nav.call}
+                  <span className="hidden tabular-nums xl:inline"> {contact.phone}</span>
+                </span>
+              </a>
+              <a href={price} className="btn btn-accent min-h-11 px-5 text-[14px]">
+                {nav.price}
+              </a>
+            </div>
           </div>
 
-          <div className="flex items-center gap-1 lg:hidden">
-            <a href={links.tel} className="nav-call btn btn-accent min-h-10 px-4 text-[14px]" aria-label={`${nav.call} ${contact.phone}`}>
+          {/* Mobil: Ring og Se pris skjules, mens den faste bundbjælke (med de samme knapper) er synlig. */}
+          <div className="flex items-center gap-1.5 lg:hidden">
+            <a href={links.tel} className="nav-call btn btn-ghost min-h-10 px-3 text-[14px]" aria-label={`${nav.call} ${contact.phone}`}>
               <PhoneIcon />
               {nav.call}
+            </a>
+            <a href={price} className="nav-call btn btn-accent min-h-10 px-3 text-[14px] whitespace-nowrap">
+              {nav.priceShort}
             </a>
             <button
               ref={button}
@@ -180,7 +192,10 @@ export default function Nav({ path }) {
             ))}
           </ul>
 
-          <ContactButtons className="mt-8 flex-col [&>a]:w-full" />
+          <a href={price} onClick={close} className="btn btn-accent mt-8 w-full">
+            {nav.price}
+          </a>
+          <ContactButtons className="mt-3 flex-col [&>a]:w-full" />
         </nav>
       </div>
     </>

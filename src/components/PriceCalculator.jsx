@@ -16,8 +16,8 @@ import ContactButtons from './ContactButtons.jsx'
  * annonceres i en aria-live-region, når resultatet vises. Mangler et svar,
  * står det under knappen, og fokus flyttes til spørgsmålet.
  */
-export default function PriceCalculator() {
-  const [state, set] = useCalc()
+export default function PriceCalculator({ defaults }) {
+  const [state, set] = useCalc(defaults)
   const { selected, answers, step } = state
   const resultStep = selected.length + 1
   const total = selected.length + 2
@@ -77,7 +77,7 @@ export default function PriceCalculator() {
   const totalParts = q ? priceParts(q.total) : null
 
   return (
-    <div data-calc data-callbar-hide className="calc">
+    <div id="beregner" data-calc data-callbar-hide className="calc @container">
       {/* Annonceres for skærmlæsere, når prisen vises. */}
       <p className="sr-only" aria-live="polite">
         {isResult ? `Din pris: ${sentence(priceText(q.total))} ${calculator.finalNote}.` : ''}
@@ -107,7 +107,7 @@ export default function PriceCalculator() {
                 </h2>
                 <span className="t-body mt-2 block text-[15px]">{calculator.servicesHint}</span>
               </legend>
-              <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-3">
+              <div className="mt-6 grid grid-cols-1 gap-3 @2xl:grid-cols-3">
                 {ORDER.map((key) => (
                   <label key={key} className="choice">
                     <input
@@ -139,7 +139,7 @@ export default function PriceCalculator() {
               {calculator.questions[service].map((question) => (
                 <fieldset key={question.id} className="mt-7">
                   <legend className="text-[17px] leading-snug font-medium">{question.label}</legend>
-                  <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                  <div className="mt-3 grid grid-cols-1 gap-2.5 @md:grid-cols-2">
                     {question.options.map((o) => (
                       <label key={o.id} className="choice">
                         <input
@@ -199,7 +199,7 @@ export default function PriceCalculator() {
           <ul className="mt-6 border-t border-rule">
             {q.lines.map((l) => (
               <li key={l.key} className="border-b border-rule py-4">
-                <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6">
+                <div className="flex flex-col gap-1 @md:flex-row @md:items-baseline @md:justify-between @md:gap-6">
                   <p className="text-[16px] font-medium">
                     {l.service.name}: {tierName(l.tier)}
                   </p>
@@ -253,7 +253,7 @@ export default function PriceCalculator() {
               type="button"
               onClick={() => {
                 moved.current = true
-                set({ selected: [], answers: {}, step: 0 })
+                set({ selected: [...(defaults ?? [])], answers: {}, step: 0 })
               }}
               className="calc-link"
             >
