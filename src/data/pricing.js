@@ -22,8 +22,10 @@ export const contact = {
 
 /* ---- Virksomhed -------------------------------------------------------- */
 export const company = {
-  /** Skriv CVR-nummeret her (fx '12345678'), så vises det i footeren. null = skjult. */
+  /** Skriv CVR-nummeret her (fx '12345678'). null = skjult. */
   cvr: null,
+  /** Adresse (fx 'Gade 1, 8000 Aarhus C'). Tom = skjult. Vises først i footeren, når både CVR og adresse er udfyldt. */
+  address: '',
 }
 
 /* ---- Fælles tekster og flag -------------------------------------------- */
