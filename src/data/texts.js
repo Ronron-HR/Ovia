@@ -64,11 +64,9 @@ export const cta = {
 
 export const home = {
   hero: {
-    eyebrow: 'Til lokale virksomheder',
     title: 'Jeg sørger for, at kunderne finder dig online og har let ved at tage kontakt.',
-    lead: 'Hjemmeside, Google-profil, booking og korte videoer. Du får klare priser, og det er mig, der laver arbejdet.',
-    who: `Du taler med mig, ${contact.name.split(' ')[0]}. Hele vejen.`,
-    prices: { label: 'Se alle pakker', href: `${paths.priser}#pakker` },
+    /** Den ene korte linje under overskriften. */
+    short: 'Hjemmeside, Google-profil, booking og korte videoer. Se din pris med det samme.',
   },
 
   cards: {
