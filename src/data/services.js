@@ -10,7 +10,7 @@ import { bookingSubscriptionNote, contact, formatKr, fromPrice, paidStartText, p
 import { paths } from './texts.js'
 
 const web = services.hjemmeside
-/** "Start koster 2.500 kr., Vækst 4.000 kr. og Fuld fart 5.500 kr." (altid med punktum til sidst). */
+/** "Start koster X kr., Vækst Y kr. og Fuld fart Z kr." ud fra pricing.js (altid med punktum til sidst). */
 const tierList = (service, unit = '') => {
   const parts = service.tiers.map((t) => `${tierName(t)} ${formatKr(t.price)}${unit}`)
   const s = `${parts.slice(0, -1).join(', ')} og ${parts.at(-1)}`.replace(/^(\S+)/, '$1 koster')
@@ -196,7 +196,7 @@ export const bookingGoogle = {
   },
   check: {
     eyebrow: 'Start her',
-    priceLabel: '0 kr.',
+    priceLabel: formatKr(bg.freeCheck.price),
     mailSubject: 'Gratis tjek af min Google-profil',
     smsText: 'Hej Ronny. Vil du tjekke min Google-profil?',
   },

@@ -204,7 +204,7 @@ function partList(ids) {
  * Komponenter tælles kun én gang: de dele af Booking & Google, der allerede er
  * med i den valgte hjemmesidepakke (`includes` i pricing.js), trækkes fra
  * Booking & Google-prisen, og noten siger, hvad og hvorfor. Prisen bliver
- * aldrig negativ: er hele pakken dækket, koster den 0 kr., linjen får
+ * aldrig negativ: er hele pakken dækket, koster den ingenting, linjen får
  * `allIncluded`, og intet lægges til totalen.
  */
 function applyOverlap(web, bg) {
@@ -236,7 +236,7 @@ export function quote({ selected, answers }) {
   }
 }
 
-/** Engangsdelen og månedsdelen hver for sig: { once: "4.000 kr.", month: "300 kr./md" }. 0 = tom. */
+/** Engangsdelen og månedsdelen hver for sig som tekst (formatKr); et beløb på 0 giver tom tekst. */
 export function priceParts({ once, monthly }) {
   return {
     once: once ? formatKr(once) : '',
@@ -245,8 +245,8 @@ export function priceParts({ once, monthly }) {
 }
 
 /**
- * En linjes pris: "4.000 kr. + 300 kr./md", "2.500 kr./md" eller "500 kr.".
- * Egen konto: "5.000 kr. i alt — ingen månedlig drift". En Booking & Google-
+ * En linjes pris: engangsbeløb + månedsbeløb, kun månedsbeløb eller kun
+ * engangsbeløb. Egen konto: beløbet + calculator.noDriftSuffix. En Booking & Google-
  * linje, der er helt dækket af hjemmesiden, får overlap.allIncluded.
  */
 export function priceText(price) {
@@ -256,7 +256,7 @@ export function priceText(price) {
   return once && month ? `${once} + ${month}` : once || month
 }
 
-/** Totalen: "5.000 kr. nu + 300 kr./md" (et beløb på 0 udelades). */
+/** Totalen: engangsbeløbet + calculator.nowLabel og månedsbeløbet (et beløb på 0 udelades). */
 export function totalText(total) {
   const { once, month } = priceParts(total)
   return [once && `${once} ${calculator.nowLabel}`, month].filter(Boolean).join(' + ')
