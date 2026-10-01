@@ -89,6 +89,7 @@ export default function ServicePage({ page, extra = null }) {
             <PackageGrid service={service} />
           </div>
           <Addons service={service} />
+          {page.packages.note && <p className="mt-5 text-[15px] text-ink">{page.packages.note}</p>}
           <PriceNote className="mt-5" />
           {service.drift && <DriftTerms service={service} className="mt-10" />}
           <a href={page.toCalculator.href} className="btn btn-ghost mt-8">

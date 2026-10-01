@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import { calculator, formatKr, services, tierName } from './data/pricing.js'
+import { bookingSubscriptionNote, calculator, formatKr, services, tierName } from './data/pricing.js'
 
 /**
  * PRISBEREGNERENS LOGIK — tilstand, pakkevalg, interval og opsummering.
@@ -141,7 +141,7 @@ export function quote({ selected, answers }) {
   }
   return {
     lines,
-    notes: [],
+    notes: webHasBooking || bgHasBooking ? [bookingSubscriptionNote] : [],
     total: {
       low: lines.reduce((s, l) => s + l.low, 0),
       high: lines.reduce((s, l) => s + l.high, 0),

@@ -6,7 +6,7 @@
    ingen løfter om flere kunder eller mere salg. Lov kun det, der leveres.
    ========================================================================= */
 
-import { contact, formatKr, fromPrice, paidStartText, priceNote, services, tierName } from './pricing.js'
+import { bookingSubscriptionNote, contact, formatKr, fromPrice, paidStartText, priceNote, services, tierName } from './pricing.js'
 import { paths } from './texts.js'
 
 const web = services.hjemmeside
@@ -200,6 +200,7 @@ export const bookingGoogle = {
   packages: {
     eyebrow: 'Pakker',
     title: 'Tre pakker. Du betaler én gang.',
+    note: bookingSubscriptionNote,
   },
   toCalculator,
   faq: {
@@ -208,7 +209,7 @@ export const bookingGoogle = {
     items: [
       {
         q: 'Hvilke bookingsystemer kan du koble på?',
-        a: 'Fx Planway, Booksy eller det system, du allerede bruger. Bookingsystemerne er lavet af andre firmaer, så jeg kan ikke give garanti for dem.',
+        a: `Fx Planway, Booksy eller det system, du allerede bruger. Bookingsystemerne er lavet af andre firmaer, så jeg kan ikke give garanti for dem. ${bookingSubscriptionNote}`,
       },
       {
         q: 'Kan du skaffe mig anmeldelser?',

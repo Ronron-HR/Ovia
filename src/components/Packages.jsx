@@ -48,6 +48,7 @@ export function PackageCard({ service, tier, headingLevel = 3 }) {
           <li key={f}>{f}</li>
         ))}
       </ul>
+      {tier.note && <p className="t-body mt-4 text-[14px]">{tier.note}</p>}
     </article>
   )
 }

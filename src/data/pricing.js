@@ -43,6 +43,10 @@ export const recommendedTier = 'vaekst'
 /** Navnene på de tre pakker (bruges af alle ydelser). */
 export const tierNames = { start: 'Start', vaekst: 'Vækst', 'fuld-fart': 'Fuld fart' }
 
+/** Vises på /booking-google/, ved Hjemmeside Fuld fart og i beregneren, når booking er valgt. */
+export const bookingSubscriptionNote =
+  'Abonnementet på bookingsystemet (fx Planway eller Booksy) betaler du selv direkte til udbyderen.'
+
 export const flags = {
   /** false: marketingsiden viser "Pilotforløb" i stedet for cases. */
   hasMarketingCases: false,
@@ -80,6 +84,8 @@ export const services = {
         price: 8500,
         monthly: 600,
         monthlyNote: 'ændringer laves inden 2 hverdage',
+        /** Lille note nederst på pakkekortet. */
+        note: bookingSubscriptionNote,
         summary: 'Hele pakken, med booking eller bestilling.',
         features: [
           'Op til 8 sider',
