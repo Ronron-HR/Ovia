@@ -91,3 +91,73 @@ export const hjemmeside = {
     body: 'Ring eller skriv, så tager vi en snak om, hvad din side skal kunne.',
   },
 }
+
+/* ---- Marketing --------------------------------------------------------- */
+
+const mk = services.marketing
+const pilot = mk.pilot
+
+export const marketing = {
+  service: 'marketing',
+  meta: {
+    title: 'Marketing: korte videoer og opslag | OviaSpecs',
+    description: `Korte videoer og opslag til dine sociale medier hver måned. Tre faste pakker fra ${formatKr(mk.tiers[0].price)}/md. Ingen binding. Ring ${contact.phone}.`,
+  },
+  eyebrow: 'Marketing',
+  title: 'Korte videoer er det, folk ser.',
+  problem: [
+    'Men det tager tid at filme, klippe og lægge dem op, når du også skal passe din forretning.',
+    'Jeg laver videoerne og opslagene for dig hver måned.',
+  ],
+  toPackages: 'Se pakker og priser',
+  get: {
+    eyebrow: 'Det får du',
+    title: 'Indhold hver måned. Uden at du skal lave det.',
+    items: [
+      { title: 'Korte videoer', text: 'Jeg laver korte videoer til dine sociale medier. Antallet står i pakken.' },
+      { title: 'Opslag', text: 'Opslag hver måned ved siden af videoerne.' },
+      { title: 'Jeg poster for dig', text: 'I Vækst og Fuld fart lægger jeg indholdet op. I Start poster du selv.' },
+      { title: 'Månedsrapport', text: 'I Vækst og Fuld fart får du en rapport hver måned.' },
+      { title: 'Meta-annoncer', text: 'I Fuld fart styrer jeg dine annoncer på Meta. Annoncebudgettet betaler du selv.' },
+      { title: 'Ingen binding', text: mk.binding },
+    ],
+  },
+  pilot: {
+    eyebrow: 'Pilotforløb',
+    title: `Prøv det gratis i ${pilot.weeks} uger.`,
+    intro: 'Jeg har ingen marketingcases at vise endnu. Derfor tilbyder jeg et pilotforløb i stedet for at fortælle om resultater, jeg ikke har.',
+    termsTitle: 'Sådan fungerer piloten',
+    mailSubject: 'Pilotforløb (marketing)',
+    smsText: 'Hej Ronny. Jeg er interesseret i et pilotforløb med marketing.',
+  },
+  packages: {
+    eyebrow: 'Pakker',
+    title: 'Tre pakker. Fast pris hver måned.',
+    intro: mk.binding,
+  },
+  toCalculator,
+  faq: {
+    eyebrow: 'Spørgsmål',
+    title: 'Det, du sikkert vil vide.',
+    items: [
+      {
+        q: 'Hvad er et pilotforløb?',
+        a: `${pilot.weeks} uger gratis med samme omfang som ${tierName({ id: pilot.sameAs })}: ${pilot.scope}. Til gengæld må jeg bruge resultaterne som case, og er du tilfreds, giver du en ærlig udtalelse. Det er uforpligtende, og bagefter kan du fortsætte på ${tierName({ id: pilot.sameAs })}. Jeg har max ${pilot.maxAtOnce} piloter ad gangen.`,
+      },
+      {
+        q: 'Skal jeg selv poste?',
+        a: 'I Start poster du selv. I Vækst og Fuld fart lægger jeg indholdet op for dig. Hvor mange kanaler, står i pakken.',
+      },
+      {
+        q: 'Hvem betaler annoncerne?',
+        a: 'Du betaler selv annoncebudgettet direkte til Meta. I Fuld fart styrer jeg annoncerne, og det er med i månedsprisen.',
+      },
+      { q: 'Er der binding?', a: mk.binding },
+      ...startFaq,
+    ],
+  },
+  contact: {
+    title: 'Skal vi tale om dine videoer?',
+    body: 'Ring eller skriv, så finder vi ud af, om en pilot eller en pakke passer til dig.',
+  },
+}

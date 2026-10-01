@@ -1,6 +1,13 @@
 import ConceptGrid from '../components/ConceptGrid.jsx'
+import PilotSection from '../components/PilotSection.jsx'
 import ServicePage from '../components/ServicePage.jsx'
-import { hjemmeside as web } from '../data/services.js'
+import { flags } from '../data/pricing.js'
+import { hjemmeside as web, marketing as mk } from '../data/services.js'
 
 /** Ydelsessiderne deler skabelon og ét modul (én fil at hente). */
 export const hjemmeside = () => <ServicePage page={web} extra={<ConceptGrid {...web.concepts} />} />
+
+/** Så længe der ikke er marketingcases (flags.hasMarketingCases), vises pilotforløbet. */
+export const marketing = () => (
+  <ServicePage page={mk} extra={flags.hasMarketingCases ? null : <PilotSection text={mk.pilot} />} />
+)

@@ -18,6 +18,7 @@ import * as service from './pages/Service.jsx'
 export const pages = {
   home: Home,
   hjemmeside: service.hjemmeside,
+  marketing: service.marketing,
   hjemmesider: services.hjemmesider,
   booking: services.booking,
   seo: services.seo,

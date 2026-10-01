@@ -25,6 +25,12 @@ export const routes = [
     description: pages.hjemmeside.meta.description,
   },
   {
+    path: newPaths.marketing,
+    page: 'marketing',
+    title: pages.marketing.meta.title,
+    description: pages.marketing.meta.description,
+  },
+  {
     path: paths.hjemmesider,
     page: 'hjemmesider',
     title: services.hjemmesider.metaTitle,

@@ -9,6 +9,7 @@ import { demos } from './content.demos.js'
 export const pageKeyByPath = {
   '/': 'home',
   '/hjemmeside/': 'hjemmeside',
+  '/marketing/': 'marketing',
   '/hjemmesider/': 'hjemmesider',
   '/booking-integrationer/': 'booking',
   '/seo/': 'seo',
@@ -26,6 +27,7 @@ export const pageKeyByPath = {
 export const pageFiles = {
   home: 'src/pages/Home.jsx',
   hjemmeside: 'src/pages/Service.jsx',
+  marketing: 'src/pages/Service.jsx',
   hjemmesider: 'src/pages/Services.jsx',
   booking: 'src/pages/Services.jsx',
   seo: 'src/pages/Services.jsx',
