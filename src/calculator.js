@@ -25,19 +25,63 @@ const allQuestions = ORDER.flatMap((key) => calculator.questions[key])
 export const EMPTY = Object.freeze({ selected: [], answers: {}, step: 0 })
 const NONE = Object.freeze([])
 
+/* ---- Spørgsmål, der vises, og svar, der må vælges ----------------------- */
+
+/** Spørgsmålene for en ydelse, der vises med de givne svar (`showIf` i pricing.js). */
+export function visibleQuestions(key, answers) {
+  return calculator.questions[key].filter(
+    (q) => !q.showIf || Object.entries(q.showIf).every(([id, v]) => answers[id] === v),
+  )
+}
+
+const optionOf = (q, answers) => q.options.find((o) => o.id === answers[q.id])
+
+/**
+ * Pakken, svarene peger på: den højeste `tier` blandt de valgte svar. Svar med
+ * `onlyTiers` (fx egen konto) bestemmer ikke pakken, de begrænses af den.
+ */
+export function tierFor(key, answers) {
+  const tiers = visibleQuestions(key, answers)
+    .map((q) => optionOf(q, answers))
+    .filter((o) => o && o.tier)
+    .map((o) => RANK.indexOf(o.tier))
+  return RANK[Math.max(0, ...tiers)]
+}
+
+/** Må svaret vælges med den pakke, de øvrige svar peger på? */
+export const allowed = (option, tierId) => !option.onlyTiers || option.onlyTiers.includes(tierId)
+
+/** Fjerner svar på skjulte spørgsmål og svar, der ikke er tilladt med pakken. */
+export function cleanAnswers(answers) {
+  const out = { ...answers }
+  for (const key of ORDER) {
+    const visible = visibleQuestions(key, out)
+    for (const q of calculator.questions[key]) {
+      if (!visible.includes(q)) delete out[q.id]
+    }
+    const tier = tierFor(key, out)
+    for (const q of visible) {
+      const o = optionOf(q, out)
+      if (o && !allowed(o, tier)) delete out[q.id]
+    }
+  }
+  return out
+}
+
 /* ---- Adresselinje ------------------------------------------------------ */
 
 /** Trinnet må ikke vise noget, der kræver svar, som mangler. */
 function fit(state) {
-  const { selected, answers } = state
+  const { selected } = state
+  const answers = cleanAnswers(state.answers)
   const last = selected.length + 1 // resultatet
   let step = Math.min(Math.max(0, state.step), last)
-  if (!selected.length) return { ...state, step: 0 }
+  if (!selected.length) return { ...state, answers, step: 0 }
   for (let i = 0; i < selected.length && step > i + 1; i++) {
-    const missing = calculator.questions[selected[i]].some((q) => !answers[q.id])
+    const missing = visibleQuestions(selected[i], answers).some((q) => !answers[q.id])
     if (missing) step = i + 1
   }
-  return { ...state, step }
+  return { ...state, answers, step }
 }
 
 export function parse(search, defaults = NONE) {
@@ -57,7 +101,7 @@ export function serialize({ selected, answers, step }, defaults = NONE) {
   const isDefault = selected.join(',') === ORDER.filter((k) => defaults.includes(k)).join(',')
   if (!isDefault || step > 0 || Object.keys(answers).length) q.set('ydelser', selected.join(','))
   for (const key of selected) {
-    for (const question of calculator.questions[key]) {
+    for (const question of visibleQuestions(key, answers)) {
       if (answers[question.id]) q.set(question.id, answers[question.id])
     }
   }
@@ -115,23 +159,18 @@ export function useCalc(defaults = NONE) {
 
 /* ---- Beregning ---------------------------------------------------------- */
 
-/** Pris for én ydelse ud fra svarene. */
+/**
+ * Pris for én ydelse ud fra svarene. Alle priser er faste: `once` er det, der
+ * betales nu (pakke + tilvalg), `monthly` det, der betales pr. måned.
+ */
 function line(key, answers) {
   const service = services[key]
-  const chosen = calculator.questions[key].map((q) => ({
-    question: q,
-    option: q.options.find((o) => o.id === answers[q.id]),
-  }))
-  const options = chosen.map((c) => c.option).filter(Boolean)
-  const tierId = RANK[Math.max(0, ...options.map((o) => RANK.indexOf(o.tier)))]
+  const tierId = tierFor(key, answers)
   const tier = service.tiers.find((t) => t.id === tierId)
-
+  const chosen = visibleQuestions(key, answers).map((q) => ({ question: q, option: optionOf(q, answers) }))
+  // Svar, der ikke er tilladt med pakken (fx egen konto til Fuld fart), tæller ikke.
+  const options = chosen.map((c) => c.option).filter((o) => o && allowed(o, tierId))
   const notes = options.map((o) => o.note).filter(Boolean)
-
-  // Prisen aftales (fx flere end 8 sider): ingen beløb, kun en note.
-  if (options.some((o) => o.custom)) {
-    return { key, service, tier, chosen, low: 0, high: 0, monthly: 0, packageHigh: 0, custom: true, notes: [...notes, calculator.customNote] }
-  }
 
   let once = 0
   let monthly = 0
@@ -139,24 +178,19 @@ function line(key, answers) {
   if (service.billing === 'monthly') {
     monthly = tier.price
   } else {
-    // Tilvalg (fx egen konto) lægges i prisen: resultatet viser det, kunden reelt betaler.
-    once = tier.price + options.reduce((sum, o) => sum + (o.addon ? service.addons[o.addon].price : 0), 0)
+    once = tier.price
+    for (const o of options) {
+      if (o.addon) once += service.addons[o.addon].price
+      if (o.extraPages) {
+        const page = service.addons.extraPage
+        once += o.extraPages * page.price
+        notes.push(calculator.extraPagesNote(o.extraPages, formatKr(page.price)))
+      }
+    }
     noDrift = options.some((o) => o.noDrift)
     monthly = noDrift ? 0 : (tier.monthly ?? 0)
   }
-  return {
-    key,
-    service,
-    tier,
-    chosen,
-    low: once,
-    high: once ? once + service.buffer : 0,
-    monthly,
-    noDrift,
-    /** Pakkeprisen + buffer uden tilvalg (loftet i scripts/test-pricing.mjs). */
-    packageHigh: service.billing === 'once' ? tier.price + service.buffer : 0,
-    notes,
-  }
+  return { key, service, tier, chosen, once, monthly, noDrift, notes }
 }
 
 /** "Google-profil", "Google-profil og booking", "Google-profil, booking og …" med stort forbogstav. */
@@ -169,28 +203,24 @@ function partList(ids) {
 /**
  * Komponenter tælles kun én gang: de dele af Booking & Google, der allerede er
  * med i den valgte hjemmesidepakke (`includes` i pricing.js), trækkes fra
- * Booking & Google-prisen, og noten nævner hvilke. Er hele pakken dækket,
- * bliver prisen 0, linjen får `allIncluded`, og intet lægges til totalen.
+ * Booking & Google-prisen, og noten siger, hvad og hvorfor. Prisen bliver
+ * aldrig negativ: er hele pakken dækket, koster den 0 kr., linjen får
+ * `allIncluded`, og intet lægges til totalen.
  */
 function applyOverlap(web, bg) {
   if (!web || !bg) return
   const shared = bg.tier.includes.filter((id) => web.tier.includes.includes(id))
   if (!shared.length) return
-  const amount = shared.reduce((sum, id) => sum + components[id].price, 0)
-  bg.notes.push(overlap.note(partList(shared), tierName(web.tier)))
-  if (amount >= bg.low) {
-    bg.low = 0
-    bg.high = 0
-    bg.allIncluded = true
-  } else {
-    bg.low -= amount
-    bg.high -= amount
-  }
+  const amount = Math.min(bg.once, shared.reduce((sum, id) => sum + components[id].price, 0))
+  bg.notes.push(overlap.note(partList(shared), formatKr(amount), tierName(web.tier)))
+  bg.once = Math.max(0, bg.once - amount)
+  if (bg.once === 0) bg.allIncluded = true
 }
 
 /** Hele tilbuddet: én linje pr. valgt ydelse, en samlet pris og fælles noter. */
 export function quote({ selected, answers }) {
-  const lines = selected.map((key) => line(key, answers))
+  const clean = cleanAnswers(answers)
+  const lines = selected.map((key) => line(key, clean))
   const web = lines.find((l) => l.key === 'hjemmeside')
   const bg = lines.find((l) => l.key === 'bookingGoogle')
   applyOverlap(web, bg)
@@ -199,39 +229,37 @@ export function quote({ selected, answers }) {
     lines,
     notes: hasBooking ? [bookingSubscriptionNote] : [],
     total: {
-      low: lines.reduce((s, l) => s + l.low, 0),
-      high: lines.reduce((s, l) => s + l.high, 0),
+      once: lines.reduce((s, l) => s + l.once, 0),
       monthly: lines.reduce((s, l) => s + l.monthly, 0),
-      custom: lines.some((l) => l.custom),
       noDrift: lines.some((l) => l.noDrift),
     },
   }
 }
 
-const plain = (n) => formatKr(n).replace(' kr.', '')
-
-/** Engangsdelen og månedsdelen hver for sig: { once: "4.000 kr.", month: "300 kr./md" }. "ca. X–Y" kun ved buffer over 0. */
-export function priceParts({ low, high, monthly }) {
+/** Engangsdelen og månedsdelen hver for sig: { once: "4.000 kr.", month: "300 kr./md" }. 0 = tom. */
+export function priceParts({ once, monthly }) {
   return {
-    once: low ? (high > low ? `ca. ${plain(low)}–${formatKr(high)}` : formatKr(low)) : '',
+    once: once ? formatKr(once) : '',
     month: monthly ? `${formatKr(monthly)}/md` : '',
   }
 }
 
 /**
- * "4.000 kr. + 300 kr./md", "2.500 kr./md" eller "500 kr."
- * En linje, der er helt dækket af hjemmesidepakken, får overlap.allIncluded,
- * og en pris, der aftales, får calculator.customPrice (i totalen tilføjes
- * calculator.customTotal).
+ * En linjes pris: "4.000 kr. + 300 kr./md", "2.500 kr./md" eller "500 kr.".
+ * Egen konto: "5.000 kr. i alt — ingen månedlig drift". En Booking & Google-
+ * linje, der er helt dækket af hjemmesiden, får overlap.allIncluded.
  */
 export function priceText(price) {
   if (price.allIncluded) return overlap.allIncluded
   const { once, month } = priceParts(price)
-  let base = once && month ? `${once} + ${month}` : once || month
-  // Egen konto: "6.500 kr. i alt — ingen månedlig drift".
-  if (price.noDrift && once && !month) base = `${once} ${calculator.noDriftSuffix}`
-  if (price.custom) return base ? `${base} + ${calculator.customTotal}` : calculator.customPrice
-  return base
+  if (price.noDrift && once && !month) return `${once} ${calculator.noDriftSuffix}`
+  return once && month ? `${once} + ${month}` : once || month
+}
+
+/** Totalen: "5.000 kr. nu + 300 kr./md" (et beløb på 0 udelades). */
+export function totalText(total) {
+  const { once, month } = priceParts(total)
+  return [once && `${once} ${calculator.nowLabel}`, month].filter(Boolean).join(' + ')
 }
 
 /** Opsummering til SMS og mail. */
@@ -243,7 +271,7 @@ export function summaryLines(q) {
       .join('; ')
     return `${l.service.name}, ${tierName(l.tier)}: ${priceText(l)} (${answers})`
   })
-  if (q.lines.length > 1) out.push(`I alt: ${priceText(q.total)}`)
+  out.push(`I alt: ${totalText(q.total)}`)
   return out
 }
 
@@ -266,7 +294,7 @@ export function mailBody(q) {
     ...summaryLines(q).map((s) => `- ${s}`),
     '',
     ...allNotes(q).map((n) => sentence(n)),
-    `${calculator.finalNote}.`,
+    ...(calculator.finalNote ? [sentence(calculator.finalNote)] : []),
     '',
     ...calculator.mailOutro,
   ].join('\n')

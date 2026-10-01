@@ -1,5 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
-import { ORDER, mailBody, priceParts, priceText, quote, sentence, smsBody, useCalc } from '../calculator.js'
+import {
+  ORDER,
+  allowed,
+  mailBody,
+  priceParts,
+  priceText,
+  quote,
+  smsBody,
+  tierFor,
+  totalText,
+  useCalc,
+  visibleQuestions,
+} from '../calculator.js'
 import { calculator, flags, fromPrice, introText, priceNote, services, tierName } from '../data/pricing.js'
 import ContactButtons from './ContactButtons.jsx'
 
@@ -14,7 +26,9 @@ import ContactButtons from './ContactButtons.jsx'
  * TILGÆNGELIGHED: almindelige checkbokse og radioknapper i fieldsets (piletaster
  * og mellemrum virker), overskriften får fokus ved hvert nyt trin, og prisen
  * annonceres i en aria-live-region, når resultatet vises. Mangler et svar,
- * står det under knappen, og fokus flyttes til spørgsmålet.
+ * står det under knappen, og fokus flyttes til spørgsmålet. Svar, der ikke kan
+ * vælges med pakken (fx egen konto til Fuld fart), er deaktiveret med en
+ * forklaring. "Hvor mange sider i alt?" er en almindelig <select>.
  */
 export default function PriceCalculator({ defaults }) {
   const [state, set] = useCalc(defaults)
@@ -63,10 +77,10 @@ export default function PriceCalculator({ defaults }) {
       return
     }
     if (service) {
-      const open = calculator.questions[service].find((q) => !answers[q.id])
+      const open = visibleQuestions(service, answers).find((q) => !answers[q.id])
       if (open) {
         setMissing(`Svar på: ${open.label}`)
-        form.current?.querySelector(`input[name="${open.id}"]`)?.focus()
+        form.current?.querySelector(`[name="${open.id}"]:not(:disabled)`)?.focus()
         return
       }
     }
@@ -80,7 +94,7 @@ export default function PriceCalculator({ defaults }) {
     <div id="beregner" data-calc data-callbar-hide className="calc @container">
       {/* Annonceres for skærmlæsere, når prisen vises. */}
       <p className="sr-only" aria-live="polite">
-        {isResult ? `Din pris: ${sentence(priceText(q.total))} ${calculator.finalNote}.` : ''}
+        {isResult ? `Din pris: ${totalText(q.total)}.${calculator.finalNote ? ` ${calculator.finalNote}.` : ''}` : ''}
       </p>
 
       <div className="flex items-center justify-between gap-4">
@@ -136,29 +150,60 @@ export default function PriceCalculator({ defaults }) {
               <h2 ref={heading} tabIndex={-1} className="t-display t-h3 outline-none">
                 {services[service].name}
               </h2>
-              {calculator.questions[service].map((question) => (
-                <fieldset key={question.id} className="mt-7">
-                  <legend className="text-[17px] leading-snug font-medium">{question.label}</legend>
-                  <div className="mt-3 grid grid-cols-1 gap-2.5 @md:grid-cols-2">
-                    {question.options.map((o) => (
-                      <label key={o.id} className="choice">
-                        <input
-                          type="radio"
-                          name={question.id}
-                          value={o.id}
-                          checked={answers[question.id] === o.id}
-                          onChange={() => answer(question.id, o.id)}
-                          className="choice-input"
-                        />
-                        <span className="choice-box">
-                          <span className="choice-mark choice-mark-radio" aria-hidden="true" />
-                          <span className="text-[16px]">{o.label}</span>
-                        </span>
-                      </label>
-                    ))}
+              {visibleQuestions(service, answers).map((question) =>
+                question.kind === 'select' ? (
+                  <div key={question.id} className="mt-7">
+                    <label htmlFor={`calc-${question.id}`} className="block text-[17px] leading-snug font-medium">
+                      {question.label}
+                    </label>
+                    <select
+                      id={`calc-${question.id}`}
+                      name={question.id}
+                      value={answers[question.id] ?? ''}
+                      onChange={(e) => answer(question.id, e.target.value)}
+                      className="calc-select mt-3"
+                    >
+                      <option value="" disabled>
+                        {question.placeholder}
+                      </option>
+                      {question.options.map((o) => (
+                        <option key={o.id} value={o.id}>
+                          {o.label}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                </fieldset>
-              ))}
+                ) : (
+                  <fieldset key={question.id} className="mt-7">
+                    <legend className="text-[17px] leading-snug font-medium">{question.label}</legend>
+                    <div className="mt-3 grid grid-cols-1 gap-2.5 @md:grid-cols-2">
+                      {question.options.map((o) => {
+                        const off = !allowed(o, tierFor(service, answers))
+                        return (
+                          <label key={o.id} className="choice" data-disabled={off || undefined}>
+                            <input
+                              type="radio"
+                              name={question.id}
+                              value={o.id}
+                              checked={answers[question.id] === o.id}
+                              disabled={off}
+                              onChange={() => answer(question.id, o.id)}
+                              className="choice-input"
+                            />
+                            <span className="choice-box">
+                              <span className="choice-mark choice-mark-radio" aria-hidden="true" />
+                              <span>
+                                <span className="block text-[16px]">{o.label}</span>
+                                {off && o.disabledNote && <span className="t-body block text-[14px]">{o.disabledNote}</span>}
+                              </span>
+                            </span>
+                          </label>
+                        )
+                      })}
+                    </div>
+                  </fieldset>
+                ),
+              )}
             </div>
           )}
 
@@ -179,24 +224,28 @@ export default function PriceCalculator({ defaults }) {
             Din pris
           </h2>
           {introText && <p className="badge mt-3">{introText}</p>}
-          <p className="mt-4 text-[clamp(1.75rem,5vw,2.5rem)] leading-tight font-medium tracking-tight tabular-nums">
-            {/* Stor linje: engangsbeløbet (eller månedsprisen). Resten står hver på en mindre linje. */}
-            {totalParts.once || totalParts.month || calculator.customPrice}
-            {[
-              ...(q.total.noDrift && totalParts.once && !totalParts.month ? [calculator.noDriftSuffix] : []),
-              ...(totalParts.once && totalParts.month ? [`+ ${totalParts.month}`] : []),
-              ...(q.total.custom && (totalParts.once || totalParts.month) ? [`+ ${calculator.customTotal}`] : []),
-              ...(q.total.noDrift && totalParts.month ? [calculator.noDriftWithMonthly] : []),
-            ].map((part) => (
-              <span key={part} className="mt-1 block text-[clamp(1.25rem,3vw,1.5rem)] text-muted">
-                {part}
+          {/* Totalen: "X kr. nu" og "Y kr./md" hver for sig; et beløb på 0 vises ikke. */}
+          <p className="mt-4 leading-tight font-medium tracking-tight tabular-nums">
+            {totalParts.once && (
+              <span className="block text-[clamp(1.75rem,5vw,2.5rem)]">
+                {totalParts.once} {calculator.nowLabel}
               </span>
-            ))}
+            )}
+            {totalParts.month && (
+              <span className={`block ${totalParts.once ? 'mt-1 text-[clamp(1.375rem,3.5vw,1.75rem)]' : 'text-[clamp(1.75rem,5vw,2.5rem)]'}`}>
+                {totalParts.month}
+              </span>
+            )}
+            {q.total.noDrift && (
+              <span className="mt-1 block text-[16px] font-normal tracking-normal text-muted">
+                {totalParts.month ? calculator.noDriftWithMonthly : calculator.noDriftTotal}
+              </span>
+            )}
           </p>
           {q.total.noDrift && calculator.ownAccountNote && (
             <p className="mt-3 max-w-[52ch] text-[15px] text-ink">{calculator.ownAccountNote}</p>
           )}
-          <p className="mt-2 text-[16px] font-medium">{calculator.finalNote}</p>
+          {calculator.finalNote && <p className="mt-2 text-[16px] font-medium">{calculator.finalNote}</p>}
           {priceNote && <p className="t-body mt-1 text-[14px]">{priceNote}</p>}
 
           <ul className="mt-6 border-t border-rule">

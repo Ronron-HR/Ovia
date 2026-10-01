@@ -36,8 +36,11 @@ export const priceNote = 'Alle priser er ekskl. moms.'
 /** Mærke ved pakkerne og i beregneren. Tom = skjult. */
 export const introText = 'Introduktionspriser'
 
-/** Højeste pakkepris for en hjemmeside (tjekkes af scripts/test-pricing.mjs). */
-export const maxWebsitePackage = 6000
+/**
+ * Højeste pris for en hjemmeside uden integrationer (Start/Vækst, evt. med egen
+ * konto). Tjekkes af scripts/test-pricing.mjs.
+ */
+export const maxWebsiteNoIntegrations = 5000
 
 /**
  * Svaret på "Hvornår kan vi starte?" på ydelsessiderne. Har ydelsen sin egen
@@ -74,17 +77,17 @@ export const components = {
 }
 
 export const overlap = {
-  /** Fx "Google-profil og booking er allerede med i Hjemmeside Fuld fart". */
-  note: (parts, webTier) => `${parts} er allerede med i Hjemmeside ${webTier}`,
-  /** Vises i stedet for en pris, når hele Booking & Google-pakken er dækket. */
-  allIncluded: 'Alt i denne pakke er allerede med i din hjemmesidepakke',
+  /** Fx "Trukket fra: Google-profil og booking (1.000 kr.), fordi det allerede er med i Hjemmeside Fuld fart." */
+  note: (parts, amount, webTier) => `Trukket fra: ${parts} (${amount}), fordi det allerede er med i Hjemmeside ${webTier}.`,
+  /** Vises i stedet for en pris, når hele Booking & Google-pakken er dækket (0 kr.). */
+  allIncluded: 'Allerede med i din hjemmeside',
 }
 
 /* ---- Ydelser og pakker -------------------------------------------------
    billing: 'once' (engangspris) eller 'monthly' (pris pr. måned).
-   buffer:  0 = fast pris i beregneren (det er det, alle ydelser bruger).
-            Over 0 ville give et interval ("ca. X–Y kr."); pristesten fejler da.
+            Alle priser er faste: beregneren viser aldrig et interval.
    monthly: løbende drift pr. måned (kun hjemmeside).
+   addons:  tilvalg; `tiers` = de pakker, tilvalget kan vælges til.
    includes: komponenter fra `components`, som pakken indeholder (se overlap).
 ------------------------------------------------------------------------- */
 export const services = {
@@ -92,7 +95,6 @@ export const services = {
     id: 'hjemmeside',
     name: 'Hjemmeside',
     billing: 'once',
-    buffer: 0,
     tiers: [
       {
         id: 'start',
@@ -129,12 +131,24 @@ export const services = {
       },
     ],
     addons: {
-      /** Alternativ til månedlig drift. Lægges til hjemmesideprisen i beregneren. */
-      ownAccount: { label: 'Engangskøb: siden lægges på din egen konto i stedet for drift', price: 1000 },
-      extraPage: { label: 'Ekstra underside', price: 400 },
-      /** Uden fast pris: `text` vises i stedet for et beløb. */
-      over8: { label: 'Flere end 8 sider', text: 'Aftales' },
+      /** Alternativ til månedlig drift. Kun Start og Vækst: Fuld fart har booking og kører altid med drift. */
+      ownAccount: {
+        label: 'Egen konto i stedet for drift (kun Start og Vækst)',
+        price: 1000,
+        tiers: ['start', 'vaekst'],
+      },
+      /** Kun Fuld fart: sider ud over de 8, der er med i pakken. */
+      extraPage: {
+        label: 'Ekstra underside ud over 8 (kun Fuld fart)',
+        price: 400,
+        unit: 'pr. side',
+        tiers: ['fuld-fart'],
+      },
     },
+    /** Står under pakkerne: Start og Vækst har ingen ekstra undersider. */
+    upgradeNote: 'Brug for flere sider i Start eller Vækst? Så opgraderer du til næste pakke.',
+    /** Flest sider i alt, beregneren tilbyder i Fuld fart (8 + ekstra undersider). */
+    maxPages: 20,
     /** Hvad drift dækker. Prisen pr. måned står på pakkerne (monthly). */
     drift: {
       included: [
@@ -160,7 +174,6 @@ export const services = {
     id: 'marketing',
     name: 'Marketing',
     billing: 'monthly',
-    buffer: 0,
     tiers: [
       {
         id: 'start',
@@ -216,7 +229,6 @@ export const services = {
     id: 'bookingGoogle',
     name: 'Booking & Google',
     billing: 'once',
-    buffer: 0,
     /** Erstatter paidStartText i "Hvornår kan vi starte?" for denne ydelse. Tom = paidStartText bruges. */
     startNow:
       'Det gratis Google-tjek kan du få nu. Jeg laver også op til 3 gratis opsætninger mod at bruge resultatet som case.',
@@ -281,8 +293,18 @@ export const calculator = {
           { id: '1', label: 'Én side med det hele', tier: 'start' },
           { id: '2-5', label: '2-5 sider', tier: 'vaekst' },
           { id: '6-8', label: '6-8 sider', tier: 'fuld-fart' },
-          { id: '9', label: 'Flere end 8 sider', tier: 'fuld-fart', custom: true },
+          { id: '9+', label: 'Flere end 8 sider', tier: 'fuld-fart' },
         ],
+      },
+      {
+        // Vises kun ved "Flere end 8 sider". Svarene er antal sider i alt (9 til maxPages).
+        id: 'ekstra',
+        short: 'Sider i alt',
+        label: 'Hvor mange sider i alt?',
+        kind: 'select',
+        placeholder: 'Vælg antal sider',
+        showIf: { sider: '9+' },
+        options: [],
       },
       {
         id: 'bestilling',
@@ -299,7 +321,15 @@ export const calculator = {
         label: 'Hvordan skal siden drives?',
         options: [
           { id: 'drift', label: 'Du passer siden for mig (drift pr. måned)', tier: 'start' },
-          { id: 'egen', label: 'Den lægges på min egen konto (engangsbeløb)', tier: 'start', addon: 'ownAccount', noDrift: true },
+          {
+            id: 'egen',
+            label: 'Den lægges på min egen konto (engangsbeløb)',
+            addon: 'ownAccount',
+            noDrift: true,
+            /** Kan kun vælges, når de øvrige svar peger på disse pakker (addons.ownAccount.tiers). */
+            onlyTiers: ['start', 'vaekst'],
+            disabledNote: 'Kun Start og Vækst. Fuld fart har booking koblet på og kører altid med drift.',
+          },
         ],
       },
     ],
@@ -355,14 +385,17 @@ export const calculator = {
     ],
   },
   /** Under prisen. */
-  finalNote: 'Endelig pris aftales efter en snak',
+  /** Linje under prisen. Tom = skjult. Må ikke indeholde "aftales" (prisen er fast; pristesten tjekker). */
+  finalNote: '',
   /** Når prisen aftales (flere end 8 sider): vises i linjen og i totalen. */
-  customPrice: 'Aftales',
-  customTotal: 'hjemmesiden aftales',
-  customNote: 'Flere end 8 sider aftales efter en snak.',
+  /** Efter engangsbeløbet i totalen: "5.000 kr. nu". */
+  nowLabel: 'nu',
+  /** Note ved ekstra undersider i Fuld fart. */
+  extraPagesNote: (n, price) => `${n} ekstra ${n === 1 ? 'underside' : 'undersider'} à ${price}`,
   /** Efter prisen, når siden lægges på kundens egen konto (ingen drift). */
   noDriftSuffix: 'i alt — ingen månedlig drift',
-  /** Under totalen, når der også er en månedspris fra en anden ydelse. */
+  /** Under totalen ved egen konto: uden og med en månedspris fra en anden ydelse. */
+  noDriftTotal: 'Ingen månedlig drift',
   noDriftWithMonthly: 'Ingen månedlig drift på hjemmesiden',
   /** Under totalen, når "egen konto" er valgt: hvad kunden selv står for. Tom = skjult. */
   ownAccountNote:
@@ -374,6 +407,12 @@ export const calculator = {
   mailIntro: ['Hej Ronny,', '', 'Jeg har brugt prisberegneren på oviaspecs.com og vil gerne have et tilbud.'],
   mailOutro: ['Mit navn:', 'Min virksomhed:', 'Mit telefonnummer:'],
 }
+
+/* Svarene på "Hvor mange sider i alt?": 9 sider op til maxPages, hver med antal ekstra undersider. */
+calculator.questions.hjemmeside.find((q) => q.id === 'ekstra').options = Array.from(
+  { length: services.hjemmeside.maxPages - 8 },
+  (_, i) => ({ id: String(9 + i), label: `${9 + i} sider`, tier: 'fuld-fart', extraPages: i + 1 }),
+)
 
 /* =========================================================================
    HJÆLPERE — behøver normalt ikke ændres.
