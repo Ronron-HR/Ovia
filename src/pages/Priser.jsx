@@ -2,7 +2,7 @@ import ContactSection from '../components/ContactSection.jsx'
 import { Addons, DriftTerms, PackageGrid, PriceNote } from '../components/Packages.jsx'
 import PriceCalculator from '../components/PriceCalculator.jsx'
 import { Arrow } from '../components/Shots.jsx'
-import { flags, services } from '../data/pricing.js'
+import { services } from '../data/pricing.js'
 import { priser as p } from '../data/services.js'
 import { paths } from '../data/texts.js'
 
@@ -64,14 +64,6 @@ export default function Priser() {
                 </div>
                 <Addons service={service} />
                 {service.drift && <DriftTerms service={service} className="mt-6" headingLevel={4} />}
-                {key === 'marketing' && !flags.hasMarketingCases && (
-                  <p className="mt-5 text-[15px]">
-                    {p.pilotNote}{' '}
-                    <a href={`${paths.marketing}#pilot`} className="link-underline font-medium">
-                      {p.pilotLink}
-                    </a>
-                  </p>
-                )}
               </div>
             )
           })}

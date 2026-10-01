@@ -33,8 +33,11 @@ export const company = {
 /** Står under alle priser. */
 export const priceNote = 'Priserne er endelige. OviaSpecs er ikke momsregistreret.'
 
-/** Vises i FAQ'en "Hvornår kan vi starte?" på alle ydelsessider. Tom streng = spørgsmålet skjules. */
-export const paidStartText = 'Betalte opgaver fra februar 2027. Indtil da tilbyder jeg pilotforløb.'
+/**
+ * Svaret på "Hvornår kan vi starte?" på ydelsessiderne. Har ydelsen sin egen
+ * `startNow`, bruges den i stedet. Er begge tomme, skjules spørgsmålet.
+ */
+export const paidStartText = 'Betalte opgaver fra februar 2027.'
 
 /** Mærket på den anbefalede pakke. */
 export const recommendedLabel = 'Anbefalet'
@@ -137,7 +140,7 @@ export const services = {
       /** Prisen indsættes fra addons.ownAccount.price. */
       buyout: (price) => `Stopper du drift, kan du købe siden fri for ${price} og få den overført til din egen konto.`,
     },
-    /** Vises efter paidStartText i "Hvornår kan vi starte?". Tom = skjult. */
+    /** Erstatter paidStartText i "Hvornår kan vi starte?" for denne ydelse. Tom = paidStartText bruges. */
     startNow: 'Du kan få en gratis demo nu. Opstart og betaling fra februar 2027.',
     /** Svaret på "Hvor lang tid tager det?" */
     leadTime: 'Typisk 1-2 uger efter vi har mødtes.',
@@ -192,7 +195,7 @@ export const services = {
       limitText: 'Max 2 piloter ad gangen',
     },
     binding: 'Ingen binding. Opsigelse med 1 måneds varsel.',
-    /** Vises efter paidStartText. Tom = skjult (pilotforløbet dækker marketing). */
+    /** Tom = paidStartText bruges. Pilotforløbet står i PilotSection på /marketing/. */
     startNow: '',
   },
 
@@ -201,7 +204,7 @@ export const services = {
     name: 'Booking & Google',
     billing: 'once',
     buffer: 500,
-    /** Vises efter paidStartText i "Hvornår kan vi starte?". Tom = skjult. */
+    /** Erstatter paidStartText i "Hvornår kan vi starte?" for denne ydelse. Tom = paidStartText bruges. */
     startNow:
       'Det gratis Google-tjek kan du få nu. Jeg laver også op til 3 gratis opsætninger mod at bruge resultatet som case.',
     /** Uforpligtende indgang, der fremhæves på siden. */

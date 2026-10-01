@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { ORDER, mailBody, priceParts, priceText, quote, sentence, smsBody, useCalc } from '../calculator.js'
-import { calculator, flags, fromPrice, priceNote, services, tierName } from '../data/pricing.js'
-import { paths } from '../data/texts.js'
+import { calculator, fromPrice, priceNote, services, tierName } from '../data/pricing.js'
 import ContactButtons from './ContactButtons.jsx'
 
 /**
@@ -76,7 +75,6 @@ export default function PriceCalculator() {
 
   const q = isResult ? quote(state) : null
   const totalParts = q ? priceParts(q.total) : null
-  const showPilot = isResult && selected.includes('marketing') && !flags.hasMarketingCases
 
   return (
     <div data-calc data-callbar-hide className="calc">
@@ -218,15 +216,6 @@ export default function PriceCalculator() {
                 <li key={n}>{n}</li>
               ))}
             </ul>
-          )}
-
-          {showPilot && (
-            <p className="mt-5 rounded-[10px] bg-paper-2 px-4 py-3 text-[15px]">
-              Marketing kan også starte som et gratis pilotforløb i {services.marketing.pilot.weeks} uger.{' '}
-              <a href={`${paths.marketing}#pilot`} className="link-underline font-medium">
-                Læs om piloten
-              </a>
-            </p>
           )}
 
           <ContactButtons

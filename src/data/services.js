@@ -17,9 +17,11 @@ const tierList = (service, unit = '') => {
   return s.endsWith('.') ? s : `${s}.`
 }
 
-/** "Hvornår kan vi starte?": paidStartText + ydelsens startNow. Skjules, når paidStartText er tom. */
-const startFaq = (service) =>
-  paidStartText ? [{ q: 'Hvornår kan vi starte?', a: [paidStartText, service.startNow].filter(Boolean).join(' ') }] : []
+/** "Hvornår kan vi starte?": ydelsens startNow, ellers paidStartText. Skjules, når begge er tomme. */
+const startFaq = (service) => {
+  const a = service.startNow || paidStartText
+  return a ? [{ q: 'Hvornår kan vi starte?', a }] : []
+}
 
 const toCalculator = { label: 'Beregn din pris', href: paths.priser }
 
@@ -240,8 +242,6 @@ export const priser = {
     title: 'Alle pakker side om side.',
     more: 'Læs mere',
   },
-  pilotNote: `Marketing kan også starte som et gratis pilotforløb i ${mk.pilot.weeks} uger.`,
-  pilotLink: 'Læs om piloten',
   contact: {
     title: 'Spørgsmål til priserne?',
     body: 'Ring eller skriv, så hjælper jeg dig med at finde den pakke, der passer.',
