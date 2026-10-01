@@ -193,6 +193,9 @@ export default function PriceCalculator({ defaults }) {
               </span>
             ))}
           </p>
+          {q.total.noDrift && calculator.ownAccountNote && (
+            <p className="mt-3 max-w-[52ch] text-[15px] text-ink">{calculator.ownAccountNote}</p>
+          )}
           <p className="mt-2 text-[16px] font-medium">{calculator.finalNote}</p>
           {priceNote && <p className="t-body mt-1 text-[14px]">{priceNote}</p>}
 

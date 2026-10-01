@@ -364,6 +364,9 @@ export const calculator = {
   noDriftSuffix: 'i alt — ingen månedlig drift',
   /** Under totalen, når der også er en månedspris fra en anden ydelse. */
   noDriftWithMonthly: 'Ingen månedlig drift på hjemmesiden',
+  /** Under totalen, når "egen konto" er valgt: hvad kunden selv står for. Tom = skjult. */
+  ownAccountNote:
+    'Du ejer selv kontoen og betaler domæne og hosting direkte til udbyderen. Rettelser efter levering aftaler vi pris på, før jeg går i gang.',
   /** Forudfyldt start på SMS og mail fra resultatet. */
   smsIntro: 'Hej Ronny. Jeg har brugt prisberegneren på oviaspecs.com:',
   mailSubject: 'Tilbud fra prisberegneren',
