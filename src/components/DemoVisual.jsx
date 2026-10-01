@@ -68,7 +68,7 @@ export function DemoActions({ project, className = '' }) {
         <Arrow />
         <span className="sr-only"> ({project.name})</span>
       </a>
-      <a href={`${paths.priser}?ydelser=hjemmeside`} className="btn btn-ghost min-h-11">
+      <a href={`${paths.priser}?ydelser=hjemmeside#beregner`} className="btn btn-ghost min-h-11">
         {demos.calcCta}
       </a>
     </div>

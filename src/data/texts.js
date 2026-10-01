@@ -52,6 +52,9 @@ export const nav = {
   close: 'Luk',
 }
 
+/** Den korte linje over prisberegneren på ydelsessiderne. */
+export const calcIntro = 'Svar på et par spørgsmål, så ser du prisen med det samme.'
+
 /** Teksterne på knapperne "Ring" og "Skriv". */
 export const cta = {
   call: 'Ring',
