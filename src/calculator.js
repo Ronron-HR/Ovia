@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import { bookingSubscriptionNote, calculator, formatKr, services, tierName } from './data/pricing.js'
+import { bookingSubscriptionNote, calculator, components, formatKr, overlap, services, tierName } from './data/pricing.js'
 
 /**
  * PRISBEREGNERENS LOGIK — tilstand, pakkevalg, interval og opsummering.
@@ -122,26 +122,45 @@ function line(key, answers) {
   }
 }
 
+/** "Google-profil", "Google-profil og booking", "Google-profil, booking og …" med stort forbogstav. */
+function partList(ids) {
+  const labels = ids.map((id) => components[id].label)
+  const text = labels.length > 1 ? `${labels.slice(0, -1).join(', ')} og ${labels.at(-1)}` : labels[0]
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}
+
 /**
- * Hele tilbuddet: én linje pr. valgt ydelse, en samlet pris og fælles noter.
- * Booking tælles kun én gang: er den med i Hjemmeside Fuld fart, trækkes
- * bookingdelen fra Booking & Google (bookingOverlap i pricing.js).
+ * Komponenter tælles kun én gang: de dele af Booking & Google, der allerede er
+ * med i den valgte hjemmesidepakke (`includes` i pricing.js), trækkes fra
+ * Booking & Google-prisen, og noten nævner hvilke. Er hele pakken dækket,
+ * bliver prisen 0, linjen får `allIncluded`, og intet lægges til totalen.
  */
+function applyOverlap(web, bg) {
+  if (!web || !bg) return
+  const shared = bg.tier.includes.filter((id) => web.tier.includes.includes(id))
+  if (!shared.length) return
+  const amount = shared.reduce((sum, id) => sum + components[id].price, 0)
+  bg.notes.push(overlap.note(partList(shared), tierName(web.tier)))
+  if (amount >= bg.low) {
+    bg.low = 0
+    bg.high = 0
+    bg.allIncluded = true
+  } else {
+    bg.low -= amount
+    bg.high -= amount
+  }
+}
+
+/** Hele tilbuddet: én linje pr. valgt ydelse, en samlet pris og fælles noter. */
 export function quote({ selected, answers }) {
   const lines = selected.map((key) => line(key, answers))
   const web = lines.find((l) => l.key === 'hjemmeside')
   const bg = lines.find((l) => l.key === 'bookingGoogle')
-  const overlap = services.bookingGoogle.bookingOverlap
-  const webHasBooking = web?.tier.id === overlap.whenHjemmeside
-  const bgHasBooking = bg ? overlap.tiers.includes(bg.tier.id) : false
-  if (webHasBooking && bgHasBooking) {
-    bg.low -= overlap.amount
-    bg.high -= overlap.amount
-    bg.notes.push(overlap.note)
-  }
+  applyOverlap(web, bg)
+  const hasBooking = [web, bg].some((l) => l?.tier.includes.includes('booking'))
   return {
     lines,
-    notes: webHasBooking || bgHasBooking ? [bookingSubscriptionNote] : [],
+    notes: hasBooking ? [bookingSubscriptionNote] : [],
     total: {
       low: lines.reduce((s, l) => s + l.low, 0),
       high: lines.reduce((s, l) => s + l.high, 0),
@@ -160,8 +179,12 @@ export function priceParts({ low, high, monthly }) {
   }
 }
 
-/** "ca. 5.500–6.500 kr. + 400 kr./md", "3.500 kr./md" eller "ca. 1.000–1.500 kr." */
+/**
+ * "ca. 5.500–6.500 kr. + 400 kr./md", "3.500 kr./md" eller "ca. 1.000–1.500 kr.".
+ * En linje, der er helt dækket af hjemmesidepakken, får overlap.allIncluded.
+ */
 export function priceText(price) {
+  if (price.allIncluded) return overlap.allIncluded
   const { once, month } = priceParts(price)
   return once && month ? `${once} + ${month}` : once || month
 }

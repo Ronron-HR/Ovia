@@ -52,11 +52,31 @@ export const flags = {
   hasMarketingCases: false,
 }
 
+/* ---- Overlap mellem hjemmeside og Booking & Google ----------------------
+   Booking & Google består af komponenter. Er en komponent allerede med i den
+   valgte hjemmesidepakke (`includes`), trækkes dens pris fra Booking &
+   Google-prisen i beregneren, og noten nævner præcis hvilke dele.
+   Booking & Google-pakkernes pris = summen af deres komponenter.
+------------------------------------------------------------------------- */
+export const components = {
+  googleProfile: { label: 'Google-profil', price: 1000 },
+  booking: { label: 'booking', price: 1000 },
+  qr: { label: 'QR-skilt og opfølgning', price: 1500 },
+}
+
+export const overlap = {
+  /** Fx "Google-profil og booking er allerede med i Hjemmeside Fuld fart". */
+  note: (parts, webTier) => `${parts} er allerede med i Hjemmeside ${webTier}`,
+  /** Vises i stedet for en pris, når hele Booking & Google-pakken er dækket. */
+  allIncluded: 'Alt i denne pakke er allerede med i din hjemmesidepakke',
+}
+
 /* ---- Ydelser og pakker -------------------------------------------------
    billing: 'once' (engangspris) eller 'monthly' (pris pr. måned).
    buffer:  hvor meget prisberegnerens interval går over pakkeprisen
             (fx 5.500 kr. + 1.000 = "ca. 5.500–6.500 kr."). 0 = fast pris.
    monthly: løbende drift pr. måned (kun hjemmeside).
+   includes: komponenter fra `components`, som pakken indeholder (se overlap).
 ------------------------------------------------------------------------- */
 export const services = {
   hjemmeside: {
@@ -68,6 +88,7 @@ export const services = {
       {
         id: 'start',
         price: 3000,
+        includes: [],
         monthly: 400,
         summary: 'Én side med det vigtigste.',
         features: ['Onepage: alt samlet på én side', '1 rettelserunde'],
@@ -75,6 +96,7 @@ export const services = {
       {
         id: 'vaekst',
         price: 5500,
+        includes: ['googleProfile'],
         monthly: 400,
         summary: 'Flere sider, og du bliver fundet på Google.',
         features: ['Op til 5 sider', 'Google-profil sat op', 'Grundlæggende SEO', '2 rettelserunder'],
@@ -82,6 +104,7 @@ export const services = {
       {
         id: 'fuld-fart',
         price: 8500,
+        includes: ['googleProfile', 'booking'],
         monthly: 600,
         monthlyNote: 'ændringer laves inden 2 hverdage',
         /** Lille note nederst på pakkekortet. */
@@ -178,17 +201,6 @@ export const services = {
     name: 'Booking & Google',
     billing: 'once',
     buffer: 500,
-    /**
-     * Booking må ikke tælles to gange: vælger kunden Hjemmeside Fuld fart (booking
-     * er med) sammen med Booking & Google i en af `tiers`, trækkes `amount` fra
-     * Booking & Google-prisen i beregneren, og `note` vises.
-     */
-    bookingOverlap: {
-      whenHjemmeside: 'fuld-fart',
-      tiers: ['vaekst', 'fuld-fart'],
-      amount: 1000,
-      note: 'Booking er allerede med i Hjemmeside Fuld fart',
-    },
     /** Vises efter paidStartText i "Hvornår kan vi starte?". Tom = skjult. */
     startNow:
       'Det gratis Google-tjek kan du få nu. Jeg laver også op til 3 gratis opsætninger mod at bruge resultatet som case.',
@@ -202,18 +214,21 @@ export const services = {
       {
         id: 'start',
         price: 1000,
+        includes: ['googleProfile'],
         summary: 'Din Google-profil i orden.',
         features: ['Google-profil sat op eller rettet'],
       },
       {
         id: 'vaekst',
         price: 2000,
+        includes: ['googleProfile', 'booking'],
         summary: 'Kunderne kan booke selv.',
         features: ['Google-profil sat op eller rettet', 'Booking koblet på din hjemmeside eller Instagram'],
       },
       {
         id: 'fuld-fart',
         price: 3500,
+        includes: ['googleProfile', 'booking', 'qr'],
         summary: 'Flere anmeldelser, og tal på det.',
         features: [
           'Google-profil sat op eller rettet',
