@@ -71,7 +71,7 @@ export const hjemmeside = {
     items: [
       {
         q: 'Hvad koster det?',
-        a: `${tierList(web)} Dertil kommer drift på ${monthlies.map((m) => `${formatKr(m)}/md`).join(' eller ')} alt efter pakke. En ekstra underside koster ${formatKr(web.addons.extraPage.price)} ${web.addons.over8.label} ${web.addons.over8.text.toLowerCase()}. ${priceNote ? `${priceNote}.` : ''}`,
+        a: `${tierList(web)} Dertil kommer drift på ${monthlies.map((m) => `${formatKr(m)}/md`).join(' eller ')} alt efter pakke. En ekstra underside koster ${formatKr(web.addons.extraPage.price)} ${web.addons.over8.label} ${web.addons.over8.text.toLowerCase()}. ${priceNote && !priceNote.endsWith('.') ? `${priceNote}.` : priceNote}`,
       },
       {
         q: 'Hvad er inkluderet i drift?',

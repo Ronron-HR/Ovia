@@ -64,7 +64,7 @@ export function PackageGrid({ service, headingLevel = 3 }) {
   )
 }
 
-/** "Priserne er endelige. OviaSpecs er ikke momsregistreret." (styres i pricing.js) */
+/** Momslinjen, fx "Alle priser er ekskl. moms." (priceNote i pricing.js) */
 export function PriceNote({ className = '' }) {
   if (!priceNote) return null
   return <p className={`text-[14px] text-muted ${className}`}>{priceNote}</p>
