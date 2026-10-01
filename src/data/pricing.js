@@ -4,8 +4,8 @@
    prisberegneren med. Komponenterne indeholder ingen priser.
 
    Regler (må ikke brydes):
-   - Pakkerne hedder Start, Vækst og Fuld fart. Vækst er "Anbefalet",
-     aldrig "Mest populær".
+   - Pakkerne hedder Start, Vækst og Fuld fart. Vækst er "Anbefalet";
+     ingen mærker om popularitet.
    - Ingen rabatkoder, nedtællinger eller kunstigt pres.
    - Ingen opdigtede udtalelser, kundetal eller resultater.
    ========================================================================= */
@@ -49,7 +49,7 @@ export const flags = {
 /* ---- Ydelser og pakker -------------------------------------------------
    billing: 'once' (engangspris) eller 'monthly' (pris pr. måned).
    buffer:  hvor meget prisberegnerens interval går over pakkeprisen
-            (fx 3.000 kr. + 1.000 = "ca. 3.000–4.000 kr."). 0 = fast pris.
+            (fx 5.500 kr. + 1.000 = "ca. 5.500–6.500 kr."). 0 = fast pris.
    monthly: løbende drift pr. måned (kun hjemmeside).
 ------------------------------------------------------------------------- */
 export const services = {

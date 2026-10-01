@@ -2,7 +2,8 @@
    TEKSTER — forside, navigation, kontakt og footer.
    Priser og pakker står IKKE her, men i src/data/pricing.js.
 
-   Sprog: jeg-form overalt (OviaSpecs er én person). Ingen "vi".
+   Sprog: jeg-form overalt (OviaSpecs er én person). "Vi" kun om dig og kunden
+   sammen (fx "Vi mødes"), aldrig om OviaSpecs.
    Ærlighed: ingen udtalelser, kundetal, logoer eller resultater, der ikke
    kan dokumenteres. Ingen løfter om svartider, placeringer eller salg.
    ========================================================================= */
@@ -89,7 +90,7 @@ export const home = {
     items: [
       {
         title: 'Vi mødes',
-        text: 'Jeg kigger forbi, eller vi tager en snak i telefonen. Du fortæller, hvad du har brug for, og jeg siger, hvad det koster.',
+        text: 'Jeg kigger forbi eller ringer til dig. Du fortæller, hvad du har brug for, og jeg siger, hvad det koster.',
       },
       {
         title: 'Du ser en demo',
@@ -112,7 +113,7 @@ export const about = {
   body: [
     'Jeg hedder Ronny Hong, og OviaSpecs er mig. Der er ingen sælger, ingen projektleder og ingen kundeservice. Den, du taler med, er den, der laver arbejdet.',
     'Jeg er en lille virksomhed i Aarhus-området og har ikke en lang kundeliste at vise frem endnu. Til gengæld får du faste priser, et udkast du kan se, før det går live, og én at ringe til, når noget skal rettes.',
-    'Hvis en opgave ligger uden for det, jeg kan, siger jeg det, før vi går i gang.',
+    'Hvis en opgave ligger uden for det, jeg kan, siger jeg det, før jeg går i gang.',
   ],
   portrait: {
     base: '/ronny',
@@ -127,7 +128,7 @@ export const about = {
 export const contactSection = {
   id: 'kontakt',
   eyebrow: 'Kontakt',
-  title: 'Ring eller skriv. Så tager vi den derfra.',
+  title: 'Ring eller skriv. Så tager jeg den derfra.',
   body: 'Fortæl kort, hvad du laver, og hvad du mangler. Det koster ikke noget at spørge.',
   phoneLabel: 'Telefon',
   mailLabel: 'Mail',
@@ -167,4 +168,16 @@ export const meta = {
     description:
       'Jeg hjælper lokale virksomheder med hjemmeside, Google-profil, booking og korte videoer. Faste priser, og du taler med den, der laver arbejdet. Ring 53 61 36 99.',
   },
+}
+
+/* ---- Privatlivspolitik ------------------------------------------------- */
+
+export const privacy = {
+  updated: '1. oktober 2026',
+  retentionMonths: 12,
+  /** [udbyder, hvad den bruges til] */
+  providers: [
+    ['Cloudflare', 'hosting af siden, serverlogs og videresendelse af mail til kontakt@oviaspecs.com (Email Routing).'],
+    ['Google (Gmail)', 'den mailboks, mailen bliver modtaget i.'],
+  ],
 }

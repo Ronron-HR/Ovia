@@ -1,4 +1,4 @@
-import { demoById } from '../content.js'
+import { demoById } from '../content.demos.js'
 import { VinbarArt, VinbarMark } from './art.jsx'
 import DemoShell from './DemoShell.jsx'
 import { DemoHero, errProps, Field, ItemList, Notice, Tabs, useDemoForm } from './kit.jsx'

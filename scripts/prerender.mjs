@@ -20,7 +20,7 @@ import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { dirname } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
-const { routes, renderPage, renderPrivacy, pageFiles, pageKeyFor } = await import(
+const { routes, renderPage, renderPrivacy, pageFiles, pageKeyFor, organisationLd } = await import(
   pathToFileURL('dist-ssr/entry-server.js').href
 )
 
@@ -83,10 +83,15 @@ function build(route) {
   html = setMeta(html, 'name', 'twitter:description', route.description)
   html = html.replace(/(<link rel="canonical" href=")[^"]*(")/, (_, a, b) => `${a}${url}${b}`)
 
-  // Organisationens strukturerede data hører til forsiden.
-  if (route.path !== '/') {
-    html = html.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/, '')
-  }
+  // Organisationens strukturerede data (bygget fra pricing.js) hører til forsiden.
+  const ld = /<script type="application\/ld\+json">[\s\S]*?<\/script>/
+  if (!ld.test(html)) throw new Error('dist/index.html: fandt ikke JSON-LD-pladsholderen')
+  html = html.replace(
+    ld,
+    route.path === '/'
+      ? () => `<script type="application/ld+json">${JSON.stringify(organisationLd()).replace(/</g, '\\u003c')}</script>`
+      : '',
+  )
 
   // Sidens egne JS-filer (ud over dem, forsiden allerede henter) forhåndshentes.
   const hints = chunksFor(pageFiles[route.page])

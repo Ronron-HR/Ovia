@@ -10,13 +10,10 @@ import { pageLoaders } from './pageLoaders.js'
  * videre til den nye side, så delte og gemte links stadig virker.
  */
 const OLD_ANCHORS = {
-  '#ydelser': '/hjemmesider/',
-  '#hjemmesider': '/hjemmesider/',
-  '#systemer': '/ai-automatisering/',
-  '#synlighed': '/seo/',
+  '#ydelser': '/hjemmeside/',
+  '#hjemmesider': '/hjemmeside/',
+  '#synlighed': '/marketing/',
   '#arbejde': '/demoer/',
-  '#om': '/om/',
-  '#sporgsmaal': '/kontakt/',
 }
 
 const { pathname, hash } = window.location

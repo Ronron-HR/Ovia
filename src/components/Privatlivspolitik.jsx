@@ -1,35 +1,32 @@
-import { legal, site } from '../content.js'
+import { company, contact } from '../data/pricing.js'
+import { links, privacy } from '../data/texts.js'
 import Logo from './Logo.jsx'
 
 /**
  * Privatlivspolitik.
  *
- * Skrevet ud fra, hvad siden FAKTISK gør: ingen cookies, ingen analyse, ingen
- * tredjepartsskrifter (de er selvhostede), formularer, der sender direkte til
- * mig via siden selv (worker/index.js) og videre til min mail, og beregnerens
- * valg i browserens sessionStorage (kun i fanen, aldrig sendt noget sted hen).
- * Ændrer det sig (en anden afsendelsestjeneste end hostingudbyderen, analyse,
- * nyhedsbrev, indlejret video), skal politikken ændres SAMTIDIG, ellers står
- * der noget forkert. TODO(afklar ved opsætning af afsendelse): navnet på den
- * tjeneste, der sender formularens mail (Cloudflare Email Routing eller
- * Resend), og hvor den behandler oplysninger.
+ * Skrevet ud fra, hvad siden FAKTISK gør (tjekket i koden):
+ * - ingen formularer, ingen backend: kontakt sker med telefon, SMS og mail
+ * - ingen cookies, ingen analyse, ingen tracking, ingen eksterne scripts
+ * - skrifterne er selvhostede (public/fonts)
+ * - prisberegnerens valg står kun i adresselinjen
+ * - koncepterne husker i sessionStorage, hvilken side man kom fra (DemoShell)
+ * Ændrer noget af det sig, skal politikken ændres SAMTIDIG.
  *
- * Det er en fornuftig standardtekst, ikke juridisk rådgivning. Navn, adresse
- * og CVR-nr. hentes fra `legal` i content.js.
+ * Det er en fornuftig standardtekst, ikke juridisk rådgivning.
  */
 
 function Section({ title, children }) {
   return (
     <section className="mt-12 first:mt-0">
       <h2 className="t-display t-h3">{title}</h2>
-      <div className="mt-4 flex flex-col gap-4 text-[16px] leading-relaxed text-ink/80">
-        {children}
-      </div>
+      <div className="mt-4 flex flex-col gap-4 text-[16px] leading-relaxed text-ink/80">{children}</div>
     </section>
   )
 }
 
 const list = 'flex list-disc flex-col gap-2 pl-5 marker:text-accent'
+const strong = 'font-medium text-ink'
 
 export default function Privatlivspolitik() {
   return (
@@ -49,34 +46,29 @@ export default function Privatlivspolitik() {
         <p className="t-eyebrow">Privatliv</p>
         <h1 className="t-display mt-5 text-[clamp(40px,7vw,72px)]">Privatlivspolitik</h1>
         <p className="t-body mt-6 max-w-[56ch] text-[16px]">
-          Kort version: jeg gemmer kun det, du selv sender mig, jeg bruger det til at svare dig og
-          lave arbejdet, og jeg deler det ikke med andre end de værktøjer, jeg skal bruge til det.
-          Siden bruger ingen cookies og ingen tracking.
+          Kort version: Siden har ingen formularer, ingen cookies og ingen tracking. Jeg får kun de oplysninger,
+          du selv giver mig, når du ringer, sender en SMS eller skriver en mail.
         </p>
-        <p className="mt-2 text-[13px] text-muted">Sidst opdateret: {legal.updated}</p>
+        <p className="mt-2 text-[13px] text-muted">Sidst opdateret: {privacy.updated}</p>
 
         <div className="mt-16">
           <Section title="Hvem er ansvarlig">
+            <p>OviaSpecs er dataansvarlig for de oplysninger, du giver mig.</p>
             <p>
-              OviaSpecs er dataansvarlig for de oplysninger, der behandles gennem denne side.
-            </p>
-            <p>
-              OviaSpecs v/ {legal.owner}
+              OviaSpecs v/ {contact.name}
               <br />
-              {legal.address}
-              <br />
-              {legal.cvr && (
+              {company.cvr && (
                 <>
-                  CVR: {legal.cvr}
+                  CVR: {company.cvr}
                   <br />
                 </>
               )}
-              <a href={`mailto:${site.email}`} className="link-underline">
-                {site.email}
+              <a href={links.mail} className="link-underline">
+                {contact.email}
               </a>
               <br />
-              <a href={`tel:${site.phoneHref}`} className="link-underline">
-                {site.phone}
+              <a href={links.tel} className="link-underline">
+                {contact.phone}
               </a>
             </p>
           </Section>
@@ -84,42 +76,36 @@ export default function Privatlivspolitik() {
           <Section title="Hvilke oplysninger jeg behandler">
             <ul className={list}>
               <li>
-                <strong className="font-medium text-ink">Når du skriver eller ringer:</strong> dit
-                navn, din mailadresse, dit telefonnummer og det, du selv fortæller mig.
+                <strong className={strong}>Når du ringer, sender en SMS eller skriver:</strong> dit navn, dit
+                telefonnummer eller din mailadresse og det, du selv fortæller mig.
               </li>
               <li>
-                <strong className="font-medium text-ink">Hvis vi laver en aftale:</strong>{' '}
-                virksomhedens navn, kontaktperson og de oplysninger, der skal bruges til at skrive
-                en faktura.
+                <strong className={strong}>Hvis du bestiller en opgave:</strong> virksomhedens navn, kontaktperson og
+                de oplysninger, der skal bruges til at skrive en faktura.
               </li>
               <li>
-                <strong className="font-medium text-ink">Tekniske oplysninger:</strong> når du
-                åbner siden, registrerer hostingudbyderen din IP-adresse og din browsertype i
-                serverlogs. Det er nødvendigt for, at siden kan leveres og holdes sikker.
+                <strong className={strong}>Tekniske oplysninger:</strong> når du åbner siden, registrerer
+                hostingudbyderen din IP-adresse og din browsertype i serverlogs. Det er nødvendigt for, at siden kan
+                leveres og holdes sikker.
               </li>
             </ul>
-            <p>
-              Jeg beder ikke om følsomme oplysninger og indsamler ikke oplysninger om børn. Skriv
-              dem ikke til mig.
-            </p>
+            <p>Jeg beder ikke om følsomme oplysninger. Skriv dem ikke til mig.</p>
           </Section>
 
           <Section title="Hvad jeg bruger dem til, og på hvilket grundlag">
             <ul className={list}>
               <li>
-                <strong className="font-medium text-ink">At svare på din henvendelse</strong> og
-                give dig et tilbud. Grundlaget er databeskyttelsesforordningens artikel 6, stk. 1,
-                litra b (skridt, du selv beder om, inden en aftale) og litra f (min legitime
-                interesse i at kunne svare dig).
+                <strong className={strong}>At svare dig</strong> og give dig et tilbud. Grundlaget er
+                databeskyttelsesforordningens artikel 6, stk. 1, litra b (skridt, du selv beder om, inden en aftale)
+                og litra f (min legitime interesse i at kunne svare dig).
               </li>
               <li>
-                <strong className="font-medium text-ink">At levere arbejdet og sende faktura.</strong>{' '}
-                Grundlaget er artikel 6, stk. 1, litra b (opfyldelse af aftalen) og litra c
-                (bogføringsloven).
+                <strong className={strong}>At levere arbejdet og sende faktura.</strong> Grundlaget er artikel 6,
+                stk. 1, litra b (opfyldelse af aftalen) og litra c (bogføringsloven).
               </li>
               <li>
-                <strong className="font-medium text-ink">At holde siden sikker og køre.</strong>{' '}
-                Grundlaget er artikel 6, stk. 1, litra f.
+                <strong className={strong}>At holde siden sikker og kørende.</strong> Grundlaget er artikel 6, stk.
+                1, litra f.
               </li>
             </ul>
             <p>Jeg bruger ikke dine oplysninger til markedsføring og sælger dem aldrig.</p>
@@ -127,62 +113,53 @@ export default function Privatlivspolitik() {
 
           <Section title="Hvem jeg deler dem med">
             <p>
-              Kun med de udbydere, der skal til for at drive siden og læse dine henvendelser. De
-              behandler oplysningerne på mine vegne og må ikke bruge dem til andet.
+              Kun med de udbydere, der skal til for at drive siden og modtage mail. De behandler oplysningerne på
+              mine vegne og må ikke bruge dem til andet.
             </p>
             <ul className={list}>
-              <li>
-                <strong className="font-medium text-ink">{legal.hosting}</strong> — hosting af siden
-                og serverlogs.
-              </li>
-              <li>
-                <strong className="font-medium text-ink">{legal.mailProvider}</strong> — modtagelse
-                af mails.
-              </li>
+              {privacy.providers.map(([name, what]) => (
+                <li key={name}>
+                  <strong className={strong}>{name}</strong>: {what}
+                </li>
+              ))}
             </ul>
-            <p>
-              Derudover videregiver jeg kun oplysninger, hvis jeg er retligt forpligtet til det,
-              fx til SKAT.
-            </p>
+            <p>Derudover videregiver jeg kun oplysninger, hvis jeg er retligt forpligtet til det, fx til Skattestyrelsen.</p>
           </Section>
 
           <Section title="Overførsel til lande uden for EU/EØS">
             <p>
-              Nogle af udbyderne ovenfor er amerikanske eller har behandling i USA. Sker det, er det
-              på et gyldigt overførselsgrundlag, fx EU-Kommissionens standardkontraktbestemmelser
-              eller EU-US Data Privacy Framework.
+              Udbyderne ovenfor er amerikanske eller har behandling i USA. Overførslen sker på et gyldigt
+              overførselsgrundlag, fx EU-Kommissionens standardkontraktbestemmelser eller EU-US Data Privacy
+              Framework.
             </p>
           </Section>
 
           <Section title="Hvor længe jeg gemmer dem">
             <ul className={list}>
               <li>
-                Henvendelser, der ikke fører til en aftale, slettes senest {legal.retentionMonths}{' '}
-                måneder efter sidste kontakt.
+                Henvendelser, der ikke fører til en aftale, slettes senest {privacy.retentionMonths} måneder efter
+                sidste kontakt.
               </li>
-              <li>
-                Bilag og fakturaer gemmes i 5 år efter udgangen af regnskabsåret, som
-                bogføringsloven kræver.
-              </li>
+              <li>Bilag og fakturaer gemmes i 5 år efter udgangen af regnskabsåret, som bogføringsloven kræver.</li>
               <li>Serverlogs gemmes kort af hostingudbyderen og slettes automatisk.</li>
             </ul>
           </Section>
 
           <Section title="Cookies og tracking">
             <p>
-              Siden bruger ingen cookies og ingen analyse- eller reklameværktøjer. Skrifterne
-              ligger på siden selv og hentes ikke fra Google eller andre, så din IP-adresse ikke
-              sendes videre. Derfor er der intet cookiebanner.
+              Siden bruger ingen cookies, ingen analyse- eller reklameværktøjer og ingen scripts fra andre. Skrifterne
+              ligger på siden selv og hentes ikke fra Google eller andre. Derfor er der intet cookiebanner.
             </p>
             <p>
-              Kontaktformularerne på siden og formularen efter prisberegneren sender det, du skriver
-              og vælger, fra siden selv og videre som en mail til mig. Jeg gemmer beskeden i min
-              mailkonto og ikke andre steder. Først når siden har fået svar om, at beskeden er
-              modtaget, står der, at den er sendt. Virker afsendelsen ikke, står det, og du kan i
-              stedet åbne dit eget mailprogram eller kopiere beskeden. Prisberegneren husker dine
-              valg i din egen browserfane (sessionStorage) og i adresselinjen, så de ikke forsvinder,
-              når du skifter side eller genindlæser. Det forlader ikke din browser, er ikke en cookie
-              og slettes, når du lukker fanen. Du kan også skrive eller ringe direkte. Demoerne under Demoer ligger på oviaspecs.com og er fiktive: formularer og knapper i dem sender og gemmer intet.
+              Prisberegneren gemmer ikke noget og sender ikke noget. Dine valg står kun i adresselinjen, så du kan
+              dele eller gemme linket. Knapperne efter prisen åbner din egen telefon, SMS-app eller mail med en
+              færdigskrevet besked, som du selv vælger, om du vil sende.
+            </p>
+            <p>
+              Når du åbner et af koncepterne, husker din browserfane (sessionStorage), hvilken side du kom fra, så
+              &quot;Tilbage til OviaSpecs&quot; fører det rigtige sted hen. Det forlader ikke din browser, er ikke en
+              cookie og slettes, når du lukker fanen. Koncepterne er fiktive: formularer og knapper i dem sender og
+              gemmer intet.
             </p>
           </Section>
 
@@ -193,35 +170,26 @@ export default function Privatlivspolitik() {
               <li>få forkerte oplysninger rettet,</li>
               <li>få oplysninger slettet, medmindre jeg skal gemme dem ved lov,</li>
               <li>få behandlingen begrænset eller gøre indsigelse mod den,</li>
-              <li>få dine oplysninger udleveret i et almindeligt format (dataportabilitet),</li>
-              <li>trække et samtykke tilbage, hvis behandlingen bygger på et.</li>
+              <li>få dine oplysninger udleveret i et almindeligt format (dataportabilitet).</li>
             </ul>
             <p>
               Skriv til{' '}
-              <a href={`mailto:${site.email}`} className="link-underline">
-                {site.email}
+              <a href={links.mail} className="link-underline">
+                {contact.email}
               </a>
               , så svarer jeg senest inden for en måned.
             </p>
             <p>
-              Er du utilfreds med, hvordan jeg behandler dine oplysninger, kan du klage til
-              Datatilsynet på{' '}
-              <a
-                href="https://www.datatilsynet.dk"
-                className="link-underline"
-                rel="noopener noreferrer"
-              >
+              Er du utilfreds med, hvordan jeg behandler dine oplysninger, kan du klage til Datatilsynet på{' '}
+              <a href="https://www.datatilsynet.dk" className="link-underline" rel="noopener noreferrer">
                 datatilsynet.dk
               </a>
-              . Jeg vil dog gerne have chancen for at rette det først.
+              .
             </p>
           </Section>
 
           <Section title="Ændringer">
-            <p>
-              Ændrer jeg, hvordan siden behandler oplysninger, opdaterer jeg denne side og datoen
-              øverst.
-            </p>
+            <p>Ændrer jeg, hvordan siden behandler oplysninger, opdaterer jeg denne side og datoen øverst.</p>
           </Section>
         </div>
       </main>

@@ -87,8 +87,8 @@ export const hjemmeside = {
     ],
   },
   contact: {
-    title: 'Skal vi kigge på din hjemmeside?',
-    body: 'Ring eller skriv, så tager vi en snak om, hvad din side skal kunne.',
+    title: 'Skal jeg kigge på din hjemmeside?',
+    body: 'Ring eller skriv, og fortæl mig, hvad din side skal kunne.',
   },
 }
 
@@ -157,8 +157,8 @@ export const marketing = {
     ],
   },
   contact: {
-    title: 'Skal vi tale om dine videoer?',
-    body: 'Ring eller skriv, så finder vi ud af, om en pilot eller en pakke passer til dig.',
+    title: 'Skal jeg lave dine videoer?',
+    body: 'Ring eller skriv, så hjælper jeg dig med at vælge mellem en pilot og en pakke.',
   },
 }
 
@@ -242,6 +242,6 @@ export const priser = {
   pilotLink: 'Læs om piloten',
   contact: {
     title: 'Spørgsmål til priserne?',
-    body: 'Ring eller skriv, så finder vi den pakke, der passer til dig.',
+    body: 'Ring eller skriv, så hjælper jeg dig med at finde den pakke, der passer.',
   },
 }

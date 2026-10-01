@@ -1,17 +1,9 @@
-import { faq as defaults } from '../content.js'
-
 /**
- * SPØRGSMÅL — native <details>, så det virker uden JavaScript, med tastatur
+ * SPØRGSMÅL — teksterne gives med (src/data/services.js). Native <details>, så det virker uden JavaScript, med tastatur
  * og i skærmlæsere. Kun spørgsmål, der reelt afgør, om man skriver.
  * `under` gør plads i bunden, når næste sektion er et ark (.sheet).
  */
-export default function Faq({
-  items = defaults.items,
-  title = defaults.title,
-  eyebrow = defaults.eyebrow,
-  id = defaults.id,
-  under = false,
-}) {
+export default function Faq({ items, title, eyebrow, id = 'faq', under = false }) {
   return (
     <section
       id={id}

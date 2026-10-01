@@ -1,5 +1,6 @@
 import { useRef } from 'react'
-import { calcHref, demos } from '../content.js'
+import { demos } from '../content.demos.js'
+import { paths } from '../data/texts.js'
 import { useScene } from '../motion/useScene.js'
 import { Arrow, Browser, Phone } from './Shots.jsx'
 
@@ -58,7 +59,7 @@ export default function DemoVisual({ project, eager = false }) {
   )
 }
 
-/** Handlinger til en demo: åbn den rigtige demo, og beregn en lignende hjemmeside. */
+/** Handlinger til et koncept: åbn det, og se priserne på en hjemmeside. */
 export function DemoActions({ project, className = '' }) {
   return (
     <div className={`flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center ${className}`}>
@@ -67,9 +68,8 @@ export function DemoActions({ project, className = '' }) {
         <Arrow />
         <span className="sr-only"> ({project.name})</span>
       </a>
-      <a href={calcHref({ demo: project.id })} className="btn btn-ghost min-h-11">
+      <a href={`${paths.priser}?ydelser=hjemmeside`} className="btn btn-ghost min-h-11">
         {demos.calcCta}
-        <span className="sr-only"> ({project.name})</span>
       </a>
     </div>
   )
