@@ -1,6 +1,6 @@
 # OviaSpecs — hjemmeside
 
-Hjemmesiden for OviaSpecs (oviaspecs.com): hjemmeside, marketing og booking & Google til lokale virksomheder. React 19, Vite og Tailwind 4, forudrenderet til statiske filer og hostet på Cloudflare (Workers Static Assets). Ingen backend, ingen formularer, ingen cookies og ingen tracking.
+Hjemmesiden for OviaSpecs (oviaspecs.com): hjemmeside, marketing og booking & Google til lokale virksomheder. React 19, Vite og Tailwind 4, forudrenderet til statiske filer og hostet på Cloudflare (Workers Static Assets). Ingen backend, ingen formularer og ingen cookies. Besøg tælles med Cloudflare Web Analytics, som ifølge Cloudflare ikke bruger cookies eller lokal lagring ([cloudflare.com/web-analytics](https://www.cloudflare.com/web-analytics/), [dokumentation](https://developers.cloudflare.com/web-analytics/about/)).
 
 ## Her retter du
 
@@ -51,7 +51,7 @@ public/_redirects    Viderestillinger fra gamle adresser
 privatlivspolitik/   Egen indgang, så politikken kan deles som link
 ```
 
-Skrifterne (Instrument Sans og JetBrains Mono, SIL OFL) er selvhostede i `public/fonts`. Ingen eksterne scripts eller stylesheets. Privatlivspolitikken (`src/components/Privatlivspolitik.jsx`) beskriver præcis dette; ændres noget, skal den ændres samtidig.
+Skrifterne (Instrument Sans og JetBrains Mono, SIL OFL) er selvhostede i `public/fonts`. Ingen eksterne stylesheets; det eneste eksterne script er Cloudflare Web Analytics (tilladt i CSP i `public/_headers`). Privatlivspolitikken (`src/components/Privatlivspolitik.jsx`) beskriver præcis dette; ændres noget, skal den ændres samtidig.
 
 ## Udgivelse
 
