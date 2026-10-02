@@ -187,11 +187,11 @@ export const meta = {
 /* ---- Privatlivspolitik ------------------------------------------------- */
 
 export const privacy = {
-  updated: '1. oktober 2026',
+  updated: '2. oktober 2026',
   retentionMonths: 12,
   /** [udbyder, hvad den bruges til] */
   providers: [
-    ['Cloudflare', 'hosting af siden, serverlogs og videresendelse af mail til kontakt@oviaspecs.com (Email Routing).'],
+    ['Cloudflare', 'hosting af siden, serverlogs, besøgsstatistik (Web Analytics) og videresendelse af mail til kontakt@oviaspecs.com (Email Routing).'],
     ['Google (Gmail)', 'den mailboks, mailen bliver modtaget i.'],
   ],
 }

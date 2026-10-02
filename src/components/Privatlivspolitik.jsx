@@ -7,7 +7,11 @@ import Logo from './Logo.jsx'
  *
  * Skrevet ud fra, hvad siden FAKTISK gør (tjekket i koden):
  * - ingen formularer, ingen backend: kontakt sker med telefon, SMS og mail
- * - ingen cookies, ingen analyse, ingen tracking, ingen eksterne scripts
+ * - ingen cookies og ingen reklame- eller sporingsværktøjer
+ * - besøg tælles med Cloudflare Web Analytics: ét script fra
+ *   static.cloudflareinsights.com (tilladt i CSP, public/_headers). Teksten bygger
+ *   kun på Cloudflares egne udsagn (links i README) og en test af scriptet
+ *   (ingen cookies, ingen localStorage/sessionStorage)
  * - skrifterne er selvhostede (public/fonts)
  * - prisberegnerens valg står kun i adresselinjen
  * - koncepterne husker i sessionStorage, hvilken side man kom fra (DemoShell)
@@ -46,7 +50,8 @@ export default function Privatlivspolitik() {
         <p className="t-eyebrow">Privatliv</p>
         <h1 className="t-display mt-5 text-[clamp(40px,7vw,72px)]">Privatlivspolitik</h1>
         <p className="t-body mt-6 max-w-[56ch] text-[16px]">
-          Kort version: Siden har ingen formularer, ingen cookies og ingen tracking. Jeg får kun de oplysninger,
+          Kort version: Siden har ingen formularer og bruger ingen cookies. Besøg tælles med Cloudflare Web
+          Analytics, som ifølge Cloudflare ikke indsamler personoplysninger. Jeg får kun de oplysninger,
           du selv giver mig, når du ringer, sender en SMS eller skriver en mail.
         </p>
         <p className="mt-2 text-[13px] text-muted">Sidst opdateret: {privacy.updated}</p>
@@ -145,10 +150,21 @@ export default function Privatlivspolitik() {
             </ul>
           </Section>
 
-          <Section title="Cookies og tracking">
+          <Section title="Cookies og besøgsstatistik">
             <p>
-              Siden bruger ingen cookies, ingen analyse- eller reklameværktøjer og ingen scripts fra andre. Skrifterne
-              ligger på siden selv og hentes ikke fra Google eller andre. Derfor er der intet cookiebanner.
+              Siden bruger Cloudflare Web Analytics til at tælle besøg. Et lille script fra Cloudflare
+              (static.cloudflareinsights.com) måler sidevisninger, besøg og hvor hurtigt siden indlæses. Ifølge
+              Cloudflare:
+            </p>
+            <ul className={list}>
+              <li>indsamler og bruger Web Analytics ikke dine personoplysninger,</li>
+              <li>bruges der ingen cookies eller lokal lagring (localStorage) til at indsamle tallene,</li>
+              <li>laves der ikke &quot;fingeraftryk&quot; af dig ud fra din IP-adresse, din browser eller andre data,</li>
+              <li>følger Cloudflare ikke den enkelte besøgende på tværs af hjemmesider.</li>
+            </ul>
+            <p>
+              Siden bruger ingen andre analyse- eller reklameværktøjer og ingen cookies. Skrifterne ligger på siden
+              selv og hentes ikke fra Google eller andre. Derfor er der intet cookiebanner.
             </p>
             <p>
               Prisberegneren gemmer ikke noget og sender ikke noget. Dine valg står kun i adresselinjen, så du kan

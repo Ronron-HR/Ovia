@@ -6,7 +6,17 @@
    ingen løfter om flere kunder eller mere salg. Lov kun det, der leveres.
    ========================================================================= */
 
-import { bookingSubscriptionNote, contact, formatKr, fromPrice, paidStartText, priceNote, services, tierName } from './pricing.js'
+import {
+  bookingSubscriptionNote,
+  calculator,
+  contact,
+  formatKr,
+  fromPrice,
+  paidStartText,
+  priceNote,
+  services,
+  tierName,
+} from './pricing.js'
 import { paths } from './texts.js'
 
 const web = services.hjemmeside
@@ -75,11 +85,11 @@ export const hjemmeside = {
       },
       {
         q: 'Hvad er inkluderet i drift?',
-        a: `${web.drift.included.join('. ')}. ${web.drift.fast} ${web.drift.notIncluded}`,
+        a: `${web.drift.included.join('. ')}. ${web.drift.fast} ${web.drift.unusedChanges} ${web.drift.morePagesFaq(formatKr(web.addons.extraPage.price))}`,
       },
       {
         q: 'Hvem ejer domænet og siden?',
-        a: `${web.drift.domain} Vil du have siden på din egen konto fra starten (Start og Vækst), koster det ${formatKr(web.addons.ownAccount.price)} ekstra som engangskøb i stedet for drift. Fuld fart har booking koblet på og kører altid med drift. ${web.drift.buyout(formatKr(web.drift.buyoutPrice))}`,
+        a: `${web.drift.domain} Vil du have siden på din egen konto fra starten (Start og Vækst), koster det ${formatKr(web.addons.ownAccount.price)} ekstra som engangskøb i stedet for drift. ${calculator.driftFuldFart} ${web.drift.buyout(formatKr(web.drift.buyoutPrice))}`,
       },
       {
         q: 'Hvad hvis jeg vil stoppe?',
@@ -203,7 +213,7 @@ export const bookingGoogle = {
   packages: {
     eyebrow: 'Pakker',
     title: 'Tre pakker. Du betaler én gang.',
-    note: bookingSubscriptionNote,
+    notes: [calculator.bookingDriftNote, bookingSubscriptionNote],
   },
   toCalculator,
   faq: {

@@ -47,6 +47,11 @@ export function PackageCard({ service, tier, headingLevel = 3 }) {
         {tier.features.map((f) => (
           <li key={f}>{f}</li>
         ))}
+        {(tier.optional ?? []).map((id) => (
+          <li key={id} className="text-muted">
+            Tilvalg: {service.addons[id].short} (+{formatPrice(service, service.addons[id].price)})
+          </li>
+        ))}
       </ul>
       {tier.note && <p className="t-body mt-4 text-[14px]">{tier.note}</p>}
     </article>
@@ -77,7 +82,10 @@ export function Addons({ service }) {
     <ul className="mt-6 grid grid-cols-1 gap-x-8 border-t border-rule md:grid-cols-2">
       {Object.values(service.addons).map((a) => (
         <li key={a.label} className="flex items-baseline justify-between gap-4 border-b border-rule py-3 text-[15px]">
-          <span>{a.label}</span>
+          <span>
+            {a.label}
+            {a.note && <span className="mt-0.5 block text-[13px] text-muted">{a.note}</span>}
+          </span>
           <span className="shrink-0 font-medium tabular-nums">
             +{formatPrice(service, a.price)}
             {a.unit && ` ${a.unit}`}

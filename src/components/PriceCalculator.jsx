@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   ORDER,
-  allowed,
+  blockedReason,
   bookingOnWebsite,
   cleanAnswers,
   mailBody,
@@ -73,7 +73,8 @@ export default function PriceCalculator({ defaults }) {
     const nextAnswers = { ...answers, [id]: value }
     // Tilføjes booking, efter egen konto er valgt, skifter hjemmesiden til drift: sig det.
     const clean = cleanAnswers(nextAnswers, selected)
-    setNotice(answers.drift === 'egen' && clean.drift !== 'egen' ? `${calculator.switchedToDrift} ${calculator.driftWithBooking}` : null)
+    const reason = tierFor('hjemmeside', clean) === 'fuld-fart' ? calculator.driftFuldFart : calculator.driftWithBooking
+    setNotice(answers.drift === 'egen' && clean.drift !== 'egen' ? `${calculator.switchedToDrift} ${reason}` : null)
     set({ ...state, answers: nextAnswers })
   }
 
@@ -186,7 +187,8 @@ export default function PriceCalculator({ defaults }) {
                     <legend className="text-[17px] leading-snug font-medium">{question.label}</legend>
                     <div className="mt-3 grid grid-cols-1 gap-2.5 @md:grid-cols-2">
                       {question.options.map((o) => {
-                        const off = !allowed(o, tierFor(service, answers), service === 'hjemmeside' && bookingOnWebsite(selected, answers))
+                        const reason = blockedReason(o, tierFor(service, answers), service === 'hjemmeside' && bookingOnWebsite(selected, answers))
+                        const off = Boolean(reason)
                         return (
                           <label key={o.id} className="choice" data-disabled={off || undefined}>
                             <input
@@ -202,7 +204,7 @@ export default function PriceCalculator({ defaults }) {
                               <span className="choice-mark choice-mark-radio" aria-hidden="true" />
                               <span>
                                 <span className="block text-[16px]">{o.label}</span>
-                                {off && o.disabledNote && <span className="t-body block text-[14px]">{o.disabledNote}</span>}
+                                {off && reason.trim() && <span className="t-body block text-[14px]">{reason}</span>}
                               </span>
                             </span>
                           </label>

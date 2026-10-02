@@ -5,9 +5,13 @@
  * Alle kombinationer af valgte ydelser og svar (pakker, sider, egen konto/drift,
  * Booking & Google) gennemløbes. Testen fejler, hvis:
  * - en linje eller totalen er negativ
- * - en hjemmeside uden integrationer (Start/Vækst) overstiger maxWebsiteNoIntegrations
+ * - en hjemmeside uden integrationer (uden booking, uanset pakke; ekstra sider
+ *   ud over 8 fraregnet) overstiger maxWebsiteNoIntegrations
  * - Fuld fart kan vælges med egen konto
- * - en hjemmeside med Booking & Google Vækst/Fuld fart (booking) har egen konto
+ * - en hjemmeside med booking (tilvalg eller Booking & Google Vækst/Fuld fart) har egen konto
+ * - samme slutresultat (samme pakke, sider, drift og dele) har to forskellige priser
+ * - "1 side + booking via siden" ikke koster det samme som "Start + Booking &
+ *   Google Vækst" minus Google-profilen
  * - "aftales" eller "ca." står ved en pris
  * - drift + frikøb kan blive billigere end egen konto fra start
  * - Booking & Google-pakkernes pris ≠ summen af deres komponenter
@@ -38,6 +42,7 @@ const subsets = ORDER.reduce((acc, k) => [...acc, ...acc.map((s) => [...s, k])],
 const ctx = (selected, answers) => JSON.stringify({ selected, answers })
 
 let checked = 0
+const outcomes = new Map()
 for (const selected of subsets) {
   const product = selected
     .map((k) => answerSets[k])
@@ -52,17 +57,50 @@ for (const selected of subsets) {
       if (l.key === 'hjemmeside') {
         if (l.tier.id === 'fuld-fart' && l.noDrift) fail(`Fuld fart med egen konto ${ctx(selected, answers)}`)
         const bgLine = q.lines.find((x) => x.key === 'bookingGoogle')
-        if (bgLine && bgLine.tier.includes.includes('booking') && l.noDrift) {
-          fail(`Hjemmeside med egen konto + Booking & Google ${bgLine.tier.id} ${ctx(selected, answers)}`)
+        if (l.noDrift && (l.includes.includes('booking') || bgLine?.tier.includes.includes('booking'))) {
+          fail(`Hjemmeside med booking og egen konto ${ctx(selected, answers)}`)
         }
-        const integrations = l.tier.includes.includes('booking')
-        if (!integrations && l.once > maxWebsiteNoIntegrations) {
-          fail(`Hjemmeside uden integrationer ${l.once} kr. > ${maxWebsiteNoIntegrations} kr. ${ctx(selected, answers)}`)
+        // Uden integrationer = uden booking, uanset pakke. Ekstra sider ud over 8 tæller ikke med.
+        const integrations = l.includes.includes('booking')
+        if (!integrations && l.withoutExtraPages > maxWebsiteNoIntegrations) {
+          fail(`Hjemmeside uden integrationer (${l.tier.id}) ${l.withoutExtraPages} kr. > ${maxWebsiteNoIntegrations} kr. ${ctx(selected, answers)}`)
         }
       }
     }
     if (q.total.once < 0 || q.total.monthly < 0) fail(`Negativ total ${ctx(selected, answers)}`)
+
+    // Slutresultatet: hvad kunden får (pakker, sider, drift og alle dele). Samme resultat = samme pris.
+    const web = q.lines.find((l) => l.key === 'hjemmeside')
+    const bg = q.lines.find((l) => l.key === 'bookingGoogle')
+    const mk = q.lines.find((l) => l.key === 'marketing')
+    const parts = [...new Set([...(web?.includes ?? []), ...(bg?.tier.includes ?? [])])].sort()
+    const outcome = JSON.stringify({
+      web: web && { tier: web.tier.id, pages: answers.ekstra ?? answers.sider, noDrift: web.noDrift },
+      bgAlone: !web && bg ? bg.tier.id : null,
+      parts: web ? parts : [],
+      marketing: mk?.tier.id ?? null,
+    })
+    const price = `${q.total.once}/${q.total.monthly}`
+    const seen = outcomes.get(outcome)
+    if (seen && seen.price !== price) {
+      fail(`Samme resultat, to priser: ${seen.price} (${seen.ctx}) og ${price} (${ctx(selected, answers)})`)
+    } else if (!seen) outcomes.set(outcome, { price, ctx: ctx(selected, answers) })
     if (/aftales|ca\./i.test(totalText(q.total))) fail(`Total "${totalText(q.total)}" ${ctx(selected, answers)}`)
+  }
+}
+
+// "1 side + booking via siden" = "Start + Booking & Google Vækst" minus Google-profilen.
+{
+  const viaSite = quote({ selected: ['hjemmeside'], answers: { sider: '1', bestilling: 'ja', drift: 'drift' } }).total
+  const viaBg = quote({
+    selected: ['hjemmeside', 'bookingGoogle'],
+    answers: { sider: '1', bestilling: 'nej', drift: 'drift', booking: 'ja', anmeldelser: 'nej' },
+  }).total
+  const google = components.googleProfile.price
+  if (viaSite.once !== viaBg.once - google || viaSite.monthly !== viaBg.monthly) {
+    fail(
+      `1 side + booking via siden (${viaSite.once} + ${viaSite.monthly}/md) ≠ Start + Booking & Google Vækst (${viaBg.once} + ${viaBg.monthly}/md) minus Google-profil (${google})`,
+    )
   }
 }
 

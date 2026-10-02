@@ -49,21 +49,31 @@ export function tierFor(key, answers) {
 }
 
 /**
- * Får hjemmesiden booking via Booking & Google? Kun når begge ydelser er valgt,
- * og Booking & Google-pakken indeholder booking (Vækst eller Fuld fart).
+ * Får hjemmesiden booking? Enten valgt direkte ("booke via siden: Ja") eller via
+ * Booking & Google Vækst/Fuld fart sammen med hjemmesiden. Booking betyder altid drift.
  */
 export function bookingOnWebsite(selected, answers) {
-  if (!selected.includes('hjemmeside') || !selected.includes('bookingGoogle')) return false
+  if (!selected.includes('hjemmeside')) return false
+  const web = calculator.questions.hjemmeside.flatMap((q) => q.options.filter((o) => o.addsBooking && answers[q.id] === o.id))
+  if (web.length) return true
+  if (!selected.includes('bookingGoogle')) return false
   const bg = services.bookingGoogle.tiers.find((t) => t.id === tierFor('bookingGoogle', answers))
   return bg.includes.includes('booking')
 }
 
 /**
- * Må svaret vælges? `onlyTiers`: kun med de pakker (egen konto: Start og Vækst).
- * `notWithBooking`: ikke når hjemmesiden får booking via Booking & Google.
+ * Hvorfor svaret ikke kan vælges (tom = det kan). `onlyTiers`: kun med de pakker
+ * (egen konto: Start og Vækst, ellers "Fuld fart kører med drift").
+ * `notWithBooking`: ikke når hjemmesiden får booking.
  */
-export const allowed = (option, tierId, booking = false) =>
-  (!option.onlyTiers || option.onlyTiers.includes(tierId)) && !(option.notWithBooking && booking)
+export function blockedReason(option, tierId, booking = false) {
+  if (option.onlyTiers && !option.onlyTiers.includes(tierId)) return option.disabledNotes?.tier ?? ' '
+  if (option.notWithBooking && booking) return option.disabledNotes?.booking ?? ' '
+  return ''
+}
+
+/** Må svaret vælges? */
+export const allowed = (option, tierId, booking = false) => !blockedReason(option, tierId, booking)
 
 /**
  * Fjerner svar på skjulte spørgsmål. Et svar, der ikke er tilladt (fx egen konto
@@ -197,32 +207,37 @@ function line(key, answers, booking = false) {
   let once = 0
   let monthly = 0
   let noDrift = false
+  let extraPagesCost = 0
   if (service.billing === 'monthly') {
     monthly = tier.price
   } else {
     once = tier.price
     for (const o of options) {
-      if (o.addon) once += service.addons[o.addon].price
+      const addon = o.addon && service.addons[o.addon]
+      if (addon) once += addon.price
       if (o.extraPages) {
         const page = service.addons.extraPage
-        once += o.extraPages * page.price
+        extraPagesCost = o.extraPages * page.price
+        once += extraPagesCost
         notes.push(calculator.extraPagesNote(o.extraPages, formatKr(page.price)))
       }
     }
     noDrift = options.some((o) => o.noDrift)
     monthly = noDrift ? 0 : (tier.monthly ?? 0)
-    // Booking (Fuld fart eller via Booking & Google) = altid drift; sig hvorfor.
-    if (key === 'hjemmeside' && (booking || tier.includes.includes('booking'))) notes.push(calculator.driftWithBooking)
+    // Hvorfor hjemmesiden kører med drift: Fuld fart, ellers booking (Start/Vækst).
+    if (key === 'hjemmeside') {
+      if (!service.addons.ownAccount.tiers.includes(tier.id)) notes.push(calculator.driftFuldFart)
+      else if (booking || options.some((o) => o.addsBooking)) notes.push(calculator.driftWithBooking)
+    }
   }
-  return { key, service, tier, chosen, once, monthly, noDrift, notes }
+  // Det, hjemmesiden reelt indeholder: pakkens dele + booking, hvis den er valgt som tilvalg.
+  const includes = [...new Set([...(tier.includes ?? []), ...options.filter((o) => o.addsBooking).map(() => 'booking')])]
+  /** Prisen uden ekstra sider ud over 8 (loftet for hjemmesider uden integrationer). */
+  const withoutExtraPages = once - extraPagesCost
+  return { key, service, tier, chosen, once, monthly, noDrift, notes, includes, withoutExtraPages }
 }
 
-/** "Google-profil", "Google-profil og booking", "Google-profil, booking og …" med stort forbogstav. */
-function partList(ids) {
-  const labels = ids.map((id) => components[id].label)
-  const text = labels.length > 1 ? `${labels.slice(0, -1).join(', ')} og ${labels.at(-1)}` : labels[0]
-  return text.charAt(0).toUpperCase() + text.slice(1)
-}
+const capitalize = (text) => text.charAt(0).toUpperCase() + text.slice(1)
 
 /**
  * Komponenter tælles kun én gang: de dele af Booking & Google, der allerede er
@@ -233,11 +248,16 @@ function partList(ids) {
  */
 function applyOverlap(web, bg) {
   if (!web || !bg) return
-  const shared = bg.tier.includes.filter((id) => web.tier.includes.includes(id))
+  const shared = bg.tier.includes.filter((id) => web.includes.includes(id))
   if (!shared.length) return
-  const amount = Math.min(bg.once, shared.reduce((sum, id) => sum + components[id].price, 0))
-  bg.notes.push(overlap.note(partList(shared), formatKr(amount), tierName(web.tier)))
-  bg.once = Math.max(0, bg.once - amount)
+  let left = bg.once
+  for (const id of shared) {
+    // Aldrig mere end det, der er tilbage: linjen bliver ikke negativ.
+    const amount = Math.min(left, components[id].price)
+    left -= amount
+    bg.notes.push(overlap.note(capitalize(components[id].label), formatKr(amount), overlap.reasons[id](tierName(web.tier))))
+  }
+  bg.once = Math.max(0, left)
   if (bg.once === 0) bg.allIncluded = true
 }
 
@@ -249,7 +269,7 @@ export function quote({ selected, answers }) {
   const web = lines.find((l) => l.key === 'hjemmeside')
   const bg = lines.find((l) => l.key === 'bookingGoogle')
   applyOverlap(web, bg)
-  const hasBooking = [web, bg].some((l) => l?.tier.includes.includes('booking'))
+  const hasBooking = [web, bg].some((l) => l?.includes.includes('booking'))
   return {
     lines,
     notes: hasBooking ? [bookingSubscriptionNote] : [],
