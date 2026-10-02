@@ -50,8 +50,7 @@ export function tierFor(key, answers) {
 
 /**
  * Får hjemmesiden booking? Enten valgt direkte ("booke via siden: Ja") eller via
- * Booking & Google Vækst/Fuld fart sammen med hjemmesiden. (Fuld fart har booking
- * i forvejen; den begrænses af `onlyTiers`.) Booking betyder altid drift.
+ * Booking & Google Vækst/Fuld fart sammen med hjemmesiden. Booking betyder altid drift.
  */
 export function bookingOnWebsite(selected, answers) {
   if (!selected.includes('hjemmeside')) return false
@@ -63,11 +62,18 @@ export function bookingOnWebsite(selected, answers) {
 }
 
 /**
- * Må svaret vælges? `onlyTiers`: kun med de pakker (egen konto: Start og Vækst).
- * `notWithBooking`: ikke når hjemmesiden får booking via Booking & Google.
+ * Hvorfor svaret ikke kan vælges (tom = det kan). `onlyTiers`: kun med de pakker
+ * (egen konto: Start og Vækst, ellers "Fuld fart kører med drift").
+ * `notWithBooking`: ikke når hjemmesiden får booking.
  */
-export const allowed = (option, tierId, booking = false) =>
-  (!option.onlyTiers || option.onlyTiers.includes(tierId)) && !(option.notWithBooking && booking)
+export function blockedReason(option, tierId, booking = false) {
+  if (option.onlyTiers && !option.onlyTiers.includes(tierId)) return option.disabledNotes?.tier ?? ' '
+  if (option.notWithBooking && booking) return option.disabledNotes?.booking ?? ' '
+  return ''
+}
+
+/** Må svaret vælges? */
+export const allowed = (option, tierId, booking = false) => !blockedReason(option, tierId, booking)
 
 /**
  * Fjerner svar på skjulte spørgsmål. Et svar, der ikke er tilladt (fx egen konto
@@ -201,30 +207,34 @@ function line(key, answers, booking = false) {
   let once = 0
   let monthly = 0
   let noDrift = false
+  let extraPagesCost = 0
   if (service.billing === 'monthly') {
     monthly = tier.price
   } else {
     once = tier.price
     for (const o of options) {
       const addon = o.addon && service.addons[o.addon]
-      // Et tilvalg, hvis del (`component`) allerede er med i pakken, koster ingenting.
-      if (addon && !(addon.component && tier.includes.includes(addon.component))) once += addon.price
+      if (addon) once += addon.price
       if (o.extraPages) {
         const page = service.addons.extraPage
-        once += o.extraPages * page.price
+        extraPagesCost = o.extraPages * page.price
+        once += extraPagesCost
         notes.push(calculator.extraPagesNote(o.extraPages, formatKr(page.price)))
       }
     }
     noDrift = options.some((o) => o.noDrift)
     monthly = noDrift ? 0 : (tier.monthly ?? 0)
-    // Booking (Fuld fart eller via Booking & Google) = altid drift; sig hvorfor.
-    if (key === 'hjemmeside' && (booking || tier.includes.includes('booking') || options.some((o) => o.addsBooking))) {
-      notes.push(calculator.driftWithBooking)
+    // Hvorfor hjemmesiden kører med drift: Fuld fart, ellers booking (Start/Vækst).
+    if (key === 'hjemmeside') {
+      if (!service.addons.ownAccount.tiers.includes(tier.id)) notes.push(calculator.driftFuldFart)
+      else if (booking || options.some((o) => o.addsBooking)) notes.push(calculator.driftWithBooking)
     }
   }
   // Det, hjemmesiden reelt indeholder: pakkens dele + booking, hvis den er valgt som tilvalg.
   const includes = [...new Set([...(tier.includes ?? []), ...options.filter((o) => o.addsBooking).map(() => 'booking')])]
-  return { key, service, tier, chosen, once, monthly, noDrift, notes, includes }
+  /** Prisen uden ekstra sider ud over 8 (loftet for hjemmesider uden integrationer). */
+  const withoutExtraPages = once - extraPagesCost
+  return { key, service, tier, chosen, once, monthly, noDrift, notes, includes, withoutExtraPages }
 }
 
 /** "Google-profil", "Google-profil og booking", "Google-profil, booking og …" med stort forbogstav. */

@@ -5,7 +5,8 @@
  * Alle kombinationer af valgte ydelser og svar (pakker, sider, egen konto/drift,
  * Booking & Google) gennemløbes. Testen fejler, hvis:
  * - en linje eller totalen er negativ
- * - en hjemmeside uden integrationer (Start/Vækst) overstiger maxWebsiteNoIntegrations
+ * - en hjemmeside uden integrationer (uden booking, uanset pakke; ekstra sider
+ *   ud over 8 fraregnet) overstiger maxWebsiteNoIntegrations
  * - Fuld fart kan vælges med egen konto
  * - en hjemmeside med booking (tilvalg eller Booking & Google Vækst/Fuld fart) har egen konto
  * - samme slutresultat (samme pakke, sider, drift og dele) har to forskellige priser
@@ -59,9 +60,10 @@ for (const selected of subsets) {
         if (l.noDrift && (l.includes.includes('booking') || bgLine?.tier.includes.includes('booking'))) {
           fail(`Hjemmeside med booking og egen konto ${ctx(selected, answers)}`)
         }
+        // Uden integrationer = uden booking, uanset pakke. Ekstra sider ud over 8 tæller ikke med.
         const integrations = l.includes.includes('booking')
-        if (!integrations && l.once > maxWebsiteNoIntegrations) {
-          fail(`Hjemmeside uden integrationer ${l.once} kr. > ${maxWebsiteNoIntegrations} kr. ${ctx(selected, answers)}`)
+        if (!integrations && l.withoutExtraPages > maxWebsiteNoIntegrations) {
+          fail(`Hjemmeside uden integrationer (${l.tier.id}) ${l.withoutExtraPages} kr. > ${maxWebsiteNoIntegrations} kr. ${ctx(selected, answers)}`)
         }
       }
     }

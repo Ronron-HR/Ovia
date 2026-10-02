@@ -89,7 +89,7 @@ export const hjemmeside = {
       },
       {
         q: 'Hvem ejer domænet og siden?',
-        a: `${web.drift.domain} Vil du have siden på din egen konto fra starten (Start og Vækst), koster det ${formatKr(web.addons.ownAccount.price)} ekstra som engangskøb i stedet for drift. Fuld fart har booking koblet på og kører altid med drift. ${web.drift.buyout(formatKr(web.drift.buyoutPrice))}`,
+        a: `${web.drift.domain} Vil du have siden på din egen konto fra starten (Start og Vækst), koster det ${formatKr(web.addons.ownAccount.price)} ekstra som engangskøb i stedet for drift. ${calculator.driftFuldFart} ${web.drift.buyout(formatKr(web.drift.buyoutPrice))}`,
       },
       {
         q: 'Hvad hvis jeg vil stoppe?',

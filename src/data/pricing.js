@@ -37,8 +37,9 @@ export const priceNote = 'Alle priser er ekskl. moms.'
 export const introText = 'Introduktionspriser'
 
 /**
- * Højeste pris for en hjemmeside uden integrationer (Start/Vækst, evt. med egen
- * konto). Tjekkes af scripts/test-pricing.mjs.
+ * Højeste pris for en hjemmeside uden integrationer (uden booking, uanset pakke,
+ * evt. med egen konto). Ekstra sider ud over 8 i Fuld fart tæller ikke med.
+ * Tjekkes af scripts/test-pricing.mjs.
  */
 export const maxWebsiteNoIntegrations = 5000
 
@@ -63,6 +64,12 @@ export const flags = {
   /** false: marketingsiden viser "Pilotforløb" i stedet for cases. */
   hasMarketingCases: false,
 }
+
+/* ---- Hvorfor en hjemmeside kører med drift (beregneren og FAQ) ---------- */
+/** Fuld fart kører altid med drift. */
+export const driftFuldFart = 'Fuld fart har ændringer inden 2 hverdage, så den kører med drift.'
+/** Booking på Start eller Vækst giver drift. */
+export const driftWithBooking = 'Med booking koblet på kører hjemmesiden med drift, så jeg kan holde det kørende.'
 
 /* ---- Overlap mellem hjemmeside og Booking & Google ----------------------
    Booking & Google består af komponenter. Er en komponent allerede med i den
@@ -117,40 +124,33 @@ export const services = {
       },
       {
         id: 'fuld-fart',
-        price: 5500,
-        includes: ['googleProfile', 'booking'],
+        price: 5000,
+        includes: ['googleProfile'],
         monthly: 400,
         monthlyNote: 'ændringer laves inden 2 hverdage',
-        /** Lille note nederst på pakkekortet. */
-        note: bookingSubscriptionNote,
-        summary: 'Hele pakken, med booking eller bestilling.',
-        features: [
-          'Op til 8 sider',
-          'Google-profil sat op',
-          'Lokal SEO',
-          'Booking eller bestilling koblet på',
-          '3 rettelserunder',
-        ],
+        summary: 'Flest sider, lokal SEO og hurtige ændringer.',
+        features: ['Op til 8 sider', 'Google-profil sat op', 'Lokal SEO', '3 rettelserunder'],
+        optional: ['bookingOnSite'],
       },
     ],
     addons: {
-      /** Alternativ til månedlig drift. Kun Start og Vækst: Fuld fart har booking og kører altid med drift. */
+      /** Alternativ til månedlig drift. Kun Start og Vækst uden booking: Fuld fart kører altid med drift. */
       ownAccount: {
         label: 'Egen konto i stedet for drift (kun Start og Vækst)',
         price: 1000,
         tiers: ['start', 'vaekst'],
       },
       /**
-       * Booking koblet på siden til Start og Vækst. Prisen er booking-komponentens
-       * (samme beløb, der trækkes fra Booking & Google), og i Fuld fart er booking
-       * allerede med (`component`). Booking betyder altid drift.
+       * Booking koblet på siden: tilvalg til alle tre pakker. Prisen er booking-
+       * komponentens (samme beløb, der trækkes fra Booking & Google). Ingen pakke
+       * har booking gratis. Booking betyder altid drift.
        */
       bookingOnSite: {
-        label: 'Booking koblet på (Start og Vækst, med drift)',
+        label: 'Booking koblet på (alle pakker, med drift)',
         short: 'Booking koblet på',
         price: components.booking.price,
-        component: 'booking',
-        tiers: ['start', 'vaekst'],
+        tiers: ['start', 'vaekst', 'fuld-fart'],
+        note: bookingSubscriptionNote,
       },
       /** Kun Fuld fart: sider ud over de 8, der er med i pakken. */
       extraPage: {
@@ -346,9 +346,10 @@ export const calculator = {
             noDrift: true,
             /** Kan kun vælges, når de øvrige svar peger på disse pakker (addons.ownAccount.tiers). */
             onlyTiers: ['start', 'vaekst'],
-            /** Ikke muligt, når hjemmesiden får booking via Booking & Google (Vækst eller Fuld fart). */
+            /** Ikke muligt, når hjemmesiden får booking (tilvalg eller Booking & Google Vækst/Fuld fart). */
             notWithBooking: true,
-            disabledNote: 'Med booking koblet på kører hjemmesiden med drift, så jeg kan holde det kørende.',
+            /** Forklaringen, når valget er slået fra: pakken (Fuld fart) eller booking. */
+            disabledNotes: { tier: driftFuldFart, booking: driftWithBooking },
           },
         ],
       },
@@ -411,7 +412,8 @@ export const calculator = {
   /** Efter engangsbeløbet i totalen: "5.000 kr. nu". */
   nowLabel: 'nu',
   /** Vises, når booking gør, at hjemmesiden kører med drift (Fuld fart eller Booking & Google Vækst/Fuld fart). */
-  driftWithBooking: 'Med booking koblet på kører hjemmesiden med drift, så jeg kan holde det kørende.',
+  driftWithBooking,
+  driftFuldFart,
   /** Under Booking & Google-pakkerne (/priser/ og /booking-google/): samme regel som driftWithBooking. */
   bookingDriftNote: 'Kobles booking på din hjemmeside, kører hjemmesiden med drift.',
   /** Vises i beregneren, når et valgt "egen konto" automatisk er skiftet til drift. */
