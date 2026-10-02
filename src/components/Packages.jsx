@@ -47,6 +47,11 @@ export function PackageCard({ service, tier, headingLevel = 3 }) {
         {tier.features.map((f) => (
           <li key={f}>{f}</li>
         ))}
+        {(tier.optional ?? []).map((id) => (
+          <li key={id} className="text-muted">
+            Tilvalg: {service.addons[id].short} (+{formatPrice(service, service.addons[id].price)})
+          </li>
+        ))}
       </ul>
       {tier.note && <p className="t-body mt-4 text-[14px]">{tier.note}</p>}
     </article>

@@ -103,6 +103,8 @@ export const services = {
         monthly: 300,
         summary: 'Én side med det vigtigste.',
         features: ['Onepage: alt samlet på én side', '1 rettelserunde'],
+        /** Tilvalg, der vises på pakkekortet (addons). */
+        optional: ['bookingOnSite'],
       },
       {
         id: 'vaekst',
@@ -111,6 +113,7 @@ export const services = {
         monthly: 300,
         summary: 'Flere sider, og du bliver fundet på Google.',
         features: ['Op til 5 sider', 'Google-profil sat op', 'Grundlæggende SEO', '2 rettelserunder'],
+        optional: ['bookingOnSite'],
       },
       {
         id: 'fuld-fart',
@@ -135,6 +138,18 @@ export const services = {
       ownAccount: {
         label: 'Egen konto i stedet for drift (kun Start og Vækst)',
         price: 1000,
+        tiers: ['start', 'vaekst'],
+      },
+      /**
+       * Booking koblet på siden til Start og Vækst. Prisen er booking-komponentens
+       * (samme beløb, der trækkes fra Booking & Google), og i Fuld fart er booking
+       * allerede med (`component`). Booking betyder altid drift.
+       */
+      bookingOnSite: {
+        label: 'Booking koblet på (Start og Vækst, med drift)',
+        short: 'Booking koblet på',
+        price: components.booking.price,
+        component: 'booking',
         tiers: ['start', 'vaekst'],
       },
       /** Kun Fuld fart: sider ud over de 8, der er med i pakken. */
@@ -311,8 +326,9 @@ export const calculator = {
         short: 'Booking/bestilling',
         label: 'Skal kunderne kunne booke eller bestille via siden?',
         options: [
-          { id: 'nej', label: 'Nej', tier: 'start' },
-          { id: 'ja', label: 'Ja', tier: 'fuld-fart' },
+          // Bestemmer ikke pakken (det gør antal sider): "Ja" lægger booking til og giver drift.
+          { id: 'nej', label: 'Nej' },
+          { id: 'ja', label: 'Ja', addon: 'bookingOnSite', addsBooking: true },
         ],
       },
       {
