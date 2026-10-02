@@ -177,6 +177,10 @@ export const services = {
       ],
       fast: 'På Fuld fart laves ændringerne inden 2 hverdage.',
       notIncluded: 'Ubrugte ændringer overføres ikke. Flere sider: se tilvalg ovenfor. Nyt design aftales separat.',
+      /** FAQ'en "Hvad er inkluderet i drift?" (ingen tilvalg ovenfor dér). Prisen indsættes fra addons.extraPage. */
+      unusedChanges: 'Ubrugte ændringer overføres ikke.',
+      morePagesFaq: (price) =>
+        `Flere sider: På Start og Vækst opgraderer du til næste pakke. På Fuld fart koster ekstra sider ${price} pr. side. Nyt design aftales separat.`,
       domain: 'Domænet registreres i dit navn.',
       binding: 'Ingen binding. Opsigelse med 1 måneds varsel.',
       /** Pris for at købe siden fri, når drift opsiges. */

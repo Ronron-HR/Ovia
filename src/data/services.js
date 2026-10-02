@@ -85,7 +85,7 @@ export const hjemmeside = {
       },
       {
         q: 'Hvad er inkluderet i drift?',
-        a: `${web.drift.included.join('. ')}. ${web.drift.fast} ${web.drift.notIncluded}`,
+        a: `${web.drift.included.join('. ')}. ${web.drift.fast} ${web.drift.unusedChanges} ${web.drift.morePagesFaq(formatKr(web.addons.extraPage.price))}`,
       },
       {
         q: 'Hvem ejer domænet og siden?',
