@@ -2,7 +2,7 @@ import ContactSection from '../components/ContactSection.jsx'
 import { Addons, DriftTerms, PackageGrid, PriceNote } from '../components/Packages.jsx'
 import PriceCalculator from '../components/PriceCalculator.jsx'
 import { Arrow } from '../components/Shots.jsx'
-import { introText, services } from '../data/pricing.js'
+import { calculator, introText, services } from '../data/pricing.js'
 import { priser as p } from '../data/services.js'
 import { paths } from '../data/texts.js'
 
@@ -60,6 +60,9 @@ export default function Priser() {
                   <PackageGrid service={service} headingLevel={4} />
                 </div>
                 <Addons service={service} />
+                {key === 'bookingGoogle' && calculator.bookingDriftNote && (
+                  <p className="mt-5 text-[15px] text-ink">{calculator.bookingDriftNote}</p>
+                )}
                 {service.drift && <DriftTerms service={service} className="mt-6" headingLevel={4} />}
               </div>
             )

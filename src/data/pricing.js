@@ -412,6 +412,8 @@ export const calculator = {
   nowLabel: 'nu',
   /** Vises, når booking gør, at hjemmesiden kører med drift (Fuld fart eller Booking & Google Vækst/Fuld fart). */
   driftWithBooking: 'Med booking koblet på kører hjemmesiden med drift, så jeg kan holde det kørende.',
+  /** Under Booking & Google-pakkerne (/priser/ og /booking-google/): samme regel som driftWithBooking. */
+  bookingDriftNote: 'Kobles booking på din hjemmeside, kører hjemmesiden med drift.',
   /** Vises i beregneren, når et valgt "egen konto" automatisk er skiftet til drift. */
   switchedToDrift: 'Din hjemmeside er skiftet til drift.',
   /** Note ved ekstra undersider i Fuld fart. */

@@ -6,7 +6,17 @@
    ingen løfter om flere kunder eller mere salg. Lov kun det, der leveres.
    ========================================================================= */
 
-import { bookingSubscriptionNote, contact, formatKr, fromPrice, paidStartText, priceNote, services, tierName } from './pricing.js'
+import {
+  bookingSubscriptionNote,
+  calculator,
+  contact,
+  formatKr,
+  fromPrice,
+  paidStartText,
+  priceNote,
+  services,
+  tierName,
+} from './pricing.js'
 import { paths } from './texts.js'
 
 const web = services.hjemmeside
@@ -203,7 +213,7 @@ export const bookingGoogle = {
   packages: {
     eyebrow: 'Pakker',
     title: 'Tre pakker. Du betaler én gang.',
-    note: bookingSubscriptionNote,
+    notes: [calculator.bookingDriftNote, bookingSubscriptionNote],
   },
   toCalculator,
   faq: {
