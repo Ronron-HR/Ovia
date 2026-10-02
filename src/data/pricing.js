@@ -84,8 +84,13 @@ export const components = {
 }
 
 export const overlap = {
-  /** Fx "Trukket fra: Google-profil og booking (1.000 kr.), fordi det allerede er med i Hjemmeside Fuld fart." */
-  note: (parts, amount, webTier) => `Trukket fra: ${parts} (${amount}), fordi det allerede er med i Hjemmeside ${webTier}.`,
+  /** Én note pr. del, fx "Trukket fra: Booking (500 kr.), fordi du allerede har valgt booking på din hjemmeside." */
+  note: (part, amount, reason) => `Trukket fra: ${part} (${amount}), ${reason}.`,
+  /** Hvorfor delen er trukket fra (pr. komponent). */
+  reasons: {
+    googleProfile: (webTier) => `fordi Google-profilen allerede er med i din hjemmesidepakke (${webTier})`,
+    booking: () => 'fordi du allerede har valgt booking på din hjemmeside',
+  },
   /** Vises i stedet for en pris, når hele Booking & Google-pakken er dækket (0 kr.). */
   allIncluded: 'Allerede med i din hjemmeside',
 }

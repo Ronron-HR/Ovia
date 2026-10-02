@@ -237,12 +237,7 @@ function line(key, answers, booking = false) {
   return { key, service, tier, chosen, once, monthly, noDrift, notes, includes, withoutExtraPages }
 }
 
-/** "Google-profil", "Google-profil og booking", "Google-profil, booking og …" med stort forbogstav. */
-function partList(ids) {
-  const labels = ids.map((id) => components[id].label)
-  const text = labels.length > 1 ? `${labels.slice(0, -1).join(', ')} og ${labels.at(-1)}` : labels[0]
-  return text.charAt(0).toUpperCase() + text.slice(1)
-}
+const capitalize = (text) => text.charAt(0).toUpperCase() + text.slice(1)
 
 /**
  * Komponenter tælles kun én gang: de dele af Booking & Google, der allerede er
@@ -255,9 +250,14 @@ function applyOverlap(web, bg) {
   if (!web || !bg) return
   const shared = bg.tier.includes.filter((id) => web.includes.includes(id))
   if (!shared.length) return
-  const amount = Math.min(bg.once, shared.reduce((sum, id) => sum + components[id].price, 0))
-  bg.notes.push(overlap.note(partList(shared), formatKr(amount), tierName(web.tier)))
-  bg.once = Math.max(0, bg.once - amount)
+  let left = bg.once
+  for (const id of shared) {
+    // Aldrig mere end det, der er tilbage: linjen bliver ikke negativ.
+    const amount = Math.min(left, components[id].price)
+    left -= amount
+    bg.notes.push(overlap.note(capitalize(components[id].label), formatKr(amount), overlap.reasons[id](tierName(web.tier))))
+  }
+  bg.once = Math.max(0, left)
   if (bg.once === 0) bg.allIncluded = true
 }
 
