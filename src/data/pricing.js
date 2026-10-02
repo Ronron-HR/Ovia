@@ -171,7 +171,7 @@ export const services = {
         'Op til 2 små ændringer om måneden (tekst, billeder, mindre designjusteringer)',
       ],
       fast: 'På Fuld fart laves ændringerne inden 2 hverdage.',
-      notIncluded: 'Ubrugte ændringer overføres ikke. Nyt design eller nye sider aftales separat.',
+      notIncluded: 'Ubrugte ændringer overføres ikke. Flere sider: se tilvalg ovenfor. Nyt design aftales separat.',
       domain: 'Domænet registreres i dit navn.',
       binding: 'Ingen binding. Opsigelse med 1 måneds varsel.',
       /** Pris for at købe siden fri, når drift opsiges. */
