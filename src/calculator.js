@@ -116,8 +116,7 @@ export function switchTier(key, tierId, answers, selected = ORDER) {
  */
 export function driftSwitchNotice(before, after) {
   if (before.drift !== 'egen' || after.drift === 'egen') return ''
-  const reason = tierFor('hjemmeside', after) === 'fuld-fart' ? calculator.driftFuldFart : calculator.driftWithBooking
-  return `${calculator.switchedToDrift} ${reason}`
+  return `${calculator.switchedToDrift} ${calculator.driftWithBooking}`
 }
 
 /* ---- Adresselinje ------------------------------------------------------ */
@@ -197,10 +196,10 @@ function line(key, answers, booking = false) {
     }
     noDrift = options.some((o) => o.noDrift)
     monthly = noDrift ? 0 : (tier.monthly ?? 0)
-    // Hvorfor hjemmesiden kører med drift: Fuld fart, ellers booking (Start/Vækst).
+    // Fuld fart: hurtige ændringer gælder kun med drift. Booking: hjemmesiden kører med drift.
     if (key === 'hjemmeside') {
-      if (!service.addons.ownAccount.tiers.includes(tier.id)) notes.push(calculator.driftFuldFart)
-      else if (booking || options.some((o) => o.addsBooking)) notes.push(calculator.driftWithBooking)
+      if (tier.id === 'fuld-fart') notes.push(calculator.fuldFartNote)
+      if (booking || options.some((o) => o.addsBooking)) notes.push(calculator.driftWithBooking)
     }
   }
   // Det, hjemmesiden reelt indeholder: pakkens dele + booking, hvis den er valgt som tilvalg.

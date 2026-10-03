@@ -5,9 +5,10 @@
  * Alle kombinationer af valgte ydelser og svar (pakker, sider, egen konto/drift,
  * Booking & Google) gennemløbes. Testen fejler, hvis:
  * - en linje eller totalen er negativ
- * - en hjemmeside uden integrationer (uden booking, uanset pakke; ekstra sider
- *   ud over 8 fraregnet) overstiger maxWebsiteNoIntegrations
- * - Fuld fart kan vælges med egen konto
+ * - en hjemmeside på Start eller Vækst uden integrationer (uden booking)
+ *   overstiger maxWebsiteNoIntegrations
+ * - Fuld fart med egen konto uden booking ≠ pakke + egen konto + ekstra sider
+ *   (6.000 kr. + 400 kr. pr. side ud over 8), eller har en månedspris
  * - en hjemmeside med booking (tilvalg eller Booking & Google Vækst/Fuld fart) har egen konto
  * - samme slutresultat (samme pakke, sider, drift og dele) har to forskellige priser
  * - "1 side + booking via siden" ikke koster det samme som "Start + Booking &
@@ -59,14 +60,19 @@ for (const selected of subsets) {
       const text = priceText(l)
       if (/aftales|ca\./i.test(text)) fail(`"${text}" ${ctx(selected, answers)}`)
       if (l.key === 'hjemmeside') {
-        if (l.tier.id === 'fuld-fart' && l.noDrift) fail(`Fuld fart med egen konto ${ctx(selected, answers)}`)
+        if (l.tier.id === 'fuld-fart' && l.noDrift) {
+          const w = services.hjemmeside
+          const extra = calculator.questions.hjemmeside.find((x) => x.id === 'ekstra').options.find((o) => o.id === answers.ekstra)?.extraPages ?? 0
+          const want = w.tiers.find((t) => t.id === 'fuld-fart').price + w.addons.ownAccount.price + extra * w.addons.extraPage.price
+          if (l.once !== want || l.monthly !== 0) fail(`Fuld fart + egen konto: ${l.once} + ${l.monthly}/md (forventet ${want} + 0) ${ctx(selected, answers)}`)
+        }
         const bgLine = q.lines.find((x) => x.key === 'bookingGoogle')
         if (l.noDrift && (l.includes.includes('booking') || bgLine?.tier.includes.includes('booking'))) {
           fail(`Hjemmeside med booking og egen konto ${ctx(selected, answers)}`)
         }
-        // Uden integrationer = uden booking, uanset pakke. Ekstra sider ud over 8 tæller ikke med.
+        // Loftet gælder Start og Vækst uden integrationer (uden booking).
         const integrations = l.includes.includes('booking')
-        if (!integrations && l.withoutExtraPages > maxWebsiteNoIntegrations) {
+        if (l.tier.id !== 'fuld-fart' && !integrations && l.withoutExtraPages > maxWebsiteNoIntegrations) {
           fail(`Hjemmeside uden integrationer (${l.tier.id}) ${l.withoutExtraPages} kr. > ${maxWebsiteNoIntegrations} kr. ${ctx(selected, answers)}`)
         }
       }
@@ -106,6 +112,21 @@ for (const selected of subsets) {
       `1 side + booking via siden (${viaSite.once} + ${viaSite.monthly}/md) ≠ Start + Booking & Google Vækst (${viaBg.once} + ${viaBg.monthly}/md) minus Google-profil (${google})`,
     )
   }
+}
+
+// Fuld fart + egen konto uden booking: 6.000 kr., ingen månedspris; 12 sider = +4 × 400 kr.
+for (const [ekstra, want] of [[undefined, 6000], ['12', 7600]]) {
+  const answers = { sider: ekstra ? '9+' : '6-8', ...(ekstra ? { ekstra } : {}), bestilling: 'nej', drift: 'egen' }
+  const t = quote({ selected: ['hjemmeside'], answers }).total
+  if (t.once !== want || t.monthly !== 0 || !t.noDrift) fail(`Fuld fart + egen konto (${ekstra ?? 8} sider): ${t.once} + ${t.monthly}/md, forventet ${want} + 0`)
+}
+
+// Pakkevælgeren: skift til Fuld fart beholder egen konto, men ikke med booking (så drift).
+{
+  const keep = switchTier('hjemmeside', 'fuld-fart', { sider: '2-5', bestilling: 'nej', drift: 'egen' }, ['hjemmeside'])
+  if (keep.drift !== 'egen') fail(`Skift til Fuld fart fjernede egen konto: ${JSON.stringify(keep)}`)
+  const booked = switchTier('hjemmeside', 'fuld-fart', { sider: '2-5', bestilling: 'ja', drift: 'egen' }, ['hjemmeside'])
+  if (booked.drift !== 'drift') fail(`Skift til Fuld fart med booking beholdt egen konto: ${JSON.stringify(booked)}`)
 }
 
 // Teksten under prisen må heller ikke sige "aftales" eller "ca.".
