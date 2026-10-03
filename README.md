@@ -21,7 +21,7 @@ Adresser og metadata: `src/routes.js`. Nøglerne skal passe med `src/pageKeys.js
 
 ## Prisberegneren
 
-`src/components/PriceCalculator.jsx` + `src/calculator.js`. Trin 1 er flervalg af ydelser, derefter ét trin pr. valgt ydelse og så resultatet (højst 5 trin). Hvert svar peger på en pakke, og den højeste vinder. Prisen er fast: pakkeprisen plus eventuelle tilvalg (fx egen konto). Alle ydelser har `buffer: 0`, og `npm test` fejler, hvis et interval sniger sig ind. Valgene står kun i adresselinjen. Resultatet har Ring, SMS og "Send mig tilbuddet" (mailto) med forudfyldt opsummering.
+`src/components/PriceCalculator.jsx` + `src/calculator.js`. Trin 1 er flervalg af ydelser, derefter ét trin pr. valgt ydelse og så resultatet (højst 5 trin). Hvert svar peger på en pakke, og den højeste vinder. Under hver ydelse i resultatet kan kunden skifte pakke (Start / Vækst / Fuld fart); skiftet sætter pakkens svar (`calculator.tierSwitch` i pricing.js), så svar, resultat og adresselinje altid passer sammen. Prisen er fast: pakkeprisen plus eventuelle tilvalg (fx egen konto). Alle ydelser har `buffer: 0`, og `npm test` fejler, hvis et interval sniger sig ind. Valgene står kun i adresselinjen. Resultatet har Ring, SMS og "Send mig tilbuddet" (mailto) med forudfyldt opsummering.
 
 ## Kommandoer
 

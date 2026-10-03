@@ -17,12 +17,15 @@
  * - Booking & Google-pakkernes pris ≠ summen af deres komponenter
  * - et beløb ("123 kr.", "1.500 kr./md") står hardkodet uden for pricing.js
  * - hjemmesidens drift står som 300 eller 400 kr./md (pakker, beregner eller filer)
+ * - et pakkeskift i resultatet giver noget andet end at svare direkte med
+ *   pakkens svar (og testen beviser selv, at den fanger et skift uden nye svar)
  *   (koncepterne i src/demos er undtaget: deres menupriser er fiktivt indhold)
  */
 import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { calculator, components, maxWebsiteNoIntegrations, services } from '../src/data/pricing.js'
-import { ORDER, priceText, quote, totalText } from '../src/calculator.js'
+import { ORDER, parse, priceText, quote, serialize, switchTier, totalText } from '../src/calculator.js'
+const NONE = []
 
 const failures = []
 const fail = (msg) => failures.push(msg)
@@ -139,6 +142,62 @@ for (const file of scanned) {
     .forEach((text, i) => {
       if (AMOUNT.test(text)) fail(`Hardkodet beløb i ${file}:${i + 1}: ${text.trim().slice(0, 100)}`)
     })
+}
+
+// Pakkeskift i resultatet: resultatet efter et skift skal være det samme som at
+// svare direkte med den nye pakkes svar. DIRECT er pakkernes svar skrevet ud her
+// i testen (ikke læst fra calculator.tierSwitch), så en fejl i opsætningen fanges.
+const DIRECT = {
+  hjemmeside: { start: { sider: '1' }, vaekst: { sider: '2-5' }, 'fuld-fart': { sider: '6-8' } },
+  marketing: {
+    start: { videoer: '4', poste: 'nej', annoncer: 'nej' },
+    vaekst: { videoer: '8', poste: 'ja', annoncer: 'nej' },
+    'fuld-fart': { videoer: '12', poste: 'ja', annoncer: 'ja' },
+  },
+  bookingGoogle: {
+    start: { booking: 'nej', anmeldelser: 'nej' },
+    vaekst: { booking: 'ja', anmeldelser: 'nej' },
+    'fuld-fart': { booking: 'ja', anmeldelser: 'ja' },
+  },
+}
+/** Det, kunden ser: pakke, pris, drift og noter pr. linje, totalen og svarene (adresselinjen). */
+const result = (selected, answers) => {
+  const q = quote({ selected, answers })
+  return JSON.stringify({
+    lines: q.lines.map((l) => [l.key, l.tier.id, l.once, l.monthly, l.noDrift, priceText(l), l.notes]),
+    total: totalText(q.total),
+    url: serialize(parse(serialize({ selected, answers, step: selected.length + 1 })), NONE),
+  })
+}
+/** Antal skift, hvor resultatet ikke passer med de direkte svar. */
+function switchMismatches(switchFn, report) {
+  let bad = 0
+  for (const selected of subsets) {
+    const product = selected
+      .map((k) => answerSets[k])
+      .reduce((acc, list) => acc.flatMap((a) => list.map((b) => ({ ...a, ...b }))), [{}])
+    for (const answers of product) {
+      for (const key of selected) {
+        for (const tierId of Object.keys(DIRECT[key])) {
+          const switched = switchFn(key, tierId, answers, selected)
+          // Direkte: ydelsens egne svar skiftes ud (ekstra sider fjernes), resten beholdes.
+          const direct = { ...answers, ...DIRECT[key][tierId] }
+          if (key === 'hjemmeside') delete direct.ekstra
+          const wrongTier = quote({ selected, answers: switched }).lines.find((l) => l.key === key).tier.id !== tierId
+          if (wrongTier || result(selected, switched) !== result(selected, direct)) {
+            bad++
+            if (report && bad <= 5) fail(`Pakkeskift ${key} → ${tierId} ≠ direkte svar ${ctx(selected, answers)}`)
+          }
+        }
+      }
+    }
+  }
+  return bad
+}
+switchMismatches(switchTier, true)
+// Beviset for, at testen virker: et skift, der ikke opdaterer svarene, skal fanges.
+if (switchMismatches((key, tierId, answers) => answers, false) === 0) {
+  fail('Pakkeskift-testen fanger ikke et skift, der lader svarene stå uændret')
 }
 
 // Hjemmesidens drift er 299/399 kr./md: den gamle pris (300 eller 400 kr./md) må

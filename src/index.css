@@ -889,3 +889,13 @@
     opacity: 0.45;
   }
 }
+
+@layer components {
+  /* Pakkevælgeren i beregnerens resultat: samme valg-flade, lidt lavere (stadig ≥ 44 px). */
+  .choice-sm .choice-box {
+    min-height: 48px;
+    gap: 12px;
+    padding: 8px 14px;
+    border-radius: 10px;
+  }
+}

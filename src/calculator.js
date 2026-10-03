@@ -100,6 +100,27 @@ export function cleanAnswers(answers, selected = ORDER) {
   return out
 }
 
+/**
+ * Skift pakke for én ydelse fra resultatet: pakkens svar (calculator.tierSwitch)
+ * erstatter ydelsens svar, og resten (booking via siden, drift) beholdes.
+ * Bagefter ryddes der op som ved ethvert svar: ekstra sider forsvinder uden
+ * "Flere end 8 sider", og egen konto skiftes til drift, hvis pakken eller
+ * booking kræver det.
+ */
+export function switchTier(key, tierId, answers, selected = ORDER) {
+  return cleanAnswers({ ...answers, ...calculator.tierSwitch[key][tierId].answers }, selected)
+}
+
+/**
+ * Forklaringen, når "egen konto" er skiftet til drift af et nyt svar eller et
+ * pakkeskift (tom = ingen ændring): Fuld fart eller booking.
+ */
+export function driftSwitchNotice(before, after) {
+  if (before.drift !== 'egen' || after.drift === 'egen') return ''
+  const reason = tierFor('hjemmeside', after) === 'fuld-fart' ? calculator.driftFuldFart : calculator.driftWithBooking
+  return `${calculator.switchedToDrift} ${reason}`
+}
+
 /* ---- Adresselinje ------------------------------------------------------ */
 
 /** Trinnet må ikke vise noget, der kræver svar, som mangler. */

@@ -437,6 +437,30 @@ export const calculator = {
   /** Under totalen, når "egen konto" er valgt: hvad kunden selv står for. Tom = skjult. */
   ownAccountNote:
     'Du ejer selv kontoen og betaler domæne og hosting direkte til udbyderen. Rettelser efter levering aftaler vi pris på, før jeg går i gang.',
+  /**
+   * Pakkevælgeren under hver ydelse i resultatet. Et skift sætter pakkens svar
+   * (spørgsmålets id → svar), så svarene og resultatet aldrig modsiger hinanden.
+   * Svar, der ikke står her (booking via siden, drift), beholdes; reglerne for
+   * drift og egen konto gælder stadig. `now` vises efter skiftet.
+   */
+  tierSwitch: {
+    legend: (service) => `Skift pakke for ${service}`,
+    hjemmeside: {
+      start: { answers: { sider: '1' }, now: 'Nu: én side med det hele' },
+      vaekst: { answers: { sider: '2-5' }, now: 'Nu: op til 5 sider' },
+      'fuld-fart': { answers: { sider: '6-8' }, now: 'Nu: op til 8 sider' },
+    },
+    marketing: {
+      start: { answers: { videoer: '4', poste: 'nej', annoncer: 'nej' }, now: 'Nu: 4 videoer om måneden, du poster selv' },
+      vaekst: { answers: { videoer: '8', poste: 'ja', annoncer: 'nej' }, now: 'Nu: 8 videoer om måneden, jeg poster' },
+      'fuld-fart': { answers: { videoer: '12', poste: 'ja', annoncer: 'ja' }, now: 'Nu: 12 videoer om måneden, jeg poster og styrer annoncer' },
+    },
+    bookingGoogle: {
+      start: { answers: { booking: 'nej', anmeldelser: 'nej' }, now: 'Nu: kun Google-profilen' },
+      vaekst: { answers: { booking: 'ja', anmeldelser: 'nej' }, now: 'Nu: Google-profil og online booking' },
+      'fuld-fart': { answers: { booking: 'ja', anmeldelser: 'ja' }, now: 'Nu: Google-profil, booking og QR-skilt' },
+    },
+  },
   /** Forudfyldt start på SMS og mail fra resultatet. */
   smsIntro: 'Hej Ronny. Jeg har brugt prisberegneren på oviaspecs.com:',
   mailSubject: 'Tilbud fra prisberegneren',
