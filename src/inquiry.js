@@ -22,8 +22,7 @@ export const inquiry = {
   optional: '(valgfrit)',
   submit: 'Send til Ronny',
   sending: 'Sender …',
-  /** UDFYLDES AF RONNY: hvornår du svarer (fx "inden for en hverdag"). Må ikke gå live sådan. */
-  thanks: 'Tak. Jeg svarer [UDFYLDES AF RONNY].',
+  thanks: 'Tak. Jeg svarer inden for 24 timer.',
   /** Fejl: telefonnummeret sættes ind mellem de to dele (contact.phone). */
   failed: 'Det blev ikke sendt. Ring på',
   failedAfter: ', så tager jeg den derfra.',
