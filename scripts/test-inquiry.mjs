@@ -159,6 +159,21 @@ check(danishPhone('+45 53 61 36 99') === '53613699', 'dansk nummer normaliseres 
   }
 }
 
+// Linket i mailen peger altid på det domæne, kunden brugte (aldrig et andet).
+for (const host of ['https://oviaspecs.com', 'https://beregner-cta-scroll-ovia.ronnyhong723.workers.dev']) {
+  for (const link of [LINK, `https://evil.example${LINK}`, `https://beregner-cta-scroll-ovia.ronnyhong723.workers.dev${LINK}`]) {
+    const e = env({ TURNSTILE_SECRET: undefined })
+    const req = new Request(`${host}/api/henvendelse`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Origin: host },
+      body: JSON.stringify({ contact: 'kunde@example.com', link }),
+    })
+    await handleInquiry(req, e, { EmailMessage })
+    const got = /Link til beregningen: (\S+)/.exec(decode(e.mail.sent[0]?.raw ?? '').text)?.[1] ?? ''
+    check(got.startsWith(`${host}/priser/?ydelser=`), `link på ${host} (sendt: ${link.slice(0, 40)}…) blev ${got}`)
+  }
+}
+
 // Dansk telefonnummer: ingen Reply-To, nummeret står i mailen.
 {
   const r = await call({ contact: '+45 53 61 36 99', name: '', link: LINK })
