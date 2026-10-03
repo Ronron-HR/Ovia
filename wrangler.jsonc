@@ -35,12 +35,9 @@
   // Daglig cron kl. 05:00 UTC (07:00 dansk sommertid, 06:00 vintertid):
   // sender fejlede mails igen, opgiver efter 3 genforsøg og mailer en opsummering
   // (worker/index.js, runDaily). Kører kun på den udgivne version, ikke på preview.
-  "triggers": { "crons": ["0 5 * * *"] }
+  "triggers": { "crons": ["0 5 * * *"] },
 
-  // ---- MANGLER: D1-databasens ID ------------------------------------------
-  // Indtil bindingen DB findes, svarer /api/henvendelse 503, og formularen viser
-  // "Det gik ikke igennem. Ring på … i stedet." Intet påstås sendt.
-  // Tabellen oprettes med worker/schema.sql i D1-konsollen.
-  //
-  // , "d1_databases": [{ "binding": "DB", "database_name": "ovia-henvendelser", "database_id": "<DATABASE ID>" }]
+  // Henvendelserne gemmes her FØR mailen sendes (oprettet i weur, 3. okt. 2026).
+  // Tabellen: worker/schema.sql (kørt med wrangler d1 execute --remote).
+  "d1_databases": [{ "binding": "DB", "database_name": "ovia-henvendelser", "database_id": "68b79d10-436c-45f9-b3cc-db6c8acc4d6e" }]
 }
