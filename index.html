@@ -62,10 +62,21 @@
         window.__oviaSpecsReady = function () {
           root.setAttribute('data-motion-ready', '1')
         }
+
+        // Direkte link til et senere trin i beregneren (fx ?…&trin=4): siden
+        // er forudrenderet med trin 1, og ved hydrering skifter beregneren til
+        // det rigtige trin og bliver højere. Indtil da holdes alt EFTER
+        // beregneren ude af layoutet (index.css), så det ikke skubbes ned
+        // (layoutskift). PriceCalculator fjerner markeringen, når trinnet er
+        // vist; vagthunden herunder gør det senest efter 2,5s.
+        var trin = /[?&]trin=(\d+)/.exec(location.search)
+        if (trin && Number(trin[1]) > 1) root.setAttribute('data-calc-pending', '')
+
         setTimeout(function () {
           if (!root.hasAttribute('data-motion-ready')) {
             root.classList.remove('js-motion')
           }
+          root.removeAttribute('data-calc-pending')
         }, 2500)
       })()
     </script>

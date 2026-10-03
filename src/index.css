@@ -865,6 +865,15 @@
   }
 }
 
+/* Direkte link til et senere trin (index.html sætter data-calc-pending):
+   alt efter beregneren i dokumentet er ude af layoutet, til beregneren har
+   skiftet til det rigtige trin. Det dukker så op som nyt indhold under den,
+   i stedet for at blive skubbet ned (layoutskift). Uden for lagene, så ingen
+   hjælpeklasse kan overstyre det. */
+html[data-calc-pending] :is([data-calc], :has([data-calc])) ~ * {
+  display: none !important;
+}
+
 @layer components {
   /* ---- Prisberegner ------------------------------------------------------ */
   .calc {

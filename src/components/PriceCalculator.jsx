@@ -63,6 +63,16 @@ export default function PriceCalculator({ defaults }) {
     heading.current?.closest('[data-calc]')?.scrollIntoView({ block: 'start' })
   }, [step])
 
+  // Direkte link til et senere trin: index.html holder indholdet under
+  // beregneren skjult (data-calc-pending), til trinnet fra adresselinjen er
+  // vist. Her er det vist, så markeringen fjernes efter næste maling.
+  useEffect(() => {
+    const root = document.documentElement
+    if (!root.hasAttribute('data-calc-pending')) return
+    const frame = requestAnimationFrame(() => root.removeAttribute('data-calc-pending'))
+    return () => cancelAnimationFrame(frame)
+  }, [step])
+
   const go = (next) => {
     setMissing(null)
     setNotice(null)
