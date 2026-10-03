@@ -5,7 +5,6 @@ import {
   bookingOnWebsite,
   cleanAnswers,
   driftSwitchNotice,
-  mailBody,
   priceParts,
   priceText,
   quote,
@@ -13,19 +12,20 @@ import {
   switchTier,
   tierFor,
   totalText,
-  useCalc,
   visibleQuestions,
 } from '../calculator.js'
+import { useCalc } from '../useCalc.js'
 import { calculator, flags, fromPrice, introText, priceNote, services, tierName } from '../data/pricing.js'
-import ContactButtons from './ContactButtons.jsx'
+import SendQuote from './SendQuote.jsx'
 
 /**
  * PRISBEREGNER
  *
  * Trin 1: hvilke ydelser (flervalg). Derefter ét trin pr. valgt ydelse og så
  * resultatet: højst 5 trin. Prisen vises med det samme, uden formular.
- * Efter resultatet: Ring, SMS og "Send mig tilbuddet" (mailto med
- * opsummering). Ingen tracking, intet sendes; valgene står kun i adresselinjen.
+ * Under prisen: "Få tilbuddet sendt" (SendQuote) med Ring og SMS som sekundære
+ * links. Ingen tracking; valgene står i adresselinjen og sendes kun, hvis
+ * kunden selv sender formularen.
  *
  * TILGÆNGELIGHED: almindelige checkbokse og radioknapper i fieldsets (piletaster
  * og mellemrum virker), overskriften får fokus ved hvert nyt trin, og prisen
@@ -316,16 +316,7 @@ export default function PriceCalculator({ defaults }) {
             </ul>
           )}
 
-          <ContactButtons
-            sms
-            smsText={smsBody(q)}
-            mailSubject={calculator.mailSubject}
-            mailBody={mailBody(q)}
-            writeLabel="Send mig tilbuddet"
-            className="mt-7"
-            stretch
-            stack
-          />
+          <SendQuote smsText={smsBody(q)} />
 
           <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2">
             <button type="button" onClick={() => go(1)} className="calc-link">

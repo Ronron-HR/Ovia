@@ -899,3 +899,54 @@
     border-radius: 10px;
   }
 }
+
+@layer components {
+  /* "Få tilbuddet sendt" under prisen i beregneren. */
+  .send {
+    padding-top: 26px;
+    border-top: 1px solid var(--color-rule);
+  }
+
+  /* Tekstfelt: 16px, så iOS ikke zoomer ind. */
+  .field {
+    display: block;
+    width: 100%;
+    max-width: 420px;
+    min-height: 52px;
+    padding: 12px 14px;
+    border: 1px solid var(--color-rule);
+    border-radius: 12px;
+    background: var(--color-paper);
+    font: inherit;
+    font-size: 16px;
+    color: var(--color-ink);
+  }
+
+  .field:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+  }
+
+  .field[aria-invalid] {
+    border-color: var(--color-accent);
+  }
+
+  .btn:disabled {
+    cursor: progress;
+    opacity: 0.7;
+  }
+
+  /* Honeypot: uden for skærmen, ikke display:none (nogle robotter springer skjulte felter over). */
+  .send-trap {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  /* Turnstile (usynlig) fylder intet. */
+  .send-turnstile:empty {
+    display: none;
+  }
+}

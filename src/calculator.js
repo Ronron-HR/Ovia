@@ -1,4 +1,3 @@
-import { useSyncExternalStore } from 'react'
 import { bookingSubscriptionNote, calculator, components, formatKr, overlap, services, tierName } from './data/pricing.js'
 
 /**
@@ -6,10 +5,10 @@ import { bookingSubscriptionNote, calculator, components, formatKr, overlap, ser
  * Spørgsmål, svar og priser står i src/data/pricing.js.
  *
  * TILSTAND: kun i adresselinjen (?ydelser=hjemmeside,marketing&sider=2-5&…&trin=3),
- * sat med replaceState, så et link med valgene virker, og intet gemmes andre
- * steder. Ingen cookies, intet lager, intet sendes nogen steder hen.
- * Serveren og første klient-render får starttilstanden (forudrendering og
- * hydrering er ens).
+ * sat med replaceState (src/useCalc.js), så et link med valgene virker, og intet
+ * gemmes andre steder. Ingen cookies og intet lager i browseren. Filen er ren
+ * logik uden React og window, så workeren (worker/index.js) kan regne den samme
+ * opsummering ud fra linket, når kunden sender tilbuddet.
  *
  * FORVALG: på ydelsessiderne er sidens ydelse valgt på forhånd (`defaults`).
  * Står der intet `ydelser` i adresselinjen, bruges forvalget; har kunden
@@ -23,7 +22,7 @@ const RANK = ['start', 'vaekst', 'fuld-fart']
 const allQuestions = ORDER.flatMap((key) => calculator.questions[key])
 
 export const EMPTY = Object.freeze({ selected: [], answers: {}, step: 0 })
-const NONE = Object.freeze([])
+export const NONE = Object.freeze([])
 
 /* ---- Spørgsmål, der vises, og svar, der må vælges ----------------------- */
 
@@ -124,7 +123,7 @@ export function driftSwitchNotice(before, after) {
 /* ---- Adresselinje ------------------------------------------------------ */
 
 /** Trinnet må ikke vise noget, der kræver svar, som mangler. */
-function fit(state) {
+export function fit(state) {
   const { selected } = state
   const answers = cleanAnswers(state.answers, selected)
   const last = selected.length + 1 // resultatet
@@ -161,53 +160,6 @@ export function serialize({ selected, answers, step }, defaults = NONE) {
   if (step > 0) q.set('trin', String(step + 1))
   const s = q.toString()
   return s ? `?${s}` : ''
-}
-
-/* ---- Lager (useSyncExternalStore over adresselinjen) ------------------- */
-
-const listeners = new Set()
-/** Én gemt tilstand pr. forvalg, så useSyncExternalStore får samme objekt igen. */
-const cache = new Map()
-
-function snapshot(defaults) {
-  const key = defaults.join(',')
-  const { search } = window.location
-  const hit = cache.get(key)
-  if (hit?.search === search) return hit.state
-  const state = parse(search, defaults)
-  cache.set(key, { search, state })
-  return state
-}
-
-const initial = new Map()
-/** Starttilstanden (server og første klient-render): kun forvalget. */
-function initialState(defaults) {
-  const key = defaults.join(',')
-  if (!initial.has(key)) initial.set(key, defaults.length ? fit({ ...EMPTY, selected: ORDER.filter((k) => defaults.includes(k)) }) : EMPTY)
-  return initial.get(key)
-}
-
-function subscribe(fn) {
-  listeners.add(fn)
-  window.addEventListener('popstate', fn)
-  return () => {
-    listeners.delete(fn)
-    window.removeEventListener('popstate', fn)
-  }
-}
-
-export function useCalc(defaults = NONE) {
-  const state = useSyncExternalStore(
-    subscribe,
-    () => snapshot(defaults),
-    () => initialState(defaults),
-  )
-  const set = (next) => {
-    const url = `${window.location.pathname}${serialize(fit(next), defaults)}${window.location.hash}`
-    window.history.replaceState(window.history.state, '', url)
-    listeners.forEach((fn) => fn())
-  }
-  return [state, set]
 }
 
 /* ---- Beregning ---------------------------------------------------------- */
@@ -341,9 +293,9 @@ export function summaryLines(q) {
   return out
 }
 
-/** Noter til mailen: pr. ydelse og fælles (fx bookingabonnement). */
-function allNotes(q) {
-  return [...q.lines.flatMap((l) => l.notes), ...q.notes]
+/** Noter til mailen: pr. ydelse og fælles (fx bookingabonnement), hver som en sætning. */
+export function quoteNotes(q) {
+  return [...q.lines.flatMap((l) => l.notes), ...q.notes].map((n) => sentence(n))
 }
 
 /** Sætning med punktum til sidst, også når prisen ender på "kr.". */
@@ -351,17 +303,4 @@ export const sentence = (text) => (text.endsWith('.') ? text : `${text}.`)
 
 export function smsBody(q) {
   return [calculator.smsIntro, ...summaryLines(q)].join('\n')
-}
-
-export function mailBody(q) {
-  return [
-    ...calculator.mailIntro,
-    '',
-    ...summaryLines(q).map((s) => `- ${s}`),
-    '',
-    ...allNotes(q).map((n) => sentence(n)),
-    ...(calculator.finalNote ? [sentence(calculator.finalNote)] : []),
-    '',
-    ...calculator.mailOutro,
-  ].join('\n')
 }

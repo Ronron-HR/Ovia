@@ -4,13 +4,43 @@
   // Filen findes, så `wrangler deploy` ikke autokonfigurerer projektet og
   // kører bygget igen med et andet Vite-setup (det brød forudrenderingen).
   //
-  // Siden er udelukkende statiske filer: ingen worker-kode, ingen backend.
-  // Viderestillinger står i public/_redirects, headers i public/_headers.
+  // Siden er statiske filer. Kun /api/* (henvendelser fra prisberegneren) rammer
+  // workeren i worker/index.js (run_worker_first); alt andet serveres som
+  // statiske filer uden at køre kode.
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "ovia",
+  "main": "worker/index.js",
   "compatibility_date": "2026-09-25",
+  "observability": { "enabled": true },
   "assets": {
     "directory": "./dist",
-    "not_found_handling": "404-page"
-  }
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    "run_worker_first": ["/api/*"]
+  },
+
+  // Afsender og modtager af mailen med henvendelsen.
+  "vars": {
+    "MAIL_FROM": "kontakt@oviaspecs.com",
+    "MAIL_TO": "ronnyhong723@gmail.com"
+  },
+
+  // Rate limit pr. IP: højst 5 henvendelser pr. minut. Kræver ingen opsætning
+  // i dashboardet (namespace_id er et frit valgt tal for denne konto).
+  "ratelimits": [{ "name": "RATE_LIMITER", "namespace_id": "4711", "simple": { "limit": 5, "period": 60 } }]
+
+  // ---- KRÆVER OPSÆTNING I DASHBOARDET (se README, "Henvendelser") -----------
+  // Indtil begge dele er sat op, svarer /api/henvendelse 503, og formularen
+  // viser "Det gik ikke igennem. Ring på … i stedet." Intet påstås sendt.
+  //
+  // 1. D1-databasen, hvor henvendelserne gemmes FØR mailen sendes. Opret den i
+  //    dashboardet (Storage & Databases → D1 → Create, navn: ovia-henvendelser),
+  //    og indsæt dens Database ID her. Tabellen oprettes af workeren selv.
+  //
+  // , "d1_databases": [{ "binding": "DB", "database_name": "ovia-henvendelser", "database_id": "<DATABASE ID>" }]
+  //
+  // 2. Cloudflare Email Routing på oviaspecs.com med ronnyhong723@gmail.com som
+  //    bekræftet modtageradresse (Email → Email Routing → Destination addresses).
+  //
+  // , "send_email": [{ "name": "SEND_EMAIL", "destination_address": "ronnyhong723@gmail.com" }]
 }

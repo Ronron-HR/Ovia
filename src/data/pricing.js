@@ -461,12 +461,8 @@ export const calculator = {
       'fuld-fart': { answers: { booking: 'ja', anmeldelser: 'ja' }, now: 'Nu: Google-profil, booking og QR-skilt' },
     },
   },
-  /** Forudfyldt start på SMS og mail fra resultatet. */
+  /** Forudfyldt start på SMS fra resultatet (mailen fra formularen står i src/inquiry.js). */
   smsIntro: 'Hej Ronny. Jeg har brugt prisberegneren på oviaspecs.com:',
-  mailSubject: 'Tilbud fra prisberegneren',
-  /** Mailens linjer før og efter opsummeringen ('' = tom linje). */
-  mailIntro: ['Hej Ronny,', '', 'Jeg har brugt prisberegneren på oviaspecs.com og vil gerne have et tilbud.'],
-  mailOutro: ['Mit navn:', 'Min virksomhed:', 'Mit telefonnummer:'],
 }
 
 /* Svarene på "Hvor mange sider i alt?": 9 sider op til maxPages, hver med antal ekstra undersider. */

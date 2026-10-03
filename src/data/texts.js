@@ -187,11 +187,15 @@ export const meta = {
 /* ---- Privatlivspolitik ------------------------------------------------- */
 
 export const privacy = {
-  updated: '2. oktober 2026',
+  updated: '3. oktober 2026',
+  /** Henvendelser slettes efter så mange måneder (også automatisk i databasen, worker/index.js). */
   retentionMonths: 12,
   /** [udbyder, hvad den bruges til] */
   providers: [
-    ['Cloudflare', 'hosting af siden, serverlogs, besøgsstatistik (Web Analytics) og videresendelse af mail til kontakt@oviaspecs.com (Email Routing).'],
+    [
+      'Cloudflare',
+      'hosting af siden, serverlogs, besøgsstatistik (Web Analytics), databasen med henvendelser fra formularen (D1), spamfilter på formularen (Turnstile) og afsendelse og videresendelse af mail (Email Routing).',
+    ],
     ['Google (Gmail)', 'den mailboks, mailen bliver modtaget i.'],
   ],
 }
