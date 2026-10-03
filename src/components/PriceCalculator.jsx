@@ -19,6 +19,10 @@ import { calculator, flags, fromPrice, introText, priceNote, services, tierName 
 import Amount from './Amount.jsx'
 import SendQuote from './SendQuote.jsx'
 
+/** Etiketterne over totalen i resultatet. "Nu" er calculator.nowLabel med stort. */
+const NOW_LABEL = calculator.nowLabel.charAt(0).toUpperCase() + calculator.nowLabel.slice(1)
+const MONTH_LABEL = 'Pr. måned'
+
 /**
  * PRISBEREGNER
  *
@@ -251,23 +255,37 @@ export default function PriceCalculator({ defaults }) {
           </h2>
           {introText && <p className="badge mt-3">{introText}</p>}
           {/* Totalen: "X kr. nu" og "Y kr./md" hver for sig; et beløb på 0 vises ikke. */}
-          <p className="calc-total amount-lg mt-4 leading-tight font-medium tracking-tight tabular-nums">
+          {/* Totalen: små etiketter over beløbene ("Nu", "Pr. måned"). Etiketterne
+              er kun visuelle; skærmlæsere hører "X kr. nu, Y kr. pr. måned". */}
+          <div className="calc-total amount-lg mt-4 flex flex-wrap items-end gap-x-10 gap-y-3 tabular-nums">
             {totalParts.once && (
-              <span className="calc-total-main block">
-                <Amount text={totalParts.once} /> {calculator.nowLabel}
-              </span>
+              <p className="calc-total-part">
+                <span aria-hidden="true" className="t-eyebrow block">
+                  {NOW_LABEL}
+                </span>
+                <span className="calc-total-main block">
+                  <Amount text={totalParts.once} />
+                  <span className="sr-only"> {calculator.nowLabel},</span>
+                </span>
+              </p>
             )}
             {totalParts.month && (
-              <span className={`block ${totalParts.once ? 'calc-total-sub mt-1' : 'calc-total-main'}`}>
-                <Amount text={totalParts.month} />
-              </span>
+              <p className="calc-total-part">
+                <span aria-hidden="true" className="t-eyebrow block">
+                  {MONTH_LABEL}
+                </span>
+                <span className={`block ${totalParts.once ? 'calc-total-sub' : 'calc-total-main'}`}>
+                  <Amount text={totalParts.month.replace('/md', '')} />
+                  <span className="sr-only"> {MONTH_LABEL.toLowerCase()}</span>
+                </span>
+              </p>
             )}
-            {q.total.noDrift && (
-              <span className="mt-1 block text-[16px] font-normal tracking-normal text-muted">
-                {totalParts.month ? calculator.noDriftWithMonthly : calculator.noDriftTotal}
-              </span>
-            )}
-          </p>
+          </div>
+          {q.total.noDrift && (
+            <p className="mt-2 text-[16px] text-muted">
+              {totalParts.month ? calculator.noDriftWithMonthly : calculator.noDriftTotal}
+            </p>
+          )}
           {q.total.noDrift && calculator.ownAccountNote && (
             <p className="mt-3 max-w-[52ch] text-[15px] text-ink">{calculator.ownAccountNote}</p>
           )}
@@ -281,7 +299,7 @@ export default function PriceCalculator({ defaults }) {
                   <p className="text-[16px] font-medium">
                     {l.service.name}: {tierName(l.tier)}
                   </p>
-                  <Amount text={priceText(l)} className="block text-[16px] tabular-nums" />
+                  <Amount text={priceText(l)} serif={false} className="block text-[16px] tabular-nums" />
                 </div>
                 {l.key === 'marketing' && !flags.hasMarketingCases && (
                   <p className="mt-1 text-[15px]">
@@ -373,7 +391,7 @@ function TierPicker({ line, state, onChange, status }) {
                 <span className="choice-mark choice-mark-radio" aria-hidden="true" />
                 <span className="min-w-0">
                   <span className="choice-title block text-[15px]">{tierName(t)}</span>
-                  <Amount text={price} className="t-body block text-[13px] tabular-nums" />
+                  <Amount text={price} serif={false} className="t-body block text-[13px] tabular-nums" />
                 </span>
               </span>
             </label>

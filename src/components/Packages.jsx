@@ -1,6 +1,7 @@
 import {
   formatKr,
   formatPrice,
+  fuldFartNote,
   priceNote,
   recommendedLabel,
   recommendedTier,
@@ -24,6 +25,9 @@ import Amount from './Amount.jsx'
 export function PackageCard({ service, tier, headingLevel = 3 }) {
   const H = `h${headingLevel}`
   const recommended = tier.id === recommendedTier
+  // Fuld fart: "ændringer inden 2 hverdage" står i driftlinjen under prisen,
+  // så den samme oplysning (fuldFartNote) gentages ikke nederst i kortet.
+  const note = tier.monthlyNote && tier.note === fuldFartNote ? null : tier.note
   return (
     <article className="package" data-recommended={recommended}>
       {(recommended || tier.limit) && (
@@ -46,7 +50,12 @@ export function PackageCard({ service, tier, headingLevel = 3 }) {
         {tier.monthly && (
           <>
             + drift <span className="whitespace-nowrap text-ink tabular-nums">{formatKr(tier.monthly)}/md</span>
-            {tier.monthlyNote && <span className="block">{tier.monthlyNote}</span>}
+            {tier.monthlyNote && (
+              <>
+                {' '}
+                <span aria-hidden="true">·</span> {tier.monthlyNote}
+              </>
+            )}
           </>
         )}
       </p>
@@ -61,7 +70,7 @@ export function PackageCard({ service, tier, headingLevel = 3 }) {
           </li>
         ))}
       </ul>
-      <p className="package-note t-body text-[14px]">{tier.note}</p>
+      <p className="package-note t-body text-[14px]">{note}</p>
     </article>
   )
 }

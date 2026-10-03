@@ -696,6 +696,10 @@
     color: var(--color-muted);
   }
 
+  .package-drift {
+    text-wrap: pretty;
+  }
+
   .package-drift:not(:empty) {
     padding-top: 10px;
   }
@@ -736,6 +740,20 @@
 
   .amount-per {
     color: var(--color-muted);
+  }
+
+  /* Små beløb (pakkevælger, ydelseslinjer): sidens skrift med tabelcifre. */
+  .amount-num-plain {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Resultatets total: etiket over hvert beløb. */
+  .calc-total .t-eyebrow {
+    margin-bottom: 6px;
+  }
+
+  .calc-total-part {
+    line-height: 1;
   }
 
   .calc-total-main {
