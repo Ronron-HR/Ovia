@@ -16,6 +16,7 @@ import {
 } from '../calculator.js'
 import { useCalc } from '../useCalc.js'
 import { calculator, flags, fromPrice, introText, priceNote, services, tierName } from '../data/pricing.js'
+import Amount from './Amount.jsx'
 import SendQuote from './SendQuote.jsx'
 
 /**
@@ -119,16 +120,17 @@ export default function PriceCalculator({ defaults }) {
 
       <div className="flex items-center justify-between gap-4">
         <p className="font-mono text-[12px] tracking-[0.08em] text-muted uppercase">
-          Trin {Math.min(step + 1, Math.max(total, 1))} af {selected.length ? total : '…'}
+          {/* Antallet af trin kendes først, når der er valgt mindst én ydelse. */}
+          {selected.length ? `Trin ${Math.min(step + 1, total)} af ${total}` : `Trin ${step + 1}`}
         </p>
         {step > 0 && (
           <button type="button" onClick={() => go(step - 1)} className="calc-link">
-            ← Tilbage
+            <span aria-hidden="true">←</span> Tilbage
           </button>
         )}
       </div>
       <div className="calc-progress mt-3" aria-hidden="true">
-        <span style={{ width: `${selected.length ? ((step + 1) / total) * 100 : 8}%` }} />
+        <span style={{ transform: `scaleX(${selected.length ? (step + 1) / total : 0.08})` }} />
       </div>
 
       {!isResult ? (
@@ -155,7 +157,7 @@ export default function PriceCalculator({ defaults }) {
                     <span className="choice-box">
                       <span className="choice-mark" aria-hidden="true" />
                       <span>
-                        <span className="block text-[17px] font-medium">{services[key].name}</span>
+                        <span className="choice-title block text-[17px]">{services[key].name}</span>
                         <span className="t-body block text-[14px]">{fromPrice(services[key])}</span>
                       </span>
                     </span>
@@ -214,7 +216,7 @@ export default function PriceCalculator({ defaults }) {
                             <span className="choice-box">
                               <span className="choice-mark choice-mark-radio" aria-hidden="true" />
                               <span>
-                                <span className="block text-[16px]">{o.label}</span>
+                                <span className="choice-title choice-title-regular block text-[16px]">{o.label}</span>
                                 {off && reason.trim() && <span className="t-body block text-[14px]">{reason}</span>}
                               </span>
                             </span>
@@ -249,15 +251,15 @@ export default function PriceCalculator({ defaults }) {
           </h2>
           {introText && <p className="badge mt-3">{introText}</p>}
           {/* Totalen: "X kr. nu" og "Y kr./md" hver for sig; et beløb på 0 vises ikke. */}
-          <p className="mt-4 leading-tight font-medium tracking-tight tabular-nums">
+          <p className="calc-total amount-lg mt-4 leading-tight font-medium tracking-tight tabular-nums">
             {totalParts.once && (
-              <span className="block text-[clamp(1.75rem,5vw,2.5rem)]">
-                {totalParts.once} {calculator.nowLabel}
+              <span className="calc-total-main block">
+                <Amount text={totalParts.once} /> {calculator.nowLabel}
               </span>
             )}
             {totalParts.month && (
-              <span className={`block ${totalParts.once ? 'mt-1 text-[clamp(1.375rem,3.5vw,1.75rem)]' : 'text-[clamp(1.75rem,5vw,2.5rem)]'}`}>
-                {totalParts.month}
+              <span className={`block ${totalParts.once ? 'calc-total-sub mt-1' : 'calc-total-main'}`}>
+                <Amount text={totalParts.month} />
               </span>
             )}
             {q.total.noDrift && (
@@ -279,7 +281,7 @@ export default function PriceCalculator({ defaults }) {
                   <p className="text-[16px] font-medium">
                     {l.service.name}: {tierName(l.tier)}
                   </p>
-                  <p className="text-[16px] tabular-nums">{priceText(l)}</p>
+                  <Amount text={priceText(l)} className="block text-[16px] tabular-nums" />
                 </div>
                 {l.key === 'marketing' && !flags.hasMarketingCases && (
                   <p className="mt-1 text-[15px]">
@@ -370,8 +372,8 @@ function TierPicker({ line, state, onChange, status }) {
               <span className="choice-box">
                 <span className="choice-mark choice-mark-radio" aria-hidden="true" />
                 <span className="min-w-0">
-                  <span className="block text-[15px] font-medium">{tierName(t)}</span>
-                  <span className="t-body block text-[13px] tabular-nums">{price}</span>
+                  <span className="choice-title block text-[15px]">{tierName(t)}</span>
+                  <Amount text={price} className="t-body block text-[13px] tabular-nums" />
                 </span>
               </span>
             </label>

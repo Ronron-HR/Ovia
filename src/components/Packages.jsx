@@ -6,44 +6,52 @@ import {
   recommendedTier,
   tierName,
 } from '../data/pricing.js'
+import Amount from './Amount.jsx'
 
 /**
  * PAKKER — alle tal og al tekst kommer fra src/data/pricing.js.
  *
- * PackageCard: én pakke. Den anbefalede (Vækst) får mørk kant og mærket
+ * PackageCard: én pakke. Den anbefalede (Vækst) får kant i blæk og mærket
  * "Anbefalet". En pakke med `limit` (fx "Max 1 kunde ad gangen") viser det
- * som et lille mærke; det er en oplysning, ikke en nedtælling.
+ * som et lille mærke; det er en oplysning, ikke en nedtælling. Mærkerne sidder
+ * på kortets overkant, så de ikke skubber titlen ned.
+ *
+ * Fra md står kortene i faste rækker (CSS subgrid i .package-grid): titel,
+ * tekst, pris, driftlinje, liste og note. Derfor er driftlinjen og noten
+ * altid i markuppen, også når de er tomme, så pris og liste står på samme
+ * linje på tværs af kortene, og Fuld farts ekstra linje ikke flytter listen.
  */
 export function PackageCard({ service, tier, headingLevel = 3 }) {
   const H = `h${headingLevel}`
   const recommended = tier.id === recommendedTier
   return (
     <article className="package" data-recommended={recommended}>
-      <header>
-        {/* Mærkerækken holder pakkerne på linje side om side; på mobil fylder den kun, når der er et mærke. */}
-        <div className={`${recommended || tier.limit ? 'flex mb-3' : 'hidden md:flex md:mb-3'} min-h-7 flex-wrap items-center gap-2`}>
-          {recommended && <span className="badge badge-accent">{recommendedLabel}</span>}
+      {(recommended || tier.limit) && (
+        <p className="package-flags">
+          {recommended && <span className="badge badge-ink">{recommendedLabel}</span>}
           {tier.limit && <span className="badge">{tier.limit}</span>}
-        </div>
-        <H className="t-display t-h4">
-          <span className="sr-only">{service.name}: </span>
-          {tierName(tier)}
-        </H>
-        <p className="t-body mt-1.5 text-[15px]">{tier.summary}</p>
-      </header>
-
-      <p className="mt-6">
-        <span className="text-[32px] leading-none font-medium tracking-tight tabular-nums">{formatKr(tier.price)}</span>
-        {service.billing === 'monthly' && <span className="t-body ml-1 text-[15px]">/md</span>}
-      </p>
-      {tier.monthly && (
-        <p className="t-body mt-2 text-[14px]">
-          + drift {formatKr(tier.monthly)}/md
-          {tier.monthlyNote && <span className="block text-muted">{tier.monthlyNote}</span>}
         </p>
       )}
+      <H className="t-display t-h4">
+        <span className="sr-only">{service.name}: </span>
+        {tierName(tier)}
+      </H>
+      <p className="package-summary t-body text-[15px]">{tier.summary}</p>
 
-      <ul className="spec-list mt-6">
+      <p className="package-price amount-lg">
+        <Amount text={formatKr(tier.price)} />
+        {service.billing === 'monthly' && <span className="package-per">/md</span>}
+      </p>
+      <p className="package-drift t-body text-[14px]">
+        {tier.monthly && (
+          <>
+            + drift <span className="whitespace-nowrap text-ink tabular-nums">{formatKr(tier.monthly)}/md</span>
+            {tier.monthlyNote && <span className="block">{tier.monthlyNote}</span>}
+          </>
+        )}
+      </p>
+
+      <ul className="spec-list package-list">
         {tier.features.map((f) => (
           <li key={f}>{f}</li>
         ))}
@@ -53,15 +61,15 @@ export function PackageCard({ service, tier, headingLevel = 3 }) {
           </li>
         ))}
       </ul>
-      {tier.note && <p className="t-body mt-4 text-[14px]">{tier.note}</p>}
+      <p className="package-note t-body text-[14px]">{tier.note}</p>
     </article>
   )
 }
 
-/** De tre pakker for én ydelse, side om side fra md. */
+/** De tre pakker for én ydelse, side om side fra md (faste rækker, se .package-grid). */
 export function PackageGrid({ service, headingLevel = 3 }) {
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-5">
+    <div className="package-grid">
       {service.tiers.map((tier) => (
         <PackageCard key={tier.id} service={service} tier={tier} headingLevel={headingLevel} />
       ))}

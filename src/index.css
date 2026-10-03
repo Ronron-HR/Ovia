@@ -24,6 +24,32 @@
   src: url("/fonts/jetbrains-mono-latin-400.woff2") format("woff2");
 }
 
+/* Logoets skrift (Instrument Serif) bruges KUN til beløb: pakkekort, beregnerens
+   resultat og pakkevælgeren. Filen er skåret ned til cifre, punktum, mellemrum
+   og "kr" (4 KB, unicode-range herunder), så alt andet aldrig hentes i den.
+   Ingen preload: beløbene står under folden, og swap må ikke forsinke LCP.
+   Fallbacken er Times New Roman skaleret til samme bredde og højde
+   (size-adjust/ascent-override målt på et typisk pakkebeløb), så beløbet ikke hopper
+   ved skiftet. Licens: public/fonts/LICENSE-instrument-serif.txt. */
+@font-face {
+  font-family: "Instrument Serif";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/instrument-serif-tal.woff2") format("woff2");
+  unicode-range: U+0020, U+002E, U+0030-0039, U+006B, U+0072;
+}
+
+@font-face {
+  font-family: "Instrument Serif Fallback";
+  src: local("Times New Roman"), local("TimesNewRomanPSMT"), local("Times"), local("Liberation Serif");
+  size-adjust: 85%;
+  ascent-override: 116.5%;
+  descent-override: 36.5%;
+  line-gap-override: 0%;
+  unicode-range: U+0020, U+002E, U+0030-0039, U+006B, U+0072;
+}
+
 /* =========================================================================
    RETNING — SKANDINAVISK RO
    Varm offwhite som papir, lys varm grå til adskillelse, koksgrå til tekst,
@@ -39,6 +65,8 @@
                                        tekst og streger, aldrig brødtekst)
      accent-soft på ink  7,2:1 (bronze til tekst på de mørke flader)
      hvid   på accent    5,2:1 (hover på knapper)
+     ink 60 % på surface 4,0:1 (kun stor tekst: "kr." i beløb, som "Specs" i logoet)
+     field  på paper     3,3:1 (kanter på felter og valg)
    npm run brand læser ink, paper og accent herfra.
    ========================================================================= */
 
@@ -52,8 +80,10 @@
   --color-accent-soft: #c9ad8a; /* bronze på mørk flade */
   --color-accent-strong: #7a5d40; /* bronze til lille tekst på paper-2 (4,65:1) */
   --color-rule: #d6d1c9; /* hårstreger på paper */
+  --color-field: #8a847b; /* kant på felter og valg: 3,3:1 på paper, 3,5:1 på surface (WCAG 1.4.11) */
 
   --font-sans: "Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-amount: "Instrument Serif", "Instrument Serif Fallback", var(--font-sans);
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   /* Typografisk skala */
@@ -248,6 +278,7 @@
   /* ---- Knapper --------------------------------------------------------- */
   .btn {
     display: inline-flex;
+    touch-action: manipulation;
     align-items: center;
     justify-content: center;
     gap: 10px;
@@ -424,27 +455,29 @@
     background: var(--color-accent);
   }
 
-  /* Liste med en kort bronzestreg som mærke. */
+  /* Liste med en kort bronzestreg som mærke. Én hårstreg over gruppen, ikke
+     om hver linje. */
+  .spec-list {
+    display: grid;
+    align-content: start;
+    gap: 9px;
+    padding-top: 16px;
+    border-top: 1px solid var(--color-rule);
+  }
+
   .spec-list > li {
     display: grid;
-    grid-template-columns: 26px 1fr;
-    gap: 0 4px;
-    padding-block: 11px;
-    border-top: 1px solid var(--color-rule);
+    grid-template-columns: 24px 1fr;
     font-size: 15px;
     line-height: 1.5;
   }
 
   .spec-list > li::before {
     content: "";
-    width: 12px;
+    width: 10px;
     height: 1px;
     margin-top: 0.75em;
     background: var(--color-accent);
-  }
-
-  .spec-list > li:last-child {
-    border-bottom: 1px solid var(--color-rule);
   }
 
 }
@@ -480,10 +513,16 @@
     border: 1px solid var(--color-rule);
     border-radius: 14px;
     background: var(--color-surface);
+    touch-action: manipulation;
     transition:
       border-color var(--dur-hover) var(--ease-entrance),
       transform var(--dur-hover) var(--ease-entrance),
       box-shadow var(--dur-hover) var(--ease-entrance);
+  }
+
+  /* Fokusringen følger kortets runding (outline følger border-radius). */
+  .service-card:focus-visible {
+    border-radius: 14px;
   }
 
   .service-card > :last-child {
@@ -576,25 +615,140 @@
 
 @layer components {
   /* ---- Pakker ------------------------------------------------------------ */
+  /* Luft over kortene til mærkerne, der sidder på overkanten. Fra md: seks
+     faste rækker, som hvert kort deler (subgrid): titel, tekst, pris,
+     driftlinje, liste, note. Så står pris og liste på samme linje i alle tre. */
+  .package-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    padding-top: 13px;
+  }
+
   .package {
+    position: relative;
     display: flex;
-    height: 100%;
     flex-direction: column;
-    padding: 22px;
+    padding: 28px 22px 24px;
     border: 1px solid var(--color-rule);
     border-radius: 14px;
     background: var(--color-surface);
   }
 
+  /* Anbefalet: kant i blæk. 2px kant, 1px mindre polstring, så indholdet står
+     præcis som i nabokortene. */
   .package[data-recommended='true'] {
-    border-color: var(--color-ink);
-    box-shadow: 0 0 0 1px var(--color-ink);
+    border: 2px solid var(--color-ink);
+    padding: 27px 21px 23px;
   }
 
   @media (min-width: 768px) {
-    .package {
-      padding: 28px;
+    .package-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0 20px;
     }
+
+    .package {
+      display: grid;
+      grid-row: span 6;
+      grid-template-rows: subgrid;
+      row-gap: 0;
+      padding: 32px 28px 28px;
+    }
+
+    .package[data-recommended='true'] {
+      padding: 31px 27px 27px;
+    }
+  }
+
+  /* Mærkerne ("Anbefalet", "Max 1 kunde ad gangen") sidder på overkanten. */
+  .package-flags {
+    position: absolute;
+    top: 0;
+    left: 20px;
+    right: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    transform: translateY(-50%);
+  }
+
+  .package[data-recommended='true'] .package-flags {
+    top: -1px;
+    left: 19px;
+  }
+
+  .package-summary {
+    margin-top: 6px;
+  }
+
+  .package-price {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    margin-top: 24px;
+    font-size: 48px;
+    line-height: 1;
+  }
+
+  .package-per {
+    font-size: 15px;
+    color: var(--color-muted);
+  }
+
+  .package-drift:not(:empty) {
+    padding-top: 10px;
+  }
+
+  .package-list {
+    margin-top: 22px;
+  }
+
+  .package-note:not(:empty) {
+    padding-top: 16px;
+  }
+
+  /* ---- Beløb i logoets skrift (components/Amount.jsx) -------------------- */
+  .amount {
+    white-space: nowrap;
+  }
+
+  /* Instrument Serif er smal og lav: 1,18 × omgivende tekst giver samme
+     visuelle størrelse som sidens skrift. Store beløb sætter --amount-scale: 1. */
+  .amount-num {
+    font-family: var(--font-amount);
+    font-size: calc(1em * var(--amount-scale, 1.18));
+    font-weight: 400;
+    font-synthesis: none;
+    font-variant-numeric: lining-nums tabular-nums;
+    letter-spacing: -0.005em;
+    line-height: 1;
+  }
+
+  /* Store beløb: "kr." i 60 % blæk, som "Specs" i logoet (4,0:1, kun stor tekst). */
+  .amount-lg {
+    --amount-scale: 1;
+  }
+
+  .amount-lg .amount-unit {
+    color: rgb(37 37 37 / 0.6);
+  }
+
+  .amount-per {
+    color: var(--color-muted);
+  }
+
+  .calc-total-main {
+    font-size: clamp(1.75rem, 5vw, 2.5rem);
+  }
+
+  .calc-total-sub {
+    font-size: clamp(1.375rem, 3.5vw, 1.75rem);
+  }
+
+  .calc-total-main .amount-num,
+  .calc-total-sub .amount-num {
+    font-size: 1.3em;
   }
 
   /* Små mærker: "Anbefalet" og begrænsninger som "Max 1 kunde ad gangen". */
@@ -616,6 +770,23 @@
     border-color: var(--color-accent);
     background: var(--color-accent);
     color: #fff;
+  }
+
+  /* "Anbefalet": blæk med faviconets bronzeprik ("O."). */
+  .badge-ink {
+    gap: 7px;
+    padding-left: 9px;
+    border-color: var(--color-ink);
+    background: var(--color-ink);
+    color: var(--color-paper);
+  }
+
+  .badge-ink::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--color-accent-soft);
   }
 
   /* ---- Koncepter: telefonramme på konceptets farve ---------------------- */
@@ -701,14 +872,17 @@
 
   .calc-progress > span {
     display: block;
+    width: 100%;
     height: 100%;
     background: var(--color-accent);
-    transition: width 320ms var(--ease-entrance);
+    transform-origin: left center;
+    transition: transform 320ms var(--ease-entrance);
   }
 
   .calc-link {
     min-height: 44px;
     cursor: pointer;
+    touch-action: manipulation;
     font-size: 15px;
     font-weight: 500;
     color: var(--color-ink);
@@ -729,6 +903,8 @@
     position: relative;
     display: block;
     cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .choice-input {
@@ -744,29 +920,46 @@
     align-items: center;
     gap: 14px;
     padding: 12px 16px;
-    border: 1px solid var(--color-rule);
+    border: 1px solid var(--color-field);
     border-radius: 12px;
     background: var(--color-paper);
     transition:
       border-color var(--dur-hover) var(--ease-entrance),
-      background-color var(--dur-hover) var(--ease-entrance);
+      background-color var(--dur-hover) var(--ease-entrance),
+      box-shadow var(--dur-hover) var(--ease-entrance);
   }
 
+  /* Hover: kun en mørkere grå kant, så den ikke ligner et valg. */
   @media (hover: hover) {
     .choice:hover .choice-box {
-      border-color: var(--color-ink);
+      border-color: var(--color-muted);
     }
   }
 
+  /* Valgt: ikke kun farve. Kanten bliver 2px blæk, markøren fyldes med
+     flueben/prik (form), og teksten bliver fed. */
   .choice-input:checked + .choice-box {
     border-color: var(--color-ink);
     background: var(--color-surface);
     box-shadow: 0 0 0 1px var(--color-ink);
   }
 
+  .choice-title {
+    font-weight: 500;
+  }
+
+  .choice-title-regular {
+    font-weight: 400;
+  }
+
+  .choice-input:checked + .choice-box .choice-title {
+    font-weight: 650;
+  }
+
   .choice-input:focus-visible + .choice-box {
     outline: 2px solid var(--color-accent);
     outline-offset: 3px;
+    border-radius: 12px;
   }
 
   .choice-mark {
@@ -857,7 +1050,7 @@
     max-width: 320px;
     min-height: 52px;
     padding: 12px 40px 12px 14px;
-    border: 1px solid var(--color-rule);
+    border: 1px solid var(--color-field);
     border-radius: 12px;
     background:
       url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%23252525' stroke-width='1.5'/%3E%3C/svg%3E")
@@ -881,6 +1074,7 @@
   }
 
   .choice[data-disabled] .choice-box {
+    border-color: var(--color-rule);
     border-style: dashed;
     background: transparent;
   }
@@ -903,8 +1097,16 @@
 @layer components {
   /* "Få tilbuddet sendt" under prisen i beregneren. */
   .send {
-    padding-top: 26px;
-    border-top: 1px solid var(--color-rule);
+    padding: 24px 18px;
+    border: 1px solid var(--color-rule);
+    border-radius: 14px;
+    background: var(--color-paper);
+  }
+
+  @media (min-width: 768px) {
+    .send {
+      padding: 28px;
+    }
   }
 
   /* Tekstfelt: 16px, så iOS ikke zoomer ind. */
@@ -914,7 +1116,7 @@
     max-width: 420px;
     min-height: 52px;
     padding: 12px 14px;
-    border: 1px solid var(--color-rule);
+    border: 1px solid var(--color-field);
     border-radius: 12px;
     background: var(--color-paper);
     font: inherit;

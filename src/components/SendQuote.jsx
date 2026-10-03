@@ -81,6 +81,7 @@ export default function SendQuote({ smsText }) {
             type="text"
             inputMode="email"
             autoComplete="email"
+            spellCheck={false}
             required
             maxLength={200}
             aria-invalid={invalid || undefined}
