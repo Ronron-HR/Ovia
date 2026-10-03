@@ -66,7 +66,7 @@ function Contact() {
   })
 
   return (
-    <div className="dm-card" data-reveal>
+    <div className="dm-card">
       <form ref={form} onSubmit={submit} noValidate className="dm-form" aria-label="Skriv til caféen (demo)">
         <Field id="cafe-name" label="Dit navn" error={errors.name}>
           <input id="cafe-name" name="name" type="text" className="dm-input" autoComplete="off" {...errProps('cafe-name', errors.name)} />
@@ -128,7 +128,7 @@ export default function Cafe() {
 
         <section id="menu" className="dm-section">
           <div className="dm-wrap">
-            <div className="dm-section-head" data-reveal>
+            <div className="dm-section-head">
               <p className="dm-eyebrow">Menu</p>
               <h2 className="dm-h2">Noget at spise og drikke.</h2>
             </div>
@@ -141,7 +141,7 @@ export default function Cafe() {
 
         <section id="tider" className="dm-section dm-band">
           <div className="dm-wrap">
-            <div className="dm-section-head" data-reveal>
+            <div className="dm-section-head">
               <p className="dm-eyebrow">Åbningstider</p>
               <h2 className="dm-h2">Kom forbi, når det passer.</h2>
             </div>

@@ -13,7 +13,7 @@
     "og": "node scripts/og.mjs",
     "demo-shots": "node scripts/demo-shots.mjs",
     "test": "node scripts/test-pricing.mjs && node scripts/test-inquiry.mjs",
-    "test:e2e": "node scripts/test-calculator-e2e.mjs && node scripts/test-tierswitch-e2e.mjs && node scripts/test-form-e2e.mjs"
+    "test:e2e": "node scripts/test-calculator-e2e.mjs && node scripts/test-tierswitch-e2e.mjs && node scripts/test-form-e2e.mjs && node scripts/test-demos-e2e.mjs"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",

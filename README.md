@@ -31,7 +31,7 @@ Adresser og metadata: `src/routes.js`. Nøglerne skal passe med `src/pageKeys.js
 | `npm run build` | Bygger til `dist/`, forudrenderer HTML, skriver sitemap og JSON-LD (fra pricing.js) |
 | `npm run preview` | Serverer `dist/` på http://localhost:4173 |
 | `npm test` | Pristest (alle kombinationer, pakkeskift, driftspriser) og henvendelsestest (workeren med falsk D1 og mail) |
-| `npm run test:e2e` | Browsertests mod `npm run preview` (390 px, touch): forvalg, pakkeskift og formularen |
+| `npm run test:e2e` | Browsertests mod `npm run preview`: forvalg, pakkeskift og formularen (390 px, touch) og koncepternes indgang (390/1440 px, CLS, reduceret bevægelse, uden JS) |
 | `npm run lint` | oxlint |
 | `npm run demo-shots` | Skærmbilleder af koncepterne til `public/demoer/` (kræver kørende preview og puppeteer-core) |
 | `npm run og` | Tegner delingsbilledet `public/og.jpg` |
@@ -45,7 +45,7 @@ src/pages/           Home, Service (de tre ydelsessider), Priser, Demoer
 src/components/      Nav, Footer, MobileCallBar, ContactButtons, ContactSection,
                      HomeHero, ServiceCards, Steps, About, ServicePage, Packages,
                      ConceptGrid, PilotSection, FreeCheck, Faq, PriceCalculator, …
-src/demos/           De fire koncepter (egne små sider)
+src/demos/           De fire koncepter (egne små sider); indgang ved scroll i useEntrance.js
 worker/index.js      /api/henvendelse: gemmer henvendelser (D1) og sender mail
 src/index.css        Farver, skrifter, knapper og komponenter (Tailwind @theme)
 scripts/prerender.mjs  Forudrendering, sitemap, JSON-LD og CSP-hash
