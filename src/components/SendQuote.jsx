@@ -4,7 +4,7 @@ import { cta, links, paths } from '../data/texts.js'
 import { inquiry, sendInquiry, validContact } from '../inquiry.js'
 import { PhoneIcon, SmsIcon } from './ContactButtons.jsx'
 
-/** Turnstiles site key sættes ved bygget (Cloudflare Builds: VITE_TURNSTILE_SITE_KEY). Tom = ingen Turnstile. */
+/** Turnstiles site key sættes ved bygget (Cloudflare Builds: VITE_TURNSTILE_SITE_KEY). Påkrævet: serveren afviser uden token. */
 const SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY ?? ''
 const TURNSTILE_SRC = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
 
@@ -148,7 +148,7 @@ export default function SendQuote({ smsText }) {
 /**
  * Usynlig Turnstile, hentet først ved fokus i formularen. `get()` venter på
  * en token (højst 8 s); uden en token sender formularen alligevel, og serveren
- * afviser den, hvis Turnstile er slået til (kunden ser da fejlen med nummeret).
+ * afviser den (kunden ser da fejlen med nummeret).
  */
 function useTurnstile(id) {
   const state = useRef({ loading: false, widget: null, token: '', waiters: [] })

@@ -9,7 +9,7 @@ import Logo from './Logo.jsx'
  * - én formular: "Få tilbuddet sendt" under prisberegneren (SendQuote.jsx). Den
  *   sender mail/telefon, evt. navn og linket med valgene til /api/henvendelse
  *   (worker/index.js), der gemmer henvendelsen i Cloudflare D1 og mailer den til
- *   mig. IP-adressen bruges kun til rate limit og gemmes ikke. Turnstile kun, når
+ *   mig. IP-adressen bruges kun til rate limit og gemmes ikke. Turnstile er påkrævet
  *   VITE_TURNSTILE_SITE_KEY er sat ved bygget. Sletning efter privacy.retentionMonths
  * - ingen cookies og ingen reklame- eller sporingsværktøjer
  * - besøg tælles med Cloudflare Web Analytics: ét script fra
@@ -32,9 +32,6 @@ function Section({ title, children }) {
     </section>
   )
 }
-
-/** Turnstile er kun slået til, når nøglen er sat ved bygget (se README, "Henvendelser"). */
-const turnstile = Boolean(import.meta.env.VITE_TURNSTILE_SITE_KEY)
 
 const list = 'flex list-disc flex-col gap-2 pl-5 marker:text-accent'
 const strong = 'font-medium text-ink'
@@ -98,8 +95,8 @@ export default function Privatlivspolitik() {
                 prisberegneren (pakker, priser og linket til beregningen). Din IP-adresse bruges i øjeblikket til at
                 begrænse, hvor mange henvendelser der kan sendes fra samme sted (spambeskyttelse); den gemmes ikke
                 sammen med henvendelsen.
-                {turnstile &&
-                  ' Formularen er beskyttet med Cloudflare Turnstile, som ud fra tekniske oplysninger om din browser tjekker, at det er et menneske, der sender.'}
+                {' '}Formularen er beskyttet med Cloudflare Turnstile, som ud fra tekniske oplysninger om din browser
+                tjekker, at det er et menneske, der sender.
               </li>
               <li>
                 <strong className={strong}>Hvis du bestiller en opgave:</strong> virksomhedens navn, kontaktperson og
