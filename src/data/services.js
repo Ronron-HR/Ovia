@@ -33,7 +33,7 @@ const startFaq = (service) => {
   return a ? [{ q: 'Hvornår kan vi starte?', a }] : []
 }
 
-const toCalculator = { label: 'Beregn din pris', href: paths.priser }
+const toCalculator = { label: 'Se din pris', href: paths.priser }
 
 /* ---- Hjemmeside -------------------------------------------------------- */
 
@@ -51,7 +51,7 @@ export const hjemmeside = {
     'Når nogen hører om dig, slår de dig op på telefonen. Mangler hjemmesiden, eller er den forældet, går de videre til den næste.',
     'Jeg laver en side, der viser, hvad du laver, hvornår du har åbent, og hvordan man kontakter dig.',
   ],
-  toPackages: 'Se pakker og priser',
+  toPackages: 'Se pakker',
   get: {
     eyebrow: 'Det får du',
     title: 'En side, der gør det nemt at vælge dig.',
@@ -59,15 +59,15 @@ export const hjemmeside = {
       { title: 'Lavet til telefonen', text: 'Siden er bygget til mobilen først og virker også på computeren.' },
       { title: 'Det vigtigste øverst', text: 'Hvad du laver, dine åbningstider og en knap til at ringe eller skrive.' },
       { title: 'Synlig på Google', text: 'I Vækst og Fuld fart sætter jeg din Google-profil op og laver SEO.' },
-      { title: 'Drift hver måned', text: 'Hosting, domæne, SSL, backup og op til 2 små ændringer om måneden.' },
+      { title: 'Drift hver måned', text: 'Siden holdes online og sikker, med domæne og backup, og op til 2 små ændringer om måneden.' },
     ],
   },
   concepts: {
-    eyebrow: 'Koncepter',
+    eyebrow: 'Eksempler',
     title: 'Sådan kan det se ud.',
     intro:
-      'Fire hjemmesider, jeg har lavet som koncepter. De er ikke lavet for rigtige kunder, men de virker, så du kan prøve dem på din telefon.',
-    more: 'Se alle koncepter',
+      'Fire hjemmesider, jeg har lavet som eksempler. De er ikke lavet for rigtige kunder, men de virker, så du kan prøve dem på din telefon.',
+    more: 'Se alle eksempler',
   },
   packages: {
     eyebrow: 'Pakker',
@@ -122,7 +122,7 @@ export const marketing = {
     'Men det tager tid at filme, klippe og lægge dem op, når du også skal passe din forretning.',
     'Jeg laver videoerne og opslagene for dig hver måned.',
   ],
-  toPackages: 'Se pakker og priser',
+  toPackages: 'Se pakker',
   get: {
     eyebrow: 'Det får du',
     title: 'Indhold hver måned. Uden at du skal lave det.',
@@ -191,7 +191,7 @@ export const bookingGoogle = {
     'Forkerte åbningstider, få billeder eller ingen booking-knap koster dig henvendelser.',
     'Jeg sætter profilen i orden og gør det nemt at booke dig og at give dig en anmeldelse.',
   ],
-  toPackages: 'Se pakker og priser',
+  toPackages: 'Se pakker',
   /** Ekstra link i toppen til det gratis tjek (#tjek). */
   heroLink: { label: 'Start med et gratis tjek af din Google-profil', href: '#tjek' },
   get: {
@@ -242,7 +242,7 @@ export const bookingGoogle = {
 export const priser = {
   meta: {
     title: 'Priser og prisberegner | OviaSpecs',
-    description: `Se prisen med det samme. Hjemmeside ${fromPrice(web)}, marketing ${fromPrice(mk)} og booking & Google ${fromPrice(bg)} Faste pakker, og du skal ikke oplyse noget.`,
+    description: `Se din pris med det samme. Hjemmeside ${fromPrice(web)}, marketing ${fromPrice(mk)} og booking & Google ${fromPrice(bg)} Faste pakker, og du skal ikke oplyse noget.`,
   },
   eyebrow: 'Priser',
   title: 'Hvad koster det?',

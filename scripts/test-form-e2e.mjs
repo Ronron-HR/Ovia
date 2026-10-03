@@ -46,7 +46,7 @@ const form = () =>
     const box = document.querySelector('#beregner .send')
     return {
       text: box?.textContent ?? '',
-      thanks: /Tak, jeg vender tilbage/.test(box?.textContent ?? ''),
+      thanks: /Tak\. Jeg svarer/.test(box?.textContent ?? ''),
       alert: document.querySelector('#beregner .send [role=alert]')?.textContent.trim() ?? '',
       invalid: document.querySelector('#beregner input[name=contact]')?.getAttribute('aria-invalid'),
       focused: document.activeElement?.name ?? document.activeElement?.tagName,
@@ -139,7 +139,7 @@ for (const r of [
   await wait(300)
   f = await form()
   check(!f.thanks, `tak vist ved ${r.status} ${JSON.stringify(r.body)}`)
-  check(/Det gik ikke igennem\. Ring på 53 61 36 99 i stedet\./.test(f.alert), `fejltekst ved ${r.status}: "${f.alert}"`)
+  check(/^Det blev ikke sendt\. Ring på 53 61 36 99, så tager jeg den derfra\.$/.test(f.alert), `fejltekst ved ${r.status}: "${f.alert}"`)
 }
 
 await browser.close()

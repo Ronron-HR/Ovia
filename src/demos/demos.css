@@ -57,9 +57,10 @@
 }
 
 /* ---- OviaSpecs-stribe: mærkning af demoen --------------------------------- */
+/* Striben er OviaSpecs' og følger sidens tokens (index.css), ikke demoens. */
 .dm-strip {
-  background: #252525;
-  color: #f5f3ef;
+  background: var(--color-ink);
+  color: var(--color-paper);
   font-size: 14px;
   line-height: 1.45;
 }
@@ -99,7 +100,7 @@
   display: inline-flex;
   min-height: 36px;
   align-items: center;
-  color: #f5f3ef;
+  color: var(--color-paper);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -109,21 +110,21 @@
   gap: 6px;
   min-height: 40px;
   padding: 0 14px;
-  border: 1.5px solid #f5f3ef;
-  border-radius: 999px;
+  border: 1.5px solid var(--color-paper);
+  border-radius: var(--radius-btn);
   font-weight: 600;
   text-decoration: none;
 }
 
 @media (hover: hover) {
   .dm-strip a.dm-strip-back:hover {
-    background: #f5f3ef;
-    color: #252525;
+    background: var(--color-paper);
+    color: var(--color-ink);
   }
 }
 
 .dm-strip :focus-visible {
-  outline-color: #c9ad8a;
+  outline-color: var(--color-cta);
 }
 
 /* ---- Hoved og menu --------------------------------------------------------- */

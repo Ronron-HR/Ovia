@@ -15,8 +15,9 @@ import {
   visibleQuestions,
 } from '../calculator.js'
 import { useCalc } from '../useCalc.js'
-import { calculator, flags, fromPrice, introText, priceNote, services, tierName } from '../data/pricing.js'
+import { calculator, flags, fromPrice, introNote, introText, priceNote, services, tierName } from '../data/pricing.js'
 import Amount from './Amount.jsx'
+import ErrorText from './ErrorText.jsx'
 import SendQuote from './SendQuote.jsx'
 
 /** Etiketterne over totalen i resultatet. "Nu" er calculator.nowLabel med stort. */
@@ -246,12 +247,12 @@ export default function PriceCalculator({ defaults }) {
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
             <button type="submit" className="btn btn-primary">
-              {step === resultStep - 1 && selected.length ? 'Se prisen' : 'Næste'}
+              {step === resultStep - 1 && selected.length ? 'Vis min pris' : 'Næste'}
             </button>
             {missing && (
-              <p role="alert" className="text-[15px] font-medium text-accent">
+              <ErrorText role="alert" className="text-[15px]">
                 {missing}
-              </p>
+              </ErrorText>
             )}
           </div>
           <div role="status" className="mt-3 text-[15px] font-medium text-ink empty:hidden">
@@ -263,7 +264,12 @@ export default function PriceCalculator({ defaults }) {
           <h2 ref={heading} tabIndex={-1} className="t-display t-h3 outline-none">
             Din pris
           </h2>
-          {introText && <p className="badge mt-3">{introText}</p>}
+          {introText && (
+            <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span className="badge">{introText}</span>
+              {introNote && <span className="text-[14px] text-muted">{introNote}</span>}
+            </p>
+          )}
           {/* Totalen: "X kr. nu" og "Y kr./md" hver for sig; et beløb på 0 vises ikke. */}
           {/* Totalen: små etiketter over beløbene ("Nu", "Pr. måned"). Etiketterne
               er kun visuelle; skærmlæsere hører "X kr. nu, Y kr. pr. måned". */}

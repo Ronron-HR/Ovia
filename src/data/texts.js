@@ -5,7 +5,8 @@
    Sprog: jeg-form overalt (OviaSpecs er én person). "Vi" kun om dig og kunden
    sammen (fx "Vi mødes"), aldrig om OviaSpecs.
    Ærlighed: ingen udtalelser, kundetal, logoer eller resultater, der ikke
-   kan dokumenteres. Ingen løfter om svartider, placeringer eller salg.
+   kan dokumenteres. Ingen løfter om placeringer eller salg.
+   Svartid: inden for 24 timer (besluttet af Ronny, okt. 2026).
    ========================================================================= */
 
 import { contact } from './pricing.js'
@@ -47,7 +48,7 @@ export const nav = {
   call: 'Ring',
   /** Knappen til prisberegneren: lang på desktop, kort på mobil. */
   price: 'Se din pris',
-  priceShort: 'Se pris',
+  priceShort: 'Se din pris',
   menu: 'Menu',
   close: 'Luk',
 }
@@ -55,12 +56,12 @@ export const nav = {
 /** Den korte linje over prisberegneren på ydelsessiderne. */
 export const calcIntro = 'Svar på et par spørgsmål, så ser du prisen med det samme.'
 
-/** Teksterne på knapperne "Ring" og "Skriv". */
+/** Teksterne på knapperne "Ring" og "Mail". */
 export const cta = {
   call: 'Ring',
-  write: 'Skriv',
+  write: 'Mail',
   sms: 'SMS',
-  price: 'Se pris',
+  price: 'Se din pris',
 }
 
 /* ---- Forsiden ---------------------------------------------------------- */
@@ -104,7 +105,7 @@ export const home = {
     items: [
       {
         title: 'Vi mødes',
-        text: 'Jeg kigger forbi eller ringer til dig. Du fortæller, hvad du har brug for, og jeg siger, hvad det koster.',
+        text: 'Vi gennemgår det, du har valgt, og jeg bekræfter prisen.',
       },
       {
         title: 'Du ser en demo',
@@ -166,7 +167,7 @@ export const footer = {
       title: 'OviaSpecs',
       links: [
         { label: 'Priser', href: paths.priser },
-        { label: 'Koncepter', href: paths.demoer },
+        { label: 'Eksempler', href: paths.demoer },
         { label: 'Privatlivspolitik', href: paths.privatliv },
       ],
     },

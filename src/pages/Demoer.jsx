@@ -10,7 +10,7 @@ export default function Demoer() {
         <div className="shell">
           <div className="grid grid-cols-1 gap-x-14 gap-y-8 lg:grid-cols-12 lg:items-end">
             <div className="lg:col-span-7">
-              <p data-hero="fade" className="t-eyebrow t-eyebrow-accent">
+              <p data-hero="fade" className="t-eyebrow t-eyebrow-strong">
                 {demos.eyebrow}
               </p>
               <h1 data-hero="lift" style={{ '--d': '60ms' }} className="t-display t-hero mt-5 max-w-[18ch]">

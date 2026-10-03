@@ -9,12 +9,13 @@ import { Arrow } from './Shots.jsx'
 /**
  * NAVIGATION
  *
- * Mærke til venstre, fire links, "Ring" og "Se din pris" (accent) til højre.
+ * Mærke til venstre, fire links, "Ring" (sekundær) og "Se din pris" (kobolt,
+ * sidens eneste farvede knap) til højre.
  * "Se din pris" hopper til prisberegneren på siden (#beregner) eller til /priser/.
- * Den side, man står på, markeres med aria-current="page" og en bronzestreg
- * under ordet.
+ * Den side, man står på, markeres med aria-current="page" og en sort streg
+ * under ordet (i mobilmenuen: understreget).
  *
- * MOBIL (under lg): mærke, "Ring", "Se pris" og "Menu".
+ * MOBIL (under lg): mærke, "Ring", "Se din pris" og "Menu".
  * Overlayet er et SØSKENDE til baren, så et fixed overlay ikke måles mod
  * baren. Menuen lukker med Escape og "Luk"; fokus fanges, mens den er åben,
  * og går tilbage til knappen.
@@ -26,7 +27,7 @@ const clean = (p) => (p || '/').replace(/\/+$/, '') || '/'
 const isHere = (href, path) => clean(href) === clean(path)
 
 const bigLink =
-  't-display flex min-h-14 items-center justify-between gap-4 text-[26px] leading-tight aria-[current=page]:text-accent'
+  't-display flex min-h-14 items-center justify-between gap-4 text-[26px] leading-tight aria-[current=page]:underline aria-[current=page]:decoration-2 aria-[current=page]:underline-offset-8'
 
 export default function Nav({ path }) {
   const scrolled = useScrolled()
@@ -135,19 +136,20 @@ export default function Nav({ path }) {
                   <span className="hidden tabular-nums xl:inline"> {contact.phone}</span>
                 </span>
               </a>
-              <a href={price} className="btn btn-accent min-h-11 px-5 text-[14px]">
+              <a href={price} className="btn btn-cta min-h-11 px-5 text-[14px]">
                 {nav.price}
               </a>
             </div>
           </div>
 
-          {/* Mobil: Ring og Se pris skjules, mens den faste bundbjælke (med de samme knapper) er synlig. */}
+          {/* Mobil: Ring og Se din pris skjules, mens den faste bundbjælke (med de samme knapper) er synlig. */}
           <div className="flex items-center gap-1.5 lg:hidden">
-            <a href={links.tel} className="nav-call btn btn-ghost min-h-10 px-3 text-[14px]" aria-label={`${nav.call} ${contact.phone}`}>
+            {/* Under 380 px skjules ikonet, så "Se din pris" og "Menu" kan være på linjen. */}
+            <a href={links.tel} className="nav-call btn btn-ghost min-h-10 px-3 text-[14px] max-[379px]:[&_svg]:hidden" aria-label={`${nav.call} ${contact.phone}`}>
               <PhoneIcon />
               {nav.call}
             </a>
-            <a href={price} className="nav-call btn btn-accent min-h-10 px-3 text-[14px] whitespace-nowrap">
+            <a href={price} className="nav-call btn btn-cta min-h-10 px-3 text-[14px] whitespace-nowrap">
               {nav.priceShort}
             </a>
             <button
@@ -186,13 +188,13 @@ export default function Nav({ path }) {
                   className={bigLink}
                 >
                   {item.label}
-                  <Arrow className="text-accent" />
+                  <Arrow className="text-muted" />
                 </a>
               </li>
             ))}
           </ul>
 
-          <a href={price} onClick={close} className="btn btn-accent mt-8 w-full">
+          <a href={price} onClick={close} className="btn btn-cta mt-8 w-full">
             {nav.price}
           </a>
           <ContactButtons className="mt-3 flex-col [&>a]:w-full" />

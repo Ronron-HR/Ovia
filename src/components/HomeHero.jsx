@@ -6,7 +6,7 @@ import PriceCalculator from './PriceCalculator.jsx'
  * FORSIDENS FØRSTE SKÆRMBILLEDE: overskrift, én kort linje og prisberegneren.
  * Beregneren er det dominerende element: til højre og bredest på desktop
  * (hele første trin synligt ved 1440 px) og lige under linjen på mobil
- * (overskrift og alle tre valg synlige ved 360 og 390 px). Ring og Skriv er
+ * (overskrift og alle tre valg synlige ved 360 og 390 px). Ring og Mail er
  * små tekstlinks, så de ikke konkurrerer med beregneren; de står også i nav og
  * i den faste bundbjælke. Intet portræt her (det står i Om).
  */

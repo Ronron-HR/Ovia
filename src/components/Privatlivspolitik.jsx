@@ -37,7 +37,7 @@ function Section({ title, children }) {
 /** Turnstile er kun aktiv, når site key er sat ved bygget (se README, "Henvendelser"). */
 const turnstile = Boolean(import.meta.env.VITE_TURNSTILE_SITE_KEY)
 
-const list = 'flex list-disc flex-col gap-2 pl-5 marker:text-accent'
+const list = 'flex list-disc flex-col gap-2 pl-5 marker:text-muted'
 const strong = 'font-medium text-ink'
 
 export default function Privatlivspolitik() {

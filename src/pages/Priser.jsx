@@ -2,7 +2,7 @@ import ContactSection from '../components/ContactSection.jsx'
 import { Addons, DriftTerms, PackageGrid, PriceNote } from '../components/Packages.jsx'
 import PriceCalculator from '../components/PriceCalculator.jsx'
 import { Arrow } from '../components/Shots.jsx'
-import { calculator, introText, services } from '../data/pricing.js'
+import { calculator, introNote, introText, services } from '../data/pricing.js'
 import { priser as p } from '../data/services.js'
 import { paths } from '../data/texts.js'
 
@@ -35,8 +35,9 @@ export default function Priser() {
         <div className="shell">
           <header data-reveal>
             <div className="flex flex-wrap items-center gap-3">
-              <p className="t-eyebrow t-eyebrow-accent">{p.all.eyebrow}</p>
+              <p className="t-eyebrow t-eyebrow-strong">{p.all.eyebrow}</p>
               {introText && <span className="badge">{introText}</span>}
+              {introNote && <span className="text-[14px] text-muted">{introNote}</span>}
             </div>
             <h2 id="alle-titel" className="t-display t-h2 mt-4">
               {p.all.title}

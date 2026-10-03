@@ -13,7 +13,7 @@ export default function Faq({ items, title, eyebrow, id = 'faq', under = false }
       <div className="shell">
         <div className="grid grid-cols-1 gap-x-14 gap-y-10 lg:grid-cols-12">
           <header data-reveal className="lg:col-span-4">
-            <p className="t-eyebrow t-eyebrow-accent">{eyebrow}</p>
+            <p className="t-eyebrow t-eyebrow-strong">{eyebrow}</p>
             <h2 className="t-display t-h3 mt-4">{title}</h2>
           </header>
 
@@ -22,7 +22,7 @@ export default function Faq({ items, title, eyebrow, id = 'faq', under = false }
               <details key={item.q} className="faq border-b border-rule">
                 <summary className="flex min-h-14 cursor-pointer items-center justify-between gap-6 py-4 text-[18px] leading-snug font-medium">
                   {item.q}
-                  <span aria-hidden="true" className="faq-plus text-[24px] leading-none font-normal text-accent">
+                  <span aria-hidden="true" className="faq-plus text-[24px] leading-none font-normal text-ink">
                     +
                   </span>
                 </summary>

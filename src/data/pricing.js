@@ -36,6 +36,9 @@ export const priceNote = 'Alle priser er ekskl. moms.'
 /** Mærke ved pakkerne og i beregneren. Tom = skjult. */
 export const introText = 'Introduktionspriser'
 
+/** Forklaringen ved mærket. Tom = skjult. */
+export const introNote = 'Lave priser, mens jeg bygger min kundeliste.'
+
 /**
  * Højeste pris for en hjemmeside på Start eller Vækst uden integrationer (uden
  * booking, evt. med egen konto). Gælder ikke Fuld fart, der med egen konto
@@ -69,7 +72,7 @@ export const flags = {
 /** Fuld fart: pakkebeskrivelsen og beregnerens resultat. Egen konto er muligt uden booking. */
 export const fuldFartNote = 'Ændringer inden 2 hverdage gælder med drift.'
 /** Booking (alle pakker) giver drift. */
-export const driftWithBooking = 'Med booking koblet på kører hjemmesiden med drift, så jeg kan holde det kørende.'
+export const driftWithBooking = 'Med booking passer jeg siden, så bookingen altid virker.'
 
 /* ---- Overlap mellem hjemmeside og Booking & Google ----------------------
    Booking & Google består af komponenter. Er en komponent allerede med i den
@@ -114,7 +117,7 @@ export const services = {
         includes: [],
         monthly: 299,
         summary: 'Én side med det vigtigste.',
-        features: ['Onepage: alt samlet på én side', '1 rettelserunde'],
+        features: ['Alt samlet på én side', '1 rettelserunde'],
         /** Tilvalg, der vises på pakkekortet (addons). */
         optional: ['bookingOnSite'],
       },
@@ -124,7 +127,7 @@ export const services = {
         includes: ['googleProfile'],
         monthly: 299,
         summary: 'Flere sider, og du bliver fundet på Google.',
-        features: ['Op til 5 sider', 'Google-profil sat op', 'Grundlæggende SEO', '2 rettelserunder'],
+        features: ['Op til 5 sider', 'Google-profil sat op', 'Sat op til at blive fundet på Google', '2 rettelserunder'],
         optional: ['bookingOnSite'],
       },
       {
@@ -135,7 +138,7 @@ export const services = {
         monthlyNote: 'ændringer laves inden 2 hverdage',
         note: fuldFartNote,
         summary: 'Flest sider, lokal SEO og hurtige ændringer.',
-        features: ['Op til 8 sider', 'Google-profil sat op', 'Lokal SEO', '3 rettelserunder'],
+        features: ['Op til 8 sider', 'Google-profil sat op', 'Fundet på Google, også når folk søger i dit område', '3 rettelserunder'],
         optional: ['bookingOnSite'],
       },
     ],
@@ -173,7 +176,7 @@ export const services = {
     /** Hvad drift dækker. Prisen pr. måned står på pakkerne (monthly). */
     drift: {
       included: [
-        'Hosting, domæne, SSL og backup',
+        'Siden holdes online og sikker, med domæne og backup',
         'Op til 2 små ændringer om måneden (tekst, billeder, mindre designjusteringer)',
       ],
       fast: 'På Fuld fart laves ændringerne inden 2 hverdage.',
@@ -223,7 +226,7 @@ export const services = {
           'Styring af Meta-annoncer (annoncebudgettet betaler du selv direkte til Meta)',
           'Månedsrapport',
         ],
-        limit: 'Max 1 kunde ad gangen',
+        limit: 'Højst 1 kunde ad gangen',
       },
     ],
     /** Vises på marketingsiden, så længe flags.hasMarketingCases er false. */
@@ -241,7 +244,7 @@ export const services = {
         'Er du tilfreds, giver du en ærlig udtalelse',
         'Uforpligtende. Efter piloten kan du fortsætte på Vækst',
       ],
-      limitText: 'Max 2 piloter ad gangen',
+      limitText: 'Højst 2 piloter ad gangen',
       /** Link under marketing-prisen i beregnerens resultat (kun når flags.hasMarketingCases er false). */
       calcLink: { label: 'Vil du prøve først? Se pilotforløbet', href: '/marketing/#pilot' },
     },
@@ -344,7 +347,7 @@ export const calculator = {
       {
         id: 'drift',
         short: 'Drift',
-        label: 'Hvordan skal siden drives?',
+        label: 'Hvem skal passe siden bagefter?',
         /** Svaret, der bruges i stedet, når et svar ikke længere er tilladt (fx egen konto + booking). */
         fallback: 'drift',
         options: [

@@ -22,10 +22,10 @@ export const inquiry = {
   optional: '(valgfrit)',
   submit: 'Send til Ronny',
   sending: 'Sender …',
-  thanks: 'Tak, jeg vender tilbage hurtigst muligt.',
-  /** Fejl: telefonnummeret sættes ind (contact.phone). */
-  failed: 'Det gik ikke igennem. Ring på',
-  failedAfter: 'i stedet.',
+  thanks: 'Tak. Jeg svarer inden for 24 timer.',
+  /** Fejl: telefonnummeret sættes ind mellem de to dele (contact.phone). */
+  failed: 'Det blev ikke sendt. Ring på',
+  failedAfter: ', så tager jeg den derfra.',
   invalid: 'Skriv en gyldig mail eller et dansk telefonnummer (8 cifre).',
   /** Linjen under knappen: hvad oplysningerne bruges til. */
   privacy: 'Bruges kun til at svare dig.',

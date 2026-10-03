@@ -2,8 +2,9 @@ import { demos } from '../content.demos.js'
 import { Arrow } from './Shots.jsx'
 
 /**
- * KONCEPTER — de fire fiktive hjemmesider som små eksempler. Hvert kort har
- * mærket "Koncept – ikke en kundeopgave" og fører til selve konceptet.
+ * EKSEMPLER — de fire fiktive hjemmesider (koncepter). Over listen står én
+ * linje om, at de ikke er kundeopgaver; hvert kort har det korte mærke
+ * "Koncept" og fører til selve eksemplet.
  * Billedet er toppen af konceptets mobilskærmbillede i en telefonramme på
  * konceptets egen farve.
  */
@@ -13,7 +14,7 @@ export default function ConceptGrid({ eyebrow, title, intro, more }) {
       <div className="shell">
         <header data-reveal className="grid grid-cols-1 gap-x-14 gap-y-4 lg:grid-cols-12 lg:items-end">
           <div className="lg:col-span-6">
-            <p className="t-eyebrow t-eyebrow-accent">{eyebrow}</p>
+            <p className="t-eyebrow t-eyebrow-strong">{eyebrow}</p>
             <h2 id="koncepter-titel" className="t-display t-h2 mt-4">
               {title}
             </h2>
@@ -21,7 +22,8 @@ export default function ConceptGrid({ eyebrow, title, intro, more }) {
           <p className="t-body t-lead max-w-[46ch] lg:col-span-6">{intro}</p>
         </header>
 
-        <ul className="mt-10 grid grid-cols-2 gap-x-4 gap-y-8 md:mt-12 lg:grid-cols-4 lg:gap-x-6">
+        <p className="mt-8 text-[15px] font-medium md:mt-10">{demos.listNote}</p>
+        <ul className="mt-5 grid grid-cols-2 gap-x-4 gap-y-8 md:mt-12 lg:grid-cols-4 lg:gap-x-6">
           {demos.projects.map((p, i) => (
             <li key={p.id} data-reveal style={{ '--d': `${i * 60}ms` }}>
               <a href={p.path} className="concept group block">
@@ -37,7 +39,7 @@ export default function ConceptGrid({ eyebrow, title, intro, more }) {
                     />
                   </span>
                 </span>
-                <span className="tag mt-4">{demos.tag}</span>
+                <span className="tag mt-4">{demos.tagShort}</span>
                 <span className="mt-2.5 flex items-center gap-2 text-[16px] font-medium">
                   {p.name}
                   <Arrow className="transition-transform duration-200 group-hover:translate-x-1" />
