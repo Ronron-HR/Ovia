@@ -60,7 +60,7 @@ function Group() {
   })
 
   return (
-    <div className="dm-card" data-reveal>
+    <div className="dm-card">
       <form ref={form} onSubmit={submit} noValidate className="dm-form" aria-label="Gruppehenvendelse (demo)">
         <div className="dm-row dm-row-2">
           <Field id="vin-guests" label="Antal gæster">
@@ -125,7 +125,7 @@ export default function Vinbar() {
 
         <section id="kortet" className="dm-section">
           <div className="dm-wrap">
-            <div className="dm-section-head" data-reveal>
+            <div className="dm-section-head">
               <p className="dm-eyebrow">Vinkortet</p>
               <h2 className="dm-h2">Et udvalg til aftenen.</h2>
             </div>
@@ -151,7 +151,7 @@ export default function Vinbar() {
 
         <section id="tider" className="dm-section">
           <div className="dm-wrap">
-            <div className="dm-section-head" data-reveal>
+            <div className="dm-section-head">
               <p className="dm-eyebrow">Åbningstider</p>
               <h2 className="dm-h2">Kom, når aftenen begynder.</h2>
             </div>

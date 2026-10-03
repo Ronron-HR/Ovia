@@ -4,26 +4,28 @@ import {
   blockedReason,
   bookingOnWebsite,
   cleanAnswers,
-  mailBody,
+  driftSwitchNotice,
   priceParts,
   priceText,
   quote,
   smsBody,
+  switchTier,
   tierFor,
   totalText,
-  useCalc,
   visibleQuestions,
 } from '../calculator.js'
+import { useCalc } from '../useCalc.js'
 import { calculator, flags, fromPrice, introText, priceNote, services, tierName } from '../data/pricing.js'
-import ContactButtons from './ContactButtons.jsx'
+import SendQuote from './SendQuote.jsx'
 
 /**
  * PRISBEREGNER
  *
  * Trin 1: hvilke ydelser (flervalg). Derefter ét trin pr. valgt ydelse og så
  * resultatet: højst 5 trin. Prisen vises med det samme, uden formular.
- * Efter resultatet: Ring, SMS og "Send mig tilbuddet" (mailto med
- * opsummering). Ingen tracking, intet sendes; valgene står kun i adresselinjen.
+ * Under prisen: "Få tilbuddet sendt" (SendQuote) med Ring og SMS som sekundære
+ * links. Ingen tracking; valgene står i adresselinjen og sendes kun, hvis
+ * kunden selv sender formularen.
  *
  * TILGÆNGELIGHED: almindelige checkbokse og radioknapper i fieldsets (piletaster
  * og mellemrum virker), overskriften får fokus ved hvert nyt trin, og prisen
@@ -42,6 +44,7 @@ export default function PriceCalculator({ defaults }) {
 
   const [missing, setMissing] = useState(null)
   const [notice, setNotice] = useState(null)
+  const [switched, setSwitched] = useState(null)
   const heading = useRef(null)
   const form = useRef(null)
   const moved = useRef(false)
@@ -58,6 +61,7 @@ export default function PriceCalculator({ defaults }) {
   const go = (next) => {
     setMissing(null)
     setNotice(null)
+    setSwitched(null)
     moved.current = true
     set({ ...state, step: next })
   }
@@ -72,9 +76,16 @@ export default function PriceCalculator({ defaults }) {
     setMissing(null)
     const nextAnswers = { ...answers, [id]: value }
     // Tilføjes booking, efter egen konto er valgt, skifter hjemmesiden til drift: sig det.
-    const clean = cleanAnswers(nextAnswers, selected)
-    const reason = tierFor('hjemmeside', clean) === 'fuld-fart' ? calculator.driftFuldFart : calculator.driftWithBooking
-    setNotice(answers.drift === 'egen' && clean.drift !== 'egen' ? `${calculator.switchedToDrift} ${reason}` : null)
+    setNotice(driftSwitchNotice(answers, cleanAnswers(nextAnswers, selected)) || null)
+    set({ ...state, answers: nextAnswers })
+  }
+
+  // Pakkeskift i resultatet: svarene skiftes med (switchTier), og linjen under
+  // vælgeren siger, hvad der ændrede sig (og om egen konto blev til drift).
+  const changeTier = (key, tierId) => {
+    const nextAnswers = switchTier(key, tierId, answers, selected)
+    const drift = driftSwitchNotice(answers, nextAnswers)
+    setSwitched({ key, text: `${calculator.tierSwitch[key][tierId].now}.${drift ? ` ${drift}` : ''}` })
     set({ ...state, answers: nextAnswers })
   }
 
@@ -287,6 +298,12 @@ export default function PriceCalculator({ defaults }) {
                     </li>
                   ))}
                 </ul>
+                <TierPicker
+                  line={l}
+                  state={state}
+                  onChange={changeTier}
+                  status={switched?.key === l.key ? switched.text : ''}
+                />
               </li>
             ))}
           </ul>
@@ -299,16 +316,7 @@ export default function PriceCalculator({ defaults }) {
             </ul>
           )}
 
-          <ContactButtons
-            sms
-            smsText={smsBody(q)}
-            mailSubject={calculator.mailSubject}
-            mailBody={mailBody(q)}
-            writeLabel="Send mig tilbuddet"
-            className="mt-7"
-            stretch
-            stack
-          />
+          <SendQuote smsText={smsBody(q)} />
 
           <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2">
             <button type="button" onClick={() => go(1)} className="calc-link">
@@ -332,5 +340,47 @@ export default function PriceCalculator({ defaults }) {
         <p className="mt-6 text-[15px]">Prisberegneren kræver JavaScript. Alle pakker og priser står herunder.</p>
       </noscript>
     </div>
+  )
+}
+
+/**
+ * Pakkevælger under en ydelse i resultatet: Start / Vækst / Fuld fart som en
+ * radiogruppe med legend. Prisen ved hver pakke er linjens pris efter et skift
+ * (med tilvalg og overlap), så tallet passer med det, resultatet viser bagefter.
+ */
+function TierPicker({ line, state, onChange, status }) {
+  const key = line.key
+  return (
+    <fieldset className="mt-4">
+      <legend className="text-[14px] font-medium">{calculator.tierSwitch.legend(line.service.name)}</legend>
+      <div className="mt-2 grid grid-cols-1 gap-2 @xl:grid-cols-3">
+        {line.service.tiers.map((t) => {
+          const after = quote({ ...state, answers: switchTier(key, t.id, state.answers, state.selected) })
+          const price = priceText(after.lines.find((x) => x.key === key))
+          return (
+            <label key={t.id} className="choice choice-sm">
+              <input
+                type="radio"
+                name={`pakke-${key}`}
+                value={t.id}
+                checked={line.tier.id === t.id}
+                onChange={() => onChange(key, t.id)}
+                className="choice-input"
+              />
+              <span className="choice-box">
+                <span className="choice-mark choice-mark-radio" aria-hidden="true" />
+                <span className="min-w-0">
+                  <span className="block text-[15px] font-medium">{tierName(t)}</span>
+                  <span className="t-body block text-[13px] tabular-nums">{price}</span>
+                </span>
+              </span>
+            </label>
+          )
+        })}
+      </div>
+      <p role="status" className="mt-2 text-[14px] font-medium text-ink empty:hidden">
+        {status}
+      </p>
+    </fieldset>
   )
 }

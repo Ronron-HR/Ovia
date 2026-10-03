@@ -37,9 +37,9 @@ export const priceNote = 'Alle priser er ekskl. moms.'
 export const introText = 'Introduktionspriser'
 
 /**
- * Højeste pris for en hjemmeside uden integrationer (uden booking, uanset pakke,
- * evt. med egen konto). Ekstra sider ud over 8 i Fuld fart tæller ikke med.
- * Tjekkes af scripts/test-pricing.mjs.
+ * Højeste pris for en hjemmeside på Start eller Vækst uden integrationer (uden
+ * booking, evt. med egen konto). Gælder ikke Fuld fart, der med egen konto
+ * koster pakke + egen konto (+ ekstra sider). Tjekkes af scripts/test-pricing.mjs.
  */
 export const maxWebsiteNoIntegrations = 5000
 
@@ -65,10 +65,10 @@ export const flags = {
   hasMarketingCases: false,
 }
 
-/* ---- Hvorfor en hjemmeside kører med drift (beregneren og FAQ) ---------- */
-/** Fuld fart kører altid med drift. */
-export const driftFuldFart = 'Fuld fart har ændringer inden 2 hverdage, så den kører med drift.'
-/** Booking på Start eller Vækst giver drift. */
+/* ---- Drift (beregneren, pakkerne og FAQ) -------------------------------- */
+/** Fuld fart: pakkebeskrivelsen og beregnerens resultat. Egen konto er muligt uden booking. */
+export const fuldFartNote = 'Ændringer inden 2 hverdage gælder med drift.'
+/** Booking (alle pakker) giver drift. */
 export const driftWithBooking = 'Med booking koblet på kører hjemmesiden med drift, så jeg kan holde det kørende.'
 
 /* ---- Overlap mellem hjemmeside og Booking & Google ----------------------
@@ -112,7 +112,7 @@ export const services = {
         id: 'start',
         price: 2500,
         includes: [],
-        monthly: 300,
+        monthly: 299,
         summary: 'Én side med det vigtigste.',
         features: ['Onepage: alt samlet på én side', '1 rettelserunde'],
         /** Tilvalg, der vises på pakkekortet (addons). */
@@ -122,7 +122,7 @@ export const services = {
         id: 'vaekst',
         price: 4000,
         includes: ['googleProfile'],
-        monthly: 300,
+        monthly: 299,
         summary: 'Flere sider, og du bliver fundet på Google.',
         features: ['Op til 5 sider', 'Google-profil sat op', 'Grundlæggende SEO', '2 rettelserunder'],
         optional: ['bookingOnSite'],
@@ -131,19 +131,20 @@ export const services = {
         id: 'fuld-fart',
         price: 5000,
         includes: ['googleProfile'],
-        monthly: 400,
+        monthly: 399,
         monthlyNote: 'ændringer laves inden 2 hverdage',
+        note: fuldFartNote,
         summary: 'Flest sider, lokal SEO og hurtige ændringer.',
         features: ['Op til 8 sider', 'Google-profil sat op', 'Lokal SEO', '3 rettelserunder'],
         optional: ['bookingOnSite'],
       },
     ],
     addons: {
-      /** Alternativ til månedlig drift. Kun Start og Vækst uden booking: Fuld fart kører altid med drift. */
+      /** Alternativ til månedlig drift på alle pakker, men ikke med booking (booking betyder altid drift). */
       ownAccount: {
-        label: 'Egen konto i stedet for drift (kun Start og Vækst)',
+        label: 'Egen konto i stedet for drift (uden booking)',
         price: 1000,
-        tiers: ['start', 'vaekst'],
+        tiers: ['start', 'vaekst', 'fuld-fart'],
       },
       /**
        * Booking koblet på siden: tilvalg til alle tre pakker. Prisen er booking-
@@ -353,12 +354,10 @@ export const calculator = {
             label: 'Den lægges på min egen konto (engangsbeløb)',
             addon: 'ownAccount',
             noDrift: true,
-            /** Kan kun vælges, når de øvrige svar peger på disse pakker (addons.ownAccount.tiers). */
-            onlyTiers: ['start', 'vaekst'],
             /** Ikke muligt, når hjemmesiden får booking (tilvalg eller Booking & Google Vækst/Fuld fart). */
             notWithBooking: true,
-            /** Forklaringen, når valget er slået fra: pakken (Fuld fart) eller booking. */
-            disabledNotes: { tier: driftFuldFart, booking: driftWithBooking },
+            /** Forklaringen, når valget er slået fra på grund af booking. */
+            disabledNotes: { booking: driftWithBooking },
           },
         ],
       },
@@ -422,7 +421,7 @@ export const calculator = {
   nowLabel: 'nu',
   /** Vises, når booking gør, at hjemmesiden kører med drift (Fuld fart eller Booking & Google Vækst/Fuld fart). */
   driftWithBooking,
-  driftFuldFart,
+  fuldFartNote,
   /** Under Booking & Google-pakkerne (/priser/ og /booking-google/): samme regel som driftWithBooking. */
   bookingDriftNote: 'Kobles booking på din hjemmeside, kører hjemmesiden med drift.',
   /** Vises i beregneren, når et valgt "egen konto" automatisk er skiftet til drift. */
@@ -437,12 +436,32 @@ export const calculator = {
   /** Under totalen, når "egen konto" er valgt: hvad kunden selv står for. Tom = skjult. */
   ownAccountNote:
     'Du ejer selv kontoen og betaler domæne og hosting direkte til udbyderen. Rettelser efter levering aftaler vi pris på, før jeg går i gang.',
-  /** Forudfyldt start på SMS og mail fra resultatet. */
+  /**
+   * Pakkevælgeren under hver ydelse i resultatet. Et skift sætter pakkens svar
+   * (spørgsmålets id → svar), så svarene og resultatet aldrig modsiger hinanden.
+   * Svar, der ikke står her (booking via siden, drift), beholdes; reglerne for
+   * drift og egen konto gælder stadig. `now` vises efter skiftet.
+   */
+  tierSwitch: {
+    legend: (service) => `Skift pakke for ${service}`,
+    hjemmeside: {
+      start: { answers: { sider: '1' }, now: 'Nu: én side med det hele' },
+      vaekst: { answers: { sider: '2-5' }, now: 'Nu: op til 5 sider' },
+      'fuld-fart': { answers: { sider: '6-8' }, now: 'Nu: op til 8 sider' },
+    },
+    marketing: {
+      start: { answers: { videoer: '4', poste: 'nej', annoncer: 'nej' }, now: 'Nu: 4 videoer om måneden, du poster selv' },
+      vaekst: { answers: { videoer: '8', poste: 'ja', annoncer: 'nej' }, now: 'Nu: 8 videoer om måneden, jeg poster' },
+      'fuld-fart': { answers: { videoer: '12', poste: 'ja', annoncer: 'ja' }, now: 'Nu: 12 videoer om måneden, jeg poster og styrer annoncer' },
+    },
+    bookingGoogle: {
+      start: { answers: { booking: 'nej', anmeldelser: 'nej' }, now: 'Nu: kun Google-profilen' },
+      vaekst: { answers: { booking: 'ja', anmeldelser: 'nej' }, now: 'Nu: Google-profil og online booking' },
+      'fuld-fart': { answers: { booking: 'ja', anmeldelser: 'ja' }, now: 'Nu: Google-profil, booking og QR-skilt' },
+    },
+  },
+  /** Forudfyldt start på SMS fra resultatet (mailen fra formularen står i src/inquiry.js). */
   smsIntro: 'Hej Ronny. Jeg har brugt prisberegneren på oviaspecs.com:',
-  mailSubject: 'Tilbud fra prisberegneren',
-  /** Mailens linjer før og efter opsummeringen ('' = tom linje). */
-  mailIntro: ['Hej Ronny,', '', 'Jeg har brugt prisberegneren på oviaspecs.com og vil gerne have et tilbud.'],
-  mailOutro: ['Mit navn:', 'Min virksomhed:', 'Mit telefonnummer:'],
 }
 
 /* Svarene på "Hvor mange sider i alt?": 9 sider op til maxPages, hver med antal ekstra undersider. */

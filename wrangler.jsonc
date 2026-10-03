@@ -4,13 +4,40 @@
   // Filen findes, så `wrangler deploy` ikke autokonfigurerer projektet og
   // kører bygget igen med et andet Vite-setup (det brød forudrenderingen).
   //
-  // Siden er udelukkende statiske filer: ingen worker-kode, ingen backend.
-  // Viderestillinger står i public/_redirects, headers i public/_headers.
+  // Siden er statiske filer. Kun /api/* (henvendelser fra prisberegneren) rammer
+  // workeren i worker/index.js (run_worker_first); alt andet serveres som
+  // statiske filer uden at køre kode.
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "ovia",
+  "main": "worker/index.js",
   "compatibility_date": "2026-09-25",
+  "observability": { "enabled": true },
   "assets": {
     "directory": "./dist",
-    "not_found_handling": "404-page"
-  }
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    "run_worker_first": ["/api/*"]
+  },
+
+  // Afsender og modtager af mailen med henvendelsen.
+  "vars": {
+    "MAIL_FROM": "kontakt@oviaspecs.com",
+    "MAIL_TO": "ronnyhong723@gmail.com"
+  },
+
+  // Rate limit pr. IP med Workers Rate Limiting-bindingen (ikke hukommelse):
+  // højst 5 henvendelser pr. minut. namespace_id er et frit valgt tal.
+  "ratelimits": [{ "name": "RATE_LIMITER", "namespace_id": "4711", "simple": { "limit": 5, "period": 60 } }],
+
+  // Mail med Cloudflare Email Routing. Modtageren er bekræftet (Verified).
+  "send_email": [{ "name": "SEND_EMAIL", "destination_address": "ronnyhong723@gmail.com" }],
+
+  // Daglig cron kl. 05:00 UTC (07:00 dansk sommertid, 06:00 vintertid):
+  // sender fejlede mails igen, opgiver efter 3 genforsøg og mailer en opsummering
+  // (worker/index.js, runDaily). Kører kun på den udgivne version, ikke på preview.
+  "triggers": { "crons": ["0 5 * * *"] },
+
+  // Henvendelserne gemmes her FØR mailen sendes (oprettet i weur, 3. okt. 2026).
+  // Tabellen: worker/schema.sql (kørt med wrangler d1 execute --remote).
+  "d1_databases": [{ "binding": "DB", "database_name": "ovia-henvendelser", "database_id": "68b79d10-436c-45f9-b3cc-db6c8acc4d6e" }]
 }

@@ -72,7 +72,7 @@ function Booking() {
   }
 
   return (
-    <div className="dm-card" data-reveal>
+    <div className="dm-card">
       <form onSubmit={submit} noValidate className="dm-form" aria-label="Book tid (demo)">
         <fieldset className="dm-choices">
           <legend>1. Vælg behandling</legend>
@@ -187,7 +187,7 @@ export default function Salon() {
 
         <section id="behandlinger" className="dm-section">
           <div className="dm-wrap">
-            <div className="dm-section-head" data-reveal>
+            <div className="dm-section-head">
               <p className="dm-eyebrow">Behandlinger</p>
               <h2 className="dm-h2">Det, vi tilbyder.</h2>
             </div>
@@ -226,7 +226,7 @@ export default function Salon() {
 
         <section id="tider" className="dm-section">
           <div className="dm-wrap">
-            <div className="dm-section-head" data-reveal>
+            <div className="dm-section-head">
               <p className="dm-eyebrow">Åbningstider</p>
               <h2 className="dm-h2">Kom forbi.</h2>
             </div>

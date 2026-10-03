@@ -5,9 +5,10 @@
  * Alle kombinationer af valgte ydelser og svar (pakker, sider, egen konto/drift,
  * Booking & Google) gennemløbes. Testen fejler, hvis:
  * - en linje eller totalen er negativ
- * - en hjemmeside uden integrationer (uden booking, uanset pakke; ekstra sider
- *   ud over 8 fraregnet) overstiger maxWebsiteNoIntegrations
- * - Fuld fart kan vælges med egen konto
+ * - en hjemmeside på Start eller Vækst uden integrationer (uden booking)
+ *   overstiger maxWebsiteNoIntegrations
+ * - Fuld fart med egen konto uden booking ≠ pakke + egen konto + ekstra sider
+ *   (6.000 kr. + 400 kr. pr. side ud over 8), eller har en månedspris
  * - en hjemmeside med booking (tilvalg eller Booking & Google Vækst/Fuld fart) har egen konto
  * - samme slutresultat (samme pakke, sider, drift og dele) har to forskellige priser
  * - "1 side + booking via siden" ikke koster det samme som "Start + Booking &
@@ -16,12 +17,16 @@
  * - drift + frikøb kan blive billigere end egen konto fra start
  * - Booking & Google-pakkernes pris ≠ summen af deres komponenter
  * - et beløb ("123 kr.", "1.500 kr./md") står hardkodet uden for pricing.js
+ * - hjemmesidens drift står som 300 eller 400 kr./md (pakker, beregner eller filer)
+ * - et pakkeskift i resultatet giver noget andet end at svare direkte med
+ *   pakkens svar (og testen beviser selv, at den fanger et skift uden nye svar)
  *   (koncepterne i src/demos er undtaget: deres menupriser er fiktivt indhold)
  */
 import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { calculator, components, maxWebsiteNoIntegrations, services } from '../src/data/pricing.js'
-import { ORDER, priceText, quote, totalText } from '../src/calculator.js'
+import { ORDER, parse, priceText, quote, serialize, switchTier, totalText } from '../src/calculator.js'
+const NONE = []
 
 const failures = []
 const fail = (msg) => failures.push(msg)
@@ -55,14 +60,19 @@ for (const selected of subsets) {
       const text = priceText(l)
       if (/aftales|ca\./i.test(text)) fail(`"${text}" ${ctx(selected, answers)}`)
       if (l.key === 'hjemmeside') {
-        if (l.tier.id === 'fuld-fart' && l.noDrift) fail(`Fuld fart med egen konto ${ctx(selected, answers)}`)
+        if (l.tier.id === 'fuld-fart' && l.noDrift) {
+          const w = services.hjemmeside
+          const extra = calculator.questions.hjemmeside.find((x) => x.id === 'ekstra').options.find((o) => o.id === answers.ekstra)?.extraPages ?? 0
+          const want = w.tiers.find((t) => t.id === 'fuld-fart').price + w.addons.ownAccount.price + extra * w.addons.extraPage.price
+          if (l.once !== want || l.monthly !== 0) fail(`Fuld fart + egen konto: ${l.once} + ${l.monthly}/md (forventet ${want} + 0) ${ctx(selected, answers)}`)
+        }
         const bgLine = q.lines.find((x) => x.key === 'bookingGoogle')
         if (l.noDrift && (l.includes.includes('booking') || bgLine?.tier.includes.includes('booking'))) {
           fail(`Hjemmeside med booking og egen konto ${ctx(selected, answers)}`)
         }
-        // Uden integrationer = uden booking, uanset pakke. Ekstra sider ud over 8 tæller ikke med.
+        // Loftet gælder Start og Vækst uden integrationer (uden booking).
         const integrations = l.includes.includes('booking')
-        if (!integrations && l.withoutExtraPages > maxWebsiteNoIntegrations) {
+        if (l.tier.id !== 'fuld-fart' && !integrations && l.withoutExtraPages > maxWebsiteNoIntegrations) {
           fail(`Hjemmeside uden integrationer (${l.tier.id}) ${l.withoutExtraPages} kr. > ${maxWebsiteNoIntegrations} kr. ${ctx(selected, answers)}`)
         }
       }
@@ -104,6 +114,21 @@ for (const selected of subsets) {
   }
 }
 
+// Fuld fart + egen konto uden booking: 6.000 kr., ingen månedspris; 12 sider = +4 × 400 kr.
+for (const [ekstra, want] of [[undefined, 6000], ['12', 7600]]) {
+  const answers = { sider: ekstra ? '9+' : '6-8', ...(ekstra ? { ekstra } : {}), bestilling: 'nej', drift: 'egen' }
+  const t = quote({ selected: ['hjemmeside'], answers }).total
+  if (t.once !== want || t.monthly !== 0 || !t.noDrift) fail(`Fuld fart + egen konto (${ekstra ?? 8} sider): ${t.once} + ${t.monthly}/md, forventet ${want} + 0`)
+}
+
+// Pakkevælgeren: skift til Fuld fart beholder egen konto, men ikke med booking (så drift).
+{
+  const keep = switchTier('hjemmeside', 'fuld-fart', { sider: '2-5', bestilling: 'nej', drift: 'egen' }, ['hjemmeside'])
+  if (keep.drift !== 'egen') fail(`Skift til Fuld fart fjernede egen konto: ${JSON.stringify(keep)}`)
+  const booked = switchTier('hjemmeside', 'fuld-fart', { sider: '2-5', bestilling: 'ja', drift: 'egen' }, ['hjemmeside'])
+  if (booked.drift !== 'drift') fail(`Skift til Fuld fart med booking beholdt egen konto: ${JSON.stringify(booked)}`)
+}
+
 // Teksten under prisen må heller ikke sige "aftales" eller "ca.".
 if (/aftales|ca\./i.test(calculator.finalNote)) fail(`finalNote: "${calculator.finalNote}"`)
 
@@ -137,6 +162,83 @@ for (const file of scanned) {
     .split('\n')
     .forEach((text, i) => {
       if (AMOUNT.test(text)) fail(`Hardkodet beløb i ${file}:${i + 1}: ${text.trim().slice(0, 100)}`)
+    })
+}
+
+// Pakkeskift i resultatet: resultatet efter et skift skal være det samme som at
+// svare direkte med den nye pakkes svar. DIRECT er pakkernes svar skrevet ud her
+// i testen (ikke læst fra calculator.tierSwitch), så en fejl i opsætningen fanges.
+const DIRECT = {
+  hjemmeside: { start: { sider: '1' }, vaekst: { sider: '2-5' }, 'fuld-fart': { sider: '6-8' } },
+  marketing: {
+    start: { videoer: '4', poste: 'nej', annoncer: 'nej' },
+    vaekst: { videoer: '8', poste: 'ja', annoncer: 'nej' },
+    'fuld-fart': { videoer: '12', poste: 'ja', annoncer: 'ja' },
+  },
+  bookingGoogle: {
+    start: { booking: 'nej', anmeldelser: 'nej' },
+    vaekst: { booking: 'ja', anmeldelser: 'nej' },
+    'fuld-fart': { booking: 'ja', anmeldelser: 'ja' },
+  },
+}
+/** Det, kunden ser: pakke, pris, drift og noter pr. linje, totalen og svarene (adresselinjen). */
+const result = (selected, answers) => {
+  const q = quote({ selected, answers })
+  return JSON.stringify({
+    lines: q.lines.map((l) => [l.key, l.tier.id, l.once, l.monthly, l.noDrift, priceText(l), l.notes]),
+    total: totalText(q.total),
+    url: serialize(parse(serialize({ selected, answers, step: selected.length + 1 })), NONE),
+  })
+}
+/** Antal skift, hvor resultatet ikke passer med de direkte svar. */
+function switchMismatches(switchFn, report) {
+  let bad = 0
+  for (const selected of subsets) {
+    const product = selected
+      .map((k) => answerSets[k])
+      .reduce((acc, list) => acc.flatMap((a) => list.map((b) => ({ ...a, ...b }))), [{}])
+    for (const answers of product) {
+      for (const key of selected) {
+        for (const tierId of Object.keys(DIRECT[key])) {
+          const switched = switchFn(key, tierId, answers, selected)
+          // Direkte: ydelsens egne svar skiftes ud (ekstra sider fjernes), resten beholdes.
+          const direct = { ...answers, ...DIRECT[key][tierId] }
+          if (key === 'hjemmeside') delete direct.ekstra
+          const wrongTier = quote({ selected, answers: switched }).lines.find((l) => l.key === key).tier.id !== tierId
+          if (wrongTier || result(selected, switched) !== result(selected, direct)) {
+            bad++
+            if (report && bad <= 5) fail(`Pakkeskift ${key} → ${tierId} ≠ direkte svar ${ctx(selected, answers)}`)
+          }
+        }
+      }
+    }
+  }
+  return bad
+}
+switchMismatches(switchTier, true)
+// Beviset for, at testen virker: et skift, der ikke opdaterer svarene, skal fanges.
+if (switchMismatches((key, tierId, answers) => answers, false) === 0) {
+  fail('Pakkeskift-testen fanger ikke et skift, der lader svarene stå uændret')
+}
+
+// Hjemmesidens drift er 299/399 kr./md: den gamle pris (300 eller 400 kr./md) må
+// ikke stå i pakkerne, i beregnerens tekster eller i nogen fil (marketings og
+// Booking & Googles priser er ikke drift og berøres ikke).
+const OLD_DRIFT = /(?<![\d.])[34]00\s?kr\.?\s?\/\s?md/i
+for (const tier of services.hjemmeside.tiers) {
+  if ([300, 400].includes(tier.monthly)) fail(`Hjemmeside ${tier.id}: drift ${tier.monthly} kr./md (skal være 299 eller 399)`)
+}
+for (const selected of subsets.filter((s) => s.includes('hjemmeside'))) {
+  for (const answers of answerSets.hjemmeside) {
+    const web = quote({ selected, answers }).lines.find((l) => l.key === 'hjemmeside')
+    if (OLD_DRIFT.test(priceText(web))) fail(`Gammel driftspris i beregneren: "${priceText(web)}" ${ctx(selected, answers)}`)
+  }
+}
+for (const file of [...scanned, 'src/data/pricing.js', 'README.md']) {
+  readFileSync(file, 'utf8')
+    .split('\n')
+    .forEach((text, i) => {
+      if (OLD_DRIFT.test(text)) fail(`Gammel driftspris i ${file}:${i + 1}: ${text.trim().slice(0, 100)}`)
     })
 }
 

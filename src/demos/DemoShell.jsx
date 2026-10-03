@@ -1,6 +1,7 @@
 import { useEffect, useId, useState, useSyncExternalStore } from 'react'
 import { demos } from '../content.demos.js'
 import { paths } from '../data/texts.js'
+import { useEntrance } from './useEntrance.js'
 
 /**
  * RAMMEN OM EN DEMO
@@ -99,6 +100,7 @@ function Menu({ links, label }) {
 
 export default function DemoShell({ project, links, logo, footer, children }) {
   const back = useBackHref(project.id)
+  useEntrance()
   return (
     <div className={`dm dm-${project.id}`}>
       <noscript>

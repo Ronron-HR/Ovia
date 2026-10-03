@@ -57,7 +57,7 @@ function Booking() {
   })
 
   return (
-    <div className="dm-card" data-reveal>
+    <div className="dm-card">
       <form ref={form} onSubmit={submit} noValidate className="dm-form" aria-label="Bestil bord (demo)">
         <div className="dm-row dm-row-2">
           <Field id="bord-date" label="Dato" error={errors.date}>
@@ -133,7 +133,7 @@ export default function Restaurant() {
 
         <section id="menukort" className="dm-section">
           <div className="dm-wrap">
-            <div className="dm-section-head" data-reveal>
+            <div className="dm-section-head">
               <p className="dm-eyebrow">Menukort</p>
               <h2 className="dm-h2">Vælg et kort.</h2>
             </div>
@@ -171,7 +171,7 @@ export default function Restaurant() {
 
         <section id="tider" className="dm-section dm-band">
           <div className="dm-wrap">
-            <div className="dm-section-head" data-reveal>
+            <div className="dm-section-head">
               <p className="dm-eyebrow">Åbningstider</p>
               <h2 className="dm-h2">Vi har åbent.</h2>
             </div>

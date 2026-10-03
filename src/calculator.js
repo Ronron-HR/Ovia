@@ -1,4 +1,3 @@
-import { useSyncExternalStore } from 'react'
 import { bookingSubscriptionNote, calculator, components, formatKr, overlap, services, tierName } from './data/pricing.js'
 
 /**
@@ -6,10 +5,10 @@ import { bookingSubscriptionNote, calculator, components, formatKr, overlap, ser
  * Spørgsmål, svar og priser står i src/data/pricing.js.
  *
  * TILSTAND: kun i adresselinjen (?ydelser=hjemmeside,marketing&sider=2-5&…&trin=3),
- * sat med replaceState, så et link med valgene virker, og intet gemmes andre
- * steder. Ingen cookies, intet lager, intet sendes nogen steder hen.
- * Serveren og første klient-render får starttilstanden (forudrendering og
- * hydrering er ens).
+ * sat med replaceState (src/useCalc.js), så et link med valgene virker, og intet
+ * gemmes andre steder. Ingen cookies og intet lager i browseren. Filen er ren
+ * logik uden React og window, så workeren (worker/index.js) kan regne den samme
+ * opsummering ud fra linket, når kunden sender tilbuddet.
  *
  * FORVALG: på ydelsessiderne er sidens ydelse valgt på forhånd (`defaults`).
  * Står der intet `ydelser` i adresselinjen, bruges forvalget; har kunden
@@ -23,7 +22,7 @@ const RANK = ['start', 'vaekst', 'fuld-fart']
 const allQuestions = ORDER.flatMap((key) => calculator.questions[key])
 
 export const EMPTY = Object.freeze({ selected: [], answers: {}, step: 0 })
-const NONE = Object.freeze([])
+export const NONE = Object.freeze([])
 
 /* ---- Spørgsmål, der vises, og svar, der må vælges ----------------------- */
 
@@ -100,10 +99,30 @@ export function cleanAnswers(answers, selected = ORDER) {
   return out
 }
 
+/**
+ * Skift pakke for én ydelse fra resultatet: pakkens svar (calculator.tierSwitch)
+ * erstatter ydelsens svar, og resten (booking via siden, drift) beholdes.
+ * Bagefter ryddes der op som ved ethvert svar: ekstra sider forsvinder uden
+ * "Flere end 8 sider", og egen konto skiftes til drift, hvis pakken eller
+ * booking kræver det.
+ */
+export function switchTier(key, tierId, answers, selected = ORDER) {
+  return cleanAnswers({ ...answers, ...calculator.tierSwitch[key][tierId].answers }, selected)
+}
+
+/**
+ * Forklaringen, når "egen konto" er skiftet til drift af et nyt svar eller et
+ * pakkeskift (tom = ingen ændring): Fuld fart eller booking.
+ */
+export function driftSwitchNotice(before, after) {
+  if (before.drift !== 'egen' || after.drift === 'egen') return ''
+  return `${calculator.switchedToDrift} ${calculator.driftWithBooking}`
+}
+
 /* ---- Adresselinje ------------------------------------------------------ */
 
 /** Trinnet må ikke vise noget, der kræver svar, som mangler. */
-function fit(state) {
+export function fit(state) {
   const { selected } = state
   const answers = cleanAnswers(state.answers, selected)
   const last = selected.length + 1 // resultatet
@@ -142,53 +161,6 @@ export function serialize({ selected, answers, step }, defaults = NONE) {
   return s ? `?${s}` : ''
 }
 
-/* ---- Lager (useSyncExternalStore over adresselinjen) ------------------- */
-
-const listeners = new Set()
-/** Én gemt tilstand pr. forvalg, så useSyncExternalStore får samme objekt igen. */
-const cache = new Map()
-
-function snapshot(defaults) {
-  const key = defaults.join(',')
-  const { search } = window.location
-  const hit = cache.get(key)
-  if (hit?.search === search) return hit.state
-  const state = parse(search, defaults)
-  cache.set(key, { search, state })
-  return state
-}
-
-const initial = new Map()
-/** Starttilstanden (server og første klient-render): kun forvalget. */
-function initialState(defaults) {
-  const key = defaults.join(',')
-  if (!initial.has(key)) initial.set(key, defaults.length ? fit({ ...EMPTY, selected: ORDER.filter((k) => defaults.includes(k)) }) : EMPTY)
-  return initial.get(key)
-}
-
-function subscribe(fn) {
-  listeners.add(fn)
-  window.addEventListener('popstate', fn)
-  return () => {
-    listeners.delete(fn)
-    window.removeEventListener('popstate', fn)
-  }
-}
-
-export function useCalc(defaults = NONE) {
-  const state = useSyncExternalStore(
-    subscribe,
-    () => snapshot(defaults),
-    () => initialState(defaults),
-  )
-  const set = (next) => {
-    const url = `${window.location.pathname}${serialize(fit(next), defaults)}${window.location.hash}`
-    window.history.replaceState(window.history.state, '', url)
-    listeners.forEach((fn) => fn())
-  }
-  return [state, set]
-}
-
 /* ---- Beregning ---------------------------------------------------------- */
 
 /**
@@ -224,10 +196,10 @@ function line(key, answers, booking = false) {
     }
     noDrift = options.some((o) => o.noDrift)
     monthly = noDrift ? 0 : (tier.monthly ?? 0)
-    // Hvorfor hjemmesiden kører med drift: Fuld fart, ellers booking (Start/Vækst).
+    // Fuld fart: hurtige ændringer gælder kun med drift. Booking: hjemmesiden kører med drift.
     if (key === 'hjemmeside') {
-      if (!service.addons.ownAccount.tiers.includes(tier.id)) notes.push(calculator.driftFuldFart)
-      else if (booking || options.some((o) => o.addsBooking)) notes.push(calculator.driftWithBooking)
+      if (tier.id === 'fuld-fart') notes.push(calculator.fuldFartNote)
+      if (booking || options.some((o) => o.addsBooking)) notes.push(calculator.driftWithBooking)
     }
   }
   // Det, hjemmesiden reelt indeholder: pakkens dele + booking, hvis den er valgt som tilvalg.
@@ -320,9 +292,9 @@ export function summaryLines(q) {
   return out
 }
 
-/** Noter til mailen: pr. ydelse og fælles (fx bookingabonnement). */
-function allNotes(q) {
-  return [...q.lines.flatMap((l) => l.notes), ...q.notes]
+/** Noter til mailen: pr. ydelse og fælles (fx bookingabonnement), hver som en sætning. */
+export function quoteNotes(q) {
+  return [...q.lines.flatMap((l) => l.notes), ...q.notes].map((n) => sentence(n))
 }
 
 /** Sætning med punktum til sidst, også når prisen ender på "kr.". */
@@ -330,17 +302,4 @@ export const sentence = (text) => (text.endsWith('.') ? text : `${text}.`)
 
 export function smsBody(q) {
   return [calculator.smsIntro, ...summaryLines(q)].join('\n')
-}
-
-export function mailBody(q) {
-  return [
-    ...calculator.mailIntro,
-    '',
-    ...summaryLines(q).map((s) => `- ${s}`),
-    '',
-    ...allNotes(q).map((n) => sentence(n)),
-    ...(calculator.finalNote ? [sentence(calculator.finalNote)] : []),
-    '',
-    ...calculator.mailOutro,
-  ].join('\n')
 }
