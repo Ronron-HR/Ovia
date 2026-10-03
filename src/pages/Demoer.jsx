@@ -13,10 +13,10 @@ export default function Demoer() {
               <p data-hero="fade" className="t-eyebrow t-eyebrow-accent">
                 {demos.eyebrow}
               </p>
-              <h1 data-hero="fade" style={{ '--d': '60ms' }} className="t-display t-hero mt-5 max-w-[18ch]">
+              <h1 data-hero="lift" style={{ '--d': '60ms' }} className="t-display t-hero mt-5 max-w-[18ch]">
                 {demos.title}
               </h1>
-              <p data-hero="fade" style={{ '--d': '140ms' }} className="t-body t-lead mt-6 max-w-[52ch]">
+              <p data-hero="lift" style={{ '--d': '140ms' }} className="t-body t-lead mt-6 max-w-[52ch]">
                 {demos.intro}
               </p>
             </div>

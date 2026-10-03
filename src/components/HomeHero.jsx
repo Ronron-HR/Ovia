@@ -18,12 +18,12 @@ export default function HomeHero() {
         <div className="grid grid-cols-1 gap-x-12 gap-y-5 lg:grid-cols-12 lg:items-start lg:gap-y-8">
           <div className="lg:col-span-5 lg:pt-6">
             <h1
-              data-hero="fade"
+              data-hero="lift"
               className="t-display max-w-[20ch] text-[clamp(1.5rem,6.2vw,1.75rem)] leading-[1.08] lg:text-[clamp(2.25rem,3.2vw,3rem)] lg:leading-[1.04]"
             >
               {h.title}
             </h1>
-            <p data-hero="fade" style={{ '--d': '80ms' }} className="t-body mt-2.5 max-w-[42ch] text-[16px] lg:mt-5 lg:text-[18px]">
+            <p data-hero="lift" style={{ '--d': '80ms' }} className="t-body mt-2.5 max-w-[42ch] text-[16px] lg:mt-5 lg:text-[18px]">
               {h.short}
             </p>
             <p

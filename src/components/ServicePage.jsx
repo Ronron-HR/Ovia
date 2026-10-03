@@ -28,10 +28,10 @@ export default function ServicePage({ page, extra = null }) {
             <p data-hero="fade" className="t-eyebrow t-eyebrow-accent">
               {page.eyebrow}
             </p>
-            <h1 data-hero="fade" style={{ '--d': '60ms' }} className="t-display mt-3 max-w-[22ch] text-[clamp(1.75rem,4vw,2.75rem)] leading-[1.06]">
+            <h1 data-hero="lift" style={{ '--d': '60ms' }} className="t-display mt-3 max-w-[22ch] text-[clamp(1.75rem,4vw,2.75rem)] leading-[1.06]">
               {page.title}
             </h1>
-            <p data-hero="fade" style={{ '--d': '100ms' }} className="t-body mt-2.5 text-[16px] md:text-[18px]">
+            <p data-hero="lift" style={{ '--d': '100ms' }} className="t-body mt-2.5 text-[16px] md:text-[18px]">
               {calcIntro}
             </p>
             <div data-hero="fade" style={{ '--d': '140ms' }} className="mt-4 md:mt-6">
