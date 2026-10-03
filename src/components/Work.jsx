@@ -7,7 +7,7 @@ import DemoVisual, { DemoActions } from './DemoVisual.jsx'
  * De fire koncepter, ét ad gangen: skærmbillede af selve demoen på
  * demoens egen farve, hvad den handler om, hvordan den ser ud, og hvad den kan.
  * "Åbn demo" åbner den rigtige, fungerende demo (/demoer/<navn>/), og
- * "Se priser på en hjemmeside" fører til beregneren.
+ * "Se din pris" fører til beregneren.
  *
  * Alt er mærket "Koncept – ikke en kundeopgave". Koncepterne bruger intet
  * materiale fra rigtige virksomheder.
@@ -43,6 +43,7 @@ export default function Work() {
   return (
     <section id={demos.id} className="bg-paper pb-[var(--space-section)]">
       <div className="shell flex flex-col gap-20 md:gap-28">
+        <p className="-mb-8 text-[15px] font-medium md:-mb-14">{demos.listNote}</p>
         {demos.projects.map((p, i) => (
           <article key={p.id} id={`demo-${p.id}`} className="grid grid-cols-1 gap-x-12 gap-y-8 lg:grid-cols-12 lg:items-center">
             <div className={`lg:col-span-7 ${i % 2 ? 'lg:order-2' : ''}`}>

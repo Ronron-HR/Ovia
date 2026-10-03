@@ -588,7 +588,7 @@
     }
   }
 
-  /* ---- Fast Ring/Skriv-bjælke på mobil ---------------------------------- */
+  /* ---- Fast Ring/Mail-bjælke på mobil ----------------------------------- */
   .callbar {
     position: fixed;
     inset: auto 0 0;
@@ -661,7 +661,7 @@
     }
   }
 
-  /* Mærkerne ("Anbefalet", "Max 1 kunde ad gangen") sidder på overkanten. */
+  /* Mærkerne ("Anbefalet", "Højst 1 kunde ad gangen") sidder på overkanten. */
   .package-flags {
     position: absolute;
     top: 0;
@@ -769,7 +769,7 @@
     font-size: 1.3em;
   }
 
-  /* Små mærker: "Anbefalet" og begrænsninger som "Max 1 kunde ad gangen". */
+  /* Små mærker: "Anbefalet" og begrænsninger som "Højst 1 kunde ad gangen". */
   .badge {
     display: inline-flex;
     align-items: center;

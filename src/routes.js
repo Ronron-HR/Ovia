@@ -19,7 +19,7 @@ export const routes = [
   {
     path: paths.demoer,
     page: 'demoer',
-    title: 'Koncepter: fire hjemmesider at prøve | OviaSpecs',
+    title: 'Eksempler: fire hjemmesider at prøve | OviaSpecs',
     description: demos.intro,
   },
   ...demos.projects.map((p) => ({

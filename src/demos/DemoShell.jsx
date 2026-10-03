@@ -138,7 +138,7 @@ export default function DemoShell({ project, links, logo, footer, children }) {
         <div className="dm-wrap dm-footer-in">
           <div>
             <p>{footer}</p>
-            <p>Konceptet er fiktivt: navne, adresser, tider og priser er opdigtede.</p>
+            <p>Eksemplet er fiktivt: navne, adresser, tider og priser er opdigtede.</p>
           </div>
           <p>
             <a href={back} className="underline underline-offset-4">

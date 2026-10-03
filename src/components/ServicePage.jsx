@@ -1,4 +1,4 @@
-import { introText, services } from '../data/pricing.js'
+import { introNote, introText, services } from '../data/pricing.js'
 import { calcIntro, home } from '../data/texts.js'
 import ContactButtons from './ContactButtons.jsx'
 import ContactSection from './ContactSection.jsx'
@@ -97,6 +97,7 @@ export default function ServicePage({ page, extra = null }) {
             <div className="flex flex-wrap items-center gap-3">
               <p className="t-eyebrow t-eyebrow-accent">{page.packages.eyebrow}</p>
               {introText && <span className="badge">{introText}</span>}
+              {introNote && <span className="text-[14px] text-muted">{introNote}</span>}
             </div>
             <h2 id="pakker-titel" className="t-display t-h2 mt-4">
               {page.packages.title}

@@ -4,7 +4,7 @@ import { calcHref, cta, links } from '../data/texts.js'
 import { MailIcon, PhoneIcon } from './ContactButtons.jsx'
 
 /**
- * Fast bjælke i bunden på mobil med "Ring", "Skriv" og "Se pris", så kontakt altid er ét
+ * Fast bjælke i bunden på mobil med "Ring", "Mail" og "Se din pris", så kontakt altid er ét
  * tryk væk. Den skjules, mens elementer med [data-callbar-hide] er på skærmen
  * (heroens knapper, kontaktsektionen og footeren), så den aldrig står oven i
  * de samme knapper. Uden JavaScript vises den ikke; knapperne på siden virker

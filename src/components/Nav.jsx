@@ -14,7 +14,7 @@ import { Arrow } from './Shots.jsx'
  * Den side, man står på, markeres med aria-current="page" og en bronzestreg
  * under ordet.
  *
- * MOBIL (under lg): mærke, "Ring", "Se pris" og "Menu".
+ * MOBIL (under lg): mærke, "Ring", "Se din pris" og "Menu".
  * Overlayet er et SØSKENDE til baren, så et fixed overlay ikke måles mod
  * baren. Menuen lukker med Escape og "Luk"; fokus fanges, mens den er åben,
  * og går tilbage til knappen.
@@ -141,9 +141,10 @@ export default function Nav({ path }) {
             </div>
           </div>
 
-          {/* Mobil: Ring og Se pris skjules, mens den faste bundbjælke (med de samme knapper) er synlig. */}
+          {/* Mobil: Ring og Se din pris skjules, mens den faste bundbjælke (med de samme knapper) er synlig. */}
           <div className="flex items-center gap-1.5 lg:hidden">
-            <a href={links.tel} className="nav-call btn btn-ghost min-h-10 px-3 text-[14px]" aria-label={`${nav.call} ${contact.phone}`}>
+            {/* Under 380 px skjules ikonet, så "Se din pris" og "Menu" kan være på linjen. */}
+            <a href={links.tel} className="nav-call btn btn-ghost min-h-10 px-3 text-[14px] max-[379px]:[&_svg]:hidden" aria-label={`${nav.call} ${contact.phone}`}>
               <PhoneIcon />
               {nav.call}
             </a>

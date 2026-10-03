@@ -2,7 +2,8 @@ import { home } from '../data/texts.js'
 
 /**
  * "Sådan foregår det": tre trin på en linje (desktop) eller en lodret
- * tidslinje (mobil). Genbruges på ydelsessiderne med egne trin.
+ * tidslinje (mobil). Genbruges på ydelsessiderne med egne trin. Tallet står
+ * i prikken (skjult for skærmlæsere, som får nummeret fra <ol>).
  */
 export default function Steps({ data = home.steps, id = 'forloeb', tone = 'grey' }) {
   return (
@@ -22,10 +23,7 @@ export default function Steps({ data = home.steps, id = 'forloeb', tone = 'grey'
                 {i + 1}
               </span>
               <div>
-                <h3 className="t-display t-h4">
-                  <span className="sr-only">Trin {i + 1}: </span>
-                  {step.title}
-                </h3>
+                <h3 className="t-display t-h4">{step.title}</h3>
                 <p className="t-body mt-2 max-w-[38ch] text-[16px]">{step.text}</p>
               </div>
             </li>

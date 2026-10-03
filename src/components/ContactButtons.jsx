@@ -2,7 +2,7 @@ import { contact } from '../data/pricing.js'
 import { cta, links } from '../data/texts.js'
 
 /**
- * "Ring" og "Skriv" — sidens vigtigste knapper. Ring viser altid nummeret,
+ * "Ring" og "Mail" — sidens vigtigste knapper. Ring viser altid nummeret,
  * så det også kan læses og tastes af, og begge er almindelige links
  * (tel:/mailto:/sms:), der virker uden JavaScript.
  *
@@ -28,7 +28,7 @@ export default function ContactButtons({
     .join('&')
   const mail = query ? `${links.mail}?${query}` : links.mail
   // stretch (mobil): "Ring" fylder hele bredden, så nummeret aldrig brydes.
-  // Med SMS deler de to andre knapper rækken under; uden står "Skriv" alene.
+  // Med SMS deler de to andre knapper rækken under; uden står "Mail" alene.
   const box = stretch ? 'grid grid-cols-2 gap-3 sm:flex sm:flex-wrap' : 'flex flex-wrap gap-3'
   const wide = stretch ? 'col-span-2 sm:col-auto' : ''
   const rest = stretch && (!sms || stack) ? 'col-span-2 sm:col-auto' : ''

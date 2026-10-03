@@ -13,7 +13,7 @@ import Amount from './Amount.jsx'
  * PAKKER — alle tal og al tekst kommer fra src/data/pricing.js.
  *
  * PackageCard: én pakke. Den anbefalede (Vækst) får kant i blæk og mærket
- * "Anbefalet". En pakke med `limit` (fx "Max 1 kunde ad gangen") viser det
+ * "Anbefalet". En pakke med `limit` (fx "Højst 1 kunde ad gangen") viser det
  * som et lille mærke; det er en oplysning, ikke en nedtælling. Mærkerne sidder
  * på kortets overkant, så de ikke skubber titlen ned.
  *

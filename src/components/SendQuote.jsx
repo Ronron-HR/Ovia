@@ -124,7 +124,7 @@ export default function SendQuote({ smsText }) {
             {inquiry.failed}{' '}
             <a href={links.tel} className="link-underline whitespace-nowrap tabular-nums">
               {contact.phone}
-            </a>{' '}
+            </a>
             {inquiry.failedAfter}
           </p>
         )}
