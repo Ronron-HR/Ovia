@@ -16,6 +16,7 @@
  * - drift + frikøb kan blive billigere end egen konto fra start
  * - Booking & Google-pakkernes pris ≠ summen af deres komponenter
  * - et beløb ("123 kr.", "1.500 kr./md") står hardkodet uden for pricing.js
+ * - hjemmesidens drift står som 300 eller 400 kr./md (pakker, beregner eller filer)
  *   (koncepterne i src/demos er undtaget: deres menupriser er fiktivt indhold)
  */
 import { readFileSync, readdirSync } from 'node:fs'
@@ -137,6 +138,27 @@ for (const file of scanned) {
     .split('\n')
     .forEach((text, i) => {
       if (AMOUNT.test(text)) fail(`Hardkodet beløb i ${file}:${i + 1}: ${text.trim().slice(0, 100)}`)
+    })
+}
+
+// Hjemmesidens drift er 299/399 kr./md: den gamle pris (300 eller 400 kr./md) må
+// ikke stå i pakkerne, i beregnerens tekster eller i nogen fil (marketings og
+// Booking & Googles priser er ikke drift og berøres ikke).
+const OLD_DRIFT = /(?<![\d.])[34]00\s?kr\.?\s?\/\s?md/i
+for (const tier of services.hjemmeside.tiers) {
+  if ([300, 400].includes(tier.monthly)) fail(`Hjemmeside ${tier.id}: drift ${tier.monthly} kr./md (skal være 299 eller 399)`)
+}
+for (const selected of subsets.filter((s) => s.includes('hjemmeside'))) {
+  for (const answers of answerSets.hjemmeside) {
+    const web = quote({ selected, answers }).lines.find((l) => l.key === 'hjemmeside')
+    if (OLD_DRIFT.test(priceText(web))) fail(`Gammel driftspris i beregneren: "${priceText(web)}" ${ctx(selected, answers)}`)
+  }
+}
+for (const file of [...scanned, 'src/data/pricing.js', 'README.md']) {
+  readFileSync(file, 'utf8')
+    .split('\n')
+    .forEach((text, i) => {
+      if (OLD_DRIFT.test(text)) fail(`Gammel driftspris i ${file}:${i + 1}: ${text.trim().slice(0, 100)}`)
     })
 }
 
