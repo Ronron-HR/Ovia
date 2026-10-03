@@ -39,15 +39,15 @@ export default function MobileCallBar({ path }) {
   return (
     <div className="callbar md:hidden" data-show={show} aria-hidden={!show} inert={!show}>
       <div className="grid grid-cols-3 gap-2">
-        <a href={links.tel} className="btn btn-primary gap-1.5 px-2" aria-label={`${cta.call} ${contact.phone}`}>
+        <a href={links.tel} className="btn btn-ghost gap-1.5 px-2" aria-label={`${cta.call} ${contact.phone}`}>
           <PhoneIcon />
           {cta.call}
         </a>
-        <a href={links.mail} className="btn btn-surface gap-1.5 px-2">
+        <a href={links.mail} className="btn btn-ghost gap-1.5 px-2">
           <MailIcon />
           {cta.write}
         </a>
-        <a href={calcHref(path)} className="btn btn-accent px-2 whitespace-nowrap">
+        <a href={calcHref(path)} className="btn btn-cta px-2 whitespace-nowrap">
           {cta.price}
         </a>
       </div>

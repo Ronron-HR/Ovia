@@ -12,7 +12,7 @@ export default function PilotSection({ text }) {
       <div className="shell">
         <div className="grid grid-cols-1 gap-x-14 gap-y-10 lg:grid-cols-12">
           <header data-reveal className="lg:col-span-5">
-            <p className="t-eyebrow text-accent-soft">{text.eyebrow}</p>
+            <p className="t-eyebrow text-paper">{text.eyebrow}</p>
             <h2 id="pilot-titel" className="t-display t-h2 mt-4">
               {text.title}
             </h2>
@@ -25,7 +25,7 @@ export default function PilotSection({ text }) {
             <ol className="mt-4 border-t border-paper/25">
               {pilot.terms.map((t, i) => (
                 <li key={t} className="grid grid-cols-[36px_1fr] gap-x-3 border-b border-paper/15 py-4 text-[16px]">
-                  <span className="font-mono text-[13px] leading-6 text-accent-soft">0{i + 1}</span>
+                  <span className="font-mono text-[13px] leading-6 text-paper/60">0{i + 1}</span>
                   <span>{t}</span>
                 </li>
               ))}

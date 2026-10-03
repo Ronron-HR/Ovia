@@ -10,7 +10,7 @@ export default function Steps({ data = home.steps, id = 'forloeb', tone = 'grey'
     <section id={id} aria-labelledby={`${id}-titel`} className={`section-y ${tone === 'grey' ? 'bg-paper-2' : 'bg-paper'}`}>
       <div className="shell">
         <header data-reveal className="max-w-[40ch]">
-          <p className="t-eyebrow t-eyebrow-accent">{data.eyebrow}</p>
+          <p className="t-eyebrow t-eyebrow-strong">{data.eyebrow}</p>
           <h2 id={`${id}-titel`} className="t-display t-h2 mt-4">
             {data.title}
           </h2>

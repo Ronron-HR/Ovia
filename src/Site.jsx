@@ -78,7 +78,7 @@ function NotFound() {
   return (
     <section className="bg-paper pt-[calc(var(--nav-h)+72px)] pb-24">
       <div className="shell">
-        <p className="t-eyebrow t-eyebrow-accent">404</p>
+        <p className="t-eyebrow t-eyebrow-strong">404</p>
         <h1 className="t-display t-hero mt-5">Den side findes ikke.</h1>
         <p className="t-body t-lead mt-6 max-w-[46ch]">
           Linket kan være ændret, eller adressen er skrevet forkert. Forsiden har det hele.

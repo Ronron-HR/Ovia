@@ -17,6 +17,7 @@ import {
 import { useCalc } from '../useCalc.js'
 import { calculator, flags, fromPrice, introNote, introText, priceNote, services, tierName } from '../data/pricing.js'
 import Amount from './Amount.jsx'
+import ErrorText from './ErrorText.jsx'
 import SendQuote from './SendQuote.jsx'
 
 /** Etiketterne over totalen i resultatet. "Nu" er calculator.nowLabel med stort. */
@@ -249,9 +250,9 @@ export default function PriceCalculator({ defaults }) {
               {step === resultStep - 1 && selected.length ? 'Vis min pris' : 'Næste'}
             </button>
             {missing && (
-              <p role="alert" className="text-[15px] font-medium text-accent">
+              <ErrorText role="alert" className="text-[15px]">
                 {missing}
-              </p>
+              </ErrorText>
             )}
           </div>
           <div role="status" className="mt-3 text-[15px] font-medium text-ink empty:hidden">

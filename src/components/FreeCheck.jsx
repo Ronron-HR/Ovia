@@ -12,7 +12,7 @@ export default function FreeCheck({ text }) {
       <div className="shell">
         <div data-reveal className="free-check grid grid-cols-1 gap-x-14 gap-y-6 lg:grid-cols-12 lg:items-center">
           <div className="lg:col-span-7">
-            <p className="t-eyebrow t-eyebrow-accent">{text.eyebrow}</p>
+            <p className="t-eyebrow t-eyebrow-strong">{text.eyebrow}</p>
             <h2 id="tjek-titel" className="t-display t-h2 mt-4">
               {c.title}
             </h2>

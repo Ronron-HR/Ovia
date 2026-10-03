@@ -14,7 +14,7 @@ export default function ConceptGrid({ eyebrow, title, intro, more }) {
       <div className="shell">
         <header data-reveal className="grid grid-cols-1 gap-x-14 gap-y-4 lg:grid-cols-12 lg:items-end">
           <div className="lg:col-span-6">
-            <p className="t-eyebrow t-eyebrow-accent">{eyebrow}</p>
+            <p className="t-eyebrow t-eyebrow-strong">{eyebrow}</p>
             <h2 id="koncepter-titel" className="t-display t-h2 mt-4">
               {title}
             </h2>

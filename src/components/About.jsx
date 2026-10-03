@@ -17,7 +17,7 @@ export default function About() {
           </div>
 
           <div data-reveal style={{ '--d': '80ms' }} className="lg:col-span-7 lg:col-start-6">
-            <p className="t-eyebrow t-eyebrow-accent">{about.eyebrow}</p>
+            <p className="t-eyebrow t-eyebrow-strong">{about.eyebrow}</p>
             <h2 id="om-titel" className="t-display t-h2 mt-4 max-w-[22ch]">
               {about.title}
             </h2>

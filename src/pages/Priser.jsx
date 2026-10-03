@@ -35,7 +35,7 @@ export default function Priser() {
         <div className="shell">
           <header data-reveal>
             <div className="flex flex-wrap items-center gap-3">
-              <p className="t-eyebrow t-eyebrow-accent">{p.all.eyebrow}</p>
+              <p className="t-eyebrow t-eyebrow-strong">{p.all.eyebrow}</p>
               {introText && <span className="badge">{introText}</span>}
               {introNote && <span className="text-[14px] text-muted">{introNote}</span>}
             </div>

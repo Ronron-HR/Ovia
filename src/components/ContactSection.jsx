@@ -13,7 +13,7 @@ export default function ContactSection({ title = c.title, body = c.body }) {
       <div className="shell">
         <div className="grid grid-cols-1 gap-x-14 gap-y-10 lg:grid-cols-12 lg:items-end">
           <div data-reveal className="lg:col-span-7">
-            <p className="t-eyebrow text-accent-soft">{c.eyebrow}</p>
+            <p className="t-eyebrow text-paper">{c.eyebrow}</p>
             <h2 id="kontakt-titel" className="t-display t-h2 mt-4 max-w-[20ch]">
               {title}
             </h2>

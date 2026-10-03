@@ -3,7 +3,7 @@
  *
  *   npm run brand
  *
- * Skabelonerne i scripts/brand/*.svg bruger {{ink}}, {{paper}} og {{accent}}.
+ * Skabelonerne i scripts/brand/*.svg bruger {{ink}}, {{paper}} og {{cta}} (kobolt).
  * Farverne læses fra @theme i src/index.css — det er den eneste kilde. Ud
  * kommer:
  *
@@ -26,8 +26,8 @@ const token = (name) => {
   if (!m) throw new Error(`--color-${name} findes ikke i src/index.css`)
   return m[1].toUpperCase()
 }
-const colors = { ink: token('ink'), paper: token('paper'), accent: token('accent') }
-const fill = (svg) => svg.replace(/\{\{(ink|paper|accent)\}\}/g, (_, k) => colors[k])
+const colors = { ink: token('ink'), paper: token('paper'), cta: token('cta') }
+const fill = (svg) => svg.replace(/\{\{(ink|paper|cta)\}\}/g, (_, k) => colors[k])
 
 const RASTER = {
   'apple-touch-icon': { to: 'public/apple-touch-icon.png', w: 180, h: 180, png: true },

@@ -25,7 +25,7 @@ export default function ServicePage({ page, extra = null }) {
       <section className="pt-[calc(var(--nav-h)+20px)] pb-10 md:pt-[calc(var(--nav-h)+48px)] md:pb-14">
         <div className="shell">
           <div className="max-w-[880px]">
-            <p data-hero="fade" className="t-eyebrow t-eyebrow-accent">
+            <p data-hero="fade" className="t-eyebrow t-eyebrow-strong">
               {page.eyebrow}
             </p>
             <h1 data-hero="lift" style={{ '--d': '60ms' }} className="t-display mt-3 max-w-[22ch] text-[clamp(1.75rem,4vw,2.75rem)] leading-[1.06]">
@@ -55,7 +55,7 @@ export default function ServicePage({ page, extra = null }) {
           </div>
           <div data-reveal className="mt-6 flex flex-col items-start gap-x-8 gap-y-2 sm:flex-row sm:flex-wrap">
             {page.heroLink && (
-              <a href={page.heroLink.href} className="btn-text inline-flex items-center gap-2 text-accent">
+              <a href={page.heroLink.href} className="btn-text inline-flex items-center gap-2">
                 {page.heroLink.label}
                 <Arrow className="rotate-90" />
               </a>
@@ -72,7 +72,7 @@ export default function ServicePage({ page, extra = null }) {
         <div className="shell">
           <div className="grid grid-cols-1 gap-x-14 gap-y-8 lg:grid-cols-12">
             <header data-reveal className="lg:col-span-4">
-              <p className="t-eyebrow t-eyebrow-accent">{page.get.eyebrow}</p>
+              <p className="t-eyebrow t-eyebrow-strong">{page.get.eyebrow}</p>
               <h2 id="faar-titel" className="t-display t-h2 mt-4">
                 {page.get.title}
               </h2>
@@ -95,7 +95,7 @@ export default function ServicePage({ page, extra = null }) {
         <div className="shell">
           <header data-reveal className="max-w-[46ch]">
             <div className="flex flex-wrap items-center gap-3">
-              <p className="t-eyebrow t-eyebrow-accent">{page.packages.eyebrow}</p>
+              <p className="t-eyebrow t-eyebrow-strong">{page.packages.eyebrow}</p>
               {introText && <span className="badge">{introText}</span>}
               {introNote && <span className="text-[14px] text-muted">{introNote}</span>}
             </div>

@@ -3,6 +3,7 @@ import { contact } from '../data/pricing.js'
 import { cta, links, paths } from '../data/texts.js'
 import { inquiry, sendInquiry, validContact } from '../inquiry.js'
 import { PhoneIcon, SmsIcon } from './ContactButtons.jsx'
+import ErrorText from './ErrorText.jsx'
 
 /** Turnstiles site key sættes ved bygget (Cloudflare Builds: VITE_TURNSTILE_SITE_KEY). Tom = ingen Turnstile. */
 const SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY ?? ''
@@ -90,9 +91,9 @@ export default function SendQuote({ smsText }) {
             className="field mt-2"
           />
           {invalid && (
-            <p id={errorId} className="mt-2 text-[14px] font-medium text-accent">
+            <ErrorText id={errorId} className="mt-2 text-[14px]">
               {inquiry.invalid}
-            </p>
+            </ErrorText>
           )}
         </div>
         <div>
@@ -109,7 +110,7 @@ export default function SendQuote({ smsText }) {
           </label>
         </div>
         <div>
-          <button type="submit" className="btn btn-primary w-full sm:w-auto" disabled={status === 'sending'}>
+          <button type="submit" className="btn btn-cta w-full sm:w-auto" disabled={status === 'sending'}>
             {status === 'sending' ? inquiry.sending : inquiry.submit}
           </button>
           <p className="t-body mt-2 text-[13px]">
@@ -120,13 +121,13 @@ export default function SendQuote({ smsText }) {
           </p>
         </div>
         {status === 'failed' && (
-          <p ref={doneRef} tabIndex={-1} role="alert" className="text-[15px] font-medium text-ink outline-none">
+          <ErrorText ref={doneRef} tabIndex={-1} role="alert" className="text-[15px] outline-none">
             {inquiry.failed}{' '}
             <a href={links.tel} className="link-underline whitespace-nowrap tabular-nums">
               {contact.phone}
             </a>
             {inquiry.failedAfter}
-          </p>
+          </ErrorText>
         )}
       </form>
       <div className="mt-5 flex flex-wrap gap-x-6 gap-y-1">

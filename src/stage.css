@@ -11,13 +11,13 @@
   position: relative;
   z-index: 1;
   margin-top: -28px;
-  border-radius: 28px 28px 0 0;
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
 }
 
 @media (min-width: 768px) {
   .sheet {
     margin-top: -40px;
-    border-radius: 40px 40px 0 0;
+    border-radius: var(--radius-card) var(--radius-card) 0 0;
   }
 }
 
@@ -33,12 +33,12 @@
   }
 }
 
-/* Bagplade bag bookingeksemplet og skitsen: en varm grå flade, der løfter
+/* Bagplade bag bookingeksemplet og skitsen: en lys grå flade, der løfter
    kortet. Ingen mønster — roen kommer af fladen selv. */
 .backdrop {
   position: relative;
   overflow: hidden;
-  border-radius: 20px;
+  border-radius: var(--radius-card);
   background: var(--color-paper-2);
   padding: 14px;
 }
@@ -58,44 +58,44 @@
 /* ---- Grå flade (paper-2): bronze er for lys til små mærkater, og hårstregerne
    skal være mørkere for at kunne ses ---------------------------------- */
 .on-grey {
-  --color-rule: #c3bdb3;
+  --color-rule: var(--color-rule-strong);
   background: var(--color-paper-2);
 }
 
-.on-grey .t-eyebrow-accent {
+.on-grey .t-eyebrow-strong {
   color: var(--color-muted);
 }
 
 /* ---- Mørk flade: sektionens mærkater, lister og knapper --------------- */
 .on-dark .t-eyebrow {
-  color: rgb(245 243 239 / 0.65);
+  color: rgb(255 255 255 / 0.65);
 }
 
-.on-dark .t-eyebrow-accent {
-  color: var(--color-accent-soft);
+.on-dark .t-eyebrow-strong {
+  color: var(--color-paper);
 }
 
 .on-dark .tag {
-  border-color: rgb(245 243 239 / 0.3);
+  border-color: rgb(255 255 255 / 0.3);
   background: transparent;
   color: var(--color-paper);
 }
 
 .on-dark .tag::before {
-  background: var(--color-accent-soft);
+  background: var(--color-paper);
 }
 
 .on-dark .t-body {
-  color: rgb(245 243 239 / 0.72);
+  color: rgb(255 255 255 / 0.72);
 }
 
 .on-dark .spec-list > li,
 .on-dark .spec-list > li:last-child {
-  border-color: rgb(245 243 239 / 0.18);
+  border-color: rgb(255 255 255 / 0.18);
 }
 
 .on-dark .spec-list > li::before {
-  background: var(--color-accent-soft);
+  background: var(--color-paper);
 }
 
 /* ---- Demoscene: skærmbilleder i browser og telefon på demoens farve ------------
@@ -108,15 +108,13 @@
   overflow: hidden;
   container-type: inline-size;
   padding: 20px 20px 0;
-  border-radius: 22px;
+  border-radius: var(--radius-card);
   background: var(--panel);
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
 }
 
 @media (min-width: 768px) {
   .stage {
     padding: 24px 24px 0;
-    border-radius: 28px;
   }
 }
 

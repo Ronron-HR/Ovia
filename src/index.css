@@ -51,36 +51,38 @@
 }
 
 /* =========================================================================
-   RETNING — SKANDINAVISK RO
-   Varm offwhite som papir, lys varm grå til adskillelse, koksgrå til tekst,
-   mørke sektioner og primære knapper. Dæmpet bronze er en sparsom accent.
-   Instrument Sans bærer alt; monoskriften bruges kun til små tekniske
-   detaljer (klokkeslæt, adresselinjer i rammer). Højst to skrifttyper.
+   RETNING — HVID OG SKARP (okt. 2026)
+   Hvid baggrund, næsten sort tekst og neutrale grå uden varm tone. Skarpe
+   former: 6px på kort og flader, 4px på felter og knapper, piller kun på
+   mærker. 1px kanter, ingen skygger.
+   Kobolt (cta) er sidens ENESTE farve og bruges kun på "Se din pris",
+   "Send til Ronny", fokusringen og prikken i mærket "O.". Alt andet, der
+   skal fremhæves, er sort (eller hvidt på de mørke flader).
+   Instrument Sans bærer alt; Instrument Serif kun på store beløb;
+   monoskriften kun til små tekniske detaljer. Højst tre skrifttyper.
 
    DESIGNTOKENS — farver, skrift og afstande defineres her og kun her.
    Kontrast (målt mod WCAG):
-     ink    på paper    14,6:1        muted  på paper    6,2:1
-     ink    på paper-2  12,7:1        muted  på paper-2  5,4:1
-     accent på paper     4,7:1 (tekst) accent på paper-2  3,9:1 (kun stor
-                                       tekst og streger, aldrig brødtekst)
-     accent-soft på ink  7,2:1 (bronze til tekst på de mørke flader)
-     hvid   på accent    5,2:1 (hover på knapper)
-     ink 60 % på surface 4,0:1 (kun stor tekst: "kr." i beløb, som "Specs" i logoet)
-     field  på paper     3,3:1 (kanter på felter og valg)
-   npm run brand læser ink, paper og accent herfra.
+     ink    på paper    19,8:1        muted  på paper    7,8:1
+     ink    på paper-2  18,2:1        muted  på paper-2  7,2:1
+     hvid   på cta       6,2:1        cta    på ink      3,2:1 (fokusring på mørkt)
+     hvid   på cta-hover 8,4:1
+     ink 60 % på paper   4,0:1 (kun stor tekst: "kr." i beløb, som "Specs" i logoet)
+     field  på paper     3,5:1        field  på paper-2  3,2:1 (kanter på felter og valg)
+   npm run brand læser ink, paper og cta herfra.
    ========================================================================= */
 
 @theme {
-  --color-paper: #f5f3ef; /* primær baggrund */
-  --color-paper-2: #e5e1db; /* alternative flader og adskillelse */
-  --color-surface: #faf9f6; /* indersiden af rammer og kort: paper, lysnet */
-  --color-ink: #252525; /* tekst, mørke sektioner, primære knapper */
-  --color-muted: #5b5852; /* sekundær tekst */
-  --color-accent: #876747; /* bronze: sparsomme fremhævelser */
-  --color-accent-soft: #c9ad8a; /* bronze på mørk flade */
-  --color-accent-strong: #7a5d40; /* bronze til lille tekst på paper-2 (4,65:1) */
-  --color-rule: #d6d1c9; /* hårstreger på paper */
-  --color-field: #8a847b; /* kant på felter og valg: 3,3:1 på paper, 3,5:1 på surface (WCAG 1.4.11) */
+  --color-paper: #ffffff; /* primær baggrund */
+  --color-paper-2: #f5f5f5; /* alternative flader og adskillelse */
+  --color-surface: #ffffff; /* kort og rammer (med 1px kant) */
+  --color-ink: #0a0a0a; /* tekst, mørke sektioner, primære knapper, fremhævelser */
+  --color-muted: #525252; /* sekundær tekst */
+  --color-cta: #2b44ff; /* kobolt: KUN "Se din pris", "Send til Ronny", fokusring og prikken i "O." */
+  --color-cta-hover: #1d33d6; /* kobolt ved hover */
+  --color-rule: #e5e5e5; /* hårstreger på paper */
+  --color-rule-strong: #d4d4d4; /* hårstreger på paper-2 */
+  --color-field: #8a8a8a; /* kant på felter og valg (WCAG 1.4.11) */
 
   --font-sans: "Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-amount: "Instrument Serif", "Instrument Serif Fallback", var(--font-sans);
@@ -97,8 +99,9 @@
   /* Afstande */
   --space-section: clamp(3.25rem, 6.5vw, 5.75rem);
   --space-block: clamp(2.5rem, 5vw, 4.25rem);
-  --radius-btn: 6px;
-  --radius-panel: 20px;
+  --radius-btn: 4px; /* knapper og felter */
+  --radius-card: 6px; /* kort, flader og rammer */
+  --radius-panel: 6px;
 }
 
 @layer base {
@@ -131,15 +134,12 @@
 
   /* Alle interaktive elementer har en synlig fokus-tilstand. */
   :focus-visible {
-    outline: 2px solid var(--color-accent);
+    outline: 2px solid var(--color-cta);
     outline-offset: 3px;
     border-radius: 2px;
   }
 
-  /* På den mørke sektion er accenten for mørk til en fokusring. */
-  .on-dark :focus-visible {
-    outline-color: var(--color-accent-soft);
-  }
+  /* Kobolt har 3,2:1 mod de mørke flader, så samme fokusring bruges overalt. */
 
   /* Ankre må ikke lande bag den faste bar. */
   [id] {
@@ -189,13 +189,9 @@
     color: var(--color-muted);
   }
 
-  .t-eyebrow-accent {
-    color: var(--color-accent);
-  }
-
-  /* På den grå flade er accenten for lys til lille tekst (3,97:1). */
-  .bg-paper-2 .t-eyebrow-accent {
-    color: var(--color-accent-strong);
+  /* Fremhævet mærkat: sort i stedet for dæmpet grå. */
+  .t-eyebrow-strong {
+    color: var(--color-ink);
   }
 
   .t-body {
@@ -297,8 +293,9 @@
     color: var(--color-paper);
   }
 
-  .btn-accent {
-    background: var(--color-accent);
+  /* Sidens eneste farvede knap: "Se din pris" og "Send til Ronny". */
+  .btn-cta {
+    background: var(--color-cta);
     color: #fff;
   }
 
@@ -324,7 +321,7 @@
   }
 
   .on-dark .btn-ghost {
-    border-color: rgb(245 243 239 / 0.5);
+    border-color: rgb(255 255 255 / 0.5);
     color: var(--color-paper);
   }
 
@@ -334,24 +331,21 @@
 
   @media (hover: hover) {
     .btn-primary:hover {
-      background: var(--color-accent);
-      color: #fff;
+      background: #262626;
     }
-    .btn-accent:hover {
-      background: var(--color-ink);
+    .btn-cta:hover {
+      background: var(--color-cta-hover);
     }
     .btn-ghost:hover {
       background: var(--color-ink);
       color: var(--color-paper);
     }
     .btn-text:hover {
-      color: var(--color-accent);
-    }
-    .on-dark .btn-text:hover {
-      color: var(--color-accent-soft);
+      text-decoration: underline;
+      text-underline-offset: 4px;
     }
     .on-dark .btn-primary:hover {
-      background: var(--color-accent-soft);
+      background: #e5e5e5;
       color: var(--color-ink);
     }
     .on-dark .btn-ghost:hover {
@@ -365,12 +359,8 @@
   .browser {
     overflow: hidden;
     border: 1px solid var(--color-rule);
-    border-radius: 12px;
+    border-radius: var(--radius-card);
     background: var(--color-surface);
-    box-shadow:
-      0 1px 2px rgb(37 37 37 / 0.06),
-      0 12px 24px -12px rgb(37 37 37 / 0.18),
-      0 32px 64px -32px rgb(37 37 37 / 0.32);
   }
 
   .browser-bar {
@@ -387,7 +377,7 @@
     width: 8px;
     height: 8px;
     border-radius: 999px;
-    background: #d3cec6;
+    background: var(--color-rule-strong);
   }
 
   .browser-url {
@@ -416,10 +406,7 @@
     border-radius: 26px;
     background: var(--color-ink);
     padding: 5px;
-    box-shadow:
-      0 1px 2px rgb(37 37 37 / 0.2),
-      0 12px 24px -8px rgb(37 37 37 / 0.35),
-      0 28px 48px -20px rgb(37 37 37 / 0.45);
+    outline: 1px solid var(--color-rule-strong);
   }
 
   .phone img {
@@ -452,10 +439,10 @@
     width: 6px;
     height: 6px;
     border-radius: 999px;
-    background: var(--color-accent);
+    background: var(--color-ink);
   }
 
-  /* Liste med en kort bronzestreg som mærke. Én hårstreg over gruppen, ikke
+  /* Liste med en kort grå streg som mærke. Én hårstreg over gruppen, ikke
      om hver linje. */
   .spec-list {
     display: grid;
@@ -477,7 +464,7 @@
     width: 10px;
     height: 1px;
     margin-top: 0.75em;
-    background: var(--color-accent);
+    background: var(--color-muted);
   }
 
 }
@@ -491,19 +478,12 @@
   }
 
   .nav-link[aria-current] .nav-label {
-    border-bottom-color: var(--color-accent);
+    border-bottom-color: var(--color-ink);
   }
 
 }
 
 @layer components {
-  /* ---- Lys knap på mørk/lys flade (mobilbjælken) ------------------------ */
-  .btn-surface {
-    border-color: var(--color-rule);
-    background: var(--color-surface);
-    color: var(--color-ink);
-  }
-
   /* ---- Forsidens tre kort ---------------------------------------------- */
   .service-card {
     display: flex;
@@ -511,18 +491,17 @@
     flex-direction: column;
     padding: 22px 22px 18px;
     border: 1px solid var(--color-rule);
-    border-radius: 14px;
+    border-radius: var(--radius-card);
     background: var(--color-surface);
     touch-action: manipulation;
     transition:
       border-color var(--dur-hover) var(--ease-entrance),
-      transform var(--dur-hover) var(--ease-entrance),
-      box-shadow var(--dur-hover) var(--ease-entrance);
+      transform var(--dur-hover) var(--ease-entrance);
   }
 
   /* Fokusringen følger kortets runding (outline følger border-radius). */
   .service-card:focus-visible {
-    border-radius: 14px;
+    border-radius: var(--radius-card);
   }
 
   .service-card > :last-child {
@@ -534,7 +513,6 @@
     .service-card:hover {
       border-color: var(--color-ink);
       transform: translate3d(0, -2px, 0);
-      box-shadow: 0 18px 32px -24px rgb(37 37 37 / 0.45);
     }
   }
 
@@ -555,8 +533,7 @@
     bottom: 0;
     left: 19.5px;
     width: 1px;
-    background: var(--color-accent);
-    opacity: 0.45;
+    background: var(--color-rule-strong);
   }
 
   .step-dot {
@@ -564,12 +541,12 @@
     width: 40px;
     height: 40px;
     place-items: center;
-    border: 1px solid var(--color-accent);
+    border: 1px solid var(--color-ink);
     border-radius: 999px;
     background: var(--color-paper);
     font-family: var(--font-mono);
     font-size: 14px;
-    color: var(--color-accent);
+    color: var(--color-ink);
   }
 
   @media (min-width: 768px) {
@@ -595,8 +572,7 @@
     z-index: 30;
     padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
     border-top: 1px solid var(--color-rule);
-    background: rgb(245 243 239 / 0.97);
-    box-shadow: 0 -10px 24px -18px rgb(37 37 37 / 0.4);
+    background: var(--color-paper);
     transform: translate3d(0, 110%, 0);
     transition: transform 280ms var(--ease-entrance);
   }
@@ -631,7 +607,7 @@
     flex-direction: column;
     padding: 28px 22px 24px;
     border: 1px solid var(--color-rule);
-    border-radius: 14px;
+    border-radius: var(--radius-card);
     background: var(--color-surface);
   }
 
@@ -729,13 +705,13 @@
     line-height: 1;
   }
 
-  /* Store beløb: "kr." i 60 % blæk, som "Specs" i logoet (4,0:1, kun stor tekst). */
+  /* Store beløb: "kr." i 60 % blæk, som "Specs" i logoet (4,1:1, kun stor tekst). */
   .amount-lg {
     --amount-scale: 1;
   }
 
   .amount-lg .amount-unit {
-    color: rgb(37 37 37 / 0.6);
+    color: rgb(10 10 10 / 0.6); /* --color-ink ved 60 % */
   }
 
   .amount-per {
@@ -784,13 +760,7 @@
     color: var(--color-ink);
   }
 
-  .badge-accent {
-    border-color: var(--color-accent);
-    background: var(--color-accent);
-    color: #fff;
-  }
-
-  /* "Anbefalet": blæk med faviconets bronzeprik ("O."). */
+  /* "Anbefalet": sort med en hvid prik. */
   .badge-ink {
     gap: 7px;
     padding-left: 9px;
@@ -804,7 +774,7 @@
     width: 6px;
     height: 6px;
     border-radius: 999px;
-    background: var(--color-accent-soft);
+    background: var(--color-paper);
   }
 
   /* ---- Koncepter: telefonramme på konceptets farve ---------------------- */
@@ -813,7 +783,7 @@
     justify-content: center;
     padding: 18px 18px 0;
     overflow: hidden;
-    border-radius: 14px;
+    border-radius: var(--radius-card);
     background: var(--panel, var(--color-paper-2));
     aspect-ratio: 4 / 5;
   }
@@ -850,10 +820,10 @@
 }
 
 @layer components {
-  /* Gratis Google-tjek: fremhævet flade med bronzekant. */
+  /* Gratis Google-tjek: fremhævet flade med sort kant. */
   .free-check {
     padding: 24px;
-    border: 1px solid var(--color-accent);
+    border: 1px solid var(--color-ink);
     border-radius: var(--radius-panel);
     background: var(--color-surface);
   }
@@ -901,7 +871,7 @@ html[data-calc-pending] :is([data-calc], :has([data-calc])) ~ * {
     display: block;
     width: 100%;
     height: 100%;
-    background: var(--color-accent);
+    background: var(--color-ink);
     transform-origin: left center;
     transition: transform 320ms var(--ease-entrance);
   }
@@ -920,7 +890,7 @@ html[data-calc-pending] :is([data-calc], :has([data-calc])) ~ * {
 
   @media (hover: hover) {
     .calc-link:hover {
-      text-decoration-color: var(--color-accent);
+      text-decoration-color: var(--color-ink);
     }
   }
 
@@ -948,7 +918,7 @@ html[data-calc-pending] :is([data-calc], :has([data-calc])) ~ * {
     gap: 14px;
     padding: 12px 16px;
     border: 1px solid var(--color-field);
-    border-radius: 12px;
+    border-radius: var(--radius-btn);
     background: var(--color-paper);
     transition:
       border-color var(--dur-hover) var(--ease-entrance),
@@ -963,8 +933,8 @@ html[data-calc-pending] :is([data-calc], :has([data-calc])) ~ * {
     }
   }
 
-  /* Valgt: ikke kun farve. Kanten bliver 2px blæk, markøren fyldes med
-     flueben/prik (form), og teksten bliver fed. */
+  /* Valgt: ikke kun farve. Kanten bliver 2px blæk (1px kant + 1px ring, ingen
+     skygge), markøren fyldes med flueben/prik (form), og teksten bliver fed. */
   .choice-input:checked + .choice-box {
     border-color: var(--color-ink);
     background: var(--color-surface);
@@ -984,9 +954,9 @@ html[data-calc-pending] :is([data-calc], :has([data-calc])) ~ * {
   }
 
   .choice-input:focus-visible + .choice-box {
-    outline: 2px solid var(--color-accent);
+    outline: 2px solid var(--color-cta);
     outline-offset: 3px;
-    border-radius: 12px;
+    border-radius: var(--radius-btn);
   }
 
   .choice-mark {
@@ -1078,9 +1048,9 @@ html[data-calc-pending] :is([data-calc], :has([data-calc])) ~ * {
     min-height: 52px;
     padding: 12px 40px 12px 14px;
     border: 1px solid var(--color-field);
-    border-radius: 12px;
+    border-radius: var(--radius-btn);
     background:
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%23252525' stroke-width='1.5'/%3E%3C/svg%3E")
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%230a0a0a' stroke-width='1.5'/%3E%3C/svg%3E")
         no-repeat right 14px center / 12px,
       var(--color-paper);
     font: inherit;
@@ -1091,7 +1061,7 @@ html[data-calc-pending] :is([data-calc], :has([data-calc])) ~ * {
   }
 
   .calc-select:focus-visible {
-    outline: 2px solid var(--color-accent);
+    outline: 2px solid var(--color-cta);
     outline-offset: 3px;
   }
 
@@ -1117,7 +1087,6 @@ html[data-calc-pending] :is([data-calc], :has([data-calc])) ~ * {
     min-height: 48px;
     gap: 12px;
     padding: 8px 14px;
-    border-radius: 10px;
   }
 }
 
@@ -1126,8 +1095,8 @@ html[data-calc-pending] :is([data-calc], :has([data-calc])) ~ * {
   .send {
     padding: 24px 18px;
     border: 1px solid var(--color-rule);
-    border-radius: 14px;
-    background: var(--color-paper);
+    border-radius: var(--radius-card);
+    background: var(--color-paper-2);
   }
 
   @media (min-width: 768px) {
@@ -1144,7 +1113,7 @@ html[data-calc-pending] :is([data-calc], :has([data-calc])) ~ * {
     min-height: 52px;
     padding: 12px 14px;
     border: 1px solid var(--color-field);
-    border-radius: 12px;
+    border-radius: var(--radius-btn);
     background: var(--color-paper);
     font: inherit;
     font-size: 16px;
@@ -1152,12 +1121,29 @@ html[data-calc-pending] :is([data-calc], :has([data-calc])) ~ * {
   }
 
   .field:focus-visible {
-    outline: 2px solid var(--color-accent);
+    outline: 2px solid var(--color-cta);
     outline-offset: 3px;
   }
 
+  /* Fejl: 2px sort kant (ikke kun farve) og en fejltekst med ikon under feltet. */
   .field[aria-invalid] {
-    border-color: var(--color-accent);
+    border-color: var(--color-ink);
+    box-shadow: inset 0 0 0 1px var(--color-ink);
+  }
+
+  /* Fejltekst: ikon foran (components/ErrorText.jsx), så fejlen ikke kun
+     adskiller sig med farve. */
+  .error-text {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-weight: 500;
+    color: var(--color-ink);
+  }
+
+  .error-text > svg {
+    flex: none;
+    margin-top: 0.2em;
   }
 
   .btn:disabled {

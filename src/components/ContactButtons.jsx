@@ -35,7 +35,7 @@ export default function ContactButtons({
 
   return (
     <div className={`${box} ${className}`}>
-      <a href={links.tel} className={`btn btn-primary whitespace-nowrap ${wide}`}>
+      <a href={links.tel} className={`btn btn-ghost whitespace-nowrap ${wide}`}>
         <PhoneIcon />
         <span>
           {cta.call} <span className="tabular-nums">{contact.phone}</span>
