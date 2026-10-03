@@ -73,6 +73,14 @@
   animation: fade-up 560ms var(--ease-entrance) var(--d, 0ms) both;
 }
 
+/* Overskriften og første tekstlinje er synlige fra første tegning og løfter
+   sig kun lidt på plads (transform, ingen fade fra 0). Chrome tæller ikke
+   elementer, der starter helt usynlige, som Largest Contentful Paint, og
+   uden dem havde siderne slet ingen LCP. */
+.js-motion [data-hero='lift'] {
+  animation: lift 560ms var(--ease-entrance) var(--d, 0ms) both;
+}
+
 /* Skærmbillederne kommer ind nedefra og lægger sig på plads. */
 .js-motion [data-hero='media'] {
   opacity: 0;
@@ -86,6 +94,15 @@
 }
 
 @keyframes rise {
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes lift {
+  from {
+    transform: translate3d(0, 12px, 0);
+  }
   to {
     transform: translate3d(0, 0, 0);
   }
@@ -130,6 +147,11 @@
     transform: none;
     animation: fade-only 200ms linear both;
     animation-delay: 0ms;
+  }
+
+  /* Overskrift og første linje: står bare stille (de var aldrig skjult). */
+  .js-motion [data-hero='lift'] {
+    animation: none;
   }
 }
 

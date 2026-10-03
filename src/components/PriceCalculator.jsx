@@ -16,7 +16,12 @@ import {
 } from '../calculator.js'
 import { useCalc } from '../useCalc.js'
 import { calculator, flags, fromPrice, introText, priceNote, services, tierName } from '../data/pricing.js'
+import Amount from './Amount.jsx'
 import SendQuote from './SendQuote.jsx'
+
+/** Etiketterne over totalen i resultatet. "Nu" er calculator.nowLabel med stort. */
+const NOW_LABEL = calculator.nowLabel.charAt(0).toUpperCase() + calculator.nowLabel.slice(1)
+const MONTH_LABEL = 'Pr. måned'
 
 /**
  * PRISBEREGNER
@@ -56,6 +61,16 @@ export default function PriceCalculator({ defaults }) {
     moved.current = false
     heading.current?.focus({ preventScroll: true })
     heading.current?.closest('[data-calc]')?.scrollIntoView({ block: 'start' })
+  }, [step])
+
+  // Direkte link til et senere trin: index.html holder indholdet under
+  // beregneren skjult (data-calc-pending), til trinnet fra adresselinjen er
+  // vist. Her er det vist, så markeringen fjernes efter næste maling.
+  useEffect(() => {
+    const root = document.documentElement
+    if (!root.hasAttribute('data-calc-pending')) return
+    const frame = requestAnimationFrame(() => root.removeAttribute('data-calc-pending'))
+    return () => cancelAnimationFrame(frame)
   }, [step])
 
   const go = (next) => {
@@ -119,16 +134,17 @@ export default function PriceCalculator({ defaults }) {
 
       <div className="flex items-center justify-between gap-4">
         <p className="font-mono text-[12px] tracking-[0.08em] text-muted uppercase">
-          Trin {Math.min(step + 1, Math.max(total, 1))} af {selected.length ? total : '…'}
+          {/* Antallet af trin kendes først, når der er valgt mindst én ydelse. */}
+          {selected.length ? `Trin ${Math.min(step + 1, total)} af ${total}` : `Trin ${step + 1}`}
         </p>
         {step > 0 && (
           <button type="button" onClick={() => go(step - 1)} className="calc-link">
-            ← Tilbage
+            <span aria-hidden="true">←</span> Tilbage
           </button>
         )}
       </div>
       <div className="calc-progress mt-3" aria-hidden="true">
-        <span style={{ width: `${selected.length ? ((step + 1) / total) * 100 : 8}%` }} />
+        <span style={{ transform: `scaleX(${selected.length ? (step + 1) / total : 0.08})` }} />
       </div>
 
       {!isResult ? (
@@ -155,7 +171,7 @@ export default function PriceCalculator({ defaults }) {
                     <span className="choice-box">
                       <span className="choice-mark" aria-hidden="true" />
                       <span>
-                        <span className="block text-[17px] font-medium">{services[key].name}</span>
+                        <span className="choice-title block text-[17px]">{services[key].name}</span>
                         <span className="t-body block text-[14px]">{fromPrice(services[key])}</span>
                       </span>
                     </span>
@@ -214,7 +230,7 @@ export default function PriceCalculator({ defaults }) {
                             <span className="choice-box">
                               <span className="choice-mark choice-mark-radio" aria-hidden="true" />
                               <span>
-                                <span className="block text-[16px]">{o.label}</span>
+                                <span className="choice-title choice-title-regular block text-[16px]">{o.label}</span>
                                 {off && reason.trim() && <span className="t-body block text-[14px]">{reason}</span>}
                               </span>
                             </span>
@@ -249,23 +265,37 @@ export default function PriceCalculator({ defaults }) {
           </h2>
           {introText && <p className="badge mt-3">{introText}</p>}
           {/* Totalen: "X kr. nu" og "Y kr./md" hver for sig; et beløb på 0 vises ikke. */}
-          <p className="mt-4 leading-tight font-medium tracking-tight tabular-nums">
+          {/* Totalen: små etiketter over beløbene ("Nu", "Pr. måned"). Etiketterne
+              er kun visuelle; skærmlæsere hører "X kr. nu, Y kr. pr. måned". */}
+          <div className="calc-total amount-lg mt-4 flex flex-wrap items-end gap-x-10 gap-y-3 tabular-nums">
             {totalParts.once && (
-              <span className="block text-[clamp(1.75rem,5vw,2.5rem)]">
-                {totalParts.once} {calculator.nowLabel}
-              </span>
+              <p className="calc-total-part">
+                <span aria-hidden="true" className="t-eyebrow block">
+                  {NOW_LABEL}
+                </span>
+                <span className="calc-total-main block">
+                  <Amount text={totalParts.once} />
+                  <span className="sr-only"> {calculator.nowLabel},</span>
+                </span>
+              </p>
             )}
             {totalParts.month && (
-              <span className={`block ${totalParts.once ? 'mt-1 text-[clamp(1.375rem,3.5vw,1.75rem)]' : 'text-[clamp(1.75rem,5vw,2.5rem)]'}`}>
-                {totalParts.month}
-              </span>
+              <p className="calc-total-part">
+                <span aria-hidden="true" className="t-eyebrow block">
+                  {MONTH_LABEL}
+                </span>
+                <span className={`block ${totalParts.once ? 'calc-total-sub' : 'calc-total-main'}`}>
+                  <Amount text={totalParts.month.replace('/md', '')} />
+                  <span className="sr-only"> {MONTH_LABEL.toLowerCase()}</span>
+                </span>
+              </p>
             )}
-            {q.total.noDrift && (
-              <span className="mt-1 block text-[16px] font-normal tracking-normal text-muted">
-                {totalParts.month ? calculator.noDriftWithMonthly : calculator.noDriftTotal}
-              </span>
-            )}
-          </p>
+          </div>
+          {q.total.noDrift && (
+            <p className="mt-2 text-[16px] text-muted">
+              {totalParts.month ? calculator.noDriftWithMonthly : calculator.noDriftTotal}
+            </p>
+          )}
           {q.total.noDrift && calculator.ownAccountNote && (
             <p className="mt-3 max-w-[52ch] text-[15px] text-ink">{calculator.ownAccountNote}</p>
           )}
@@ -279,7 +309,7 @@ export default function PriceCalculator({ defaults }) {
                   <p className="text-[16px] font-medium">
                     {l.service.name}: {tierName(l.tier)}
                   </p>
-                  <p className="text-[16px] tabular-nums">{priceText(l)}</p>
+                  <Amount text={priceText(l)} serif={false} className="block text-[16px] tabular-nums" />
                 </div>
                 {l.key === 'marketing' && !flags.hasMarketingCases && (
                   <p className="mt-1 text-[15px]">
@@ -370,8 +400,8 @@ function TierPicker({ line, state, onChange, status }) {
               <span className="choice-box">
                 <span className="choice-mark choice-mark-radio" aria-hidden="true" />
                 <span className="min-w-0">
-                  <span className="block text-[15px] font-medium">{tierName(t)}</span>
-                  <span className="t-body block text-[13px] tabular-nums">{price}</span>
+                  <span className="choice-title block text-[15px]">{tierName(t)}</span>
+                  <Amount text={price} serif={false} className="t-body block text-[13px] tabular-nums" />
                 </span>
               </span>
             </label>

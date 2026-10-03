@@ -20,7 +20,7 @@ export default function Priser() {
       <section className="pt-[calc(var(--nav-h)+20px)] pb-[var(--space-section)] md:pt-[calc(var(--nav-h)+48px)]">
         <div className="shell">
           <div className="max-w-[880px]">
-            <h1 data-hero="fade" className="t-display text-[clamp(1.75rem,4vw,2.75rem)] leading-[1.06]">
+            <h1 data-hero="lift" className="t-display text-[clamp(1.75rem,4vw,2.75rem)] leading-[1.06]">
               {p.title}
             </h1>
             <div data-hero="fade" style={{ '--d': '80ms' }} className="mt-4 md:mt-6">
