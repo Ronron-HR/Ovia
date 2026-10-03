@@ -5,7 +5,8 @@
    Sprog: jeg-form overalt (OviaSpecs er én person). "Vi" kun om dig og kunden
    sammen (fx "Vi mødes"), aldrig om OviaSpecs.
    Ærlighed: ingen udtalelser, kundetal, logoer eller resultater, der ikke
-   kan dokumenteres. Ingen løfter om svartider, placeringer eller salg.
+   kan dokumenteres. Ingen løfter om placeringer eller salg.
+   Svartid: inden for 24 timer (besluttet af Ronny, okt. 2026).
    ========================================================================= */
 
 import { contact } from './pricing.js'
