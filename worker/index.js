@@ -10,8 +10,8 @@ import { canonicalLink, composeMail, inquiry, normalize, validContact, validEmai
  *   1. kun POST fra siden selv (same origin), højst 8 kB JSON
  *   2. honeypot: et udfyldt skjult felt får et almindeligt OK, men intet gemmes eller sendes
  *   3. rate limit pr. IP med Workers Rate Limiting-bindingen (RATE_LIMITER, ikke
- *      hukommelse) og Turnstile: uden gyldig token afvises henvendelsen. Er
- *      TURNSTILE_SECRET ikke sat, afvises alt (503), hellere end at åbne for spam.
+ *      hukommelse) — altid. Turnstile kun, når TURNSTILE_SECRET er sat: så er en
+ *      gyldig token påkrævet (403 uden). Uden hemmeligheden springes den over.
  *   4. felterne tjekkes igen (src/inquiry.js); opsummeringen regnes ud fra linket
  *   5. henvendelsen GEMMES i D1 (DB) — først derefter sendes mailen
  *   6. mailen sendes med Cloudflare Email Routing (SEND_EMAIL, MAIL_FROM → MAIL_TO)
@@ -124,8 +124,9 @@ export async function handleInquiry(request, env, deps) {
     const { success } = await env.RATE_LIMITER.limit({ key: ip || 'ukendt' })
     if (!success) return json(429, { ok: false, error: 'rate_limited' })
   }
-  if (!env.TURNSTILE_SECRET) return json(503, { ok: false, error: 'not_configured' })
-  if (!(await verifyTurnstile(env.TURNSTILE_SECRET, p.turnstile, ip))) return json(403, { ok: false, error: 'turnstile' })
+  if (env.TURNSTILE_SECRET && !(await verifyTurnstile(env.TURNSTILE_SECRET, p.turnstile, ip))) {
+    return json(403, { ok: false, error: 'turnstile' })
+  }
 
   if (!validContact(p.contact)) return json(400, { ok: false, error: 'invalid_contact' })
   const link = canonicalLink(p.link, self.origin)

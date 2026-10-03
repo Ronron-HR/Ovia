@@ -7,7 +7,8 @@
  *
  * Tjekker: gyldig mail/dansk nummer (samme regler i browser og på server),
  * ugyldigt input, honeypot, at henvendelsen GEMMES før mailen sendes og stadig
- * er gemt, når mailen fejler, fejl uden database, rate limit, Turnstile (påkrævet),
+ * er gemt, når mailen fejler, fejl uden database, rate limit (altid), Turnstile
+ * (påkrævet med TURNSTILE_SECRET, sprunget over uden),
  * fremmed origin, ugyldigt link og mailens indhold. Cron: genforsøg → 'sent',
  * 3 fejlede genforsøg → 'gave_up' øverst i opsummeringen (kun én gang),
  * hængende 'pending', ingen mail uden nyt, og sletning efter retentionMonths.
@@ -180,11 +181,11 @@ for (const contact of ['abc', '1234567', '', 'ronny@example']) {
   check(noLink.status === 400 && noLink.data.error === 'invalid_link', `link uden valg: ${noLink.status}`)
 }
 
-// Honeypot: OK til robotten, men intet gemt og intet sendt.
-{
-  const r = await call({ contact: 'kunde@example.com', link: LINK, website: 'http://spam.example' })
-  check(r.status === 200 && r.data.ok === true, `honeypot: ${r.status}`)
-  check(r.env.DB.rows().length === 0 && r.env.mail.sent.length === 0, 'honeypot: gemt eller sendt')
+// Honeypot: OK til robotten, men intet gemt og intet sendt — med og uden Turnstile.
+for (const [label, e] of [['med Turnstile', env()], ['uden Turnstile', env({ TURNSTILE_SECRET: undefined })]]) {
+  const r = await call({ contact: 'kunde@example.com', link: LINK, website: 'http://spam.example' }, e)
+  check(r.status === 200 && r.data.ok === true, `honeypot ${label}: ${r.status}`)
+  check(e.DB.rows().length === 0 && e.mail.sent.length === 0, `honeypot ${label}: gemt eller sendt`)
 }
 
 // Mailen fejler: henvendelsen er gemt som 'failed' med fejlen, og kunden får OK.
@@ -208,21 +209,35 @@ for (const contact of ['abc', '1234567', '', 'ronny@example']) {
   check(f.status === 500 && f.data.ok === false && f.env.mail.sent.length === 0, `D1-fejl: ${f.status}`)
 }
 
-// Turnstile er påkrævet: ingen, forkert eller manglende hemmelighed → afvist, intet gemt.
-for (const [label, body, e, want] of [
-  ['uden token', { turnstile: '' }, env(), 403],
-  ['forkert token', { turnstile: 'falsk' }, env(), 403],
-  ['uden TURNSTILE_SECRET', {}, env({ TURNSTILE_SECRET: undefined }), 503],
+// Turnstile, når TURNSTILE_SECRET er sat: uden eller med forkert token → 403, intet gemt.
+for (const [label, body] of [
+  ['uden token', { turnstile: '' }],
+  ['forkert token', { turnstile: 'falsk' }],
 ]) {
+  const e = env()
   const r = await call({ contact: 'kunde@example.com', link: LINK, ...body }, e)
-  check(r.status === want && r.data.ok === false, `Turnstile ${label}: ${r.status} (forventet ${want})`)
+  check(r.status === 403 && r.data.ok === false, `Turnstile ${label}: ${r.status} (forventet 403)`)
   check(e.DB.rows().length === 0 && e.mail.sent.length === 0, `Turnstile ${label}: gemt eller sendt`)
+}
+// Uden TURNSTILE_SECRET springes Turnstile over: gyldig henvendelse uden token gemmes og sendes.
+{
+  const e = env({ TURNSTILE_SECRET: undefined })
+  const r = await call({ contact: 'kunde@example.com', link: LINK, turnstile: '' }, e)
+  check(r.status === 200 && r.data.ok === true, `uden TURNSTILE_SECRET: ${r.status} ${JSON.stringify(r.data)}`)
+  check(e.DB.rows().length === 1 && e.mail.sent.length === 1, 'uden TURNSTILE_SECRET: ikke gemt og sendt')
 }
 
 // Rate limit (bindingen), fremmed origin og GET.
 {
-  const r = await call({ contact: 'kunde@example.com', link: LINK }, env({ limited: true }))
-  check(r.status === 429 && r.env.DB.rows().length === 0, `rate limit: ${r.status}`)
+  for (const [label, e] of [['med Turnstile', env({ limited: true })], ['uden Turnstile', env({ limited: true, TURNSTILE_SECRET: undefined })]]) {
+    const r = await call({ contact: 'kunde@example.com', link: LINK }, e)
+    check(r.status === 429 && e.DB.rows().length === 0 && e.mail.sent.length === 0, `rate limit ${label}: ${r.status}`)
+  }
+  // Rate limit pr. IP: nøglen er klientens IP.
+  const keys = []
+  const k = env({ TURNSTILE_SECRET: undefined, RATE_LIMITER: { limit: async ({ key }) => (keys.push(key), { success: true }) } })
+  await call({ contact: 'kunde@example.com', link: LINK }, k)
+  check(keys[0] === '203.0.113.7', `rate limit-nøgle: ${keys[0]}`)
   const o = await call({ contact: 'kunde@example.com', link: LINK }, env(), { origin: 'https://evil.example' })
   check(o.status === 403 && o.env.DB.rows().length === 0, `fremmed origin: ${o.status}`)
   const g = await handleInquiry(new Request(`${ORIGIN}/api/henvendelse`), env(), { EmailMessage })
@@ -319,5 +334,5 @@ if (failures.length) {
   process.exit(1)
 }
 console.log(
-  'Henvendelsestest bestået: validering, honeypot, gem-før-mail, mailfejl, Turnstile påkrævet, rate limit, mailens indhold og daglig cron (genforsøg, gave_up efter 3, opsummering, oprydning).',
+  'Henvendelsestest bestået: validering, honeypot, gem-før-mail, mailfejl, Turnstile (valgfri), honeypot og rate limit uden Turnstile, mailens indhold og daglig cron (genforsøg, gave_up efter 3, opsummering, oprydning).',
 )
