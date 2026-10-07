@@ -22,7 +22,7 @@ export default function ConceptGrid({ eyebrow, title, intro, more }) {
           <p className="t-body t-lead max-w-[46ch] lg:col-span-6">{intro}</p>
         </header>
 
-        <p className="mt-8 text-[15px] font-medium md:mt-10">{demos.listNote}</p>
+        <p className="mt-8 text-[16px] font-medium md:mt-10">{demos.listNote}</p>
         <ul className="mt-5 grid grid-cols-2 gap-x-4 gap-y-8 md:mt-12 lg:grid-cols-4 lg:gap-x-6">
           {demos.projects.map((p, i) => (
             <li key={p.id} data-reveal style={{ '--d': `${i * 60}ms` }}>

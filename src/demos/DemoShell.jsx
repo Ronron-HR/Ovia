@@ -18,6 +18,9 @@ import { useEntrance } from './useEntrance.js'
 /** Sider, hvor demoen vises med et anker (id="demo-<id>") at lande ved. */
 const WITH_ANCHOR = ['/demoer/']
 
+/** Sider med prisberegneren: valgene i adresselinjen følger med tilbage. */
+const CALC_PAGES = [paths.home, paths.hjemmeside, paths.marketing, paths.bookingGoogle, paths.priser]
+
 /** Priserne på en hjemmeside i beregneren. */
 const PRICES = `${paths.priser}?ydelser=hjemmeside#beregner`
 const FROM = 'oviaspecs-demo-from'
@@ -39,7 +42,7 @@ function backHref(id) {
   try {
     const ref = document.referrer ? new URL(document.referrer) : null
     if (ref && ref.origin === window.location.origin && !isDemoPath(ref.pathname)) {
-      from = { path: ref.pathname, search: ref.pathname === paths.priser ? ref.search : '' }
+      from = { path: ref.pathname, search: CALC_PAGES.includes(ref.pathname) ? ref.search : '' }
       window.sessionStorage.setItem(FROM, JSON.stringify(from))
     } else {
       from = JSON.parse(window.sessionStorage.getItem(FROM) ?? 'null')
@@ -49,7 +52,7 @@ function backHref(id) {
   }
   const fallback = `${paths.demoer}#demo-${id}`
   if (!from || typeof from.path !== 'string' || !from.path.startsWith('/') || from.path.startsWith('//')) return fallback
-  const anchor = WITH_ANCHOR.includes(from.path) ? `#demo-${id}` : ''
+  const anchor = WITH_ANCHOR.includes(from.path) ? `#demo-${id}` : from.path === paths.home ? '#eksempler' : ''
   return `${from.path}${from.search ?? ''}${anchor}`
 }
 

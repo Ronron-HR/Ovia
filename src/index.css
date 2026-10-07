@@ -7,7 +7,7 @@
    Open Font License; licenserne ligger ved siden af filerne i public/fonts.
    Instrument Sans er én variabel fil med en wght-akse fra 400 til 700, så
    overskrifter og brødtekst er ægte vægte og ikke syntetisk fed.
-   JetBrains Mono bruges kun til små mærkater og tal, derfor kun vægt 400. */
+   JetBrains Mono bruges kun til små tekniske detaljer, derfor kun vægt 400. */
 @font-face {
   font-family: "Instrument Sans";
   font-style: normal;
@@ -25,8 +25,9 @@
 }
 
 /* Logoets skrift (Instrument Serif) bruges KUN til beløb: pakkekort, beregnerens
-   resultat og pakkevælgeren. Filen er skåret ned til cifre, punktum, mellemrum
-   og "kr" (4 KB, unicode-range herunder), så alt andet aldrig hentes i den.
+   resultat, pakkevælgeren og "fra"-priserne på forsidens kort. Filen er skåret
+   ned til cifre, punktum, mellemrum og "kr" (4 KB, unicode-range herunder), så
+   alt andet aldrig hentes i den.
    Ingen preload: beløbene står under folden, og swap må ikke forsinke LCP.
    Fallbacken er Times New Roman skaleret til samme bredde og højde
    (size-adjust/ascent-override målt på et typisk pakkebeløb), så beløbet ikke hopper
@@ -51,57 +52,65 @@
 }
 
 /* =========================================================================
-   RETNING — HVID OG SKARP (okt. 2026)
-   Hvid baggrund, næsten sort tekst og neutrale grå uden varm tone. Skarpe
-   former: 6px på kort og flader, 4px på felter og knapper, piller kun på
-   mærker. 1px kanter, ingen skygger.
-   Kobolt (cta) er sidens ENESTE farve og bruges kun på "Se din pris",
-   "Send til Ronny", fokusringen og prikken i mærket "O.". Alt andet, der
-   skal fremhæves, er sort (eller hvidt på de mørke flader).
-   Instrument Sans bærer alt; Instrument Serif kun på store beløb;
-   monoskriften kun til små tekniske detaljer. Højst tre skrifttyper.
+   RETNING — ROLIG OG KLAR (okt. 2026)
+   Lys, køligt tonet flade (paper), hvide kort med fine kanter (surface),
+   mørk blåsort tekst (ink) og ÉN blå accent (cta), som bærer alt aktivt:
+   primære handlinger, valgte valg, fokusring, flueben og links. Alt andet er
+   ink eller dæmpet ink. Den mørke flade (kontaktsektionen) er ink.
+
+   Former varierer efter rang: store flader 20px, kort 14px, knapper og felter
+   10px, rammer om skærmbilleder 10px, mærker som piller. Kanter er 1px; kun
+   beregneren har en skygge (tonet, ikke grå), fordi den er sidens hovedsag.
+
+   Skrift: Instrument Sans bærer alt. Overskrifter vægt 600 og tæt sat,
+   forklaringer i dæmpet ink, hjælpetekst mindre, priser i Instrument Serif
+   (kun cifre), monoskrift kun til det tekniske "Trin n". Ingen versaler.
 
    DESIGNTOKENS — farver, skrift og afstande defineres her og kun her.
-   Kontrast (målt mod WCAG):
-     ink    på paper    19,8:1        muted  på paper    7,8:1
-     ink    på paper-2  18,2:1        muted  på paper-2  7,2:1
-     hvid   på cta       6,2:1        cta    på ink      3,2:1 (fokusring på mørkt)
-     hvid   på cta-hover 8,4:1
-     ink 60 % på paper   4,0:1 (kun stor tekst: "kr." i beløb, som "Specs" i logoet)
-     field  på paper     3,5:1        field  på paper-2  3,2:1 (kanter på felter og valg)
+   Andre filer bruger variablerne, aldrig egne farver.
+   Kontrast (målt mod WCAG, mindst 4,5:1 til tekst, 3:1 til kanter):
+     ink    på paper    16,0:1       muted  på paper    7,0:1
+     muted  på paper-2   6,5:1       muted  på surface  7,5:1
+     hvid   på cta       6,7:1       hvid   på cta-hover 8,8:1
+     cta    på paper     6,2:1       cta    på cta-soft 5,8:1   cta på paper-2 5,8:1
+     field  på surface   4,3:1       field  på paper    4,0:1   (kanter på felter og valg)
+     cta-on-dark på ink  9,5:1       hvid på ink 17,0:1
    npm run brand læser ink, paper og cta herfra.
    ========================================================================= */
 
 @theme {
-  --color-paper: #ffffff; /* primær baggrund */
-  --color-paper-2: #f5f5f5; /* alternative flader og adskillelse */
+  --color-paper: #f5f8fc; /* sidens baggrund */
+  --color-paper-2: #e9f0f8; /* alternative flader (bånd) */
   --color-surface: #ffffff; /* kort og rammer (med 1px kant) */
-  --color-ink: #0a0a0a; /* tekst, mørke sektioner, primære knapper, fremhævelser */
-  --color-muted: #525252; /* sekundær tekst */
-  --color-cta: #2b44ff; /* kobolt: KUN "Se din pris", "Send til Ronny", fokusring og prikken i "O." */
-  --color-cta-hover: #1d33d6; /* kobolt ved hover */
-  --color-rule: #e5e5e5; /* hårstreger på paper */
-  --color-rule-strong: #d4d4d4; /* hårstreger på paper-2 */
-  --color-field: #8a8a8a; /* kant på felter og valg (WCAG 1.4.11) */
+  --color-ink: #0e1d2f; /* tekst, mørke flader, primære knapper */
+  --color-muted: #46566a; /* sekundær tekst */
+  --color-cta: #1c4fd8; /* sidens ene accent: handlinger, valg, fokus, links */
+  --color-cta-hover: #1640b0; /* accent ved hover */
+  --color-cta-soft: #e8efff; /* svag accentflade: valgt valg, flueben */
+  --color-cta-on-dark: #a9c1ff; /* accent på den mørke flade */
+  --color-rule: #dce4ee; /* hårstreger på paper og surface */
+  --color-rule-strong: #c5d1df; /* hårstreger på paper-2 */
+  --color-field: #6b7c92; /* kant på felter og valg (WCAG 1.4.11) */
 
   --font-sans: "Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-amount: "Instrument Serif", "Instrument Serif Fallback", var(--font-sans);
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   /* Typografisk skala */
-  --text-hero: clamp(2.125rem, 4.2vw, 3.75rem);
-  --text-h2: clamp(1.75rem, 3.2vw, 2.75rem);
-  --text-h3: clamp(1.625rem, 2.6vw, 2.25rem);
-  --text-h4: 1.375rem;
-  --text-lead: clamp(1.0625rem, 1.3vw, 1.1875rem);
+  --text-hero: clamp(2.125rem, 1.15rem + 3.1vw, 3.375rem);
+  --text-h2: clamp(1.75rem, 1.3rem + 1.7vw, 2.5rem);
+  --text-h3: clamp(1.5rem, 1.2rem + 1.1vw, 2.0625rem);
+  --text-h4: 1.3125rem;
+  --text-lead: clamp(1.0625rem, 1rem + 0.35vw, 1.1875rem);
   --text-quote: clamp(1.75rem, 3.6vw, 3.25rem);
 
   /* Afstande */
-  --space-section: clamp(3.25rem, 6.5vw, 5.75rem);
+  --space-section: clamp(3.5rem, 7vw, 6rem);
   --space-block: clamp(2.5rem, 5vw, 4.25rem);
-  --radius-btn: 4px; /* knapper og felter */
-  --radius-card: 6px; /* kort, flader og rammer */
-  --radius-panel: 6px;
+  --radius-btn: 10px; /* knapper og felter */
+  --radius-card: 14px; /* kort */
+  --radius-panel: 20px; /* store flader: beregner, eksempler, faktaboks */
+  --radius-frame: 10px; /* rammer om skærmbilleder */
 }
 
 @layer base {
@@ -128,18 +137,17 @@
   }
 
   ::selection {
-    background: var(--color-ink);
-    color: var(--color-paper);
+    background: var(--color-cta);
+    color: #fff;
   }
 
-  /* Alle interaktive elementer har en synlig fokus-tilstand. */
+  /* Alle interaktive elementer har en tydelig fokusring: 3px accent med luft
+     om elementet. Radius følger elementets egen. På den mørke flade er ringen
+     hvid (se .on-dark herunder). */
   :focus-visible {
-    outline: 2px solid var(--color-cta);
+    outline: 3px solid var(--color-cta);
     outline-offset: 3px;
-    border-radius: 2px;
   }
-
-  /* Kobolt har 3,2:1 mod de mørke flader, så samme fokusring bruges overalt. */
 
   /* Ankre må ikke lande bag den faste bar. */
   [id] {
@@ -153,47 +161,49 @@
 }
 
 @layer components {
-  /* Overskrifter: tæt sat, vægt 500 — rolig i stedet for høj. */
+  /* ---- Typografi ---------------------------------------------------------- */
+  /* Overskrifter: vægt 600, tæt sat. */
   .t-display {
     font-family: var(--font-sans);
-    font-weight: 500;
-    line-height: 1.06;
-    letter-spacing: -0.03em;
+    font-weight: 600;
+    line-height: 1.08;
+    letter-spacing: -0.026em;
     text-wrap: balance;
   }
 
   .t-hero {
     font-size: var(--text-hero);
-    line-height: 1.02;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
   }
   .t-h2 {
     font-size: var(--text-h2);
   }
   .t-h3 {
     font-size: var(--text-h3);
-    line-height: 1.12;
+    line-height: 1.14;
   }
   .t-h4 {
     font-size: var(--text-h4);
-    line-height: 1.2;
+    line-height: 1.22;
     letter-spacing: -0.02em;
   }
 
-  /* Mærkat over overskrifter: små versaler med luft, i bronze på lyse flader. */
+  /* Lille mærkat over en overskrift eller en etiket over et tal. Sætningsskrift,
+     ikke versaler. */
   .t-eyebrow {
-    font-size: 13px;
-    font-weight: 500;
+    font-size: 14px;
+    font-weight: 600;
     line-height: 1.4;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
     color: var(--color-muted);
   }
 
-  /* Fremhævet mærkat: sort i stedet for dæmpet grå. */
+  /* Fremhævet mærkat i accenten. */
   .t-eyebrow-strong {
-    color: var(--color-ink);
+    color: var(--color-cta);
   }
 
+  /* Forklaring: dæmpet ink. */
   .t-body {
     color: var(--color-muted);
     line-height: 1.65;
@@ -211,7 +221,7 @@
 
   .shell {
     width: 100%;
-    max-width: 1240px;
+    max-width: 1200px;
     margin-inline: auto;
     padding-inline: 20px;
   }
@@ -245,7 +255,7 @@
   }
   @media (min-width: 768px) {
     :root {
-      --gutter: max(40px, calc((100vw - 1240px) / 2 + 40px));
+      --gutter: max(40px, calc((100vw - 1200px) / 2 + 40px));
     }
   }
 }
@@ -258,10 +268,11 @@
     left: 8px;
     z-index: 100;
     transform: translateY(-160%);
+    border-radius: var(--radius-btn);
     background: var(--color-ink);
-    color: var(--color-paper);
+    color: var(--color-surface);
     padding: 12px 16px;
-    font-size: 14px;
+    font-size: 15px;
     transition: transform var(--dur-hover) var(--ease-entrance);
   }
 
@@ -282,84 +293,95 @@
     padding: 0 22px;
     border: 1px solid transparent;
     border-radius: var(--radius-btn);
-    font-size: 15px;
-    font-weight: 500;
+    font-size: 16px;
+    font-weight: 600;
     line-height: 1.2;
     text-align: center;
   }
 
-  .btn-primary {
-    background: var(--color-ink);
-    color: var(--color-paper);
+  /* Stor knap: sidens hovedhandling i heroen. */
+  .btn-lg {
+    min-height: 56px;
+    padding: 0 28px;
+    font-size: 17px;
   }
 
-  /* Sidens eneste farvede knap: "Se din pris" og "Send til Ronny". */
+  .btn-primary {
+    background: var(--color-ink);
+    color: var(--color-surface);
+  }
+
+  /* Sidens hovedhandling: "Se din pris" og "Send forespørgsel". */
   .btn-cta {
     background: var(--color-cta);
     color: #fff;
   }
 
-  /* Tekstlink med pil: sekundær handling ved en ydelse. */
+  /* Tekstlink med pil: sekundær handling. */
   .btn-text {
     min-height: 44px;
     padding: 0;
     border: 0;
     border-radius: 0;
-    color: var(--color-ink);
-    font-size: 15px;
-    font-weight: 500;
+    color: var(--color-cta);
+    font-size: 16px;
+    font-weight: 600;
   }
 
   .btn-ghost {
-    border-color: var(--color-ink);
+    border-color: var(--color-field);
+    background: var(--color-surface);
     color: var(--color-ink);
   }
 
   .on-dark .btn-primary {
-    background: var(--color-paper);
+    background: var(--color-surface);
     color: var(--color-ink);
   }
 
   .on-dark .btn-ghost {
-    border-color: rgb(255 255 255 / 0.5);
-    color: var(--color-paper);
+    border-color: rgb(255 255 255 / 0.45);
+    background: transparent;
+    color: var(--color-surface);
   }
 
   .on-dark .btn-text {
-    color: var(--color-paper);
+    color: var(--color-surface);
+  }
+
+  .on-dark :focus-visible {
+    outline-color: #fff;
   }
 
   @media (hover: hover) {
     .btn-primary:hover {
-      background: #262626;
+      background: #1d3350;
     }
     .btn-cta:hover {
       background: var(--color-cta-hover);
     }
     .btn-ghost:hover {
-      background: var(--color-ink);
-      color: var(--color-paper);
+      border-color: var(--color-ink);
     }
     .btn-text:hover {
       text-decoration: underline;
       text-underline-offset: 4px;
     }
     .on-dark .btn-primary:hover {
-      background: #e5e5e5;
+      background: #dfe8f5;
       color: var(--color-ink);
     }
     .on-dark .btn-ghost:hover {
-      background: var(--color-paper);
-      border-color: var(--color-paper);
-      color: var(--color-ink);
+      background: rgb(255 255 255 / 0.1);
+      border-color: #fff;
     }
   }
 
   /* ---- Rammer om skærmbilleder ---------------------------------------- */
   .browser {
     overflow: hidden;
-    border: 1px solid var(--color-rule);
-    border-radius: var(--radius-card);
+    border: 1px solid var(--color-rule-strong);
+    border-radius: var(--radius-frame);
     background: var(--color-surface);
   }
 
@@ -390,7 +412,7 @@
     border-radius: 6px;
     background: var(--color-paper);
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 13px;
     line-height: 1.4;
     color: var(--color-muted);
   }
@@ -416,22 +438,20 @@
     border-radius: 21px;
   }
 
-  /* Mærke for demoer. Sidens vigtigste ærlighedsdetalje: står på hver eneste
-     visning af et projekt, der ikke er en dokumenteret kundeopgave. */
+  /* Mærke "Demo" / "Koncept". Sidens vigtigste ærlighedsdetalje: står på hver
+     eneste visning af et projekt, der ikke er en dokumenteret kundeopgave. */
   .tag {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 4px 8px;
-    border: 1px solid var(--color-rule);
-    border-radius: 4px;
-    background: var(--color-surface);
-    font-family: var(--font-mono);
-    font-size: 12px;
-    line-height: 1.3;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--color-ink);
+    gap: 7px;
+    padding: 3px 10px 3px 9px;
+    border: 1px solid #c3d3f7;
+    border-radius: 999px;
+    background: var(--color-cta-soft);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--color-cta);
   }
 
   .tag::before {
@@ -439,58 +459,108 @@
     width: 6px;
     height: 6px;
     border-radius: 999px;
-    background: var(--color-ink);
+    background: var(--color-cta);
   }
 
-  /* Liste med en kort grå streg som mærke. Én hårstreg over gruppen, ikke
-     om hver linje. */
+  /* Liste med flueben: hvad der er med. Én hårstreg over gruppen. */
   .spec-list {
     display: grid;
     align-content: start;
-    gap: 9px;
+    gap: 10px;
     padding-top: 16px;
     border-top: 1px solid var(--color-rule);
   }
 
   .spec-list > li {
     display: grid;
-    grid-template-columns: 24px 1fr;
+    grid-template-columns: 28px 1fr;
     font-size: 15px;
     line-height: 1.5;
   }
 
   .spec-list > li::before {
     content: "";
-    width: 10px;
-    height: 1px;
-    margin-top: 0.75em;
-    background: var(--color-muted);
+    width: 18px;
+    height: 18px;
+    margin-top: 0.1em;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Ccircle cx='9' cy='9' r='9' fill='%23e8efff'/%3E%3Cpath d='m5.2 9.3 2.5 2.5 5-5.4' fill='none' stroke='%231c4fd8' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+      no-repeat center / 18px;
   }
-
 }
 
 @layer components {
   /* ---- Navigation: aktiv side ------------------------------------------- */
   .nav-label {
     padding-bottom: 3px;
-    border-bottom: 1px solid transparent;
+    border-bottom: 2px solid transparent;
     transition: border-color var(--dur-hover) var(--ease-entrance);
   }
 
   .nav-link[aria-current] .nav-label {
-    border-bottom-color: var(--color-ink);
+    border-bottom-color: var(--color-cta);
   }
-
 }
 
 @layer components {
+  /* ---- Forsidens hero ---------------------------------------------------- */
+  .hero {
+    padding-top: calc(var(--nav-h) + 28px);
+    padding-bottom: 44px;
+  }
+
+  @media (min-width: 768px) {
+    .hero {
+      padding-top: calc(var(--nav-h) + 72px);
+      padding-bottom: 80px;
+    }
+  }
+
+  /* Faktaboksen i heroen: hvad man får, med flueben. */
+  .facts {
+    padding: 22px 24px 8px;
+    border: 1px solid var(--color-rule);
+    border-radius: var(--radius-panel);
+    background: var(--color-surface);
+  }
+
+  @media (min-width: 768px) {
+    .facts {
+      padding: 28px 32px 12px;
+    }
+  }
+
+  .facts-list > li {
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    align-items: start;
+    padding-block: 14px;
+    border-top: 1px solid var(--color-rule);
+    font-size: 17px;
+    line-height: 1.4;
+  }
+
+  .facts-list > li::before {
+    content: "";
+    width: 22px;
+    height: 22px;
+    margin-top: 0.05em;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Ccircle cx='9' cy='9' r='9' fill='%23e8efff'/%3E%3Cpath d='m5.2 9.3 2.5 2.5 5-5.4' fill='none' stroke='%231c4fd8' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+      no-repeat center / 22px;
+  }
+
+  /* ---- Beregnerens sektion: lyst bånd, så det hvide kort står frem -------- */
+  .calc-section {
+    padding-block: var(--space-section);
+    background: var(--color-paper-2);
+  }
+
   /* ---- Forsidens tre kort ---------------------------------------------- */
   .service-card {
     display: flex;
     height: 100%;
     flex-direction: column;
-    padding: 22px 22px 18px;
-    border: 1px solid var(--color-rule);
+    padding: 26px 26px 22px;
+    border: 1px solid var(--color-rule-strong);
     border-radius: var(--radius-card);
     background: var(--color-surface);
     touch-action: manipulation;
@@ -499,67 +569,72 @@
       transform var(--dur-hover) var(--ease-entrance);
   }
 
-  /* Fokusringen følger kortets runding (outline følger border-radius). */
-  .service-card:focus-visible {
-    border-radius: var(--radius-card);
-  }
-
   .service-card > :last-child {
     margin-top: auto;
-    padding-top: 24px;
+    padding-top: 22px;
   }
 
   @media (hover: hover) {
     .service-card:hover {
-      border-color: var(--color-ink);
-      transform: translate3d(0, -2px, 0);
+      border-color: var(--color-cta);
     }
+  }
+
+  /* "fra" og "kr." i sidens skrift, selve tallet i logoets skrift og større. */
+  .service-price.amount-lg {
+    --amount-scale: 1.75;
+    font-size: 16px;
+    line-height: 1.2;
+    color: var(--color-muted);
+  }
+
+  .service-price .amount-num {
+    color: var(--color-ink);
   }
 
   /* ---- Trin: lodret tidslinje på mobil, tre kolonner fra md ------------- */
   .step {
     position: relative;
     display: grid;
-    grid-template-columns: 40px 1fr;
-    gap: 0 16px;
-    padding-bottom: 28px;
+    grid-template-columns: 44px 1fr;
+    gap: 0 18px;
+    padding-bottom: 30px;
   }
 
   /* Linjen mellem prikkerne. */
   .step:not(:last-child)::before {
     content: "";
     position: absolute;
-    top: 40px;
+    top: 44px;
     bottom: 0;
-    left: 19.5px;
+    left: 21.5px;
     width: 1px;
     background: var(--color-rule-strong);
   }
 
   .step-dot {
     display: grid;
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     place-items: center;
-    border: 1px solid var(--color-ink);
     border-radius: 999px;
-    background: var(--color-paper);
-    font-family: var(--font-mono);
-    font-size: 14px;
-    color: var(--color-ink);
+    background: var(--color-cta-soft);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-cta);
   }
 
   @media (min-width: 768px) {
     .step {
       grid-template-columns: 1fr;
-      gap: 20px;
+      gap: 22px;
       padding-bottom: 0;
     }
     .step:not(:last-child)::before {
-      top: 19.5px;
+      top: 21.5px;
       bottom: auto;
-      left: 52px;
-      right: -20px;
+      left: 60px;
+      right: -24px;
       width: auto;
       height: 1px;
     }
@@ -571,10 +646,10 @@
     inset: auto 0 0;
     z-index: 30;
     padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
-    border-top: 1px solid var(--color-rule);
-    background: var(--color-paper);
+    border-top: 1px solid var(--color-rule-strong);
+    background: var(--color-surface);
     transform: translate3d(0, 110%, 0);
-    transition: transform 280ms var(--ease-entrance);
+    transition: transform 240ms var(--ease-entrance);
   }
 
   .callbar[data-show='true'] {
@@ -597,25 +672,25 @@
   .package-grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: 24px;
-    padding-top: 13px;
+    gap: 28px;
+    padding-top: 14px;
   }
 
   .package {
     position: relative;
     display: flex;
     flex-direction: column;
-    padding: 28px 22px 24px;
-    border: 1px solid var(--color-rule);
+    padding: 30px 24px 26px;
+    border: 1px solid var(--color-rule-strong);
     border-radius: var(--radius-card);
     background: var(--color-surface);
   }
 
-  /* Anbefalet: kant i blæk. 2px kant, 1px mindre polstring, så indholdet står
+  /* Anbefalet: 2px kant i accenten. 1px mindre polstring, så indholdet står
      præcis som i nabokortene. */
   .package[data-recommended='true'] {
-    border: 2px solid var(--color-ink);
-    padding: 27px 21px 23px;
+    border: 2px solid var(--color-cta);
+    padding: 29px 23px 25px;
   }
 
   @media (min-width: 768px) {
@@ -629,11 +704,11 @@
       grid-row: span 6;
       grid-template-rows: subgrid;
       row-gap: 0;
-      padding: 32px 28px 28px;
+      padding: 34px 28px 28px;
     }
 
     .package[data-recommended='true'] {
-      padding: 31px 27px 27px;
+      padding: 33px 27px 27px;
     }
   }
 
@@ -705,13 +780,13 @@
     line-height: 1;
   }
 
-  /* Store beløb: "kr." i 60 % blæk, som "Specs" i logoet (4,1:1, kun stor tekst). */
+  /* Store beløb: "kr." i 60 % ink (4,1:1, kun stor tekst). */
   .amount-lg {
     --amount-scale: 1;
   }
 
   .amount-lg .amount-unit {
-    color: rgb(10 10 10 / 0.6); /* --color-ink ved 60 % */
+    color: color-mix(in srgb, var(--color-ink) 62%, transparent);
   }
 
   .amount-per {
@@ -750,23 +825,23 @@
     display: inline-flex;
     align-items: center;
     min-height: 26px;
-    padding: 3px 9px;
-    border: 1px solid var(--color-rule);
+    padding: 3px 10px;
+    border: 1px solid var(--color-rule-strong);
     border-radius: 999px;
-    background: var(--color-paper);
-    font-size: 13px;
-    font-weight: 500;
+    background: var(--color-surface);
+    font-size: 14px;
+    font-weight: 600;
     line-height: 1.3;
     color: var(--color-ink);
   }
 
-  /* "Anbefalet": sort med en hvid prik. */
+  /* "Anbefalet": accentfyldt med en hvid prik. */
   .badge-ink {
     gap: 7px;
-    padding-left: 9px;
-    border-color: var(--color-ink);
-    background: var(--color-ink);
-    color: var(--color-paper);
+    padding-left: 10px;
+    border-color: var(--color-cta);
+    background: var(--color-cta);
+    color: #fff;
   }
 
   .badge-ink::before {
@@ -774,7 +849,7 @@
     width: 6px;
     height: 6px;
     border-radius: 999px;
-    background: var(--color-paper);
+    background: #fff;
   }
 
   /* ---- Koncepter: telefonramme på konceptets farve ---------------------- */
@@ -820,17 +895,17 @@
 }
 
 @layer components {
-  /* Gratis Google-tjek: fremhævet flade med sort kant. */
+  /* Gratis Google-tjek: fremhævet flade med accentkant. */
   .free-check {
-    padding: 24px;
-    border: 1px solid var(--color-ink);
+    padding: 26px;
+    border: 1px solid var(--color-rule-strong);
     border-radius: var(--radius-panel);
     background: var(--color-surface);
   }
 
   @media (min-width: 768px) {
     .free-check {
-      padding: 40px;
+      padding: 44px;
     }
   }
 }
@@ -847,21 +922,24 @@ html[data-calc-pending] :is([data-calc], :has([data-calc])) ~ * {
 @layer components {
   /* ---- Prisberegner ------------------------------------------------------ */
   .calc {
-    padding: 22px 18px 26px;
-    border: 1px solid var(--color-rule);
+    padding: 24px 18px 28px;
+    border: 1px solid var(--color-rule-strong);
     border-radius: var(--radius-panel);
     background: var(--color-surface);
+    box-shadow:
+      0 1px 2px rgb(14 29 47 / 0.05),
+      0 18px 40px -22px rgb(28 79 216 / 0.28);
     scroll-margin-top: calc(var(--nav-h) + 12px);
   }
 
   @media (min-width: 768px) {
     .calc {
-      padding: 32px 36px 36px;
+      padding: 40px 44px 44px;
     }
   }
 
   .calc-progress {
-    height: 3px;
+    height: 4px;
     overflow: hidden;
     border-radius: 999px;
     background: var(--color-paper-2);
@@ -871,7 +949,8 @@ html[data-calc-pending] :is([data-calc], :has([data-calc])) ~ * {
     display: block;
     width: 100%;
     height: 100%;
-    background: var(--color-ink);
+    border-radius: 999px;
+    background: var(--color-cta);
     transform-origin: left center;
     transition: transform 320ms var(--ease-entrance);
   }
@@ -880,17 +959,18 @@ html[data-calc-pending] :is([data-calc], :has([data-calc])) ~ * {
     min-height: 44px;
     cursor: pointer;
     touch-action: manipulation;
-    font-size: 15px;
-    font-weight: 500;
-    color: var(--color-ink);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-cta);
     text-decoration: underline;
-    text-decoration-color: var(--color-rule);
+    text-decoration-color: transparent;
     text-underline-offset: 4px;
+    transition: text-decoration-color var(--dur-hover) var(--ease-entrance);
   }
 
   @media (hover: hover) {
     .calc-link:hover {
-      text-decoration-color: var(--color-ink);
+      text-decoration-color: currentColor;
     }
   }
 
@@ -913,36 +993,38 @@ html[data-calc-pending] :is([data-calc], :has([data-calc])) ~ * {
 
   .choice-box {
     display: flex;
-    min-height: 56px;
+    min-height: 60px;
     align-items: center;
     gap: 14px;
-    padding: 12px 16px;
+    padding: 12px 18px;
     border: 1px solid var(--color-field);
     border-radius: var(--radius-btn);
-    background: var(--color-paper);
+    background: var(--color-surface);
     transition:
       border-color var(--dur-hover) var(--ease-entrance),
       background-color var(--dur-hover) var(--ease-entrance),
       box-shadow var(--dur-hover) var(--ease-entrance);
   }
 
-  /* Hover: kun en mørkere grå kant, så den ikke ligner et valg. */
+  /* Hover: kanten bliver accent, men uden fyld, så den ikke ligner et valg. */
   @media (hover: hover) {
     .choice:hover .choice-box {
-      border-color: var(--color-muted);
+      border-color: var(--color-cta);
     }
   }
 
-  /* Valgt: ikke kun farve. Kanten bliver 2px blæk (1px kant + 1px ring, ingen
-     skygge), markøren fyldes med flueben/prik (form), og teksten bliver fed. */
+  /* Valgt: accentkant (1px kant + 1px ring), svag accentflade, udfyldt markør
+     med flueben eller prik, og titlen bliver fed. Ikke kun farve: markørens
+     form og skriftvægten skifter også. */
   .choice-input:checked + .choice-box {
-    border-color: var(--color-ink);
-    background: var(--color-surface);
-    box-shadow: 0 0 0 1px var(--color-ink);
+    border-color: var(--color-cta);
+    background: var(--color-cta-soft);
+    box-shadow: 0 0 0 1px var(--color-cta);
+    animation: box-settle 220ms var(--ease-entrance);
   }
 
   .choice-title {
-    font-weight: 500;
+    font-weight: 600;
   }
 
   .choice-title-regular {
@@ -954,19 +1036,21 @@ html[data-calc-pending] :is([data-calc], :has([data-calc])) ~ * {
   }
 
   .choice-input:focus-visible + .choice-box {
-    outline: 2px solid var(--color-cta);
+    outline: 3px solid var(--color-cta);
     outline-offset: 3px;
-    border-radius: var(--radius-btn);
   }
 
   .choice-mark {
     position: relative;
     flex: none;
-    width: 20px;
-    height: 20px;
-    border: 1.5px solid var(--color-muted);
-    border-radius: 5px;
+    width: 22px;
+    height: 22px;
+    border: 1.5px solid var(--color-field);
+    border-radius: 6px;
     background: var(--color-surface);
+    transition:
+      border-color var(--dur-hover) var(--ease-entrance),
+      background-color var(--dur-hover) var(--ease-entrance);
   }
 
   .choice-mark-radio {
@@ -974,38 +1058,65 @@ html[data-calc-pending] :is([data-calc], :has([data-calc])) ~ * {
   }
 
   .choice-input:checked + .choice-box .choice-mark {
-    border-color: var(--color-ink);
-    background: var(--color-ink);
+    border-color: var(--color-cta);
+    background: var(--color-cta);
+    animation: mark-pop 260ms var(--ease-entrance);
   }
 
   /* Flueben (checkboks) og prik (radio). */
   .choice-input:checked + .choice-box .choice-mark::after {
     content: "";
     position: absolute;
-    left: 5.5px;
-    top: 2px;
+    left: 6.5px;
+    top: 2.5px;
     width: 6px;
     height: 11px;
-    border: solid var(--color-paper);
+    border: solid #fff;
     border-width: 0 2px 2px 0;
     transform: rotate(45deg);
   }
 
   .choice-input:checked + .choice-box .choice-mark-radio::after {
-    left: 4.5px;
-    top: 4.5px;
-    width: 8px;
-    height: 8px;
+    left: 5.5px;
+    top: 5.5px;
+    width: 9px;
+    height: 9px;
     border: 0;
     border-radius: 999px;
-    background: var(--color-paper);
+    background: #fff;
     transform: none;
+  }
+
+  @keyframes mark-pop {
+    0% {
+      transform: scale(0.7);
+    }
+    60% {
+      transform: scale(1.14);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  @keyframes box-settle {
+    from {
+      transform: scale(0.988);
+    }
+    to {
+      transform: scale(1);
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
     .calc-progress > span,
-    .choice-box {
+    .choice-box,
+    .choice-mark {
       transition-duration: 1ms;
+    }
+    .choice-input:checked + .choice-box,
+    .choice-input:checked + .choice-box .choice-mark {
+      animation: none;
     }
   }
 }
@@ -1045,23 +1156,30 @@ html[data-calc-pending] :is([data-calc], :has([data-calc])) ~ * {
     display: block;
     width: 100%;
     max-width: 320px;
-    min-height: 52px;
-    padding: 12px 40px 12px 14px;
+    min-height: 54px;
+    padding: 12px 40px 12px 16px;
     border: 1px solid var(--color-field);
     border-radius: var(--radius-btn);
     background:
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%230a0a0a' stroke-width='1.5'/%3E%3C/svg%3E")
-        no-repeat right 14px center / 12px,
-      var(--color-paper);
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%230e1d2f' stroke-width='1.5'/%3E%3C/svg%3E")
+        no-repeat right 16px center / 12px,
+      var(--color-surface);
     font: inherit;
     font-size: 16px;
     color: var(--color-ink);
     appearance: none;
     cursor: pointer;
+    transition: border-color var(--dur-hover) var(--ease-entrance);
+  }
+
+  @media (hover: hover) {
+    .calc-select:hover {
+      border-color: var(--color-cta);
+    }
   }
 
   .calc-select:focus-visible {
-    outline: 2px solid var(--color-cta);
+    outline: 3px solid var(--color-cta);
     outline-offset: 3px;
   }
 
@@ -1071,7 +1189,7 @@ html[data-calc-pending] :is([data-calc], :has([data-calc])) ~ * {
   }
 
   .choice[data-disabled] .choice-box {
-    border-color: var(--color-rule);
+    border-color: var(--color-rule-strong);
     border-style: dashed;
     background: transparent;
   }
@@ -1084,24 +1202,24 @@ html[data-calc-pending] :is([data-calc], :has([data-calc])) ~ * {
 @layer components {
   /* Pakkevælgeren i beregnerens resultat: samme valg-flade, lidt lavere (stadig ≥ 44 px). */
   .choice-sm .choice-box {
-    min-height: 48px;
+    min-height: 52px;
     gap: 12px;
     padding: 8px 14px;
   }
 }
 
 @layer components {
-  /* "Få tilbuddet sendt" under prisen i beregneren. */
+  /* "Send din forespørgsel" under prisen i beregneren. */
   .send {
     padding: 24px 18px;
     border: 1px solid var(--color-rule);
     border-radius: var(--radius-card);
-    background: var(--color-paper-2);
+    background: var(--color-paper);
   }
 
   @media (min-width: 768px) {
     .send {
-      padding: 28px;
+      padding: 32px;
     }
   }
 
@@ -1110,22 +1228,29 @@ html[data-calc-pending] :is([data-calc], :has([data-calc])) ~ * {
     display: block;
     width: 100%;
     max-width: 420px;
-    min-height: 52px;
-    padding: 12px 14px;
+    min-height: 54px;
+    padding: 12px 16px;
     border: 1px solid var(--color-field);
     border-radius: var(--radius-btn);
-    background: var(--color-paper);
+    background: var(--color-surface);
     font: inherit;
     font-size: 16px;
     color: var(--color-ink);
+    transition: border-color var(--dur-hover) var(--ease-entrance);
+  }
+
+  @media (hover: hover) {
+    .field:hover {
+      border-color: var(--color-ink);
+    }
   }
 
   .field:focus-visible {
-    outline: 2px solid var(--color-cta);
+    outline: 3px solid var(--color-cta);
     outline-offset: 3px;
   }
 
-  /* Fejl: 2px sort kant (ikke kun farve) og en fejltekst med ikon under feltet. */
+  /* Fejl: 2px ink-kant (ikke kun farve) og en fejltekst med ikon under feltet. */
   .field[aria-invalid] {
     border-color: var(--color-ink);
     box-shadow: inset 0 0 0 1px var(--color-ink);
@@ -1137,7 +1262,7 @@ html[data-calc-pending] :is([data-calc], :has([data-calc])) ~ * {
     display: flex;
     align-items: flex-start;
     gap: 8px;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--color-ink);
   }
 
@@ -1163,5 +1288,152 @@ html[data-calc-pending] :is([data-calc], :has([data-calc])) ~ * {
   /* Turnstile (usynlig) fylder intet. */
   .send-turnstile:empty {
     display: none;
+  }
+}
+
+@layer components {
+  /* Behovsguiden og forklaringer i beregneren. */
+  .calc-help {
+    padding: 18px 20px;
+    border: 1px solid var(--color-rule);
+    border-radius: var(--radius-card);
+    background: var(--color-paper);
+  }
+
+  .calc-details {
+    border-top: 1px solid var(--color-rule);
+    padding-top: 12px;
+  }
+
+  .calc-details > summary {
+    min-height: 44px;
+    cursor: pointer;
+    font-weight: 600;
+    touch-action: manipulation;
+  }
+}
+
+@layer components {
+  /* ---- Eksempler under beregneren ----------------------------------------
+     Kort med stor forhåndsvisning: et beskåret udsnit af demoens computer-
+     visning i en browserramme, og telefonvisningen foran. Hele kortet er ét
+     link (knappens ::after dækker kortet), så der kun er ét tabstop. */
+  .example {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--color-rule-strong);
+    border-radius: var(--radius-panel);
+    background: var(--color-surface);
+    transition: border-color var(--dur-hover) var(--ease-entrance);
+  }
+
+  /* Fra 768 til 1023 står hvert kort på hele bredden: forhåndsvisning til
+     venstre, tekst til højre. Fra 1024 er der to kort ved siden af hinanden. */
+  @media (min-width: 768px) and (max-width: 1023.98px) {
+    .example {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    }
+  }
+
+  @media (hover: hover) {
+    .example:hover {
+      border-color: var(--color-cta);
+    }
+  }
+
+  .example-preview {
+    position: relative;
+    overflow: hidden;
+    padding: 20px 20px 0;
+    background: var(--color-paper-2);
+  }
+
+  /* Rammen er skåret fladt i bunden: siden fortsætter "under" kortet. */
+  .example-browser {
+    border-bottom: 0;
+    border-radius: var(--radius-frame) var(--radius-frame) 0 0;
+    box-shadow: 0 -1px 0 rgb(14 29 47 / 0.04);
+    transition: transform var(--dur-hover) var(--ease-entrance);
+  }
+
+  .example-browser .browser-bar {
+    height: 30px;
+  }
+
+  .example-browser .tag {
+    margin-left: auto;
+    padding-block: 1px;
+    font-size: 13px;
+  }
+
+  .example-phone {
+    position: absolute;
+    right: 8%;
+    bottom: 0;
+    width: 24%;
+    min-width: 84px;
+    max-width: 150px;
+    overflow: hidden;
+    padding: 4px 4px 0;
+    border-radius: 18px 18px 0 0;
+    background: var(--color-ink);
+    outline: 0;
+    box-shadow: 0 10px 28px -8px rgb(14 29 47 / 0.35);
+    transition: transform var(--dur-hover) var(--ease-entrance);
+  }
+
+  .example-phone img {
+    border-radius: 14px 14px 0 0;
+  }
+
+  @media (hover: hover) {
+    .example:hover .example-browser {
+      transform: translate3d(0, -4px, 0);
+    }
+    .example:hover .example-phone {
+      transform: translate3d(0, -8px, 0);
+    }
+  }
+
+  .example-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 24px 24px 26px;
+  }
+
+  @media (min-width: 768px) {
+    .example-body {
+      padding: 28px 30px 30px;
+    }
+  }
+
+  /* Knappen strækker sig over hele kortet, så kortet er trykbart. */
+  .example-link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+
+  .example-link:focus-visible {
+    outline: none;
+  }
+
+  .example:has(.example-link:focus-visible) {
+    outline: 3px solid var(--color-cta);
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .example,
+    .example-browser,
+    .example-phone {
+      transition-duration: 1ms;
+    }
   }
 }

@@ -119,7 +119,7 @@ export default function Nav({ path }) {
                     <a
                       href={item.href}
                       aria-current={isHere(item.href, path) ? 'page' : undefined}
-                      className="nav-link flex min-h-11 items-center text-[14px] font-medium"
+                      className="nav-link flex min-h-11 items-center text-[15px] font-medium"
                     >
                       <span className="nav-label">{item.label}</span>
                     </a>
@@ -129,14 +129,14 @@ export default function Nav({ path }) {
             </nav>
 
             <div className="flex items-center gap-2.5">
-              <a href={links.tel} className="btn btn-ghost min-h-11 px-4 text-[14px]" aria-label={`${nav.call} ${contact.phone}`}>
+              <a href={links.tel} className="btn btn-ghost min-h-11 px-4 text-[15px]" aria-label={`${nav.call} ${contact.phone}`}>
                 <PhoneIcon />
                 <span>
                   {nav.call}
                   <span className="hidden tabular-nums xl:inline"> {contact.phone}</span>
                 </span>
               </a>
-              <a href={price} className="btn btn-cta min-h-11 px-5 text-[14px]">
+              <a href={price} className="btn btn-cta min-h-11 px-5 text-[15px]">
                 {nav.price}
               </a>
             </div>
@@ -145,11 +145,11 @@ export default function Nav({ path }) {
           {/* Mobil: Ring og Se din pris skjules, mens den faste bundbjælke (med de samme knapper) er synlig. */}
           <div className="flex items-center gap-1.5 lg:hidden">
             {/* Under 380 px skjules ikonet, så "Se din pris" og "Menu" kan være på linjen. */}
-            <a href={links.tel} className="nav-call btn btn-ghost min-h-10 px-3 text-[14px] max-[379px]:[&_svg]:hidden" aria-label={`${nav.call} ${contact.phone}`}>
+            <a href={links.tel} className="nav-call btn btn-ghost min-h-11 px-3 text-[14px] max-[379px]:[&_svg]:hidden" aria-label={`${nav.call} ${contact.phone}`}>
               <PhoneIcon />
               {nav.call}
             </a>
-            <a href={price} className="nav-call btn btn-cta min-h-10 px-3 text-[14px] whitespace-nowrap">
+            <a href={price} className="nav-call btn btn-cta min-h-11 px-3 text-[14px] whitespace-nowrap">
               {nav.priceShort}
             </a>
             <button

@@ -23,6 +23,35 @@ const CHROME =
 const SITE = process.env.SITE ?? 'http://localhost:4173'
 const IDS = ['cafe', 'restaurant', 'salon', 'vinbar']
 
+/**
+ * Udsnit til forsidens eksempelkort (components/HomeExamples.jsx): skærmbillederne
+ * uden OviaSpecs-striben øverst, som forstyrrer som forhåndsvisning. Skæres fra de
+ * færdige skærmbilleder i public/demoer og gemmes som
+ *   public/demoer/<id>-udsnit-desktop.webp  (680 × 470, fra x = 100 og y = 38)
+ *   public/demoer/<id>-udsnit-mobile.webp   (340 × 600, fra y = 131)
+ * Kun dette trin: node scripts/demo-shots.mjs --crops-only
+ */
+const CROPS = [
+  ['desktop', { left: 100, top: 38, width: 680, height: 470 }],
+  ['mobile', { left: 0, top: 131, width: 340, height: 600 }],
+]
+async function crops(ids) {
+  for (const id of ids) {
+    for (const [mode, region] of CROPS) {
+      const out = `public/demoer/${id}-udsnit-${mode}.webp`
+      const info = await sharp(`public/demoer/${id}-${mode}.webp`)
+        .extract(region)
+        .webp({ quality: 82, effort: 6 })
+        .toFile(out)
+      console.log(`${out}  ${info.width}×${info.height}  ${(info.size / 1024).toFixed(0)} kB`)
+    }
+  }
+}
+if (process.argv.includes('--crops-only')) {
+  await crops(['restaurant', 'salon'])
+  process.exit(0)
+}
+
 mkdirSync('public/demoer', { recursive: true })
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: true })
 
@@ -50,3 +79,4 @@ for (const id of IDS) {
 }
 
 await browser.close()
+await crops(['restaurant', 'salon'])

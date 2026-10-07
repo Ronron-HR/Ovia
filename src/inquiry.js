@@ -1,6 +1,6 @@
-import { calculator, formatKr } from './data/pricing.js'
+import { calculator, formatKr, priceNote } from './data/pricing.js'
 import { privacy } from './data/texts.js'
-import { NONE, parse, priceParts, quote, quoteNotes, serialize, summaryLines } from './calculator.js'
+import { NONE, parse, priceParts, quote, quoteNotes, resultStep, serialize, summaryLines } from './calculator.js'
 
 /**
  * HENVENDELSER FRA PRISBEREGNEREN — fælles for formularen (SendQuote.jsx) og
@@ -16,7 +16,10 @@ export const inquiry = {
   /** Hvor længe en henvendelse gemmes (D1), før workeren sletter den. Samme tal som i privatlivspolitikken. */
   retentionMonths: privacy.retentionMonths,
   endpoint: '/api/henvendelse',
-  title: 'Få tilbuddet sendt',
+  title: 'Send din forespørgsel',
+  /** Hvad formularen faktisk gør: den sender en forespørgsel til Ronny, ikke et tilbud til kunden. */
+  intro:
+    'Jeg får dine valg og prisen og svarer inden for 24 timer, på mail eller telefon. Der sendes ikke et tilbud automatisk: Jeg gennemgår valgene med dig og bekræfter prisen.',
   contactLabel: 'Din mail eller dit telefonnummer',
   nameLabel: 'Navn / virksomhed',
   optional: '(valgfrit)',
@@ -81,11 +84,11 @@ export function canonicalLink(link, origin) {
   const state = parse(url.search, NONE)
   if (!state.selected.length) return null
   const path = CALC_PATHS.includes(url.pathname) ? url.pathname : '/priser/'
-  const search = serialize({ ...state, step: state.selected.length + 1 }, NONE)
+  const search = serialize({ ...state, step: resultStep(state.selected) }, NONE)
   return { url: `${origin}${path}${search}#beregner`, state }
 }
 
-/** Mailen til Ronny: kontakt, navn, opsummering med pakker, nu/pr. md og linket. */
+/** Mailen til Ronny: kontakt, navn, opsummering med pakker og drift, nu/pr. md, moms og linket. */
 export function composeMail({ contact, name, link, state }) {
   const q = quote(state)
   const { once, month } = priceParts(q.total)
@@ -103,6 +106,7 @@ export function composeMail({ contact, name, link, state }) {
       '',
       `Nu: ${once || formatKr(0)}`,
       `Pr. md: ${month || `${formatKr(0)}/md`}`,
+      ...(priceNote ? [priceNote] : []),
       ...(quoteNotes(q).length ? ['', ...quoteNotes(q)] : []),
       ...(calculator.finalNote ? ['', calculator.finalNote] : []),
       '',

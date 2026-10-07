@@ -1,6 +1,6 @@
 # OviaSpecs — hjemmeside
 
-Hjemmesiden for OviaSpecs (oviaspecs.com): hjemmeside, marketing og booking & Google til lokale virksomheder. React 19, Vite og Tailwind 4, forudrenderet til statiske filer og hostet på Cloudflare (Workers Static Assets). Én lille worker modtager formularen "Få tilbuddet sendt" under prisberegneren (se "Henvendelser"); resten er statiske filer. Ingen cookies. Besøg tælles med Cloudflare Web Analytics, som ifølge Cloudflare ikke bruger cookies eller lokal lagring ([cloudflare.com/web-analytics](https://www.cloudflare.com/web-analytics/), [dokumentation](https://developers.cloudflare.com/web-analytics/about/)).
+Hjemmesiden for OviaSpecs (oviaspecs.com): hjemmeside, marketing og booking & Google til lokale virksomheder. React 19, Vite og Tailwind 4, forudrenderet til statiske filer og hostet på Cloudflare (Workers Static Assets). Én lille worker modtager formularen "Send din forespørgsel" under prisberegneren (se "Henvendelser"); resten er statiske filer. Ingen cookies. Besøg tælles med Cloudflare Web Analytics, som ifølge Cloudflare ikke bruger cookies eller lokal lagring ([cloudflare.com/web-analytics](https://www.cloudflare.com/web-analytics/), [dokumentation](https://developers.cloudflare.com/web-analytics/about/)).
 
 ## Her retter du
 
@@ -21,7 +21,7 @@ Adresser og metadata: `src/routes.js`. Nøglerne skal passe med `src/pageKeys.js
 
 ## Prisberegneren
 
-`src/components/PriceCalculator.jsx` + `src/calculator.js`. Trin 1 er flervalg af ydelser, derefter ét trin pr. valgt ydelse og så resultatet (højst 5 trin). Hvert svar peger på en pakke, og den højeste vinder. Under hver ydelse i resultatet kan kunden skifte pakke (Start / Vækst / Fuld fart); skiftet sætter pakkens svar (`calculator.tierSwitch` i pricing.js), så svar, resultat og adresselinje altid passer sammen. Prisen er fast: pakkeprisen plus eventuelle tilvalg (fx egen konto). Alle ydelser har `buffer: 0`, og `npm test` fejler, hvis et interval sniger sig ind. Valgene står i adresselinjen. Under prisen står formularen "Få tilbuddet sendt" (`src/components/SendQuote.jsx`) med Ring og SMS som sekundære links.
+`src/components/PriceCalculator.jsx` + `src/calculator.js`. Trin 1 er flervalg af ydelser, derefter ét trin pr. valgt ydelse og så resultatet (højst 5 trin). Hvert svar peger på en pakke, og den højeste vinder. Under hver ydelse i resultatet kan kunden skifte pakke (Start / Vækst / Fuld fart); skiftet sætter pakkens svar (`calculator.tierSwitch` i pricing.js), så svar, resultat og adresselinje altid passer sammen. Prisen er fast: pakkeprisen plus eventuelle tilvalg (fx egen konto). Alle ydelser har `buffer: 0`, og `npm test` fejler, hvis et interval sniger sig ind. Valgene står i adresselinjen. Under prisen står formularen "Send din forespørgsel" (`src/components/SendQuote.jsx`) med Ring og SMS som sekundære links.
 
 ## Kommandoer
 
@@ -30,7 +30,7 @@ Adresser og metadata: `src/routes.js`. Nøglerne skal passe med `src/pageKeys.js
 | `npm run dev` | Udviklingsserver |
 | `npm run build` | Bygger til `dist/`, forudrenderer HTML, skriver sitemap og JSON-LD (fra pricing.js) |
 | `npm run preview` | Serverer `dist/` på http://localhost:4173 |
-| `npm test` | Pristest (alle kombinationer, pakkeskift, driftspriser) og henvendelsestest (workeren med falsk D1 og mail) |
+| `npm test` | Pristest (håndregnede priser for alle pakker × driftsplaner, egen hosting, pakkeskift, gamle links) og henvendelsestest (workeren med falsk D1 og mail) |
 | `npm run test:e2e` | Browsertests mod `npm run preview`: forvalg, pakkeskift og formularen (390 px, touch) og koncepternes indgang (390/1440 px, CLS, reduceret bevægelse, uden JS) |
 | `npm run lint` | oxlint |
 | `npm run demo-shots` | Skærmbilleder af koncepterne til `public/demoer/` (kræver kørende preview og puppeteer-core) |
@@ -71,3 +71,10 @@ Henvendelserne kan ses i D1 → ovia-henvendelser → Console: `SELECT created_a
 ## Udgivelse
 
 `git push origin main` udgiver (Cloudflare bygger med `npm run build`). Brug en anden gren til et preview først.
+
+## Drift, guide og rundvisning
+
+- **Drift er et eget valg** (ikke en del af hjemmesidepakken): `driftPlans` i `src/data/pricing.js` (Basis 199, Plus 299, Ekstra 399 kr./md; minutter indholdsarbejde pr. måned: 0/15/30) eller egen konto/hosting (tillæg `ownAccount`, ingen månedlig betaling til OviaSpecs). Adresselinjen: `drift=basis|plus|ekstra|egen`. Gamle links med `drift=drift` bliver til den plan, der havde samme månedspris (Start/Vækst → Plus, Fuld fart → Ekstra); mangler `drift`, vælger kunden selv.
+- **Behovsguiden** ("Hjælp mig med at vælge"): `src/guide.js` (regler), tekster i `calculator.guide`, UI i `NeedsGuide.jsx`. Tilstand: `hjaelp=<trin>&g-<spørgsmål>=<svar>`.
+- **Rundvisningen** ("Vis mig rundt"): `TourLauncher.jsx` (knap og invitation ved første besøg), `Tour.jsx` (indlæses først ved brug), `src/data/tour.js` (trin og tekster), mål via `data-tour="calc|guide|drift|price|examples|contact"`. Afslutning/fravalg huskes kun i browserens localStorage.
+- Tests: `scripts/test-guide.mjs`, `test-guide-e2e.mjs`, `test-tour-e2e.mjs`, `test-a11y-e2e.mjs` (kræver kørende preview; `ONLY=tastatur,priser,… ` for dele). Skærmbilleder: `node scripts/ovia-shots.mjs <mappe>` og `ovia-shots-flow.mjs <mappe>`.

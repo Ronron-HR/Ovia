@@ -10,7 +10,7 @@ const SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY ?? ''
 const TURNSTILE_SRC = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
 
 /**
- * "FÅ TILBUDDET SENDT" — slutningen af prisberegneren (samme komponent på alle
+ * "SEND DIN FORESPØRGSEL" — slutningen af prisberegneren (samme komponent på alle
  * sider med beregneren).
  *
  * Et felt til mail eller telefon, et valgfrit felt til navn/virksomhed og
@@ -22,7 +22,7 @@ const TURNSTILE_SRC = 'https://challenges.cloudflare.com/turnstile/v0/api.js?ren
  * hentes først, når nogen begynder at udfylde formularen, så den ikke koster
  * noget ved indlæsning; uden site key bruges den ikke.
  */
-export default function SendQuote({ smsText }) {
+export default function SendQuote({ smsText, link }) {
   const id = useId()
   const [status, setStatus] = useState('idle') // idle | sending | sent | failed
   const [invalid, setInvalid] = useState(false)
@@ -50,7 +50,7 @@ export default function SendQuote({ smsText }) {
       contact: value,
       name: data.get('name'),
       website: data.get('website'),
-      link: `${window.location.pathname}${window.location.search}`,
+      link: link ?? `${window.location.pathname}${window.location.search}`,
       turnstile: SITE_KEY ? await token.get() : '',
     })
     setStatus(ok ? 'sent' : 'failed')
@@ -70,6 +70,7 @@ export default function SendQuote({ smsText }) {
   return (
     <div className="send mt-8">
       <h3 className="t-display t-h4">{inquiry.title}</h3>
+      <p className="t-body mt-2 max-w-[52ch] text-[15px]">{inquiry.intro}</p>
       <form onSubmit={submit} onFocus={token.load} noValidate className="mt-4 flex flex-col gap-4">
         <div>
           <label htmlFor={`${id}-kontakt`} className="block text-[15px] font-medium">
@@ -113,7 +114,7 @@ export default function SendQuote({ smsText }) {
           <button type="submit" className="btn btn-cta w-full sm:w-auto" disabled={status === 'sending'}>
             {status === 'sending' ? inquiry.sending : inquiry.submit}
           </button>
-          <p className="t-body mt-2 text-[13px]">
+          <p className="t-body mt-2 text-[14px]">
             {inquiry.privacy}{' '}
             <a href={paths.privatliv} className="link-underline">
               {inquiry.privacyLink}

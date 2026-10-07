@@ -1,0 +1,299 @@
+/* =========================================================================
+   RUNDVISNING ("Vis mig rundt") — spotlight, dialog og invitation.
+   Kun designvariabler (--color-*, --radius-*, --font-*): designet ændrer
+   værdierne, og rundvisningen følger med. Ingen hardkodede farver.
+   Klasser med præfikset .tour- ejes af onboarding (Tour*.jsx).
+   ========================================================================= */
+
+/* Laget ligger i dokumentets øverste venstre hjørne uden størrelse; spotlightet
+   er absolut i det og følger derfor siden, når den scroller. */
+.tour-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+}
+
+/* Spotlight: selve dæmpningen er en kæmpestor skygge uden om en klar rude. */
+.tour-spot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  z-index: 2000;
+  pointer-events: none;
+  border-radius: calc(var(--radius-card) + 4px);
+  box-shadow: 0 0 0 9999px color-mix(in srgb, var(--color-ink) 62%, transparent);
+  outline: 2px solid var(--color-surface);
+  opacity: 0;
+}
+
+.tour-spot[data-ready='true'] {
+  opacity: 1;
+  transition:
+    transform 230ms cubic-bezier(0.22, 0.7, 0.2, 1),
+    width 230ms cubic-bezier(0.22, 0.7, 0.2, 1),
+    height 230ms cubic-bezier(0.22, 0.7, 0.2, 1),
+    opacity 160ms ease-out;
+}
+
+/* Gennemsigtigt lag, der fanger klik, så intet på siden under kan aktiveres. */
+.tour-shield {
+  position: fixed;
+  inset: 0;
+  z-index: 2001;
+  background: transparent;
+}
+
+/* Dialog ----------------------------------------------------------------- */
+.tour-pop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 2002;
+  box-sizing: border-box;
+  width: min(360px, calc(100vw - 24px));
+  padding: 16px 18px 14px;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  border: 1px solid var(--color-rule-strong);
+  border-radius: var(--radius-card);
+  box-shadow: 0 14px 44px color-mix(in srgb, var(--color-ink) 28%, transparent);
+  opacity: 0;
+  outline: none;
+}
+
+.tour-pop[data-ready='true'] {
+  opacity: 1;
+  transition: opacity 160ms ease-out;
+}
+
+.tour-pop[data-ready='true'][data-glide='true'] {
+  transition:
+    transform 230ms cubic-bezier(0.22, 0.7, 0.2, 1),
+    opacity 160ms ease-out;
+}
+
+/* Under 640 px er dialogen et bund-sheet, aldrig uden for skærmen. */
+.tour-pop[data-mode='sheet'] {
+  top: auto;
+  left: 8px;
+  right: 8px;
+  bottom: calc(8px + env(safe-area-inset-bottom));
+  width: auto;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.tour-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tour-count {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.tour-dots {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.tour-dots > span {
+  width: 18px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--color-rule-strong);
+}
+
+.tour-dots > span[data-on='true'] {
+  background: var(--color-ink);
+}
+
+.tour-text {
+  animation: tour-in 200ms ease-out;
+}
+
+.tour-title {
+  margin: 10px 0 0;
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--color-ink);
+}
+
+.tour-body {
+  margin: 8px 0 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--color-muted);
+}
+
+.tour-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.tour-spacer {
+  flex: 1 1 0;
+}
+
+.tour-btn {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--color-field);
+  border-radius: var(--radius-btn);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.tour-btn:hover {
+  background: var(--color-paper-2);
+}
+
+.tour-btn-primary {
+  border-color: var(--color-ink);
+  background: var(--color-ink);
+  color: var(--color-paper);
+}
+
+.tour-btn-primary:hover {
+  background: var(--color-ink);
+  opacity: 0.88;
+}
+
+.tour-btn-text {
+  padding: 0 8px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--color-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.tour-btn-text:hover {
+  background: transparent;
+  color: var(--color-ink);
+}
+
+.tour-btn:focus-visible {
+  outline: 2px solid var(--color-cta);
+  outline-offset: 2px;
+}
+
+/* Kun for skærmlæsere (live-annoncering ved trinskift). */
+.tour-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Invitation ved første besøg og kort besked ---------------------------------
+   Fixed og uden layoutskift. Under bundbjælken (z 30) på desktop ikke relevant;
+   på mobil løftes kortet over bundbjælken, mens den er synlig (html[data-callbar='on']). */
+.tour-invite {
+  position: fixed;
+  z-index: 35;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  box-sizing: border-box;
+  max-width: 340px;
+  padding: 14px 16px 10px;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  border: 1px solid var(--color-rule-strong);
+  border-radius: var(--radius-card);
+  box-shadow: 0 10px 32px color-mix(in srgb, var(--color-ink) 18%, transparent);
+  animation: tour-in 240ms ease-out;
+  transition: bottom 280ms ease-out;
+}
+
+.tour-note {
+  padding-bottom: 14px;
+}
+
+.tour-invite-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.tour-invite-body {
+  margin: 4px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-muted);
+}
+
+@media (min-width: 640px) {
+  .tour-invite {
+    left: auto;
+    right: 24px;
+    bottom: 24px;
+  }
+}
+
+@media (max-width: 767px) {
+  html[data-callbar='on'] .tour-invite {
+    bottom: calc(92px + env(safe-area-inset-bottom));
+  }
+}
+
+@keyframes tour-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-spot,
+  .tour-spot[data-ready='true'],
+  .tour-pop[data-ready='true'],
+  .tour-pop[data-ready='true'][data-glide='true'],
+  .tour-invite {
+    transition: none;
+  }
+
+  .tour-text,
+  .tour-invite {
+    animation: none;
+  }
+}
+
+/* Fokuserede elementer scrolles ikke ind bag invitationen (WCAG 2.4.11). */
+html:has(.tour-invite) {
+  scroll-padding-bottom: 200px;
+}
+

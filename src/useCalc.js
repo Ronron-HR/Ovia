@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import { EMPTY, NONE, ORDER, fit, parse, serialize } from './calculator.js'
+import { parseGuide, serializeGuide } from './guide.js'
 
 /**
  * Prisberegnerens tilstand i adresselinjen (useSyncExternalStore). Serveren og
@@ -51,4 +52,29 @@ export function useCalc(defaults = NONE) {
     listeners.forEach((fn) => fn())
   }
   return [state, set]
+}
+
+/* ---- Behovsguiden (samme adresselinje, se src/guide.js) ------------------ */
+
+let guideCache = { search: null, state: null }
+
+function guideSnapshot() {
+  const { search } = window.location
+  if (guideCache.search !== search) guideCache = { search, state: parseGuide(search) }
+  return guideCache.state
+}
+
+/**
+ * Guidens tilstand (null = lukket). Åbnes og ændres med setGuide; setGuide(null)
+ * lukker den og fjerner dens parametre. Beregnerens egen set() skriver adresselinjen
+ * forfra, så guiden lukkes af sig selv, når kunden går videre i beregneren.
+ */
+export function useGuide() {
+  const guide = useSyncExternalStore(subscribe, guideSnapshot, () => null)
+  const setGuide = (next) => {
+    const { pathname, hash } = window.location
+    window.history.replaceState(window.history.state, '', `${pathname}${next ? serializeGuide(next) : ''}${hash}`)
+    listeners.forEach((fn) => fn())
+  }
+  return [guide, setGuide]
 }

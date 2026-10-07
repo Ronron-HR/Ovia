@@ -6,7 +6,7 @@ import Logo from './Logo.jsx'
  * Privatlivspolitik.
  *
  * Skrevet ud fra, hvad siden FAKTISK gør (tjekket i koden):
- * - én formular: "Få tilbuddet sendt" under prisberegneren (SendQuote.jsx). Den
+ * - én formular: "Send din forespørgsel" under prisberegneren (SendQuote.jsx). Den
  *   sender mail/telefon, evt. navn og linket med valgene til /api/henvendelse
  *   (worker/index.js), der gemmer henvendelsen i Cloudflare D1 og mailer den til
  *   mig. IP-adressen bruges kun til rate limit og gemmes ikke. Turnstile nævnes kun, når
@@ -20,6 +20,9 @@ import Logo from './Logo.jsx'
  * - skrifterne er selvhostede (public/fonts)
  * - prisberegnerens valg står i adresselinjen og sendes kun med formularen
  * - koncepterne husker i sessionStorage, hvilken side man kom fra (DemoShell)
+ * - rundvisningen "Vis mig rundt" (TourLauncher.jsx, data/tour.js) husker i localStorage
+ *   (nøgle oviaspecs-tour) kun, om den er afsluttet, sprunget over eller fravalgt, så
+ *   invitationen ikke kommer igen. Mærket bliver i browseren og sendes ikke
  * Ændrer noget af det sig, skal politikken ændres SAMTIDIG.
  *
  * Det er en fornuftig standardtekst, ikke juridisk rådgivning.
@@ -60,7 +63,7 @@ export default function Privatlivspolitik() {
         <p className="t-body mt-6 max-w-[56ch] text-[16px]">
           Kort version: Siden bruger ingen cookies. Besøg tælles med Cloudflare Web Analytics, som ifølge
           Cloudflare ikke indsamler personoplysninger. Jeg får kun de oplysninger, du selv giver mig: når du
-          ringer, sender en SMS, skriver en mail eller sender formularen &quot;Få tilbuddet sendt&quot; under
+          ringer, sender en SMS, skriver en mail eller sender formularen &quot;Send din forespørgsel&quot; under
           prisberegneren. Dem bruger jeg kun til at svare dig.
         </p>
         <p className="mt-2 text-[13px] text-muted">Sidst opdateret: {privacy.updated}</p>
@@ -94,7 +97,7 @@ export default function Privatlivspolitik() {
                 telefonnummer eller din mailadresse og det, du selv fortæller mig.
               </li>
               <li>
-                <strong className={strong}>Når du sender formularen &quot;Få tilbuddet sendt&quot;:</strong> din mail
+                <strong className={strong}>Når du sender formularen &quot;Send din forespørgsel&quot;:</strong> din mail
                 eller dit telefonnummer, dit navn eller din virksomhed, hvis du skriver det, og dine valg i
                 prisberegneren (pakker, priser og linket til beregningen). Din IP-adresse bruges i øjeblikket til at
                 begrænse, hvor mange henvendelser der kan sendes fra samme sted (spambeskyttelse); den gemmes ikke
@@ -200,7 +203,7 @@ export default function Privatlivspolitik() {
             </p>
             <p>
               Prisberegnerens valg står i adresselinjen, så du kan dele eller gemme linket. De sendes kun til mig,
-              hvis du selv sender formularen &quot;Få tilbuddet sendt&quot;. Ring og SMS efter prisen åbner din egen
+              hvis du selv sender formularen &quot;Send din forespørgsel&quot;. Ring og SMS efter prisen åbner din egen
               telefon eller SMS-app med en færdigskrevet besked, som du selv vælger, om du vil sende.
             </p>
             <p>
@@ -208,6 +211,13 @@ export default function Privatlivspolitik() {
               &quot;Tilbage til OviaSpecs&quot; fører det rigtige sted hen. Det forlader ikke din browser, er ikke en
               cookie og slettes, når du lukker fanen. Koncepterne er fiktive: formularer og knapper i dem sender og
               gemmer intet.
+            </p>
+            <p>
+              Rundvisningen &quot;Vis mig rundt&quot; husker i din egen browser (localStorage), om du har afsluttet den,
+              sprunget den over eller sagt nej tak til invitationen, så den ikke dukker op igen. Det er kun et lille
+              ja/nej-mærke. Det sendes ikke til mig eller andre, er ikke en cookie og bruges ikke til at følge dig. Du
+              kan slette det ved at rydde websitedata i din browser. Rundvisningen ændrer ikke dine valg i
+              prisberegneren og sender ingenting.
             </p>
           </Section>
 

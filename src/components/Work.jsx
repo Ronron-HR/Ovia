@@ -17,11 +17,11 @@ function Facts({ project }) {
     <dl>
       <div>
         <dt className="t-eyebrow">{demos.labels.task}</dt>
-        <dd className="t-body mt-2 max-w-[46ch] text-[15px]">{project.task}</dd>
+        <dd className="t-body mt-2 max-w-[46ch] text-[16px]">{project.task}</dd>
       </div>
       <div className="mt-5">
         <dt className="t-eyebrow">{demos.labels.design}</dt>
-        <dd className="t-body mt-2 max-w-[46ch] text-[15px]">{project.design}</dd>
+        <dd className="t-body mt-2 max-w-[46ch] text-[16px]">{project.design}</dd>
       </div>
       <div className="mt-6">
         <dt className="t-eyebrow">{demos.labels.features}</dt>
@@ -43,7 +43,7 @@ export default function Work() {
   return (
     <section id={demos.id} className="bg-paper pb-[var(--space-section)]">
       <div className="shell flex flex-col gap-20 md:gap-28">
-        <p className="-mb-8 text-[15px] font-medium md:-mb-14">{demos.listNote}</p>
+        <p className="-mb-8 text-[16px] font-medium md:-mb-14">{demos.listNote}</p>
         {demos.projects.map((p, i) => (
           <article key={p.id} id={`demo-${p.id}`} className="grid grid-cols-1 gap-x-12 gap-y-8 lg:grid-cols-12 lg:items-center">
             <div className={`lg:col-span-7 ${i % 2 ? 'lg:order-2' : ''}`}>

@@ -70,7 +70,7 @@
         // (layoutskift). PriceCalculator fjerner markeringen, når trinnet er
         // vist; vagthunden herunder gør det senest efter 2,5s.
         var trin = /[?&]trin=(\d+)/.exec(location.search)
-        if (trin && Number(trin[1]) > 1) root.setAttribute('data-calc-pending', '')
+        if ((trin && Number(trin[1]) > 1) || /[?&]hjaelp=/.test(location.search)) root.setAttribute('data-calc-pending', '')
 
         setTimeout(function () {
           if (!root.hasAttribute('data-motion-ready')) {

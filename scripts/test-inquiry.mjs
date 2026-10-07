@@ -31,7 +31,7 @@ const check = (ok, msg) => {
 }
 
 const ORIGIN = 'https://oviaspecs.com'
-const LINK = '/priser/?ydelser=hjemmeside%2Cmarketing&sider=2-5&bestilling=nej&drift=drift&videoer=8&poste=ja&annoncer=nej&trin=4'
+const LINK = '/priser/?ydelser=hjemmeside%2Cmarketing&sider=2-5&bestilling=nej&drift=plus&videoer=8&poste=ja&annoncer=nej&trin=5'
 const SCHEMA = readFileSync('worker/schema.sql', 'utf8')
 const TOKEN_OK = 'gyldig-token'
 
@@ -149,14 +149,53 @@ check(danishPhone('+45 53 61 36 99') === '53613699', 'dansk nummer normaliseres 
     'Kontakt: kunde@example.com (mail)',
     'Navn / virksomhed: Café Test',
     'Hjemmeside, Vækst: 4.000 kr. + 299 kr./md',
+    'Drift: Plus, 299 kr./md, op til 15 min. indholdsarbejde pr. måned',
     'Marketing, Vækst: 2.500 kr./md',
     'Nu: 4.000 kr.',
     'Pr. md: 2.799 kr./md',
     'I alt: 4.000 kr. nu + 2.799 kr./md',
-    `Link til beregningen: ${ORIGIN}/priser/?ydelser=hjemmeside%2Cmarketing&sider=2-5&bestilling=nej&drift=drift&videoer=8&poste=ja&annoncer=nej&trin=4#beregner`,
+    'Alle priser er ekskl. moms.',
+    `Link til beregningen: ${ORIGIN}/priser/?ydelser=hjemmeside%2Cmarketing&sider=2-5&bestilling=nej&drift=plus&videoer=8&poste=ja&annoncer=nej&trin=5#beregner`,
   ]) {
     check(text.includes(want), `mailen mangler "${want}"\n${text}`)
   }
+}
+
+// Mailens opsummering viser pakke, driftsplan og beløb for hver plan og for egen konto (håndregnet).
+for (const [drift, want] of [
+  ['basis', ['Hjemmeside, Vækst: 4.000 kr. + 199 kr./md', 'Drift: Basis, 199 kr./md, ingen inkluderede indholdsændringer', 'Nu: 4.000 kr.', 'Pr. md: 199 kr./md']],
+  ['plus', ['Hjemmeside, Vækst: 4.000 kr. + 299 kr./md', 'Drift: Plus, 299 kr./md, op til 15 min. indholdsarbejde pr. måned', 'Pr. md: 299 kr./md']],
+  ['ekstra', ['Hjemmeside, Vækst: 4.000 kr. + 399 kr./md', 'Drift: Ekstra, 399 kr./md, op til 30 min. indholdsarbejde pr. måned', 'Pr. md: 399 kr./md']],
+  ['egen', ['Hjemmeside, Vækst: 5.000 kr. i alt, ingen månedlig drift', 'Drift: Egen konto/hosting (ingen månedlig betaling til OviaSpecs for drift)', 'Nu: 5.000 kr.', 'Pr. md: 0 kr./md']],
+]) {
+  const e = env({ TURNSTILE_SECRET: undefined })
+  await call({ contact: 'kunde@example.com', link: `/priser/?ydelser=hjemmeside&sider=2-5&bestilling=nej&drift=${drift}&trin=3` }, e)
+  const { text } = decode(e.mail.sent[0]?.raw ?? '')
+  for (const w of want) check(text.includes(w), `mail med drift=${drift} mangler "${w}"\n${text}`)
+}
+
+// Booking tvinger ingen plan: Fuld fart + Basis + booking = 5.500 kr. nu + 199 kr./md.
+{
+  const e = env({ TURNSTILE_SECRET: undefined })
+  await call({ contact: 'kunde@example.com', link: '/priser/?ydelser=hjemmeside&sider=6-8&bestilling=ja&drift=basis&trin=3' }, e)
+  const { text } = decode(e.mail.sent[0]?.raw ?? '')
+  check(text.includes('I alt: 5.500 kr. nu + 199 kr./md') && text.includes('Ikke med i priserne fra OviaSpecs'), `Fuld fart + Basis + booking:\n${text}`)
+}
+
+// Gammelt link (drift=drift) i en henvendelse: Plus for Vækst og Ekstra for Fuld fart, og linket i mailen er det nye.
+for (const [sider, plan, month] of [['2-5', 'plus', '299'], ['6-8', 'ekstra', '399']]) {
+  const e = env({ TURNSTILE_SECRET: undefined })
+  await call({ contact: 'kunde@example.com', link: `/priser/?ydelser=hjemmeside&sider=${sider}&bestilling=nej&drift=drift&trin=3` }, e)
+  const { text } = decode(e.mail.sent[0]?.raw ?? '')
+  check(text.includes(`Drift: ${plan === 'plus' ? 'Plus' : 'Ekstra'}, ${month} kr./md`) && text.includes(`drift=${plan}`) && !text.includes('drift=drift'), `gammelt link (${sider}):\n${text}`)
+}
+
+// Uden valgt drift gættes der ikke: mailen siger det, og der er ingen månedspris.
+{
+  const e = env({ TURNSTILE_SECRET: undefined })
+  await call({ contact: 'kunde@example.com', link: '/priser/?ydelser=hjemmeside&sider=2-5&bestilling=nej&trin=3' }, e)
+  const { text } = decode(e.mail.sent[0]?.raw ?? '')
+  check(text.includes('Drift: ikke valgt') && text.includes('Pr. md: 0 kr./md'), `uden drift:\n${text}`)
 }
 
 // Linket i mailen peger altid på det domæne, kunden brugte (aldrig et andet).

@@ -1,5 +1,5 @@
 /**
- * Browsertest af "Få tilbuddet sendt" (390 px, touch) mod `npm run preview`.
+ * Browsertest af "Send din forespørgsel" (390 px, touch) mod `npm run preview`.
  * Serveren (/api/henvendelse) efterlignes med request interception; workeren
  * selv testes i scripts/test-inquiry.mjs.
  *
@@ -15,7 +15,7 @@ import puppeteer from 'puppeteer-core'
 
 const CHROME = process.env.CHROME ?? 'C:/Program Files/Google/Chrome/Application/chrome.exe'
 const SITE = process.env.SITE ?? 'http://localhost:4173'
-const RESULT = `${SITE}/priser/?ydelser=hjemmeside&sider=2-5&bestilling=nej&drift=drift&trin=3`
+const RESULT = `${SITE}/priser/?ydelser=hjemmeside&sider=2-5&bestilling=nej&drift=plus&trin=4`
 
 const failures = []
 const check = (ok, msg) => {
@@ -90,7 +90,7 @@ await open()
       newsletter: /nyhedsbrev/i.test(box.textContent),
     }
   })
-  check(ui.title === 'Få tilbuddet sendt', `overskrift: ${ui.title}`)
+  check(ui.title === 'Send din forespørgsel', `overskrift: ${ui.title}`)
   check(ui.labels[0] === 'Din mail eller dit telefonnummer' && ui.labels[1]?.startsWith('Navn / virksomhed'), `labels: ${ui.labels}`)
   check(ui.button === 'Send til Ronny', `knap: ${ui.button}`)
   check(ui.tel && ui.sms && !ui.mailto, 'Ring/SMS mangler, eller mailto står stadig')
@@ -125,7 +125,7 @@ check(f.thanks, `ingen tak efter OK: ${JSON.stringify(f)}`)
 check(requests.length === 1, `${requests.length} requests for ét tryk`)
 const sent = requests[0] ?? {}
 check(sent.contact === '+45 53 61 36 99' && sent.name === 'Café Test' && sent.website === '', `request: ${JSON.stringify(sent)}`)
-check(sent.link?.startsWith('/priser/?ydelser=hjemmeside') && sent.link.includes('sider=2-5'), `link: ${sent.link}`)
+check(sent.link?.startsWith('/priser/?ydelser=hjemmeside') && sent.link.includes('sider=2-5') && sent.link.includes('drift=plus') && !sent.link.includes('example'), `link: ${sent.link}`)
 
 // Fejl fra serveren: ingen tak, telefonnummeret står.
 for (const r of [

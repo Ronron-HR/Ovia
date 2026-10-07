@@ -22,21 +22,19 @@ export default function ServicePage({ page, extra = null }) {
   return (
     <>
       {/* Først overskrift, én kort linje og beregneren med sidens ydelse forvalgt. */}
-      <section className="pt-[calc(var(--nav-h)+20px)] pb-10 md:pt-[calc(var(--nav-h)+48px)] md:pb-14">
+      <section className="hero">
         <div className="shell">
-          <div className="max-w-[880px]">
-            <p data-hero="fade" className="t-eyebrow t-eyebrow-strong">
-              {page.eyebrow}
-            </p>
-            <h1 data-hero="lift" style={{ '--d': '60ms' }} className="t-display mt-3 max-w-[22ch] text-[clamp(1.75rem,4vw,2.75rem)] leading-[1.06]">
-              {page.title}
-            </h1>
-            <p data-hero="lift" style={{ '--d': '100ms' }} className="t-body mt-2.5 text-[16px] md:text-[18px]">
-              {calcIntro}
-            </p>
-            <div data-hero="fade" style={{ '--d': '140ms' }} className="mt-4 md:mt-6">
-              <PriceCalculator defaults={[page.service]} />
-            </div>
+          <p data-hero="fade" className="t-eyebrow t-eyebrow-strong">
+            {page.eyebrow}
+          </p>
+          <h1 data-hero="lift" style={{ '--d': '60ms' }} className="t-display t-hero mt-3 max-w-[22ch]">
+            {page.title}
+          </h1>
+          <p data-hero="lift" style={{ '--d': '100ms' }} className="t-body t-lead mt-4 max-w-[52ch]">
+            {calcIntro}
+          </p>
+          <div data-hero="fade" style={{ '--d': '140ms' }} className="mt-7 md:mt-9">
+            <PriceCalculator defaults={[page.service]} />
           </div>
         </div>
       </section>
@@ -81,7 +79,7 @@ export default function ServicePage({ page, extra = null }) {
               {page.get.items.map((item) => (
                 <li key={item.title} className="border-b border-rule py-5">
                   <h3 className="text-[18px] leading-snug font-medium">{item.title}</h3>
-                  <p className="t-body mt-1.5 text-[15px]">{item.text}</p>
+                  <p className="t-body mt-1.5 text-[16px]">{item.text}</p>
                 </li>
               ))}
             </ul>
@@ -110,7 +108,7 @@ export default function ServicePage({ page, extra = null }) {
           </div>
           <Addons service={service} />
           {page.packages.notes?.map((n, i) => (
-            <p key={n} className={`${i ? 'mt-1.5' : 'mt-5'} text-[15px] text-ink`}>
+            <p key={n} className={`${i ? 'mt-1.5' : 'mt-5'} text-[16px] text-ink`}>
               {n}
             </p>
           ))}

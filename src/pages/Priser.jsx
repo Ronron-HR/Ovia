@@ -60,11 +60,12 @@ export default function Priser() {
                 <div className="mt-6">
                   <PackageGrid service={service} headingLevel={4} />
                 </div>
+                {/* Hjemmeside: pakken er valg 1, driften valg 2 (egen blok), og først derefter tillæg. */}
+                {service.drift && <DriftTerms service={service} className="mt-8" headingLevel={4} />}
                 <Addons service={service} />
                 {key === 'bookingGoogle' && calculator.bookingDriftNote && (
                   <p className="mt-5 text-[15px] text-ink">{calculator.bookingDriftNote}</p>
                 )}
-                {service.drift && <DriftTerms service={service} className="mt-6" headingLevel={4} />}
               </div>
             )
           })}

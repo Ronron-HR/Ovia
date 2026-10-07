@@ -4,9 +4,10 @@
  *   npm run build && npm run preview     (i et andet vindue)
  *   npm run test:e2e
  *
- * Hjemmeside: svar 6-8 sider (Fuld fart), skift til Vækst i resultatet,
- * genindlæs, og tjek at resultatet er Vækst, at adresselinjen siger 2-5 sider,
- * og at "Ret svarene" viser 2-5 sider. Marketing: 12 videoer, jeg poster,
+ * Hjemmeside: svar 6-8 sider (Fuld fart) og driften Plus (eget trin), skift til Vækst
+ * i resultatet, genindlæs, og tjek at resultatet er Vækst, at adresselinjen siger 2-5
+ * sider og stadig drift=plus (pakkeskiftet overskriver ikke driftsvalget), og at
+ * "Ret svarene" viser 2-5 sider (og driften på sit trin). Marketing: 12 videoer, jeg poster,
  * annoncer (Fuld fart) → Vækst → genindlæs → 8 videoer, jeg poster, ingen annoncer.
  * Vælgeren tjekkes også for legend, radioknapper og trykflader på mindst 44 px.
  */
@@ -42,6 +43,11 @@ async function answerStep(answers) {
   await tap('#beregner button[type=submit]')
 }
 
+/** Trinene for en ydelse: hjemmesiden har to (siderne og driften). */
+async function answerSteps(steps) {
+  for (const answers of steps) await answerStep(answers)
+}
+
 const result = () =>
   page.evaluate(() => {
     const lines = [...document.querySelectorAll('#beregner li > div > p:first-child')].map((p) => p.textContent.trim())
@@ -54,12 +60,12 @@ const result = () =>
     return { lines, groups, search: location.search }
   })
 
-async function run({ name, service, answers, from, to, expectLine, expectParams }) {
+async function run({ name, service, steps, from, to, expectLine, expectParams }) {
   await page.bringToFront()
   await page.goto(`${SITE}/priser/`, { waitUntil: 'networkidle0' })
   await tap(`#beregner label.choice:has(input[name=ydelser][value=${service}])`)
   await tap('#beregner button[type=submit]')
-  await answerStep(answers)
+  await answerSteps(steps)
 
   let r = await result()
   check(r.lines.some((l) => l.endsWith(from)), `${name}: forventede ${from} efter svarene (${JSON.stringify(r.lines)})`)
@@ -81,13 +87,20 @@ async function run({ name, service, answers, from, to, expectLine, expectParams 
     check(params.get(k) === v, `${name}: adresselinjen ${k}=${params.get(k)} (forventet ${v}) — ${r.search}`)
   }
 
-  // Svarene passer også, når man går tilbage og retter dem.
-  await tap('#beregner button.calc-link:nth-of-type(1)')
-  const shown = await page.evaluate(() =>
-    Object.fromEntries([...document.querySelectorAll('#beregner input[type=radio]:checked')].map((i) => [i.name, i.value])),
-  )
-  for (const [k, v] of Object.entries(expectParams)) {
-    if (k in answers) check(shown[k] === v, `${name}: "Ret svarene" viser ${k}=${shown[k]} (forventet ${v})`)
+  // Svarene passer også, når man går tilbage og retter dem (hvert trin viser sine svar).
+  await page.evaluate(() => [...document.querySelectorAll('#beregner button.calc-link')].find((b) => b.textContent.trim() === 'Ret svarene').click())
+  await wait(150)
+  const checkedNow = () =>
+    page.evaluate(() => Object.fromEntries([...document.querySelectorAll('#beregner input[type=radio]:checked')].map((i) => [i.name, i.value])))
+  let shown = await checkedNow()
+  for (let i = 0; i < steps.length; i++) {
+    for (const k of Object.keys(steps[i])) {
+      if (k in expectParams) check(shown[k] === expectParams[k], `${name}: "Ret svarene" viser ${k}=${shown[k]} (forventet ${expectParams[k]})`)
+    }
+    if (i < steps.length - 1) {
+      await tap('#beregner button[type=submit]')
+      shown = await checkedNow()
+    }
   }
   console.log(`  ${name}: ok`)
 }
@@ -95,17 +108,17 @@ async function run({ name, service, answers, from, to, expectLine, expectParams 
 await run({
   name: 'Hjemmeside',
   service: 'hjemmeside',
-  answers: { sider: '6-8', bestilling: 'nej', drift: 'drift' },
+  steps: [{ sider: '6-8', bestilling: 'nej' }, { drift: 'plus' }],
   from: 'Fuld fart',
   to: { id: 'vaekst', name: 'Vækst' },
   expectLine: 'Hjemmeside: Vækst',
-  expectParams: { sider: '2-5', bestilling: 'nej', drift: 'drift' },
+  expectParams: { sider: '2-5', bestilling: 'nej', drift: 'plus' },
 })
 
 await run({
   name: 'Marketing',
   service: 'marketing',
-  answers: { videoer: '12', poste: 'ja', annoncer: 'ja' },
+  steps: [{ videoer: '12', poste: 'ja', annoncer: 'ja' }],
   from: 'Fuld fart',
   to: { id: 'vaekst', name: 'Vækst' },
   expectLine: 'Marketing: Vækst',

@@ -25,12 +25,12 @@
 
   --dur-tap: 140ms;
   --dur-hover: 200ms;
-  --dur-reveal: 620ms;
+  --dur-reveal: 320ms;
   --dur-exit: 320ms;
-  --dur-hero-line: 700ms;
-  --dur-hero-media: 800ms;
+  --dur-hero-line: 560ms;
+  --dur-hero-media: 600ms;
 
-  --reveal-y: 24px;
+  --reveal-y: 14px;
 
   --nav-h: 64px;
   --lp: 0;
@@ -38,7 +38,7 @@
 
 @media (max-width: 767px) {
   :root {
-    --reveal-y: 16px;
+    --reveal-y: 10px;
     --nav-h: 56px;
   }
 }
@@ -70,7 +70,7 @@
 
 .js-motion [data-hero='fade'] {
   opacity: 0;
-  animation: fade-up 560ms var(--ease-entrance) var(--d, 0ms) both;
+  animation: fade-up 320ms var(--ease-entrance) var(--d, 0ms) both;
 }
 
 /* Overskriften og første tekstlinje er synlige fra første tegning og løfter
@@ -78,7 +78,7 @@
    elementer, der starter helt usynlige, som Largest Contentful Paint, og
    uden dem havde siderne slet ingen LCP. */
 .js-motion [data-hero='lift'] {
-  animation: lift 560ms var(--ease-entrance) var(--d, 0ms) both;
+  animation: lift 320ms var(--ease-entrance) var(--d, 0ms) both;
 }
 
 /* Skærmbillederne kommer ind nedefra og lægger sig på plads. */

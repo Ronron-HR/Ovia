@@ -1,0 +1,181 @@
+/* =========================================================================
+   Prisberegnerens egne stilarter: trinskifte, driftvalg, valgrespons og
+   delene i prisen. Kun variabler fra index.css (ingen egne farver). De
+   eksisterende klasser (.calc*, .choice*, .btn*, .badge ...) styles i index.css.
+   ========================================================================= */
+
+/* Trinskiftet er en rolig opacity/transform (200 ms). Standardtilstanden er
+   synlig: virker animationen ikke, eller fejler JS, er indholdet der alligevel. */
+@keyframes calc-stage-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes calc-status-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.calc-stage[data-animate] {
+  animation: calc-stage-in 200ms var(--ease-entrance, ease-out);
+}
+
+.calc-status:not(:empty) {
+  animation: calc-status-in 200ms var(--ease-entrance, ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .calc-stage[data-animate],
+  .calc-status:not(:empty) {
+    animation: none;
+  }
+}
+
+@layer components {
+  /* ---- Valgrespons ---------------------------------------------------------
+     Det valgte kort får ordet "Valgt" (ikke kun farve), og et tryk giver et
+     lille nedtryk. */
+  .calc-picked {
+    flex: none;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--color-cta);
+    opacity: 0;
+    transform: translateX(-4px);
+    transition:
+      opacity 160ms var(--ease-entrance, ease-out),
+      transform 160ms var(--ease-entrance, ease-out);
+  }
+
+  .choice-input:checked + .choice-box .calc-picked {
+    opacity: 1;
+    transform: none;
+  }
+
+  .choice:active .choice-box {
+    transform: scale(0.992);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .calc-picked {
+      transition: none;
+      transform: none;
+    }
+
+    .choice:active .choice-box {
+      transform: none;
+    }
+  }
+
+  /* ---- Driftvalget (trin 2 for hjemmesiden) --------------------------------- */
+  .calc-plan,
+  .calc-plan .choice-box {
+    height: 100%;
+  }
+
+  .calc-plan .choice-box {
+    align-items: flex-start;
+    padding: 14px 16px;
+  }
+
+  .calc-plan .choice-mark {
+    margin-top: 3px;
+  }
+
+  .calc-plan-price {
+    margin-top: 2px;
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--color-ink);
+  }
+
+  /* ---- Hvad prisen består af (en række pr. del) ------------------------------ */
+  .calc-parts > li {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 3px 0;
+  }
+
+  .calc-parts > li > :first-child {
+    min-width: 0;
+  }
+
+  /* ---- Noter uden for priserne (fx bookingsystemets abonnement) -------------- */
+  .calc-aside {
+    padding: 10px 14px;
+    border: 1px solid var(--color-rule);
+    border-radius: var(--radius-btn);
+    background: var(--color-paper-2);
+    font-size: 15px;
+    color: var(--color-ink);
+  }
+
+  /* ---- Blokken "Drift" på pakkesiderne og /priser/ (valg 2 efter pakken) ------ */
+  .drift-block {
+    padding: 20px;
+    border: 1px solid var(--color-rule);
+    border-radius: var(--radius-card);
+    background: var(--color-surface);
+  }
+
+  .drift-plans {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .drift-plan {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 16px 18px;
+    border: 1px solid var(--color-rule);
+    border-radius: var(--radius-btn);
+    background: var(--color-paper);
+  }
+
+  .drift-plan-name {
+    font-size: 17px;
+    font-weight: 600;
+  }
+
+  .drift-plan-price {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    font-size: 34px;
+    line-height: 1.1;
+  }
+
+  .drift-plan-content {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--color-ink);
+  }
+
+  @media (min-width: 768px) {
+    .drift-block {
+      padding: 28px;
+    }
+
+    .drift-plans {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+  }
+}

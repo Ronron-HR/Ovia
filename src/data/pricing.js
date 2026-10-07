@@ -4,10 +4,15 @@
    prisberegneren med. Komponenterne indeholder ingen priser.
 
    Regler (må ikke brydes):
-   - Pakkerne hedder Start, Vækst og Fuld fart. Vækst er "Anbefalet";
+   - Pakkerne hedder Start, Vækst og Fuld fart. Vækst på hjemmeside er "Anbefalet, hvis du vil findes på Google" (begrundet);
      ingen mærker om popularitet.
    - Ingen rabatkoder, nedtællinger eller kunstigt pres.
    - Ingen opdigtede udtalelser, kundetal eller resultater.
+   - Hjemmesidepakken (engangspris) og driftsplanen (Basis, Plus eller Ekstra,
+     pr. måned) er to uafhængige valg. Alle planer kan kombineres med alle
+     pakker, og ingen plan får et popularitetsmærke. Planerne har samme tekniske drift
+     (services.hjemmeside.drift.included) og adskiller sig kun i, hvor meget
+     indholdsarbejde der er med. Der lovers intet ud over det, der står i drift.included og planens minutter.
    ========================================================================= */
 
 /* ---- Kontakt ----------------------------------------------------------- */
@@ -37,7 +42,7 @@ export const priceNote = 'Alle priser er ekskl. moms.'
 export const introText = 'Introduktionspriser'
 
 /** Forklaringen ved mærket. Tom = skjult. */
-export const introNote = 'Lave priser, mens jeg bygger min kundeliste.'
+export const introNote = 'Priserne er introduktionspriser, mens OviaSpecs er nyt.'
 
 /**
  * Højeste pris for en hjemmeside på Start eller Vækst uden integrationer (uden
@@ -53,26 +58,61 @@ export const maxWebsiteNoIntegrations = 5000
 export const paidStartText = 'Betalte opgaver fra februar 2027.'
 
 /** Mærket på den anbefalede pakke. */
-export const recommendedLabel = 'Anbefalet'
-export const recommendedTier = 'vaekst'
+/** Anbefalingen står kun, hvor den kan begrundes ud fra kundens behov (pakken indeholder Google-profilen). */
+export const recommendedFor = { hjemmeside: { tier: 'vaekst', label: 'Anbefalet, hvis du vil findes på Google' } }
 
 /** Navnene på de tre pakker (bruges af alle ydelser). */
 export const tierNames = { start: 'Start', vaekst: 'Vækst', 'fuld-fart': 'Fuld fart' }
 
-/** Vises på /booking-google/, ved Hjemmeside Fuld fart og i beregneren, når booking er valgt. */
+/**
+ * Vises på /booking-google/, ved booking på hjemmesiden og i beregneren, når booking er valgt.
+ * Abonnementet er ikke en del af OviaSpecs' priser (hverken engangs eller pr. måned).
+ */
 export const bookingSubscriptionNote =
-  'Abonnementet på bookingsystemet (fx Planway eller Booksy) betaler du selv direkte til udbyderen.'
+  'Ikke med i priserne fra OviaSpecs: Abonnementet på bookingsystemet (fx Planway eller Booksy) betaler du selv direkte til udbyderen.'
 
 export const flags = {
   /** false: marketingsiden viser "Pilotforløb" i stedet for cases. */
   hasMarketingCases: false,
 }
 
-/* ---- Drift (beregneren, pakkerne og FAQ) -------------------------------- */
-/** Fuld fart: pakkebeskrivelsen og beregnerens resultat. Egen konto er muligt uden booking. */
-export const fuldFartNote = 'Ændringer inden 2 hverdage gælder med drift.'
-/** Booking (alle pakker) giver drift. */
-export const driftWithBooking = 'Med booking passer jeg siden, så bookingen altid virker.'
+/* ---- Drift af hjemmesiden (planer pr. måned) ----------------------------
+   Tre planer, uafhængigt af hjemmesidepakken. Teknisk drift er den samme i
+   alle tre (services.hjemmeside.drift.included); planerne adskiller sig kun i
+   den inkluderede tid til indholdsarbejde (`minutes`; 0 = ingen). Rækkefølgen
+   her er rækkefølgen i beregneren, på pakkesiderne og på /priser/.
+------------------------------------------------------------------------- */
+const makePlan = (id, name, monthly, minutes, summary) => ({
+  id,
+  name,
+  monthly,
+  minutes,
+  summary,
+  /** Hvor meget indholdsarbejde der er med, som en kort sætning med stort begyndelsesbogstav. */
+  content: minutes ? `Op til ${minutes} min. indholdsarbejde pr. måned` : 'Ingen inkluderede indholdsændringer',
+})
+
+export const driftPlans = {
+  basis: makePlan('basis', 'Basis', 199, 0, 'Til dig, der ikke regner med at skulle have ændret noget.'),
+  plus: makePlan('plus', 'Plus', 299, 15, 'Til små ændringer nu og da.'),
+  ekstra: makePlan('ekstra', 'Ekstra', 399, 30, 'Til dig, der jævnligt skal have ændret tekst og billeder.'),
+}
+
+/**
+ * Gamle links (før driftsplanerne) har drift=drift. De skifter til planen med
+ * samme månedspris, som linket viste dengang: Start og Vækst hed 299 kr./md
+ * (nu Plus), Fuld fart 399 kr./md (nu Ekstra). Se parse() i src/calculator.js.
+ */
+export const legacyDriftPlan = { start: 'plus', vaekst: 'plus', 'fuld-fart': 'ekstra' }
+
+/** Planerne som liste i visningsrækkefølge. */
+export const driftPlanList = Object.values(driftPlans)
+
+/** Laveste månedspris for drift (bruges, hvor pakken nævner drift: "fra 199 kr./md"). */
+export const driftFrom = Math.min(...driftPlanList.map((p) => p.monthly))
+
+/** Plan med måned og indhold som tekst, fx "Plus, 299 kr./md, op til 15 min. indholdsarbejde pr. måned". */
+export const driftSummary = (p) => `${p.name}, ${formatKr(p.monthly)}/md, ${p.content.charAt(0).toLowerCase()}${p.content.slice(1)}`
 
 /* ---- Overlap mellem hjemmeside og Booking & Google ----------------------
    Booking & Google består af komponenter. Er en komponent allerede med i den
@@ -101,7 +141,7 @@ export const overlap = {
 /* ---- Ydelser og pakker -------------------------------------------------
    billing: 'once' (engangspris) eller 'monthly' (pris pr. måned).
             Alle priser er faste: beregneren viser aldrig et interval.
-   monthly: løbende drift pr. måned (kun hjemmeside).
+   Hjemmesidens drift pr. måned står i `driftPlans` (ikke på pakkerne).
    addons:  tilvalg; `tiers` = de pakker, tilvalget kan vælges til.
    includes: komponenter fra `components`, som pakken indeholder (se overlap).
 ------------------------------------------------------------------------- */
@@ -115,7 +155,6 @@ export const services = {
         id: 'start',
         price: 2500,
         includes: [],
-        monthly: 299,
         summary: 'Én side med det vigtigste.',
         features: ['Alt samlet på én side', '1 rettelserunde'],
         /** Tilvalg, der vises på pakkekortet (addons). */
@@ -125,7 +164,6 @@ export const services = {
         id: 'vaekst',
         price: 4000,
         includes: ['googleProfile'],
-        monthly: 299,
         summary: 'Flere sider, og du bliver fundet på Google.',
         features: ['Op til 5 sider', 'Google-profil sat op', 'Sat op til at blive fundet på Google', '2 rettelserunder'],
         optional: ['bookingOnSite'],
@@ -134,28 +172,32 @@ export const services = {
         id: 'fuld-fart',
         price: 5000,
         includes: ['googleProfile'],
-        monthly: 399,
-        monthlyNote: 'ændringer laves inden 2 hverdage',
-        note: fuldFartNote,
-        summary: 'Flest sider, lokal SEO og hurtige ændringer.',
+        summary: 'Flest sider og lokal SEO.',
         features: ['Op til 8 sider', 'Google-profil sat op', 'Fundet på Google, også når folk søger i dit område', '3 rettelserunder'],
         optional: ['bookingOnSite'],
       },
     ],
     addons: {
-      /** Alternativ til månedlig drift på alle pakker, men ikke med booking (booking betyder altid drift). */
+      /**
+       * Alternativ til en driftsplan på alle pakker: siden lægges på kundens egen
+       * konto, og der er ingen månedlig betaling til OviaSpecs for drift.
+       * ANTAGELSE (ikke afklaret med forretningen): kan kombineres med booking.
+       */
       ownAccount: {
-        label: 'Egen konto i stedet for drift (uden booking)',
+        label: 'Egen konto/hosting i stedet for en driftsplan',
+        short: 'Egen konto/hosting',
         price: 1000,
+        unit: 'én gang',
+        note: 'Ingen månedlig betaling til OviaSpecs for drift. Du kan selv have udgifter til hosting og domæne.',
         tiers: ['start', 'vaekst', 'fuld-fart'],
       },
       /**
-       * Booking koblet på siden: tilvalg til alle tre pakker. Prisen er booking-
-       * komponentens (samme beløb, der trækkes fra Booking & Google). Ingen pakke
-       * har booking gratis. Booking betyder altid drift.
+       * Booking koblet på siden: tilvalg til alle tre pakker, uafhængigt af driftsplan.
+       * Prisen er booking-komponentens (samme beløb, der trækkes fra Booking & Google).
+       * Ingen pakke har booking gratis.
        */
       bookingOnSite: {
-        label: 'Booking koblet på (alle pakker, med drift)',
+        label: 'Booking koblet på (alle pakker)',
         short: 'Booking koblet på',
         price: components.booking.price,
         tiers: ['start', 'vaekst', 'fuld-fart'],
@@ -173,18 +215,32 @@ export const services = {
     upgradeNote: 'Brug for flere sider i Start eller Vækst? Så opgraderer du til næste pakke.',
     /** Flest sider i alt, beregneren tilbyder i Fuld fart (8 + ekstra undersider). */
     maxPages: 20,
-    /** Hvad drift dækker. Prisen pr. måned står på pakkerne (monthly). */
+    /**
+     * Hvad drift dækker. Prisen pr. måned står i `driftPlans`. `included` er den
+     * tekniske drift, der er ens i ALLE planer, og det eneste, drift lover ud over
+     * planens indholdsarbejde.
+     */
     drift: {
-      included: [
-        'Siden holdes online og sikker, med domæne og backup',
-        'Op til 2 små ændringer om måneden (tekst, billeder, mindre designjusteringer)',
-      ],
-      fast: 'På Fuld fart laves ændringerne inden 2 hverdage.',
-      notIncluded: 'Ubrugte ændringer overføres ikke. Flere sider: se tilvalg ovenfor. Nyt design aftales separat.',
-      /** FAQ'en "Hvad er inkluderet i drift?" (ingen tilvalg ovenfor dér). Prisen indsættes fra addons.extraPage. */
-      unusedChanges: 'Ubrugte ændringer overføres ikke.',
+      included: ['Siden holdes online og sikker, med domæne og backup'],
+      /** Teksten på pakkekortet: drift er et særskilt valg (prisen indsættes: laveste plan). */
+      fromLine: (price) => `Drift vælger du særskilt, fra ${price}/md`,
+      /** Blokken "Drift" på pakkesiderne og /priser/ (valg 2 efter pakken). */
+      block: {
+        eyebrow: 'Valg 2 efter pakken',
+        title: 'Drift',
+        intro: 'Drift betaler du hver måned. Du vælger frit mellem planerne, uanset hvilken pakke du har valgt.',
+        sharedLead: 'Det samme i alle tre planer:',
+        perMonth: '/md',
+      },
+      /** Hvad indholdsarbejde er (planernes minutter). */
+      contentWork: 'Indholdsarbejde er små ændringer med den tekst og de billeder, du leverer.',
+      /** Hvad der ikke er indholdsarbejde. */
+      notContentWork: 'Nye sider, nye funktioner og større designændringer aftales særskilt.',
+      unusedTime: 'Ubrugt tid overføres ikke.',
+      extraWork: 'Ekstra arbejde ud over den inkluderede tid aftaler vi pris på, før jeg går i gang.',
+      /** FAQ'en "Hvad er inkluderet i drift?". Prisen indsættes fra addons.extraPage. */
       morePagesFaq: (price) =>
-        `Flere sider: På Start og Vækst opgraderer du til næste pakke. På Fuld fart koster ekstra sider ${price} pr. side. Nyt design aftales separat.`,
+        `Flere sider: På Start og Vækst opgraderer du til næste pakke. På Fuld fart koster hver side ud over 8 ${price}, når du bestiller siden. Nye sider efter lanceringen aftales særskilt.`,
       domain: 'Domænet registreres i dit navn.',
       binding: 'Ingen binding. Opsigelse med 1 måneds varsel.',
       /** Pris for at købe siden fri, når drift opsiges. */
@@ -298,14 +354,15 @@ export const services = {
 }
 
 /* ---- Prisberegneren (/priser/) ------------------------------------------
-   Trin 1: hvilke ydelser (flervalg). Derefter ét trin pr. valgt ydelse med
-   dens spørgsmål og til sidst resultatet: højst 5 trin.
+   Trin 1: hvilke ydelser (flervalg). Derefter ét trin pr. valgt ydelse (for
+   hjemmesiden to: siderne og så driften, se `page`) og til sidst resultatet.
 
    Hvert svar peger på en pakke (`tier`); den højeste pakke blandt svarene
    vinder. `short` er spørgsmålet i opsummeringen (SMS/mail). `addon` lægger
    et tilvalg til (addons i ydelsen) i prisen, så resultatet viser det, kunden
-   reelt betaler, og `noDrift` fjerner den månedlige drift. `custom` betyder, at
-   prisen aftales (ingen pris i beregneren). `note` vises ved resultatet.
+   reelt betaler. `plan` er en driftsplan (driftPlans), som lægger sin
+   månedspris til; `noDrift` (egen konto) giver ingen månedlig drift. `note`
+   vises ved resultatet. `page` samler spørgsmål i samme trin (standard 1).
    Spørgsmålenes `id` skal være unikke, fordi de står i adresselinjen.
 ------------------------------------------------------------------------- */
 export const calculator = {
@@ -339,28 +396,28 @@ export const calculator = {
         short: 'Booking/bestilling',
         label: 'Skal kunderne kunne booke eller bestille via siden?',
         options: [
-          // Bestemmer ikke pakken (det gør antal sider): "Ja" lægger booking til og giver drift.
+          // Bestemmer hverken pakke eller driftsplan: "Ja" lægger booking til (+ prisen for booking).
           { id: 'nej', label: 'Nej' },
           { id: 'ja', label: 'Ja', addon: 'bookingOnSite', addsBooking: true },
         ],
       },
       {
+        // Eget trin efter siderne. Ingen standardværdi: kunden vælger selv.
         id: 'drift',
+        page: 2,
+        heading: 'Drift af din hjemmeside',
         short: 'Drift',
-        label: 'Hvem skal passe siden bagefter?',
-        /** Svaret, der bruges i stedet, når et svar ikke længere er tilladt (fx egen konto + booking). */
-        fallback: 'drift',
+        label: 'Hvilken drift skal hjemmesiden have?',
+        /** Vises, hvis kunden går videre uden at vælge. */
+        missing: 'Vælg en driftsplan eller egen konto/hosting for at gå videre.',
         options: [
-          { id: 'drift', label: 'Du passer siden for mig (drift pr. måned)', tier: 'start' },
+          ...driftPlanList.map((p) => ({ id: p.id, label: p.name, summary: driftSummary(p), plan: p.id })),
           {
             id: 'egen',
-            label: 'Den lægges på min egen konto (engangsbeløb)',
+            label: 'Egen konto/hosting',
+            summary: 'Egen konto/hosting (ingen månedlig betaling til OviaSpecs for drift)',
             addon: 'ownAccount',
             noDrift: true,
-            /** Ikke muligt, når hjemmesiden får booking (tilvalg eller Booking & Google Vækst/Fuld fart). */
-            notWithBooking: true,
-            /** Forklaringen, når valget er slået fra på grund af booking. */
-            disabledNotes: { booking: driftWithBooking },
           },
         ],
       },
@@ -416,34 +473,57 @@ export const calculator = {
       },
     ],
   },
-  /** Under prisen. */
   /** Linje under prisen. Tom = skjult. Må ikke indeholde "aftales" (prisen er fast; pristesten tjekker). */
   finalNote: '',
-  /** Når prisen aftales (flere end 8 sider): vises i linjen og i totalen. */
   /** Efter engangsbeløbet i totalen: "5.000 kr. nu". */
   nowLabel: 'nu',
-  /** Vises, når booking gør, at hjemmesiden kører med drift (Fuld fart eller Booking & Google Vækst/Fuld fart). */
-  driftWithBooking,
-  fuldFartNote,
-  /** Under Booking & Google-pakkerne (/priser/ og /booking-google/): samme regel som driftWithBooking. */
-  bookingDriftNote: 'Kobles booking på din hjemmeside, kører hjemmesiden med drift.',
-  /** Vises i beregneren, når et valgt "egen konto" automatisk er skiftet til drift. */
-  switchedToDrift: 'Din hjemmeside er skiftet til drift.',
+  /**
+   * Under Booking & Google-pakkerne (/priser/ og /booking-google/): booking
+   * på hjemmesiden er et tilvalg uden krav om en bestemt driftsplan.
+   */
+  bookingDriftNote: 'Kobles booking på din hjemmeside, ændrer det ikke din driftsplan.',
   /** Note ved ekstra undersider i Fuld fart. */
   extraPagesNote: (n, price) => `${n} ekstra ${n === 1 ? 'underside' : 'undersider'} à ${price}`,
-  /** Efter prisen, når siden lægges på kundens egen konto (ingen drift). */
-  noDriftSuffix: 'i alt — ingen månedlig drift',
+  /** Efter prisen, når siden lægges på kundens egen konto (ingen månedlig drift hos OviaSpecs). */
+  noDriftSuffix: 'i alt, ingen månedlig drift',
   /** Under totalen ved egen konto: uden og med en månedspris fra en anden ydelse. */
-  noDriftTotal: 'Ingen månedlig drift',
-  noDriftWithMonthly: 'Ingen månedlig drift på hjemmesiden',
+  noDriftTotal: 'Ingen månedlig betaling til OviaSpecs for drift',
+  noDriftWithMonthly: 'Ingen månedlig betaling til OviaSpecs for hjemmesidens drift',
   /** Under totalen, når "egen konto" er valgt: hvad kunden selv står for. Tom = skjult. */
   ownAccountNote:
-    'Du ejer selv kontoen og betaler domæne og hosting direkte til udbyderen. Rettelser efter levering aftaler vi pris på, før jeg går i gang.',
+    'Du ejer selv kontoen og kan have udgifter til hosting og domæne direkte til udbyderen. Rettelser efter levering aftaler vi pris på, før jeg går i gang.',
+  /**
+   * Driftvalget (trin 2 for hjemmesiden og skiftet i resultatet). Planerne og
+   * deres priser står i driftPlans; vilkårene i services.hjemmeside.drift.
+   */
+  driftStep: {
+    eyebrow: 'Valg 2: Drift',
+    intro: 'Vælg, hvordan siden passes efter lanceringen. Du kan vælge frit, uanset hvilken pakke du har valgt.',
+    /** Teknisk drift: ens i alle tre planer. */
+    sharedLead: 'Det samme i alle tre planer:',
+    /** Under planerne: indholdsarbejdets grænser, kort. Detaljerne står i "Hvad er drift?". */
+    limits: () => {
+      const d = services.hjemmeside.drift
+      return `${d.contentWork} ${d.notContentWork} ${d.unusedTime}`
+    },
+    /** Kort tekst på kortet "Egen konto/hosting". */
+    ownText: `Siden lægges på din egen konto. Ingen månedlig betaling til OviaSpecs for drift.`,
+    ownExtra: 'Du kan selv have udgifter til hosting og domæne.',
+    /** Pris på kortet: planen pr. måned, egen konto som tillæg én gang. */
+    ownPrice: (price) => `+${price} én gang`,
+    helpTitle: 'Hvad er drift?',
+    /** Pakken, der er valgt (over driftvalget): "Pakke: Vækst, 4.000 kr. én gang". */
+    packageLine: (tier, price) => `Pakke: ${tier}, ${price} én gang`,
+    /** I resultatet: vælger til at skifte drift. */
+    legend: 'Skift drift for hjemmesiden',
+    now: (text) => `Nu: ${text}`,
+    picked: 'Valgt',
+  },
   /**
    * Pakkevælgeren under hver ydelse i resultatet. Et skift sætter pakkens svar
    * (spørgsmålets id → svar), så svarene og resultatet aldrig modsiger hinanden.
-   * Svar, der ikke står her (booking via siden, drift), beholdes; reglerne for
-   * drift og egen konto gælder stadig. `now` vises efter skiftet.
+   * Alle andre svar (booking via siden og driftsvalget) beholdes uændret.
+   * `now` vises efter skiftet.
    */
   tierSwitch: {
     legend: (service) => `Skift pakke for ${service}`,
@@ -461,6 +541,195 @@ export const calculator = {
       start: { answers: { booking: 'nej', anmeldelser: 'nej' }, now: 'Nu: kun Google-profilen' },
       vaekst: { answers: { booking: 'ja', anmeldelser: 'nej' }, now: 'Nu: Google-profil og online booking' },
       'fuld-fart': { answers: { booking: 'ja', anmeldelser: 'ja' }, now: 'Nu: Google-profil, booking og QR-skilt' },
+    },
+  },
+  /**
+   * Hjælpetekster i beregneren. `sider` står under spørgsmålet om sider. `monthly`
+   * og `ownAccount` står i resultatet og forklarer, hvad månedsprisen dækker, og hvad
+   * kunden selv overtager. `driftWhat` er "Hvad er drift?" i driftvalget. Kun
+   * dokumenterede vilkår (services.hjemmeside.drift).
+   */
+  help: {
+    sider:
+      'En side er fx forsiden, menukortet, "Om os" eller kontakt. Er du i tvivl, så vælg det, der ligner mest. Du kan skifte pakke bagefter.',
+    driftWhat: () => {
+      const d = services.hjemmeside.drift
+      const [basis, plus, ekstra] = driftPlanList
+      return [
+        `Drift er det løbende, efter siden er lavet. ${d.included[0]}. Det er det samme i ${basis.name}, ${plus.name} og ${ekstra.name}.`,
+        `Forskellen er indholdsarbejde. ${d.contentWork} ${basis.name}: ${basis.content.toLowerCase()}. ${plus.name}: ${plus.content.toLowerCase()}. ${ekstra.name}: ${ekstra.content.toLowerCase()}.`,
+        `${d.notContentWork} ${d.unusedTime} ${d.extraWork}`,
+        `${d.domain} ${d.binding}`,
+        `Vil du hellere passe siden selv, vælger du egen konto/hosting: ${formatKr(services.hjemmeside.addons.ownAccount.price)} én gang i tillæg til pakken. ${services.hjemmeside.addons.ownAccount.note}`,
+      ]
+    },
+    monthly: {
+      title: 'Hvad dækker månedsprisen?',
+      /** `line.driftPlan` er planens id. */
+      hjemmeside: (line) => {
+        const d = services.hjemmeside.drift
+        const plan = line.driftPlan ? driftPlans[line.driftPlan] : null
+        return [
+          ...d.included,
+          ...(plan ? [`${plan.content}.`] : []),
+          d.contentWork,
+          d.notContentWork,
+          ...(plan?.minutes ? [d.unusedTime] : []),
+          d.extraWork,
+          d.domain,
+          d.binding,
+          d.buyout(formatKr(d.buyoutPrice)),
+        ]
+      },
+      marketing: () => [services.marketing.binding],
+    },
+    ownAccount: {
+      title: 'Det overtager du selv',
+      items: [
+        'Ingen månedlig betaling til OviaSpecs for drift.',
+        'Du ejer selv kontoen og kan have udgifter til hosting og domæne direkte til udbyderen.',
+        'Rettelser efter levering aftaler vi pris på, før jeg går i gang.',
+      ],
+    },
+  },
+  /**
+   * Behovsguiden ("Hjælp mig med at vælge"): frivillig, i beregnerens område.
+   * Efter det første spørgsmål højst to opfølgende. Reglerne står i src/guide.js,
+   * teksterne her. Svaret "ved-ikke" (Jeg ved det ikke) giver den mindste løsning.
+   */
+  guide: {
+    entryTitle: 'Hjælp mig med at vælge',
+    entryText: 'Er du usikker? Svar på et par korte spørgsmål.',
+    pickAnswer: 'Vælg et svar for at gå videre.',
+    resultTitle: 'Mit forslag til dig',
+    whyTitle: 'Derfor foreslår jeg det',
+    includesTitle: 'Det er med',
+    oncePrice: 'Engangspris',
+    monthPrice: 'Pr. måned',
+    noMonthly: 'Ingen månedspris',
+    noOnce: 'Ingen engangspris',
+    open: 'Se og ret i beregneren',
+    change: 'Ret svarene',
+    unclearTitle: 'Lad os tage en kort snak',
+    unclearText:
+      'Ud fra svarene kan jeg ikke give dig en pris endnu, og jeg vil ikke gætte. Ring eller send en SMS, så finder vi sammen ud af, hvad der giver mening for din virksomhed.',
+    unclearSms: 'Hej Ronny. Jeg har prøvet hjælp til at vælge på oviaspecs.com, men er stadig i tvivl. Kan vi tage en kort snak?',
+    need: {
+      id: 'behov',
+      label: 'Hvad vil du gerne have hjælp til?',
+      options: [
+        { id: 'hjemmeside', label: 'En ny eller bedre hjemmeside' },
+        { id: 'google', label: 'At blive fundet på Google' },
+        { id: 'booking', label: 'At gøre booking eller bestilling nemmere' },
+        { id: 'sociale', label: 'Hjælp til sociale medier' },
+        { id: 'usikker', label: 'Jeg er ikke sikker' },
+      ],
+    },
+    /** Opfølgende spørgsmål. Hvilke der stilles, afgør src/guide.js ud fra de tidligere svar. */
+    questions: {
+      fokus: {
+        id: 'fokus',
+        label: 'Hvad er vigtigst for dig lige nu?',
+        options: [
+          { id: 'google', label: 'At folk kan finde mig på Google' },
+          { id: 'booking', label: 'At kunderne kan booke eller bestille' },
+          { id: 'sociale', label: 'At jeg er synlig på sociale medier' },
+          { id: 'hjemmeside', label: 'At jeg har en (bedre) hjemmeside' },
+          { id: 'ved-ikke', label: 'Jeg ved det ikke' },
+        ],
+      },
+      sider: {
+        id: 'sider',
+        label: 'Hvor stor skal hjemmesiden være?',
+        help: 'En side er fx forsiden, menukortet, "Om os" eller kontakt.',
+        options: [
+          { id: '1', label: 'Én side med det vigtigste' },
+          { id: '2-5', label: '2-5 sider' },
+          { id: '6-8', label: '6-8 sider' },
+          { id: 'ved-ikke', label: 'Jeg ved det ikke' },
+        ],
+      },
+      aendringer: {
+        id: 'aendringer',
+        label: 'Skal du have lavet ændringer på siden, efter den er lanceret?',
+        help: 'Små ændringer er fx ny tekst, nye åbningstider eller nye billeder, som du leverer.',
+        options: [
+          { id: 'nej', label: 'Nej, siden skal bare ligge der' },
+          { id: 'lidt', label: 'Lidt, en gang imellem' },
+          { id: 'jaevnligt', label: 'Ja, jævnligt' },
+          { id: 'egen', label: 'Jeg vil selv passe siden på en konto, jeg ejer' },
+          { id: 'ved-ikke', label: 'Jeg ved det ikke' },
+        ],
+      },
+      harSide: {
+        id: 'har-side',
+        label: 'Har du en hjemmeside, der virker i dag?',
+        options: [
+          { id: 'ja', label: 'Ja' },
+          { id: 'nej', label: 'Nej' },
+          { id: 'ved-ikke', label: 'Jeg ved det ikke' },
+        ],
+      },
+      ogsaaSide: {
+        id: 'ogsaa-side',
+        label: 'Vil du også have en hjemmeside?',
+        options: [
+          { id: 'ja', label: 'Ja, bookingen skal ligge på en hjemmeside' },
+          { id: 'nej', label: 'Nej, booking via Instagram og Google er nok' },
+          { id: 'ved-ikke', label: 'Jeg ved det ikke' },
+        ],
+      },
+      anmeldelser: {
+        id: 'anmeldelser',
+        label: 'Vil du have et QR-skilt, der beder kunderne om en anmeldelse?',
+        options: [
+          { id: 'ja', label: 'Ja' },
+          { id: 'nej', label: 'Nej, kun Google-profilen' },
+          { id: 'ved-ikke', label: 'Jeg ved det ikke' },
+        ],
+      },
+      opslag: {
+        id: 'opslag',
+        label: 'Skal jeg lægge indholdet op for dig?',
+        options: [
+          { id: 'ja', label: 'Ja, gerne' },
+          { id: 'nej', label: 'Nej, jeg poster selv' },
+          { id: 'ved-ikke', label: 'Jeg ved det ikke' },
+        ],
+      },
+      annoncer: {
+        id: 'annoncer',
+        label: 'Skal jeg også styre annoncer på Meta (Facebook og Instagram)?',
+        options: [
+          { id: 'ja', label: 'Ja' },
+          { id: 'nej', label: 'Nej' },
+          { id: 'ved-ikke', label: 'Jeg ved det ikke' },
+        ],
+      },
+    },
+    /** Begrundelserne i resultatet. */
+    reasons: {
+      websiteSmall: 'Jeg starter småt: én side med det vigtigste. Skal der flere sider til, skifter du pakke i beregneren.',
+      websitePages: 'Antallet af sider passer til pakken.',
+      websiteNoBooking: `Booking er ikke med. Den kan lægges til i beregneren (+${formatKr(components.booking.price)}).`,
+      websiteBooking: 'Booking kobles på siden som tilvalg. Det ændrer ikke din driftsplan.',
+      /** Driftsplan efter spørgsmålet om ændringer: den mindste, der dækker svaret. */
+      driftBasis: `${driftPlans.basis.name} er nok: siden holdes online og sikker, og du skal ikke have lavet ændringer. Skal der alligevel rettes noget, aftaler vi prisen, før jeg går i gang.`,
+      driftPlus: `${driftPlans.plus.name} er den mindste plan med indholdsarbejde: ${driftPlans.plus.content.toLowerCase()} til små ændringer med din tekst og dine billeder.`,
+      driftEkstra: `${driftPlans.ekstra.name} har mest tid til indholdsarbejde: ${driftPlans.ekstra.content.toLowerCase()}. Det passer, når du jævnligt skal have ændret tekst og billeder.`,
+      driftOwn: `Du passer selv siden på din egen konto: ${formatKr(services.hjemmeside.addons.ownAccount.price)} i tillæg én gang og ingen månedlig betaling til OviaSpecs for drift. Du kan selv have udgifter til hosting og domæne.`,
+      /** Når spørgsmålet om ændringer ikke stilles (kun to opfølgende spørgsmål) eller svares "Jeg ved det ikke". */
+      driftDefault: `Jeg har valgt den mindste driftsplan, ${driftPlans.basis.name}. Skal du have ændret tekst og billeder, kan du skifte til ${driftPlans.plus.name} eller ${driftPlans.ekstra.name} i beregneren.`,
+      googleStart: 'Du vil findes på Google. En Google-profil, der er i orden, er den mindste løsning.',
+      googleReviews: 'QR-skiltet og opfølgningen findes kun i Fuld fart. Den pakke indeholder også booking, og prisen er samlet.',
+      bookingHasSite: 'Du har allerede en hjemmeside, så jeg kobler bookingen på den i stedet for at lave en ny.',
+      bookingUnsureSite: 'Du er ikke sikker på, om du har en hjemmeside, så jeg foreslår ikke en ny. Bookingen kobles på den, du har, eller på Instagram.',
+      bookingNoSite: 'Du kan få booking via Instagram og Google uden at bestille en ny hjemmeside.',
+      bookingNewSite: 'Du vil have bookingen på en hjemmeside. Jeg foreslår den mindste: én side med booking koblet på.',
+      socialStart: 'Du lægger selv indholdet op. Det er den mindste løsning.',
+      socialPost: 'Jeg laver indholdet og lægger det op for dig.',
+      socialAds: 'Annoncer på Meta er kun med i Fuld fart, hvor jeg også laver og lægger indholdet op.',
+      unsureDefault: 'Du var i tvivl, så jeg har valgt den mindste løsning. Du kan ændre den i beregneren.',
     },
   },
   /** Forudfyldt start på SMS fra resultatet (mailen fra formularen står i src/inquiry.js). */
@@ -488,6 +757,12 @@ export function formatPrice(service, n) {
 }
 
 /** Laveste pakkepris for en ydelse, fx "fra 2.500 kr." */
+/** "fra 2.500 kr. + drift fra 199 kr./md" for hjemmeside (drift er et særskilt valg), ellers som fromPrice. */
+export function fromPriceWithDrift(service) {
+  const base = fromPrice(service)
+  return service.id === 'hjemmeside' ? `${base} + drift fra ${formatKr(driftFrom)}/md` : base
+}
+
 export function fromPrice(service) {
   return `fra ${formatPrice(service, Math.min(...service.tiers.map((t) => t.price)))}`
 }

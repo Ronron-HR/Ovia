@@ -68,14 +68,30 @@ export const cta = {
 
 export const home = {
   hero: {
-    title: 'Jeg sørger for, at kunderne finder dig online og har let ved at tage kontakt.',
-    /** Den ene korte linje under overskriften. */
-    short: 'Hjemmeside, Google-profil, booking og korte videoer. Se din pris med det samme.',
+    title: 'Hjemmeside, Google og booking til lokale virksomheder i Aarhus-området',
+    /** Den korte forklaring under overskriften. */
+    short: 'Jeg laver det hele selv, og du taler direkte med mig. Svar på et par spørgsmål, så ser du prisen med det samme.',
+    /** Hovedhandlingen (hopper til beregneren). */
+    cta: 'Se din pris',
+    /** Faktaboksen: kun det, siden i forvejen lover. */
+    factsTitle: 'Det får du',
+    facts: [
+      'En hjemmeside, der virker på telefonen',
+      'Google-profil og online booking',
+      'Korte videoer til de sociale medier',
+      'Et udkast, du kan se, før noget går live',
+    ],
+  },
+
+  /** Overskriften over prisberegneren på forsiden (selve beregneren har sin egen overskrift). */
+  calc: {
+    title: 'Se din pris',
+    intro: 'Svar på et par spørgsmål, så ser du prisen med det samme. Du kan altid ringe i stedet.',
   },
 
   cards: {
-    eyebrow: 'Det kan jeg hjælpe med',
-    title: 'Vælg det, du mangler.',
+    title: 'Det kan jeg hjælpe med',
+    intro: 'Vælg en eller flere ydelser. Prisen ser du i beregneren.',
     items: [
       {
         service: 'hjemmeside',
@@ -97,6 +113,34 @@ export const home = {
       },
     ],
     more: 'Se pakker',
+  },
+
+  /** To demoer lige under beregneren (id fra src/content.demos.js). Kun egne, fiktive demoer. */
+  examples: {
+    title: 'Se, hvordan en hjemmeside kan se ud',
+    note: 'To eksempler, jeg selv har lavet, så du kan se stil og funktioner. Indholdet er opdigtet, og intet sendes, bestilles eller bookes.',
+    tag: 'Demo',
+    open: 'Åbn demoen',
+    all: 'Se alle fire eksempler',
+    /** Beskårne udsnit (uden OviaSpecs-striben), lavet af scripts/demo-shots.mjs --crops-only. */
+    items: [
+      {
+        id: 'restaurant',
+        preview: {
+          desktop: { src: '/demoer/restaurant-udsnit-desktop.webp', width: 680, height: 470 },
+          mobile: { src: '/demoer/restaurant-udsnit-mobile.webp', width: 340, height: 600 },
+        },
+        fits: 'Passer til en restaurant eller café, der vil vise menukortet. Bordbestilling kan lægges til som tilvalg.',
+      },
+      {
+        id: 'salon',
+        preview: {
+          desktop: { src: '/demoer/salon-udsnit-desktop.webp', width: 680, height: 470 },
+          mobile: { src: '/demoer/salon-udsnit-mobile.webp', width: 340, height: 600 },
+        },
+        fits: 'Passer til en salon eller frisør, der vil vise behandlinger og priser. Online booking kan lægges til som tilvalg.',
+      },
+    ],
   },
 
   steps: {
@@ -127,7 +171,7 @@ export const about = {
   title: 'Jeg er én person. Det er mig, du taler med.',
   body: [
     'Jeg hedder Ronny Hong, og OviaSpecs er mig. Der er ingen sælger, ingen projektleder og ingen kundeservice. Den, du taler med, er den, der laver arbejdet.',
-    'Jeg er en lille virksomhed i Aarhus-området og har ikke en lang kundeliste at vise frem endnu. Til gengæld får du klare priser, et udkast du kan se, før det går live, og én at ringe til, når noget skal rettes.',
+    'OviaSpecs er nyt og drives fra Aarhus-området. Du får klare priser, et udkast du kan se, før det går live, og én at ringe til, når noget skal rettes.',
     'Hvis en opgave ligger uden for det, jeg kan, siger jeg det, før jeg går i gang.',
   ],
   portrait: {
@@ -143,8 +187,10 @@ export const about = {
 export const contactSection = {
   id: 'kontakt',
   eyebrow: 'Kontakt',
-  title: 'Ring eller skriv. Så tager jeg den derfra.',
-  body: 'Fortæl kort, hvad du laver, og hvad du mangler. Det koster ikke noget at spørge.',
+  title: 'Tal direkte med mig',
+  body: 'Ring, skriv eller send en SMS, og fortæl kort, hvad du laver, og hvad du mangler. Jeg hjælper dig med at finde ud af, hvad der giver mening, og du taler med mig selv, ikke en sælger. Det koster ikke noget at spørge.',
+  /** Kun om formularen under prisberegneren (svartiden er besluttet af Ronny). */
+  formNote: 'Foretrækker du at skrive, kan du sende en forespørgsel med dine valg fra prisberegneren. Jeg svarer inden for 24 timer.',
   phoneLabel: 'Telefon',
   mailLabel: 'Mail',
   smsHint: 'Eller send en SMS',
@@ -153,7 +199,7 @@ export const contactSection = {
 /* ---- Footer ------------------------------------------------------------ */
 
 export const footer = {
-  tagline: 'Hjemmesider, marketing og booking til lokale virksomheder.',
+  tagline: 'Hjemmeside, Google-profil, booking og korte videoer til lokale virksomheder i Aarhus-området. Du taler direkte med mig.',
   columns: [
     {
       title: 'Ydelser',
@@ -188,7 +234,7 @@ export const meta = {
 /* ---- Privatlivspolitik ------------------------------------------------- */
 
 export const privacy = {
-  updated: '3. oktober 2026',
+  updated: '7. oktober 2026',
   /** Henvendelser slettes efter så mange måneder (også automatisk i databasen, worker/index.js). */
   retentionMonths: 12,
   /** [udbyder, hvad den bruges til] */

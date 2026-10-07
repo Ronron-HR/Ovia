@@ -6,6 +6,7 @@ import { cta, links } from '../data/texts.js'
  * så det også kan læses og tastes af, og begge er almindelige links
  * (tel:/mailto:/sms:), der virker uden JavaScript.
  *
+ * `primary` gør "Ring" til den fyldte knap (bruges på den mørke kontaktflade).
  * `stack` lægger alle knapper på hver sin linje på mobil.
  * `sms` tilføjer en tredje knap; `smsText` og `mailSubject`/`mailBody`
  * forudfylder beskeden (bruges af prisberegneren).
@@ -19,6 +20,7 @@ export default function ContactButtons({
   className = '',
   stretch = false,
   stack = false,
+  primary = false,
 }) {
   const query = [
     mailSubject && `subject=${encodeURIComponent(mailSubject)}`,
@@ -35,7 +37,7 @@ export default function ContactButtons({
 
   return (
     <div className={`${box} ${className}`}>
-      <a href={links.tel} className={`btn btn-ghost whitespace-nowrap ${wide}`}>
+      <a href={links.tel} className={`btn ${primary ? 'btn-primary' : 'btn-ghost'} whitespace-nowrap ${wide}`}>
         <PhoneIcon />
         <span>
           {cta.call} <span className="tabular-nums">{contact.phone}</span>

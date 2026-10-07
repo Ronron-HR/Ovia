@@ -10,6 +10,8 @@ import {
   bookingSubscriptionNote,
   calculator,
   contact,
+  driftFrom,
+  driftPlanList,
   formatKr,
   fromPrice,
   paidStartText,
@@ -37,13 +39,17 @@ const toCalculator = { label: 'Se din pris', href: paths.priser }
 
 /* ---- Hjemmeside -------------------------------------------------------- */
 
-const monthlies = [...new Set(web.tiers.map((t) => t.monthly))]
+/** Planerne med månedspris ("Basis ..., Plus ... og Ekstra ...") ud fra driftPlans i pricing.js. */
+const planList = () => {
+  const parts = driftPlanList.map((p) => `${p.name} ${formatKr(p.monthly)}/md`)
+  return `${parts.slice(0, -1).join(', ')} og ${parts.at(-1)}`
+}
 
 export const hjemmeside = {
   service: 'hjemmeside',
   meta: {
     title: 'Hjemmeside til lokale virksomheder | OviaSpecs',
-    description: `En hjemmeside, der virker på mobilen. Tre faste pakker fra ${formatKr(web.tiers[0].price)} plus drift fra ${formatKr(monthlies[0])}/md. Ring ${contact.phone}.`,
+    description: `En hjemmeside, der virker på mobilen. Tre faste pakker fra ${formatKr(web.tiers[0].price)} plus drift fra ${formatKr(driftFrom)}/md. Ring ${contact.phone}.`,
   },
   eyebrow: 'Hjemmeside',
   title: 'Dine kunder leder efter dig på mobilen.',
@@ -58,8 +64,8 @@ export const hjemmeside = {
     items: [
       { title: 'Lavet til telefonen', text: 'Siden er bygget til mobilen først og virker også på computeren.' },
       { title: 'Det vigtigste øverst', text: 'Hvad du laver, dine åbningstider og en knap til at ringe eller skrive.' },
-      { title: 'Synlig på Google', text: 'I Vækst og Fuld fart sætter jeg din Google-profil op og laver SEO.' },
-      { title: 'Drift hver måned', text: 'Siden holdes online og sikker, med domæne og backup, og op til 2 små ændringer om måneden.' },
+      { title: 'Synlig på Google', text: 'I Vækst og Fuld fart sætter jeg din Google-profil op, så du kan blive fundet.' },
+      { title: 'Drift hver måned', text: `Siden holdes online og sikker, med domæne og backup. Du vælger Basis, Plus eller Ekstra, alt efter hvor meget indholdsarbejde du vil have med.` },
     ],
   },
   concepts: {
@@ -72,7 +78,7 @@ export const hjemmeside = {
   packages: {
     eyebrow: 'Pakker',
     title: 'Tre pakker. Klare priser.',
-    intro: 'Du betaler én gang for siden og derefter drift hver måned.',
+    intro: 'Du vælger to ting: pakken, du betaler én gang, og driftsplanen, du betaler hver måned.',
   },
   toCalculator,
   faq: {
@@ -81,15 +87,19 @@ export const hjemmeside = {
     items: [
       {
         q: 'Hvad koster det?',
-        a: `${tierList(web)} Dertil kommer drift på ${monthlies.map((m) => `${formatKr(m)}/md`).join(' eller ')} alt efter pakke. ${web.upgradeNote} I Fuld fart koster en ekstra underside ud over 8 sider ${formatKr(web.addons.extraPage.price)} ${priceNote && !priceNote.endsWith('.') ? `${priceNote}.` : priceNote}`,
+        a: `${tierList(web)} Dertil kommer drift hver måned: ${planList()}. Du kan vælge en hvilken som helst plan til en hvilken som helst pakke. ${web.upgradeNote} I Fuld fart koster en ekstra underside ud over 8 sider ${formatKr(web.addons.extraPage.price)}. ${priceNote && !priceNote.endsWith('.') ? `${priceNote}.` : priceNote}`,
       },
       {
         q: 'Hvad er inkluderet i drift?',
-        a: `${web.drift.included.join('. ')}. ${web.drift.fast} ${web.drift.unusedChanges} ${web.drift.morePagesFaq(formatKr(web.addons.extraPage.price))}`,
+        a: `${web.drift.included.join('. ')}, i alle tre planer. Forskellen er indholdsarbejde: ${driftPlanList.map((p) => `${p.name}: ${p.content.toLowerCase()}`).join('. ')}. ${web.drift.contentWork} ${web.drift.notContentWork} ${web.drift.unusedTime} ${web.drift.extraWork} ${web.drift.morePagesFaq(formatKr(web.addons.extraPage.price))}`,
+      },
+      {
+        q: 'Hvilken driftsplan skal jeg vælge?',
+        a: `Den mindste, der dækker dit behov. Skal du ikke have ændret noget, er ${driftPlanList[0].name} nok. ${driftPlanList[1].name} passer til små ændringer nu og da, og ${driftPlanList[2].name} til dig, der jævnligt skal have ændret tekst og billeder. Planen er uafhængig af, hvilken pakke du vælger.`,
       },
       {
         q: 'Hvem ejer domænet og siden?',
-        a: `${web.drift.domain} Vil du have siden på din egen konto fra starten, koster det ${formatKr(web.addons.ownAccount.price)} ekstra som engangskøb i stedet for drift (på alle pakker, men ikke med booking). ${calculator.driftWithBooking} ${web.drift.buyout(formatKr(web.drift.buyoutPrice))}`,
+        a: `${web.drift.domain} Vil du have siden på din egen konto fra starten, koster det ${formatKr(web.addons.ownAccount.price)} ekstra én gang i stedet for en driftsplan (på alle pakker). ${web.addons.ownAccount.note} ${web.drift.buyout(formatKr(web.drift.buyoutPrice))}`,
       },
       {
         q: 'Hvad hvis jeg vil stoppe?',
