@@ -48,7 +48,7 @@ const planList = () => {
 export const hjemmeside = {
   service: 'hjemmeside',
   meta: {
-    title: 'Hjemmeside til lokale virksomheder | OviaSpecs',
+    title: 'Hjemmeside til virksomheder | OviaSpecs',
     description: `En hjemmeside, der virker på mobilen. Tre faste pakker fra ${formatKr(web.tiers[0].price)} plus drift fra ${formatKr(driftFrom)}/md. Ring ${contact.phone}.`,
   },
   eyebrow: 'Hjemmeside',
@@ -192,7 +192,7 @@ const bg = services.bookingGoogle
 export const bookingGoogle = {
   service: 'bookingGoogle',
   meta: {
-    title: 'Booking & Google-profil til lokale virksomheder | OviaSpecs',
+    title: 'Booking & Google-profil til virksomheder | OviaSpecs',
     description: `Google-profil i orden, online booking og et QR-skilt til anmeldelser. Klare priser fra ${formatKr(bg.tiers[0].price)} Start med et gratis tjek af din Google-profil.`,
   },
   eyebrow: 'Booking & Google',

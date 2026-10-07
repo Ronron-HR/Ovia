@@ -6,7 +6,7 @@ import TourLauncher from './TourLauncher.jsx'
 /**
  * FORSIDENS FØRSTE SKÆRMBILLEDE OG BEREGNEREN
  *
- * Heroen er kort: hvem det er til (lokale virksomheder i Aarhus-området), hvad
+ * Heroen er kort: hvem det er til (virksomheder), hvad
  * man får, og to handlinger: "Se din pris" (hopper til beregneren, sidens
  * eneste blå knap her) og "Vis mig rundt" (rundvisningen). Ring og Mail er små
  * tekstlinks, så de ikke konkurrerer; de står også i nav og i den faste

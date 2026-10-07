@@ -68,7 +68,7 @@ export const cta = {
 
 export const home = {
   hero: {
-    title: 'Hjemmeside, Google og booking til lokale virksomheder i Aarhus-området',
+    title: 'Hjemmeside, Google og booking til virksomheder',
     /** Den korte forklaring under overskriften. */
     short: 'Jeg laver det hele selv, og du taler direkte med mig. Svar på et par spørgsmål, så ser du prisen med det samme.',
     /** Hovedhandlingen (hopper til beregneren). */
@@ -171,7 +171,7 @@ export const about = {
   title: 'Jeg er én person. Det er mig, du taler med.',
   body: [
     'Jeg hedder Ronny Hong, og OviaSpecs er mig. Der er ingen sælger, ingen projektleder og ingen kundeservice. Den, du taler med, er den, der laver arbejdet.',
-    'OviaSpecs er nyt og drives fra Aarhus-området. Du får klare priser, et udkast du kan se, før det går live, og én at ringe til, når noget skal rettes.',
+    'OviaSpecs er nyt. Du får klare priser, et udkast du kan se, før det går live, og én at ringe til, når noget skal rettes.',
     'Hvis en opgave ligger uden for det, jeg kan, siger jeg det, før jeg går i gang.',
   ],
   portrait: {
@@ -199,7 +199,7 @@ export const contactSection = {
 /* ---- Footer ------------------------------------------------------------ */
 
 export const footer = {
-  tagline: 'Hjemmeside, Google-profil, booking og korte videoer til lokale virksomheder i Aarhus-området. Du taler direkte med mig.',
+  tagline: 'Hjemmeside, Google-profil, booking og korte videoer til virksomheder. Du taler direkte med mig.',
   columns: [
     {
       title: 'Ydelser',
@@ -225,9 +225,9 @@ export const footer = {
 
 export const meta = {
   home: {
-    title: 'OviaSpecs | Hjemmeside, marketing og booking til lokale virksomheder',
+    title: 'OviaSpecs | Hjemmeside, marketing og booking til virksomheder',
     description:
-      'Jeg hjælper lokale virksomheder med hjemmeside, Google-profil, booking og korte videoer. Klare priser, og du taler med den, der laver arbejdet. Ring 53 61 36 99.',
+      'Jeg hjælper virksomheder med hjemmeside, Google-profil, booking og korte videoer. Klare priser, og du taler med den, der laver arbejdet. Ring 53 61 36 99.',
   },
 }
 

@@ -34,7 +34,7 @@ export const organisationLd = () => ({
   image: 'https://oviaspecs.com/og.jpg',
   email: contact.email,
   telephone: contact.phoneHref,
-  description: 'Hjemmesider, marketing og booking til lokale virksomheder.',
+  description: 'Hjemmesider, marketing og booking til virksomheder.',
   founder: { '@type': 'Person', name: contact.name },
   areaServed: { '@type': 'Country', name: 'Danmark' },
   knowsLanguage: 'da',
