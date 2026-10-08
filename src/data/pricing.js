@@ -94,7 +94,7 @@ const makePlan = (id, name, monthly, minutes, content, summary) => ({
 
 export const driftPlans = {
   basis: makePlan('basis', 'Basis', 99, 0, 'Ingen inkluderede indholdsændringer', 'Ren drift og sikkerhed. Til dig, der ikke regner med at skulle have ændret noget, og som vil have den billigste løsning til at holde siden kørende.'),
-  plus: makePlan('plus', 'Plus', 199, 15, 'Små rettelser og nye billeder nu og da', 'Vi hjælper med udskiftning af billeder, mindre tekstrettelser og opsætning af nyheder. Til små ændringer nu og da, uden at du skal bekymre dig om teknikken.'),
+  plus: makePlan('plus', 'Plus', 199, 15, 'Hjælp til billeder, tekst og nyheder', 'Vi hjælper med udskiftning af billeder, mindre tekstrettelser og opsætning af nyheder. Til små ændringer nu og da, uden at du skal bekymre dig om teknikken.'),
   ekstra: makePlan('ekstra', 'Ekstra', 399, 30, 'Flere rettelser og nyt indhold hver måned', 'Fuld opdateringsservice. Vi er din faste webmaster, når du jævnligt skal have ændret tekst og billeder.'),
 }
 
@@ -111,7 +111,7 @@ export const driftPlanList = Object.values(driftPlans)
 /** Laveste månedspris for drift (bruges, hvor pakken nævner drift: "fra 99 kr./md"). */
 export const driftFrom = Math.min(...driftPlanList.map((p) => p.monthly))
 
-/** Plan med måned og indhold som tekst, fx "Plus, 199 kr./md, små rettelser og nye billeder nu og da". */
+/** Plan med måned og indhold som tekst, fx "Plus, 199 kr./md, hjælp til billeder, tekst og nyheder". */
 export const driftSummary = (p) => `${p.name}, ${formatKr(p.monthly)}/md, ${p.content.charAt(0).toLowerCase()}${p.content.slice(1)}`
 
 /* ---- Overlap mellem hjemmeside og Booking & Google ----------------------

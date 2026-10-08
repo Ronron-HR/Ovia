@@ -149,7 +149,7 @@ check(danishPhone('+45 53 61 36 99') === '53613699', 'dansk nummer normaliseres 
     'Kontakt: kunde@example.com (mail)',
     'Navn / virksomhed: Café Test',
     'Hjemmeside, Vækst: 4.000 kr. + 199 kr./md',
-    'Drift: Plus, 199 kr./md, små rettelser og nye billeder nu og da',
+    'Drift: Plus, 199 kr./md, hjælp til billeder, tekst og nyheder',
     'Marketing, Vækst: 2.500 kr./md',
     'Nu: 4.000 kr.',
     'Pr. md: 2.699 kr./md',
@@ -164,7 +164,7 @@ check(danishPhone('+45 53 61 36 99') === '53613699', 'dansk nummer normaliseres 
 // Mailens opsummering viser pakke, driftsplan og beløb for hver plan og for egen konto (håndregnet).
 for (const [drift, want] of [
   ['basis', ['Hjemmeside, Vækst: 4.000 kr. + 99 kr./md', 'Drift: Basis, 99 kr./md, ingen inkluderede indholdsændringer', 'Nu: 4.000 kr.', 'Pr. md: 99 kr./md']],
-  ['plus', ['Hjemmeside, Vækst: 4.000 kr. + 199 kr./md', 'Drift: Plus, 199 kr./md, små rettelser og nye billeder nu og da', 'Pr. md: 199 kr./md']],
+  ['plus', ['Hjemmeside, Vækst: 4.000 kr. + 199 kr./md', 'Drift: Plus, 199 kr./md, hjælp til billeder, tekst og nyheder', 'Pr. md: 199 kr./md']],
   ['ekstra', ['Hjemmeside, Vækst: 4.000 kr. + 399 kr./md', 'Drift: Ekstra, 399 kr./md, flere rettelser og nyt indhold hver måned', 'Pr. md: 399 kr./md']],
   ['egen', ['Hjemmeside, Vækst: 5.000 kr. i alt, ingen månedlig drift', 'Drift: Egen konto/hosting (ingen månedlig betaling til OviaSpecs for drift)', 'Nu: 5.000 kr.', 'Pr. md: 0 kr./md']],
 ]) {

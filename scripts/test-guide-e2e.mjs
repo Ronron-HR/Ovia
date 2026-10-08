@@ -101,7 +101,7 @@ for (const width of [375, 1440]) {
   text = await calc(page)
   check(/Trin 3 af 4/.test(text) && /Drift af din hjemmeside/.test(text), `${tag}: driftstrinnet mangler eller tæller forkert: ${text.slice(0, 120)}`)
   check(/Basis/.test(text) && /99\s*kr\./.test(text) && /Ingen inkluderede indholdsændringer/.test(text), `${tag}: Basis mangler`)
-  check(/Plus/.test(text) && /199\s*kr\./.test(text) && /Små rettelser og nye billeder nu og da/.test(text), `${tag}: Plus mangler`)
+  check(/Plus/.test(text) && /199\s*kr\./.test(text) && /Hjælp til billeder, tekst og nyheder/.test(text), `${tag}: Plus mangler`)
   check(/Ekstra/.test(text) && /399\s*kr\./.test(text) && /Flere rettelser og nyt indhold hver måned/.test(text), `${tag}: Ekstra mangler`)
   check(/Egen konto\/hosting/.test(text) && /Ingen månedlig betaling til OviaSpecs for drift/.test(text) && /udgifter til hosting og domæne/.test(text), `${tag}: egen konto mangler`)
   check(/Hvad er drift\?/.test(text) && /Ubrugt tid overføres ikke/.test(text) && /ekskl\. moms/.test(text), `${tag}: forklaring eller moms mangler`)
