@@ -3,8 +3,8 @@
  * led i `npm run build`, så en pris, der bryder reglerne, stopper udgivelsen.
  *
  * De forventede priser er regnet ud for hånd her i testen (ikke hentet fra koden):
- * hjemmesidepakker 2.500 / 4.000 / 5.000 kr. engangs, driftsplaner Basis 199 /
- * Plus 299 / Ekstra 399 kr. pr. måned (0 / 15 / 30 min. indholdsarbejde), egen konto
+ * hjemmesidepakker 2.500 / 4.000 / 5.000 kr. engangs, driftsplaner Basis 99 /
+ * Plus 199 / Ekstra 399 kr. pr. måned (0 / 15 / 30 min. indholdsarbejde), egen konto
  * +1.000 kr. engangs (ingen månedspris), booking på siden +500 kr., ekstra sider i
  * Fuld fart 400 kr. pr. side over 8.
  *
@@ -52,7 +52,7 @@ const ctx = (selected, answers) => JSON.stringify({ selected, answers })
 
 /* ---- Håndregnede forventninger (uafhængige af koden) --------------------- */
 const PACKAGE = { '1': ['start', 2500], '2-5': ['vaekst', 4000], '6-8': ['fuld-fart', 5000] }
-const PLAN = { basis: 199, plus: 299, ekstra: 399 }
+const PLAN = { basis: 99, plus: 199, ekstra: 399 }
 const OWN_ACCOUNT = 1000
 const BOOKING = 500
 const EXTRA_PAGE = 400
@@ -114,7 +114,7 @@ for (const selected of subsets) {
 const web1 = (answers, selected = ['hjemmeside']) => quote({ selected, answers }).lines.find((l) => l.key === 'hjemmeside')
 const total = (selected, answers) => quote({ selected, answers }).total
 
-// De 9 kombinationer pakke × plan, begge uafhængige: engangs 2.500/4.000/5.000, måned 199/299/399.
+// De 9 kombinationer pakke × plan, begge uafhængige: engangs 2.500/4.000/5.000, måned 99/199/399.
 for (const [sider, [tier, once]] of Object.entries(PACKAGE)) {
   for (const [plan, monthly] of Object.entries(PLAN)) {
     const answers = { sider, bestilling: 'nej', drift: plan }
@@ -146,7 +146,7 @@ for (const [ekstra, extra] of [['9', 1], ['12', 4], ['20', 12]]) {
 // Fuld fart kræver ikke Ekstra, og ingen plan er forvalgt: uden drift er der ingen månedspris, og det markeres.
 {
   const basis = web1({ sider: '6-8', bestilling: 'nej', drift: 'basis' })
-  if (basis.monthly !== 199) fail(`Fuld fart + Basis: ${basis.monthly}/md`)
+  if (basis.monthly !== 99) fail(`Fuld fart + Basis: ${basis.monthly}/md`)
   const none = web1({ sider: '6-8', bestilling: 'nej' })
   if (none.monthly !== 0 || !none.driftMissing || none.driftPlan) fail(`Uden drift er der en standard: ${none.monthly}/md ${none.driftPlan}`)
   const drift = calculator.questions.hjemmeside.find((x) => x.id === 'drift')
@@ -157,16 +157,16 @@ for (const [ekstra, extra] of [['9', 1], ['12', 4], ['20', 12]]) {
 {
   // Vækst indeholder Google-profilen: Booking & Google Vækst (1.000) minus 500 = 500.
   const a = total(['hjemmeside', 'bookingGoogle'], { sider: '2-5', bestilling: 'nej', drift: 'plus', booking: 'ja', anmeldelser: 'nej' })
-  if (a.once !== 4500 || a.monthly !== 299) fail(`Vækst + B&G Vækst: ${a.once} + ${a.monthly}/md (forventet 4500 + 299)`)
+  if (a.once !== 4500 || a.monthly !== 199) fail(`Vækst + B&G Vækst: ${a.once} + ${a.monthly}/md (forventet 4500 + 199)`)
   // Med booking på siden er hele B&G Vækst dækket.
   const b = quote({ selected: ['hjemmeside', 'bookingGoogle'], answers: { sider: '2-5', bestilling: 'ja', drift: 'plus', booking: 'ja', anmeldelser: 'nej' } })
-  if (b.total.once !== 4500 || b.total.monthly !== 299 || !b.lines[1].allIncluded) fail(`Vækst + booking + B&G Vækst: ${b.total.once} + ${b.total.monthly}/md`)
+  if (b.total.once !== 4500 || b.total.monthly !== 199 || !b.lines[1].allIncluded) fail(`Vækst + booking + B&G Vækst: ${b.total.once} + ${b.total.monthly}/md`)
   // Start har ikke Google-profilen: B&G Fuld fart (1.500) uden fradrag = 2.500 + 1.500.
   const c = total(['hjemmeside', 'bookingGoogle'], { sider: '1', bestilling: 'nej', drift: 'basis', booking: 'ja', anmeldelser: 'ja' })
-  if (c.once !== 4000 || c.monthly !== 199) fail(`Start + B&G Fuld fart: ${c.once} + ${c.monthly}/md (forventet 4000 + 199)`)
+  if (c.once !== 4000 || c.monthly !== 99) fail(`Start + B&G Fuld fart: ${c.once} + ${c.monthly}/md (forventet 4000 + 99)`)
   // Start + booking på siden + B&G Fuld fart: booking (500) trækkes fra B&G.
   const d = total(['hjemmeside', 'bookingGoogle'], { sider: '1', bestilling: 'ja', drift: 'basis', booking: 'ja', anmeldelser: 'ja' })
-  if (d.once !== 4000 || d.monthly !== 199) fail(`Start + booking + B&G Fuld fart: ${d.once} + ${d.monthly}/md (forventet 4000 + 199)`)
+  if (d.once !== 4000 || d.monthly !== 99) fail(`Start + booking + B&G Fuld fart: ${d.once} + ${d.monthly}/md (forventet 4000 + 99)`)
   // "1 side + booking via siden" = "Start + Booking & Google Vækst" minus Google-profilen.
   const viaSite = total(['hjemmeside'], { sider: '1', bestilling: 'ja', drift: 'plus' })
   const viaBg = total(['hjemmeside', 'bookingGoogle'], { sider: '1', bestilling: 'nej', drift: 'plus', booking: 'ja', anmeldelser: 'nej' })
@@ -183,15 +183,15 @@ for (const [ekstra, extra] of [['9', 1], ['12', 4], ['20', 12]]) {
 // Marketing: sin egen månedspris, lagt oven i hjemmesidens drift uden dobbeltregning.
 {
   const t = total(['hjemmeside', 'marketing'], { sider: '2-5', bestilling: 'nej', drift: 'plus', videoer: '8', poste: 'ja', annoncer: 'nej' })
-  if (t.once !== 4000 || t.monthly !== 299 + 2500) fail(`Hjemmeside + marketing: ${t.once} + ${t.monthly}/md (forventet 4000 + 2799)`)
+  if (t.once !== 4000 || t.monthly !== 199 + 2500) fail(`Hjemmeside + marketing: ${t.once} + ${t.monthly}/md (forventet 4000 + 2699)`)
   const own = total(['hjemmeside', 'marketing'], { sider: '1', bestilling: 'nej', drift: 'egen', videoer: '4', poste: 'nej', annoncer: 'nej' })
   if (own.once !== 3500 || own.monthly !== 1500 || !own.noDrift) fail(`Egen konto + marketing: ${own.once} + ${own.monthly}/md (forventet 3500 + 1500)`)
 }
 
-// Gamle links: drift=drift → planen med samme månedspris som linket viste (Start/Vækst 299 → Plus, Fuld fart 399 → Ekstra).
+// Gamle links: drift=drift → planen med samme indhold som linket viste (Start/Vækst → Plus, Fuld fart 399 → Ekstra).
 for (const [search, plan, monthly] of [
-  ['sider=1', 'plus', 299],
-  ['sider=2-5', 'plus', 299],
+  ['sider=1', 'plus', 199],
+  ['sider=2-5', 'plus', 199],
   ['sider=6-8', 'ekstra', 399],
   ['sider=9%2B&ekstra=10', 'ekstra', 399],
 ]) {
@@ -234,7 +234,7 @@ if (/aftales|ca\./i.test(calculator.finalNote)) fail(`finalNote: "${calculator.f
 // Planerne: tre, i rækkefølge, med de forventede minutter, og ingen er "mest populær".
 {
   const list = Object.values(driftPlans)
-  const want = [['basis', 199, 0], ['plus', 299, 15], ['ekstra', 399, 30]]
+  const want = [['basis', 99, 0], ['plus', 199, 15], ['ekstra', 399, 30]]
   if (list.length !== 3 || want.some(([id, m, min], i) => list[i].id !== id || list[i].monthly !== m || list[i].minutes !== min)) {
     fail(`Driftsplaner: ${JSON.stringify(list.map((p) => [p.id, p.monthly, p.minutes]))}`)
   }
@@ -339,7 +339,7 @@ if (switchMismatches((key, tierId, answers) => answers, false) === 0) {
 {
   const q = quote({ selected: ['hjemmeside'], answers: { sider: '2-5', bestilling: 'nej', drift: 'plus' } })
   const text = summaryLines(q).join('\n')
-  for (const want of ['Hjemmeside, Vækst: 4.000 kr. + 299 kr./md', 'Drift: Plus, 299 kr./md, op til 15 min. indholdsarbejde pr. måned', 'I alt: 4.000 kr. nu + 299 kr./md']) {
+  for (const want of ['Hjemmeside, Vækst: 4.000 kr. + 199 kr./md', 'Drift: Plus, 199 kr./md, op til 15 min. indholdsarbejde pr. måned', 'I alt: 4.000 kr. nu + 199 kr./md']) {
     if (!text.includes(want)) fail(`Opsummeringen mangler "${want}":\n${text}`)
   }
 }

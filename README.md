@@ -74,7 +74,7 @@ Henvendelserne kan ses i D1 → ovia-henvendelser → Console: `SELECT created_a
 
 ## Drift, guide og rundvisning
 
-- **Drift er et eget valg** (ikke en del af hjemmesidepakken): `driftPlans` i `src/data/pricing.js` (Basis 199, Plus 299, Ekstra 399 kr./md; minutter indholdsarbejde pr. måned: 0/15/30) eller egen konto/hosting (tillæg `ownAccount`, ingen månedlig betaling til OviaSpecs). Adresselinjen: `drift=basis|plus|ekstra|egen`. Gamle links med `drift=drift` bliver til den plan, der havde samme månedspris (Start/Vækst → Plus, Fuld fart → Ekstra); mangler `drift`, vælger kunden selv.
+- **Drift er et eget valg** (ikke en del af hjemmesidepakken): `driftPlans` i `src/data/pricing.js` (Basis 99, Plus 199, Ekstra 399 kr./md; minutter indholdsarbejde pr. måned: 0/15/30) eller egen konto/hosting (tillæg `ownAccount`, ingen månedlig betaling til OviaSpecs). Adresselinjen: `drift=basis|plus|ekstra|egen`. Gamle links med `drift=drift` bliver til den plan, der havde samme indhold (Start/Vækst → Plus, Fuld fart → Ekstra); mangler `drift`, vælger kunden selv.
 - **Behovsguiden** ("Hjælp mig med at vælge"): `src/guide.js` (regler), tekster i `calculator.guide`, UI i `NeedsGuide.jsx`. Tilstand: `hjaelp=<trin>&g-<spørgsmål>=<svar>`.
 - **Rundvisningen** ("Vis mig rundt"): `TourLauncher.jsx` (knap og invitation ved første besøg), `Tour.jsx` (indlæses først ved brug), `src/data/tour.js` (trin og tekster), mål via `data-tour="calc|guide|drift|price|examples|contact"`. Afslutning/fravalg huskes kun i browserens localStorage.
 - Tests: `scripts/test-guide.mjs`, `test-guide-e2e.mjs`, `test-tour-e2e.mjs`, `test-a11y-e2e.mjs` (kræver kørende preview; `ONLY=tastatur,priser,… ` for dele). Skærmbilleder: `node scripts/ovia-shots.mjs <mappe>` og `ovia-shots-flow.mjs <mappe>`.

@@ -93,25 +93,25 @@ const makePlan = (id, name, monthly, minutes, summary) => ({
 })
 
 export const driftPlans = {
-  basis: makePlan('basis', 'Basis', 199, 0, 'Til dig, der ikke regner med at skulle have ændret noget.'),
-  plus: makePlan('plus', 'Plus', 299, 15, 'Til små ændringer nu og da.'),
-  ekstra: makePlan('ekstra', 'Ekstra', 399, 30, 'Til dig, der jævnligt skal have ændret tekst og billeder.'),
+  basis: makePlan('basis', 'Basis', 99, 0, 'Ren drift og sikkerhed. Til dig, der ikke regner med at skulle have ændret noget, og som vil have den billigste løsning til at holde siden kørende.'),
+  plus: makePlan('plus', 'Plus', 199, 15, 'Til mindre løbende justeringer: nye billeder, små tekstrettelser og nyheder, uden at du skal bekymre dig om teknikken.'),
+  ekstra: makePlan('ekstra', 'Ekstra', 399, 30, 'Fuld opdateringsservice. Vi er din faste webmaster, når du jævnligt skal have ændret tekst og billeder.'),
 }
 
 /**
  * Gamle links (før driftsplanerne) har drift=drift. De skifter til planen med
- * samme månedspris, som linket viste dengang: Start og Vækst hed 299 kr./md
- * (nu Plus), Fuld fart 399 kr./md (nu Ekstra). Se parse() i src/calculator.js.
+ * samme indhold, som linket viste dengang: Start og Vækst hed 299 kr./md
+ * (nu Plus, 199 kr./md), Fuld fart 399 kr./md (nu Ekstra). Se parse() i src/calculator.js.
  */
 export const legacyDriftPlan = { start: 'plus', vaekst: 'plus', 'fuld-fart': 'ekstra' }
 
 /** Planerne som liste i visningsrækkefølge. */
 export const driftPlanList = Object.values(driftPlans)
 
-/** Laveste månedspris for drift (bruges, hvor pakken nævner drift: "fra 199 kr./md"). */
+/** Laveste månedspris for drift (bruges, hvor pakken nævner drift: "fra 99 kr./md"). */
 export const driftFrom = Math.min(...driftPlanList.map((p) => p.monthly))
 
-/** Plan med måned og indhold som tekst, fx "Plus, 299 kr./md, op til 15 min. indholdsarbejde pr. måned". */
+/** Plan med måned og indhold som tekst, fx "Plus, 199 kr./md, op til 15 min. indholdsarbejde pr. måned". */
 export const driftSummary = (p) => `${p.name}, ${formatKr(p.monthly)}/md, ${p.content.charAt(0).toLowerCase()}${p.content.slice(1)}`
 
 /* ---- Overlap mellem hjemmeside og Booking & Google ----------------------
@@ -757,7 +757,7 @@ export function formatPrice(service, n) {
 }
 
 /** Laveste pakkepris for en ydelse, fx "fra 2.500 kr." */
-/** "fra 2.500 kr. + drift fra 199 kr./md" for hjemmeside (drift er et særskilt valg), ellers som fromPrice. */
+/** "fra 2.500 kr. + drift fra 99 kr./md" for hjemmeside (drift er et særskilt valg), ellers som fromPrice. */
 export function fromPriceWithDrift(service) {
   const base = fromPrice(service)
   return service.id === 'hjemmeside' ? `${base} + drift fra ${formatKr(driftFrom)}/md` : base

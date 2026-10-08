@@ -132,8 +132,8 @@ const PACK = {
   'fuld-fart': { label: '6-8 sider', sider: '6-8', once: 5000, name: 'Fuld fart' },
 }
 const PLAN = {
-  basis: { label: 'Basis', monthly: 199, extra: 0 },
-  plus: { label: 'Plus', monthly: 299, extra: 0 },
+  basis: { label: 'Basis', monthly: 99, extra: 0 },
+  plus: { label: 'Plus', monthly: 199, extra: 0 },
   ekstra: { label: 'Ekstra', monthly: 399, extra: 0 },
   egen: { label: 'Egen konto/hosting', monthly: 0, extra: 1000 },
 }
@@ -283,11 +283,11 @@ async function testState() {
   // Delbart link i frisk kontekst (ingen delt tilstand).
   const fresh = await newPage(375)
   await open(fresh, resultUrl.startsWith('?') ? `/${resultUrl}` : resultUrl)
-  check((await shown(fresh)).once === 4000 && (await shown(fresh)).monthly === 299, 'TILSTAND delt link giver ikke samme pris i en frisk browser')
+  check((await shown(fresh)).once === 4000 && (await shown(fresh)).monthly === 199, 'TILSTAND delt link giver ikke samme pris i en frisk browser')
   // Gamle links.
   await open(fresh, '/?ydelser=hjemmeside&sider=2-5&bestilling=nej&drift=drift&trin=3')
   let s = await shown(fresh)
-  check(s.once === 4000 && s.monthly === 299, `GAMMELT link Vækst: ${s.once}/${s.monthly} ${await search(fresh)}`)
+  check(s.once === 4000 && s.monthly === 199, `GAMMELT link Vækst: ${s.once}/${s.monthly} ${await search(fresh)}`)
   await open(fresh, '/?ydelser=hjemmeside&sider=6-8&bestilling=nej&drift=drift&trin=3')
   s = await shown(fresh)
   check(s.once === 5000 && s.monthly === 399, `GAMMELT link Fuld fart: ${s.once}/${s.monthly} ${await search(fresh)}`)
@@ -767,7 +767,7 @@ async function testMotionAndNoJs() {
       const calcText = document.querySelector('#beregner')?.textContent ?? ''
       return { len: text.length, h1: main?.querySelector('h1')?.textContent ?? '', prices: /\d\.\d{3}\s*kr\./.test(document.body.textContent), hidden: hidden.map((e) => `${e.tagName} ${e.textContent.slice(0, 25)}`), calcText, sw: document.documentElement.scrollWidth }
     })
-    check(path === '/priser/' ? /2\.500/.test(await page.evaluate(() => document.body.textContent)) && /5\.000/.test(await page.evaluate(() => document.body.textContent)) && /199/.test(await page.evaluate(() => document.body.textContent)) : true, `UDEN JS ${path}: pakke- og driftspriser mangler`)
+    check(path === '/priser/' ? /2\.500/.test(await page.evaluate(() => document.body.textContent)) && /5\.000/.test(await page.evaluate(() => document.body.textContent)) && /b99b/.test(await page.evaluate(() => document.body.textContent)) : true, `UDEN JS ${path}: pakke- og driftspriser mangler`)
     check(r.len > 400 && r.h1 && r.prices, `UDEN JS ${path}: indhold mangler (tekst ${r.len}, h1 "${r.h1}", priser ${r.prices})`)
     check(r.hidden.length === 0, `UDEN JS ${path}: usynlig tekst: ${r.hidden.join('; ')}`)
     check(r.sw <= 376, `UDEN JS ${path}: vandret scroll ${r.sw}`)
@@ -836,7 +836,7 @@ async function testRegressions() {
   check(links.sms.length >= 2 && links.sms.every((h) => h.startsWith('sms:+4553613699')), `KONTAKT sms-links: ${links.sms.map((h) => h.slice(0, 30))}`)
   check(links.mail.length >= 1 && links.mail.every((h) => h.startsWith('mailto:kontakt@oviaspecs.com')), `KONTAKT mail-links: ${links.mail}`)
   const smsBody = decodeURIComponent(links.sms.find((h) => h.includes('body='))?.split('body=')[1] ?? '')
-  check(/4\.000 kr\./.test(smsBody) && /299 kr\./.test(smsBody) && /Plus/.test(smsBody), `KONTAKT sms i beregneren indeholder ikke valg og pris: ${smsBody.slice(0, 120)}`)
+  check(/4\.000 kr\./.test(smsBody) && /199 kr\./.test(smsBody) && /Plus/.test(smsBody), `KONTAKT sms i beregneren indeholder ikke valg og pris: ${smsBody.slice(0, 120)}`)
 
   // Guidens afklaring: "Jeg er ikke sikker" -> "Jeg ved det ikke" giver ingen pris, men Ring/SMS.
   await open(page, '/')

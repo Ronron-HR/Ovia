@@ -1,7 +1,7 @@
 /**
  * Test af behovsguiden (src/guide.js). De forventede priser er regnet ud for hånd
  * ud fra prislisten, ikke hentet fra koden: hjemmeside 2.500 / 4.000 / 5.000 kr. engangs,
- * driftsplaner Basis 199 / Plus 299 / Ekstra 399 kr. om måneden, egen konto +1.000 kr.
+ * driftsplaner Basis 99 / Plus 199 / Ekstra 399 kr. om måneden, egen konto +1.000 kr.
  * engangs (ingen månedspris), booking på siden +500, Booking & Google 500 / 1.000 /
  * 1.500, marketing 1.500 / 2.500 / 4.000 pr. måned.
  *
@@ -22,20 +22,20 @@ const check = (ok, msg) => {
 
 const cases = [
   // [navn, svar, engangs, pr. md, ydelse]
-  ['hjemmeside 1 side, ingen ændringer', { behov: 'hjemmeside', sider: '1', aendringer: 'nej' }, 2500, 199, 'hjemmeside'],
-  ['hjemmeside 2-5, lidt ændringer', { behov: 'hjemmeside', sider: '2-5', aendringer: 'lidt' }, 4000, 299, 'hjemmeside'],
+  ['hjemmeside 1 side, ingen ændringer', { behov: 'hjemmeside', sider: '1', aendringer: 'nej' }, 2500, 99, 'hjemmeside'],
+  ['hjemmeside 2-5, lidt ændringer', { behov: 'hjemmeside', sider: '2-5', aendringer: 'lidt' }, 4000, 199, 'hjemmeside'],
   ['hjemmeside 6-8, jævnlige ændringer', { behov: 'hjemmeside', sider: '6-8', aendringer: 'jaevnligt' }, 5000, 399, 'hjemmeside'],
-  ['hjemmeside 6-8, ingen ændringer (ikke Ekstra)', { behov: 'hjemmeside', sider: '6-8', aendringer: 'nej' }, 5000, 199, 'hjemmeside'],
+  ['hjemmeside 6-8, ingen ændringer (ikke Ekstra)', { behov: 'hjemmeside', sider: '6-8', aendringer: 'nej' }, 5000, 99, 'hjemmeside'],
   ['hjemmeside 1 side, jævnlige ændringer', { behov: 'hjemmeside', sider: '1', aendringer: 'jaevnligt' }, 2500, 399, 'hjemmeside'],
   ['hjemmeside 2-5, egen konto', { behov: 'hjemmeside', sider: '2-5', aendringer: 'egen' }, 5000, 0, 'hjemmeside'],
-  ['hjemmeside ved ikke', { behov: 'hjemmeside', sider: 'ved-ikke', aendringer: 'ved-ikke' }, 2500, 199, 'hjemmeside'],
-  ['hjemmeside, ved ikke om ændringer', { behov: 'hjemmeside', sider: '2-5', aendringer: 'ved-ikke' }, 4000, 199, 'hjemmeside'],
+  ['hjemmeside ved ikke', { behov: 'hjemmeside', sider: 'ved-ikke', aendringer: 'ved-ikke' }, 2500, 99, 'hjemmeside'],
+  ['hjemmeside, ved ikke om ændringer', { behov: 'hjemmeside', sider: '2-5', aendringer: 'ved-ikke' }, 4000, 99, 'hjemmeside'],
   ['google uden QR', { behov: 'google', anmeldelser: 'nej' }, 500, 0, 'bookingGoogle'],
   ['google med QR', { behov: 'google', anmeldelser: 'ja' }, 1500, 0, 'bookingGoogle'],
   ['google ved ikke', { behov: 'google', anmeldelser: 'ved-ikke' }, 500, 0, 'bookingGoogle'],
   ['booking, har hjemmeside', { behov: 'booking', harSide: 'ja' }, 1000, 0, 'bookingGoogle'],
   ['booking, ved ikke om hjemmeside', { behov: 'booking', harSide: 'ved-ikke' }, 1000, 0, 'bookingGoogle'],
-  ['booking, ingen side, vil have side (mindste plan)', { behov: 'booking', harSide: 'nej', ogsaaSide: 'ja' }, 3000, 199, 'hjemmeside'],
+  ['booking, ingen side, vil have side (mindste plan)', { behov: 'booking', harSide: 'nej', ogsaaSide: 'ja' }, 3000, 99, 'hjemmeside'],
   ['booking, ingen side, nok med Instagram', { behov: 'booking', harSide: 'nej', ogsaaSide: 'nej' }, 1000, 0, 'bookingGoogle'],
   ['booking, ingen side, ved ikke', { behov: 'booking', harSide: 'nej', ogsaaSide: 'ved-ikke' }, 1000, 0, 'bookingGoogle'],
   ['sociale, poster selv', { behov: 'sociale', opslag: 'nej', annoncer: 'nej' }, 0, 1500, 'marketing'],
@@ -45,7 +45,7 @@ const cases = [
   ['usikker, Google', { behov: 'usikker', fokus: 'google', anmeldelser: 'nej' }, 500, 0, 'bookingGoogle'],
   ['usikker, booking, har side', { behov: 'usikker', fokus: 'booking', harSide: 'ja' }, 1000, 0, 'bookingGoogle'],
   ['usikker, booking, ingen side', { behov: 'usikker', fokus: 'booking', harSide: 'nej' }, 1000, 0, 'bookingGoogle'],
-  ['usikker, hjemmeside', { behov: 'usikker', fokus: 'hjemmeside', sider: '1' }, 2500, 199, 'hjemmeside'],
+  ['usikker, hjemmeside', { behov: 'usikker', fokus: 'hjemmeside', sider: '1' }, 2500, 99, 'hjemmeside'],
 ]
 
 for (const [name, a, once, monthly, key] of cases) {
@@ -71,7 +71,7 @@ for (const [name, a, once, monthly, key] of cases) {
 
 // Hjemmesiden: spørgsmålet om ændringer afløser bookingspørgsmålet, og planen følger svaret.
 check(questionList({ behov: 'hjemmeside' }).join() === 'behov,sider,aendringer', `hjemmesidens spørgsmål: ${questionList({ behov: 'hjemmeside' })}`)
-for (const [aendringer, plan, maxMonthly] of [['nej', 'basis', 199], ['lidt', 'plus', 299], ['jaevnligt', 'ekstra', 399], ['egen', 'egen', 0], ['ved-ikke', 'basis', 199]]) {
+for (const [aendringer, plan, maxMonthly] of [['nej', 'basis', 99], ['lidt', 'plus', 199], ['jaevnligt', 'ekstra', 399], ['egen', 'egen', 0], ['ved-ikke', 'basis', 99]]) {
   const rec = proposal({ behov: 'hjemmeside', sider: '2-5', aendringer })
   check(rec.state.answers.drift === plan, `ændringer=${aendringer} gav drift=${rec.state.answers.drift} (forventet ${plan})`)
   check(rec.state.answers.bestilling === 'nej', `ændringer=${aendringer}: booking blev lagt til af sig selv`)
