@@ -339,7 +339,7 @@ if (switchMismatches((key, tierId, answers) => answers, false) === 0) {
 {
   const q = quote({ selected: ['hjemmeside'], answers: { sider: '2-5', bestilling: 'nej', drift: 'plus' } })
   const text = summaryLines(q).join('\n')
-  for (const want of ['Hjemmeside, Vækst: 4.000 kr. + 199 kr./md', 'Drift: Plus, 199 kr./md, op til 15 min. indholdsarbejde pr. måned', 'I alt: 4.000 kr. nu + 199 kr./md']) {
+  for (const want of ['Hjemmeside, Vækst: 4.000 kr. + 199 kr./md', 'Drift: Plus, 199 kr./md, små rettelser og nye billeder nu og da', 'I alt: 4.000 kr. nu + 199 kr./md']) {
     if (!text.includes(want)) fail(`Opsummeringen mangler "${want}":\n${text}`)
   }
 }
