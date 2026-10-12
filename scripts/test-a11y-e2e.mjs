@@ -55,6 +55,17 @@ async function newPage(width, { reduceMotion = false, noJs = false, height } = {
   page.on('console', (m) => m.type() === 'error' && errors.push(`${tag} ${page.url()}: ${m.text()}`))
   await page.setViewport({ width, height: height ?? (width < 768 ? 812 : 900), isMobile: width < 768, hasTouch: width < 768 })
   if (reduceMotion) await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }])
+  // Glidende scroll (scroll-behavior: smooth) gør klik- og målingstests ustabile; slås kun fra uden reduceret bevægelse
+  // (med reduceret bevægelse måles den rigtige værdi i testen "bevægelse").
+  else {
+    await page.evaluateOnNewDocument(() => {
+      document.addEventListener('DOMContentLoaded', () => {
+        const s = document.createElement('style')
+        s.textContent = 'html{scroll-behavior:auto !important}'
+        document.head.appendChild(s)
+      })
+    })
+  }
   if (noJs) await page.setJavaScriptEnabled(false)
   await page.setRequestInterception(true)
   page.on('request', (req) => {
@@ -70,12 +81,26 @@ async function newPage(width, { reduceMotion = false, noJs = false, height } = {
 const closePage = (page) => page.ctx.close()
 /** Tømmer feltet (Ctrl+A) og skriver teksten, som en bruger ville. */
 async function fill(page, selector, text) {
+  // Siden ruller selv (glidende) til fejlteksten efter en afvist afsendelse: vent, til rulningen står stille.
+  await wait(700)
+  let lastY = -1
+  for (let i = 0; i < 40; i++) {
+    const y = await page.evaluate(() => Math.round(window.scrollY))
+    if (y === lastY) break
+    lastY = y
+    await wait(120)
+  }
   const input = await page.$(selector)
-  await input.click()
-  await page.keyboard.down('Control')
-  await page.keyboard.press('KeyA')
-  await page.keyboard.up('Control')
-  await page.keyboard.press('Backspace')
+  // Fokus + markér alt + Backspace (som Ctrl+A); gentages, hvis noget flytter siden/fokus under os (fx rulning til fejlteksten).
+  for (let attempt = 0; attempt < 4; attempt++) {
+    await input.evaluate((n) => {
+      n.focus()
+      n.select?.()
+    })
+    await page.keyboard.press('Backspace')
+    if (!(await input.evaluate((n) => n.value))) break
+    await wait(500)
+  }
   await input.type(text)
 }
 const open = async (page, path = '/') => {
@@ -109,10 +134,10 @@ async function click(page, text, selector = '#beregner label, #beregner button, 
     failures.push(`fandt ikke "${text}"`)
     return false
   }
-  await el.evaluate((n) => n.scrollIntoView({ block: 'center' }))
+  await el.evaluate((n) => n.scrollIntoView({ block: 'center', behavior: 'instant' }))
   // Vent til elementet står stille (trinskift animeres), ellers rammer klikket ved siden af.
   let last = ''
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < 40; i++) {
     const box = JSON.stringify(await el.boundingBox())
     if (box === last) break
     last = box
@@ -161,7 +186,7 @@ const shown = (page) =>
 /** Hele vejen fra forsiden til resultatet via klik. */
 async function runThrough(page, pack, plan, booking) {
   await open(page, '/')
-  await click(page, 'Hjemmeside')
+  await click(page, 'Køb hjemmesiden')
   await click(page, 'Næste')
   await click(page, PACK[pack].label)
   await click(page, booking ? 'Ja' : 'Nej')
@@ -263,7 +288,7 @@ async function testState() {
   // Browser-tilbage/frem: beregneren bruger replaceState, så tilbage forlader siden og frem gendanner valgene.
   await open(page, '/priser/')
   await open(page, '/')
-  await click(page, 'Hjemmeside')
+  await click(page, 'Køb hjemmesiden')
   await click(page, 'Næste')
   await click(page, '2-5 sider')
   await click(page, 'Nej')
@@ -310,30 +335,30 @@ async function testState() {
   await click(page, 'Næste')
   await click(page, '6-8 sider')
   await click(page, 'Næste')
-  await click(page, 'Ja, jævnligt')
+  await click(page, 'Én gang: jeg køber') // betalingsmodel (spørgsmål 3 siden rebrandet); driften foreslås som den mindste, Basis
   await click(page, 'Vis mit forslag')
-  check(/5\.000/.test(await calc(page)) && /399/.test(await calc(page)) && /hjaelp=4/.test(await search(page)), `GUIDE forslag Fuld fart + Ekstra: ${(await calc(page)).slice(0, 160)}`)
+  check(/5\.000/.test(await calc(page)) && /\b99\b/.test(await calc(page)) && /hjaelp=4/.test(await search(page)), `GUIDE forslag Fuld fart + Basis (køb): ${(await calc(page)).slice(0, 160)}`)
   let sent = await submitInquiry(page, '53 61 36 99')
-  check(sent && !/hjaelp|g-/.test(sent.link) && new URL(sent.link, SITE).searchParams.get('drift') === 'ekstra' && new URL(sent.link, SITE).searchParams.get('sider') === '6-8', `GUIDE payload-link: ${sent?.link}`)
+  check(sent && !/hjaelp|g-/.test(sent.link) && new URL(sent.link, SITE).searchParams.get('drift') === 'basis' && new URL(sent.link, SITE).searchParams.get('sider') === '6-8', `GUIDE payload-link: ${sent?.link}`)
   check(!/53|36|99/.test(await search(page)), 'KONTAKT telefonnummeret ligger i adresselinjen')
   await open(page, '/')
   await click(page, 'Hjælp mig med at vælge')
   await click(page, 'En ny eller bedre hjemmeside')
   await click(page, 'Næste')
-  await click(page, '2-5 sider')
+  await click(page, '4-5 sider')
   await click(page, 'Næste')
-  await click(page, 'Lidt, en gang imellem')
+  await click(page, 'Én gang: jeg køber')
   await click(page, 'Vis mit forslag')
   await click(page, 'Se og ret i beregneren')
   const afterGuide = await search(page)
-  check(!/hjaelp|g-/.test(afterGuide) && /drift=plus/.test(afterGuide) && /sider=2-5/.test(afterGuide), `GUIDE -> beregner: adresselinje ${afterGuide}`)
+  check(!/hjaelp|g-/.test(afterGuide) && /drift=basis/.test(afterGuide) && /sider=2-5/.test(afterGuide), `GUIDE -> beregner: adresselinje ${afterGuide}`)
   await click(page, 'Egen konto/hosting', 'label', '[data-tour="drift"]')
   s = await shown(page)
   check(s.once === 5000 && s.monthly === 0, `GUIDE -> beregner, skift til egen: ${s.once}/${s.monthly}`)
   // Retur til guiden efter ændring: guiden åbner igen uden at beregnerens valg går tabt.
   await click(page, 'Start forfra')
   await click(page, 'Hjælp mig med at vælge')
-  await click(page, 'Vælg selv i beregneren')
+  await click(page, 'Spring over') // "Spring over og vælg selv i beregneren" (siden rebrandet)
   check(!/hjaelp|g-/.test(await search(page)), `GUIDE ud igen: ${await search(page)}`)
   // Kontaktoplysninger i URL'en efter udfyldning og afsendelse.
   await open(page, `${base}&trin=4`)
@@ -356,8 +381,16 @@ const tourInfo = (page) =>
     const d = document.querySelector('[data-tour-popup]')
     return d ? { step: d.dataset.tourStep, count: d.querySelector('.tour-count')?.textContent.trim(), buttons: [...d.querySelectorAll('button')].map((b) => b.textContent.trim()), active: d.contains(document.activeElement) } : null
   })
-const tourChoice = (page) => page.evaluate(() => localStorage.getItem('oviaspecs-tour'))
+/** Rundvisningen bruger ingen lagring: ingen nøgle med "tour" i localStorage/sessionStorage. */
+const tourStorage = (page) => page.evaluate(() => [...Object.keys(localStorage), ...Object.keys(sessionStorage)].filter((k) => /tour|rundvis/i.test(k)))
+const helpVisible = (page) => page.evaluate(() => !!document.querySelector('[data-tour-invite],[data-tour-popup],[data-tour-note]'))
+const launcherFocused = (page) => page.evaluate(() => document.activeElement === document.querySelector('[data-tour-launcher]'))
 
+/**
+ * "Vis mig rundt" åbner kun på brugerens initiativ (rebrand okt. 2026: den automatiske invitation og lagringen i
+ * localStorage er fjernet bevidst). Testen kræver derfor, at ingen invitation dukker op af sig selv, og at touren
+ * stadig virker ved klik, med tastatur og uden at røre kundens valg.
+ */
 async function testTour() {
   for (const width of [375, 768, 1440]) {
     const tag = `${width}px`
@@ -366,22 +399,20 @@ async function testTour() {
     await open(page, url)
     const startUrl = await search(page)
     const startCalc = await calc(page)
-    check(!(await page.$('[data-tour-invite]')), `RUNDVISNING ${tag}: invitationen vises med det samme`)
-    // Invitationen ved første besøg (frisk kontekst): kommer efter kort tid, påvirker ikke valg.
-    await wait(5300)
-    check(!!(await page.$('[data-tour-invite]')), `RUNDVISNING ${tag}: invitationen vises ikke ved første besøg`)
-    check((await search(page)) === startUrl && (await calc(page)) === startCalc, `RUNDVISNING ${tag}: invitationen ændrede valg/adresse`)
-    await page.screenshot({ path: `${SHOTS}/${tag}-tour-invitation.png` })
-    const yes = await page.$('[data-tour-invite-yes]')
-    await yes?.click()
-    await page.waitForSelector('[data-tour-popup]', { timeout: 5000 }).catch(() => failures.push(`RUNDVISNING ${tag}: "Ja" starter ikke touren`))
+    check(!(await helpVisible(page)), `RUNDVISNING ${tag}: hjælp vises med det samme`)
+    // Ingen invitation af sig selv (tidligere kom den efter ca. 4,5 s), heller ikke efter 8 s.
+    await wait(8500)
+    check(!(await page.$('[data-tour-invite]')) && !(await page.$('[data-tour-popup]')), `RUNDVISNING ${tag}: en invitation/rundvisning dukkede op af sig selv`)
+    check((await search(page)) === startUrl && (await calc(page)) === startCalc, `RUNDVISNING ${tag}: valg/adresse ændret uden at brugeren gjorde noget`)
+    await page.evaluate(() => document.querySelector('[data-tour-launcher]').scrollIntoView({ block: 'center', behavior: 'instant' }))
+    await page.click('[data-tour-launcher]')
+    await page.waitForSelector('[data-tour-popup]', { timeout: 5000 }).catch(() => failures.push(`RUNDVISNING ${tag}: "Vis mig rundt" starter ikke touren`))
     await wait(500)
+    await page.screenshot({ path: `${SHOTS}/${tag}-tour-trin1.png` })
     let info = await tourInfo(page)
     check(!!info && info.count?.startsWith('1 af ') && info.buttons.includes('Spring over'), `RUNDVISNING ${tag}: trin 1 ${JSON.stringify(info)}`)
     const total = Number(info?.count?.split(' af ')[1] ?? 0)
     check(total >= 3, `RUNDVISNING ${tag}: kun ${total} trin`)
-    await wait(600)
-    await page.screenshot({ path: `${SHOTS}/${tag}-tour-trin1.png` })
     for (let i = 1; i < total; i++) {
       await (await tourBtn(page, 'Næste')).asElement()?.click()
       await wait(450)
@@ -397,11 +428,11 @@ async function testTour() {
     await wait(400)
     await (await tourBtn(page, 'Færdig')).asElement()?.click()
     await wait(350)
-    check(!(await page.$('[data-tour-popup]')) && (await tourChoice(page)) === 'done', `RUNDVISNING ${tag}: Færdig lukkede ikke / husker ikke`)
+    check(!(await page.$('[data-tour-popup]')), `RUNDVISNING ${tag}: Færdig lukkede ikke`)
+    check((await tourStorage(page)).length === 0, `RUNDVISNING ${tag}: rundvisningen gemmer noget i browserens lagring: ${await tourStorage(page)}`)
     check((await search(page)) === startUrl && (await calc(page)) === startCalc, `RUNDVISNING ${tag}: kundens valg eller adresse ændret af touren`)
-    check(await page.evaluate(() => document.activeElement === document.querySelector('[data-tour-launcher]')), `RUNDVISNING ${tag}: fokus kom ikke tilbage til "Vis mig rundt" efter Færdig`)
+    check(await launcherFocused(page), `RUNDVISNING ${tag}: fokus kom ikke tilbage til "Vis mig rundt" efter Færdig`)
     // Genåbning, Escape, Spring over.
-    await page.evaluate(() => document.querySelector('[data-tour-launcher]').scrollIntoView({ block: 'center' }))
     await page.click('[data-tour-launcher]')
     await page.waitForSelector('[data-tour-popup]', { timeout: 5000 })
     await wait(400)
@@ -411,22 +442,24 @@ async function testTour() {
     await page.keyboard.press('Escape')
     await wait(350)
     check(!(await page.$('[data-tour-popup]')) && (await search(page)) === startUrl, `RUNDVISNING ${tag}: Escape lukkede ikke rent`)
-    check(await page.evaluate(() => document.activeElement === document.querySelector('[data-tour-launcher]')), `RUNDVISNING ${tag}: fokus tilbage efter Escape`)
+    check(await launcherFocused(page), `RUNDVISNING ${tag}: fokus tilbage efter Escape`)
     await page.click('[data-tour-launcher]')
     await page.waitForSelector('[data-tour-popup]', { timeout: 5000 })
     await wait(300)
     await (await tourBtn(page, 'Spring over')).asElement()?.click()
     await wait(350)
-    check(!(await page.$('[data-tour-popup]')) && (await tourChoice(page)) === 'skipped', `RUNDVISNING ${tag}: Spring over`)
-    check(await page.evaluate(() => document.activeElement === document.querySelector('[data-tour-launcher]')), `RUNDVISNING ${tag}: fokus tilbage efter Spring over`)
-    // Efter afvist/afsluttet kommer invitationen ikke igen.
+    check(!(await page.$('[data-tour-popup]')), `RUNDVISNING ${tag}: Spring over lukkede ikke`)
+    check(await launcherFocused(page), `RUNDVISNING ${tag}: fokus tilbage efter Spring over`)
+    check((await tourStorage(page)).length === 0, `RUNDVISNING ${tag}: lagring efter Spring over: ${await tourStorage(page)}`)
+    // Efter en afsluttet rundvisning kommer der stadig ingen invitation af sig selv.
     await page.reload({ waitUntil: 'networkidle0' })
-    await wait(5300)
-    check(!(await page.$('[data-tour-invite]')), `RUNDVISNING ${tag}: invitationen kom igen efter afsluttet rundvisning`)
+    await wait(8500)
+    check(!(await helpVisible(page)), `RUNDVISNING ${tag}: hjælp dukkede op af sig selv efter genindlæsning`)
     check((await search(page)) === startUrl, `RUNDVISNING ${tag}: adresse ændret`)
     await closePage(page)
   }
 }
+
 
 /* =====================================================================
    4. HENVENDELSE (mock)
@@ -767,7 +800,7 @@ async function testMotionAndNoJs() {
       const calcText = document.querySelector('#beregner')?.textContent ?? ''
       return { len: text.length, h1: main?.querySelector('h1')?.textContent ?? '', prices: /\d\.\d{3}\s*kr\./.test(document.body.textContent), hidden: hidden.map((e) => `${e.tagName} ${e.textContent.slice(0, 25)}`), calcText, sw: document.documentElement.scrollWidth }
     })
-    check(path === '/priser/' ? /2\.500/.test(await page.evaluate(() => document.body.textContent)) && /5\.000/.test(await page.evaluate(() => document.body.textContent)) && /b99b/.test(await page.evaluate(() => document.body.textContent)) : true, `UDEN JS ${path}: pakke- og driftspriser mangler`)
+    check(path === '/priser/' ? /2\.500/.test(await page.evaluate(() => document.body.textContent)) && /5\.000/.test(await page.evaluate(() => document.body.textContent)) && /(?<![\d.,])99\s*kr/.test(await page.evaluate(() => document.body.textContent)) : true, `UDEN JS ${path}: pakke- og driftspriser mangler`)
     check(r.len > 400 && r.h1 && r.prices, `UDEN JS ${path}: indhold mangler (tekst ${r.len}, h1 "${r.h1}", priser ${r.prices})`)
     check(r.hidden.length === 0, `UDEN JS ${path}: usynlig tekst: ${r.hidden.join('; ')}`)
     check(r.sw <= 376, `UDEN JS ${path}: vandret scroll ${r.sw}`)
@@ -787,7 +820,7 @@ async function testRegressions() {
   // Demo og retur med valg i adresselinjen.
   const calcUrl = '/?ydelser=hjemmeside&sider=6-8&bestilling=ja&drift=egen&trin=4'
   await open(page, calcUrl)
-  await page.evaluate(() => document.querySelector('#eksempler a').scrollIntoView())
+  await page.evaluate(() => document.querySelector('#eksempler li a').scrollIntoView({ block: 'center', behavior: 'instant' }))
   await Promise.all([page.waitForNavigation({ waitUntil: 'networkidle0' }), page.click('#eksempler li a')])
   const back = await page.evaluate(() => document.querySelector('.dm-strip-back')?.getAttribute('href') ?? '')
   check(/\/demoer\//.test(page.url()) && back.startsWith(calcUrl), `DEMO retur-link ${back}`)

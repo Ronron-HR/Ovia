@@ -223,7 +223,7 @@ export default function PriceCalculator({ defaults }) {
       </p>
 
       <div className="flex items-center justify-between gap-4">
-        <p className="font-mono text-[14px] tracking-[0.08em] text-muted uppercase">
+        <p className="text-[14px] font-medium text-muted tabular-nums">
           {/* Antallet af trin kendes først, når der er valgt mindst én ydelse. */}
           {selected.length ? `Trin ${Math.min(step + 1, total)} af ${total}` : `Trin ${step + 1}`}
         </p>
