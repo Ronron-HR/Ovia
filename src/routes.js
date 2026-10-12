@@ -22,6 +22,12 @@ export const routes = [
     title: 'Eksempler: fire hjemmesider at prøve | OviaSpecs',
     description: demos.intro,
   },
+  {
+    path: paths.systemer,
+    page: 'systemer',
+    title: 'Små systemer til henvendelser og opfølgning | OviaSpecs',
+    description: 'Små digitale arbejdsgange til fx catering, tilbudsopfølgning og booking. Kun når der er et konkret behov.',
+  },
   ...demos.projects.map((p) => ({
     path: p.path,
     page: `demo-${p.id}`,

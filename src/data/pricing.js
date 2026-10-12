@@ -114,6 +114,64 @@ export const driftFrom = Math.min(...driftPlanList.map((p) => p.monthly))
 /** Plan med måned og indhold som tekst, fx "Plus, 199 kr./md, hjælp til billeder, tekst og nyheder". */
 export const driftSummary = (p) => `${p.name}, ${formatKr(p.monthly)}/md, ${p.content.charAt(0).toLowerCase()}${p.content.slice(1)}`
 
+/* ---- Domæne (fælles afgrænsning) ----------------------------------------
+   Samme regel i Lokal og i driftsplanerne, så domænet aldrig står forskelligt
+   forskellige steder (docs/rebrand/brief.md, afsnit C). Loftet er en aftalt
+   kontraktgrænse, ikke en oplyst registrarpris.
+------------------------------------------------------------------------- */
+export const domain = {
+  /** Kr. pr. år til almindelig fornyelse af ét standarddomæne. */
+  capPerYear: 200,
+}
+
+/* ---- Løbende samarbejde: Lokal (rebrand okt. 2026) ----------------------
+   Hjemmeside uden opstartspris: 0 kr. i opstart, fast månedspris og en
+   minimumsperiode fra lancering. Godkendt i docs/rebrand/brief.md (afsnit C og D).
+   Tallene her er den ENESTE kilde; minimum regnes ud, aldrig skrevet i tekst.
+------------------------------------------------------------------------- */
+export const lokal = {
+  id: 'lokal',
+  name: 'Lokal',
+  /** Opstartspris. */
+  start: 0,
+  monthly: 995,
+  /** Mindst så mange abonnementsmåneder fra lancering. */
+  minMonths: 6,
+  /** Indholdssider i alt (nødvendige juridiske informationssider tæller ikke med). */
+  pages: { min: 1, max: 3 },
+  /** Samlede korrekturrunder før lancering. */
+  revisionRounds: 2,
+  /** Hvert måned: minutter til prioriteret lokal SEO, kontrol og kort status / mindre tekst- og billedrettelser. */
+  minutes: { seo: 45, content: 15 },
+  /** Komponenter, der er med (bruges af overlap mod Booking & Google). */
+  includes: ['googleProfile'],
+  /** Opsigelse: så mange måneders varsel. */
+  noticeMonths: 1,
+}
+
+/**
+ * Systemtilvalg til Lokal: ét færdigt standardmodul (én arbejdsgang).
+ * `ready: false` = der findes endnu IKKE et udviklet og testet standardmodul.
+ * Så længe det er false, må siden ikke sælge modulet til denne pris
+ * (brief afsnit C): beregneren tilbyder det ikke med pris, og tekster viser
+ * "særskilt fast tilbud efter afgrænsning". Prisen nedenfor er den planlagte.
+ */
+export const systemModule = {
+  id: 'system',
+  name: 'Systemtilvalg',
+  monthly: 500,
+  ready: false,
+  /** Ekstra brugerstøtte pr. måned (nyudvikling er separat). */
+  supportMinutes: 30,
+  /** Kommercielle grænser, der først må loves, når kapacitet og omkostninger er kontrolleret (ready). */
+  limits: { users: 2, casesPerMonth: 100 },
+}
+
+/** Lokal i alt pr. måned med eller uden systemtilvalg. */
+export const lokalMonthly = (withSystem = false) => lokal.monthly + (withSystem ? systemModule.monthly : 0)
+/** Mindste samlede betaling over minimumsperioden (5.970 kr. / 8.970 kr.). */
+export const lokalMinimum = (withSystem = false) => lokalMonthly(withSystem) * lokal.minMonths
+
 /* ---- Overlap mellem hjemmeside og Booking & Google ----------------------
    Booking & Google består af komponenter. Er en komponent allerede med i den
    valgte hjemmesidepakke (`includes`), trækkes dens pris fra Booking &

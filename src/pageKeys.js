@@ -13,6 +13,7 @@ export const pageKeyByPath = {
   '/booking-google/': 'bookingGoogle',
   '/priser/': 'priser',
   '/demoer/': 'demoer',
+  '/systemer/': 'systemer',
   ...Object.fromEntries(demos.projects.map((p) => [p.path, `demo-${p.id}`])),
 }
 
@@ -24,6 +25,7 @@ export const pageFiles = {
   bookingGoogle: 'src/pages/Service.jsx',
   priser: 'src/pages/Priser.jsx',
   demoer: 'src/pages/Demoer.jsx',
+  systemer: 'src/pages/Systemer.jsx',
   'demo-cafe': 'src/demos/Cafe.jsx',
   'demo-restaurant': 'src/demos/Restaurant.jsx',
   'demo-salon': 'src/demos/Salon.jsx',

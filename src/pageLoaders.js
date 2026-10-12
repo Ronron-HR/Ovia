@@ -12,6 +12,7 @@ export const pageLoaders = {
   bookingGoogle: () => service().then((m) => m.bookingGoogle),
   priser: () => import('./pages/Priser.jsx').then((m) => m.default),
   demoer: () => import('./pages/Demoer.jsx').then((m) => m.default),
+  systemer: () => import('./pages/Systemer.jsx').then((m) => m.default),
   'demo-cafe': () => import('./demos/Cafe.jsx').then((m) => m.default),
   'demo-restaurant': () => import('./demos/Restaurant.jsx').then((m) => m.default),
   'demo-salon': () => import('./demos/Salon.jsx').then((m) => m.default),

@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "garrettjsmith-localseo": {
+      "source": {
+        "source": "github",
+        "repo": "garrettjsmith/localseoskills"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "local-seo-skills@garrettjsmith-localseo": true
+  }
+}

@@ -18,6 +18,7 @@ export const paths = {
   bookingGoogle: '/booking-google/',
   priser: '/priser/',
   demoer: '/demoer/',
+  systemer: '/systemer/',
   privatliv: '/privatlivspolitik/',
 }
 
