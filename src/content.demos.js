@@ -36,9 +36,17 @@ export const demos = {
   tagShort: 'Koncept',
   /** Linjen over listen af eksempler. */
   listNote: 'Eksempler, jeg har lavet selv – ikke kundeopgaver.',
-  note: 'Eksemplerne viser design og funktioner. Din hjemmeside tilpasses din virksomhed. Hvilke funktioner der er med, afhænger af pakken: booking og bestilling er fx med i Fuld fart. Skærmbillederne er taget af eksemplerne selv.',
+  note: 'Eksemplerne viser design og funktioner. Din hjemmeside tilpasses din virksomhed. Booking og bestilling er tilvalg, som vi aftaler, før jeg går i gang. Skærmbillederne er taget af eksemplerne selv.',
   localNote:
     'Alt i eksemplerne er lokalt: intet bliver sendt, bestilt eller booket, og ingen knap fører til en rigtig virksomhed.',
+  /** Arbejdsgangsdemoen på /systemer/ (tekstkortet på siden Eksempler). Ikke et koncept-website, men en lille frontenddemo. */
+  workflow: {
+    title: 'Prøv en arbejdsgang',
+    text: 'En lille demo af en forespørgsel om et selskab: formular, overblik og status.',
+    href: '/systemer/#demo',
+    label: 'Demo – ikke et færdigt system. Intet sendes eller gemmes.',
+    open: 'Åbn demoen',
+  },
   open: 'Åbn eksemplet',
   calcCta: 'Se din pris',
   backToSite: 'Tilbage til OviaSpecs',

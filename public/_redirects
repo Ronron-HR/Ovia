@@ -1,8 +1,13 @@
-# Gamle adresser (før oktober 2026) -> nye sider. 301 = permanent.
+# Gamle adresser -> nuværende sider. 301 = permanent. Ét hop (ingen kæder):
+# målene nedenfor er de endelige adresser. Rebrand okt. 2026: /seo/ er flyttet
+# fra Marketing til Lokal synlighed (/booking-google/), /ai-automatisering/ til
+# Systemer. Se docs/rebrand/s-seo.md.
 /hjemmesider/                  /hjemmeside/       301
 /hjemmesider                   /hjemmeside/       301
-/seo/                          /marketing/        301
-/seo                           /marketing/        301
+/seo/                          /booking-google/   301
+/seo                           /booking-google/   301
+/lokal-synlighed/              /booking-google/   301
+/lokal-synlighed               /booking-google/   301
 /google-ads/                   /marketing/        301
 /google-ads                    /marketing/        301
 /sociale-medier-annoncering/   /marketing/        301
@@ -11,8 +16,8 @@
 /booking-integrationer         /booking-google/   301
 /prisberegner/                 /priser/           301
 /prisberegner                  /priser/           301
-/ai-automatisering/            /                  301
-/ai-automatisering             /                  301
+/ai-automatisering/            /systemer/         301
+/ai-automatisering             /systemer/         301
 /om/                           /#om               301
 /om                            /#om               301
 /kontakt/                      /#kontakt          301

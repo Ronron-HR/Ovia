@@ -8,12 +8,12 @@ import ContactButtons from './ContactButtons.jsx'
 export default function FreeCheck({ text }) {
   const c = services.bookingGoogle.freeCheck
   return (
-    <section id="tjek" aria-labelledby="tjek-titel" className="section-y bg-paper">
+    <section id="tjek" aria-labelledby="tjek-titel" className="section-y bg-paper-2">
       <div className="shell">
         <div data-reveal className="free-check grid grid-cols-1 gap-x-14 gap-y-6 lg:grid-cols-12 lg:items-center">
           <div className="lg:col-span-7">
             <p className="t-eyebrow t-eyebrow-strong">{text.eyebrow}</p>
-            <h2 id="tjek-titel" className="t-display t-h2 mt-4">
+            <h2 id="tjek-titel" className="t-display t-h2 mt-3">
               {c.title}
             </h2>
             <p className="t-body t-lead mt-4 max-w-[48ch]">{c.text}</p>

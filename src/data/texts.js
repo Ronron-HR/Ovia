@@ -1,15 +1,18 @@
 /* =========================================================================
    TEKSTER — forside, navigation, kontakt og footer.
-   Priser og pakker står IKKE her, men i src/data/pricing.js.
+   Priser og pakker står IKKE her, men i src/data/pricing.js. Beløb skrives
+   aldrig som tekst: brug formatKr(...) med tal derfra.
 
    Sprog: jeg-form overalt (OviaSpecs er én person). "Vi" kun om dig og kunden
    sammen (fx "Vi mødes"), aldrig om OviaSpecs.
    Ærlighed: ingen udtalelser, kundetal, logoer eller resultater, der ikke
    kan dokumenteres. Ingen løfter om placeringer eller salg.
-   Svartid: inden for 24 timer (besluttet af Ronny, okt. 2026).
+   Svartid: inden for 24 timer på hverdage (Ronnys eksisterende svartid).
+
+   Importer ikke offer.js herfra: offer.js importerer denne fil.
    ========================================================================= */
 
-import { contact } from './pricing.js'
+import { contact, formatKr, lokal, lokalMinimum, priceNote } from './pricing.js'
 
 export const paths = {
   home: '/',
@@ -20,6 +23,11 @@ export const paths = {
   demoer: '/demoer/',
   systemer: '/systemer/',
   privatliv: '/privatlivspolitik/',
+  /** Ankre på forsiden og prissiden. */
+  om: '/#om',
+  koebsmaader: '/#koebsmaader',
+  vilkaar: '/priser/#vilkaar',
+  workflowDemo: '/systemer/#demo',
 }
 
 /** Sider med prisberegneren. "Se din pris" hopper til den på siden, ellers til /priser/. */
@@ -38,13 +46,28 @@ export const links = {
   sms: (text = contact.smsText) => `sms:${contact.phoneHref}?&body=${encodeURIComponent(text)}`,
 }
 
+/**
+ * Navigationen. Formen:
+ *   nav.solutions = { label, ariaLabel, items: [{ label, href, text }] }  // "Løsninger" (disclosure på desktop, liste under overskrift på mobil)
+ *   nav.items     = [{ label, href }]                                       // resten: Eksempler, Priser, Om og kontakt
+ * Rækkefølgen i menuen: solutions, derefter items.
+ */
 export const nav = {
   brand: 'OviaSpecs',
+  solutions: {
+    label: 'Løsninger',
+    ariaLabel: 'Vis løsninger',
+    items: [
+      { label: 'Hjemmesider', href: paths.hjemmeside, text: 'Hjemmeside til din virksomhed' },
+      { label: 'Lokal synlighed', href: paths.bookingGoogle, text: 'Google-profil, lokal SEO, booking og QR-skilt' },
+      { label: 'Systemer', href: paths.systemer, text: 'Små arbejdsgange, når du har brug for dem' },
+      { label: 'Marketing', href: paths.marketing, text: 'Korte videoer og opslag hver måned' },
+    ],
+  },
   items: [
-    { label: 'Hjemmeside', href: paths.hjemmeside },
-    { label: 'Marketing', href: paths.marketing },
-    { label: 'Booking & Google', href: paths.bookingGoogle },
+    { label: 'Eksempler', href: paths.demoer },
     { label: 'Priser', href: paths.priser },
+    { label: 'Om og kontakt', href: paths.om },
   ],
   call: 'Ring',
   /** Knappen til prisberegneren: lang på desktop, kort på mobil. */
@@ -55,7 +78,7 @@ export const nav = {
 }
 
 /** Den korte linje over prisberegneren på ydelsessiderne. */
-export const calcIntro = 'Svar på et par spørgsmål, så ser du prisen med det samme.'
+export const calcIntro = 'Vælg først, om du vil have et løbende samarbejde eller købe hjemmesiden. Så ser du prisen med det samme.'
 
 /** Teksterne på knapperne "Ring" og "Mail". */
 export const cta = {
@@ -67,27 +90,46 @@ export const cta = {
 
 /* ---- Forsiden ---------------------------------------------------------- */
 
+/** Tilbudslinjen (opstart, månedspris og minimumsperiode) bygget af tallene i pricing.js. */
+const offerLine = `${formatKr(lokal.start)} i opstart · ${formatKr(lokal.monthly)}/md. · mindst ${lokal.minMonths} måneder`
+
 export const home = {
   hero: {
-    title: 'Hjemmeside, Google og booking til virksomheder',
-    /** Den korte forklaring under overskriften. */
-    short: 'Jeg laver det hele selv, og du taler direkte med mig. Svar på et par spørgsmål, så ser du prisen med det samme.',
-    /** Hovedhandlingen (hopper til beregneren). */
-    cta: 'Se din pris',
-    /** Faktaboksen: kun det, siden i forvejen lover. */
-    factsTitle: 'Det får du',
+    title: 'En hjemmeside, der gør det nemt at vælge din virksomhed.',
+    /** Den korte forklaring under overskriften: hjemmeside, lokal synlighed, direkte kontakt og tilbuddet. */
+    short:
+      'Jeg laver hjemmesiden, forbedrer din synlighed på Google i dit lokalområde og gør det nemt for kunderne at kontakte dig direkte. Nyt er en hjemmeside uden opstartspris, hvor du betaler en fast månedspris.',
+    /** Hovedhandlingen (hopper til købsmåderne med priser og minimumsbetaling). */
+    cta: 'Se priser',
+    ctaHref: '#koebsmaader',
+    /** Den sekundære handling ved siden af (Ring og Mail står i kontaktlinjen). */
+    secondary: { label: 'Se eksempler', href: paths.demoer },
+    /**
+     * Tilbuddet. Overskriften nævner ikke "gratis": abonnementet står altid ved siden af.
+     * line + minimum bygges af pricing.js; link fører til købsmåderne og vilkårene.
+     */
+    offer: {
+      heading: 'Hjemmeside uden opstartspris',
+      line: offerLine,
+      minimum: `I alt mindst ${formatKr(lokalMinimum())}`,
+      note: `${priceNote} Du kan i stedet købe hjemmesiden som et engangsbeløb.`,
+      link: { label: 'Se begge måder at købe på', href: '#koebsmaader' },
+    },
+    /** Faktaboksen: kun det, tilbuddet i forvejen lover. */
+    factsTitle: 'Det er med i Lokal',
     facts: [
-      'En hjemmeside, der virker på telefonen',
-      'Google-profil og online booking',
-      'Korte videoer til de sociale medier',
+      `${lokal.pages.min}–${lokal.pages.max} indholdssider, der virker på telefonen`,
+      'Indledende SEO og hjælp til din Google-profil',
+      `Op til ${lokal.minutes.seo} minutters lokal SEO og ${lokal.minutes.content} minutters rettelser hver måned`,
       'Et udkast, du kan se, før noget går live',
     ],
   },
 
   /** Overskriften over prisberegneren på forsiden (selve beregneren har sin egen overskrift). */
   calc: {
-    title: 'Se din pris',
-    intro: 'Svar på et par spørgsmål, så ser du prisen med det samme. Du kan altid ringe i stedet.',
+    title: 'Beregn din pris',
+    intro:
+      'Vælg først, om du vil have et løbende samarbejde eller købe hjemmesiden. Så ser du opstart, månedspris og minimumsbetaling med det samme. Du kan altid ringe i stedet.',
   },
 
   cards: {
@@ -108,21 +150,21 @@ export const home = {
       },
       {
         service: 'bookingGoogle',
-        title: 'Booking & Google',
-        text: 'En Google-profil, der er i orden, online booking og et skilt, der hjælper dig med at få anmeldelser.',
+        title: 'Lokal synlighed',
+        text: 'Din Google-profil i orden, booking koblet på og et QR-skilt, der gør det nemt at give dig en anmeldelse.',
         href: paths.bookingGoogle,
       },
     ],
     more: 'Se pakker',
   },
 
-  /** To demoer lige under beregneren (id fra src/content.demos.js). Kun egne, fiktive demoer. */
+  /** Demoer lige under tilbuddet (id fra src/content.demos.js). Kun egne, fiktive demoer. */
   examples: {
-    title: 'Se, hvordan en hjemmeside kan se ud',
-    note: 'To eksempler, jeg selv har lavet, så du kan se stil og funktioner. Indholdet er opdigtet, og intet sendes, bestilles eller bookes.',
+    title: 'Se, hvad jeg selv har lavet',
+    note: 'Tre eksempler, jeg har lavet selv, så du kan se stil og funktioner. Indholdet er opdigtet, og intet sendes, bestilles eller bookes.',
     tag: 'Demo',
     open: 'Åbn demoen',
-    all: 'Se alle fire eksempler',
+    all: 'Se alle eksempler',
     /** Beskårne udsnit (uden OviaSpecs-striben), lavet af scripts/demo-shots.mjs --crops-only. */
     items: [
       {
@@ -142,23 +184,41 @@ export const home = {
         fits: 'Passer til en salon eller frisør, der vil vise behandlinger og priser. Online booking kan lægges til som tilvalg.',
       },
     ],
+    /** Det tredje kort: arbejdsgangsdemoen på /systemer/#demo. Ingen forhåndsvisning; D tegner kortet. */
+    workflow: {
+      title: 'Prøv en arbejdsgang',
+      text: 'En lille demo af en forespørgsel om et selskab. Du udfylder en formular og ser forespørgslen i et overblik med status og en påmindelse.',
+      href: paths.workflowDemo,
+      tag: 'Demo',
+      label: 'Demo – ikke et færdigt system. Intet sendes eller gemmes.',
+      open: 'Prøv demoen',
+    },
   },
 
+  /** Forløbet i fem trin (genbruges som offer.process og på ydelsessiderne). */
   steps: {
     eyebrow: 'Sådan foregår det',
-    title: 'Tre trin, og så er det live.',
+    title: 'Fra første samtale til løbende hjælp.',
     items: [
       {
-        title: 'Vi mødes',
-        text: 'Vi gennemgår det, du har valgt, og jeg bekræfter prisen.',
+        title: 'Afklaring',
+        text: 'Vi taler om din virksomhed, dine kunder og det, du har brug for. Jeg siger det, hvis noget ikke giver mening for dig.',
       },
       {
-        title: 'Du ser en demo',
-        text: 'Jeg laver et udkast, du kan åbne på din egen telefon. Du siger til, hvad der skal ændres.',
+        title: 'Aftalt omfang',
+        text: 'Jeg skriver sider, pris og vilkår ned, og du godkender, før jeg går i gang. I Lokal betales første måned, før jeg bygger færdigt. Beløbet fratrækkes første abonnementsmåned og er ikke et startgebyr.',
       },
       {
-        title: 'Det går live',
-        text: 'Når du er tilfreds, går det live. Jeg viser dig, hvordan det virker, og du ved, hvem du skal ringe til bagefter.',
+        title: 'Udkast og godkendelse',
+        text: 'Jeg laver et udkast, du kan åbne på din egen telefon. Du siger til, hvad der skal rettes. Antallet af korrekturrunder står i det aftalte omfang.',
+      },
+      {
+        title: 'Lancering',
+        text: 'Når du har godkendt, går siden live. Jeg viser dig, hvordan den virker, og hvordan du kontakter mig bagefter.',
+      },
+      {
+        title: 'Løbende hjælp',
+        text: 'I Lokal får du hver måned lidt SEO-arbejde og en kort status. Køber du hjemmesiden som engangsbeløb, vælger du selv en driftsplan.',
       },
     ],
   },
@@ -171,9 +231,9 @@ export const about = {
   eyebrow: 'Om OviaSpecs',
   title: 'Jeg er én person. Det er mig, du taler med.',
   body: [
-    'Jeg hedder Ronny Hong, og OviaSpecs er mig. Der er ingen sælger, ingen projektleder og ingen kundeservice. Den, du taler med, er den, der laver arbejdet.',
-    'OviaSpecs er nyt. Du får klare priser, et udkast du kan se, før det går live, og én at ringe til, når noget skal rettes.',
-    'Hvis en opgave ligger uden for det, jeg kan, siger jeg det, før jeg går i gang.',
+    'Jeg hedder Ronny Hong, og OviaSpecs er mig. Min base er Aarhusområdet. Der er ingen sælger, ingen projektleder og ingen kundeservice. Den, du taler med, er den, der laver arbejdet.',
+    'OviaSpecs er nyt, og eksemplerne på siden er mine egne, ikke kundeopgaver. Derfor fortæller jeg på forhånd, hvad du får, og hvad det koster.',
+    'Ligger en opgave uden for det, jeg kan, siger jeg det, før jeg går i gang. Har du ikke brug for et system eller et nyt bookingsystem, siger jeg også det.',
   ],
   portrait: {
     base: '/ronny',
@@ -190,8 +250,9 @@ export const contactSection = {
   eyebrow: 'Kontakt',
   title: 'Tal direkte med mig',
   body: 'Ring, skriv eller send en SMS, og fortæl kort, hvad du laver, og hvad du mangler. Jeg hjælper dig med at finde ud af, hvad der giver mening, og du taler med mig selv, ikke en sælger. Det koster ikke noget at spørge.',
-  /** Kun om formularen under prisberegneren (svartiden er besluttet af Ronny). */
-  formNote: 'Foretrækker du at skrive, kan du sende en forespørgsel med dine valg fra prisberegneren. Jeg svarer inden for 24 timer.',
+  /** Kun om formularen under prisberegneren (svartiden er Ronnys eksisterende). */
+  formNote:
+    'Foretrækker du at skrive, kan du sende en forespørgsel med dine valg fra beregneren. Det er en forespørgsel og ikke en bestilling. Jeg svarer inden for 24 timer på hverdage.',
   phoneLabel: 'Telefon',
   mailLabel: 'Mail',
   smsHint: 'Eller send en SMS',
@@ -200,21 +261,24 @@ export const contactSection = {
 /* ---- Footer ------------------------------------------------------------ */
 
 export const footer = {
-  tagline: 'Hjemmeside, Google-profil, booking og korte videoer til virksomheder. Du taler direkte med mig.',
+  tagline: 'Hjemmesider, lokal synlighed på Google, små systemer og korte videoer til mindre virksomheder. Du taler direkte med Ronny, som har base i Aarhusområdet.',
   columns: [
     {
-      title: 'Ydelser',
+      title: 'Løsninger',
       links: [
-        { label: 'Hjemmeside', href: paths.hjemmeside },
+        { label: 'Hjemmesider', href: paths.hjemmeside },
+        { label: 'Lokal synlighed', href: paths.bookingGoogle },
+        { label: 'Systemer', href: paths.systemer },
         { label: 'Marketing', href: paths.marketing },
-        { label: 'Booking & Google', href: paths.bookingGoogle },
       ],
     },
     {
       title: 'OviaSpecs',
       links: [
-        { label: 'Priser', href: paths.priser },
         { label: 'Eksempler', href: paths.demoer },
+        { label: 'Priser', href: paths.priser },
+        { label: 'Vilkår', href: paths.vilkaar },
+        { label: 'Om og kontakt', href: paths.om },
         { label: 'Privatlivspolitik', href: paths.privatliv },
       ],
     },

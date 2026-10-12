@@ -6,7 +6,7 @@
  *
  * Tegnes ud fra scripts/og/og.html i sidens egne skrifter. Motivet er
  * skærmbilleder af to af koncepterne (public/demoer, se
- * `npm run demo-shots`), mærket "Koncepter – ikke kundeopgaver", så mærkningen følger med,
+ * `npm run demo-shots`), mærket "Demoer – ikke kundeopgaver", så mærkningen følger med,
  * når siden deles. Ingen fotos, logoer eller materiale fra rigtige virksomheder.
  *
  * Kør igen, hvis farver, logo, tekst eller demoerne ændres (og `npm run brand`

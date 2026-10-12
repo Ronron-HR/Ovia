@@ -13,7 +13,7 @@ export default function PilotSection({ text }) {
         <div className="grid grid-cols-1 gap-x-14 gap-y-10 lg:grid-cols-12">
           <header data-reveal className="lg:col-span-5">
             <p className="t-eyebrow text-paper">{text.eyebrow}</p>
-            <h2 id="pilot-titel" className="t-display t-h2 mt-4">
+            <h2 id="pilot-titel" className="t-display t-h2 mt-3">
               {text.title}
             </h2>
             <p className="t-lead mt-5 max-w-[44ch] text-paper/75">{text.intro}</p>

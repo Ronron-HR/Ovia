@@ -52,65 +52,74 @@
 }
 
 /* =========================================================================
-   RETNING — ROLIG OG KLAR (okt. 2026)
-   Lys, køligt tonet flade (paper), hvide kort med fine kanter (surface),
-   mørk blåsort tekst (ink) og ÉN blå accent (cta), som bærer alt aktivt:
-   primære handlinger, valgte valg, fokusring, flueben og links. Alt andet er
-   ink eller dæmpet ink. Den mørke flade (kontaktsektionen) er ink.
+   RETNING: VARM OG PRÆCIS (okt. 2026)
+   Lys VARM flade (paper), kort og felter i næsten-hvid (surface) med fine
+   varme hårstreger, varm næsten-sort tekst (ink) og ÉN accent, kobolt (cta),
+   som bærer alt aktivt: primær handling, valgt valg, fokusring, flueben og
+   links. Alt andet er ink eller dæmpet ink. Den mørke flade (kontaktsektionen)
+   er ink.
 
    Former varierer efter rang: store flader 20px, kort 14px, knapper og felter
    10px, rammer om skærmbilleder 10px, mærker som piller. Kanter er 1px; kun
-   beregneren har en skygge (tonet, ikke grå), fordi den er sidens hovedsag.
+   beregneren og det fremhævede hovedtilbud har en skygge (varm, ikke grå).
 
    Skrift: Instrument Sans bærer alt. Overskrifter vægt 600 og tæt sat,
    forklaringer i dæmpet ink, hjælpetekst mindre, priser i Instrument Serif
    (kun cifre), monoskrift kun til det tekniske "Trin n". Ingen versaler.
+   Linjer højst ca. 65 tegn; luft mellem sektioner (--space-section).
 
-   DESIGNTOKENS — farver, skrift og afstande defineres her og kun her.
+   Ikoner: components/Icon.jsx (24x24, streg 1,75, runde ender, currentColor).
+
+   DESIGNTOKENS: farver, skrift og afstande defineres her og kun her.
    Andre filer bruger variablerne, aldrig egne farver.
-   Kontrast (målt mod WCAG, mindst 4,5:1 til tekst, 3:1 til kanter):
+   Kontrast (målt mod WCAG 2.x, mindst 4,5:1 til tekst, 3:1 til kanter):
      ink    på paper    16,0:1       muted  på paper    7,0:1
-     muted  på paper-2   6,5:1       muted  på surface  7,5:1
+     ink    på surface  17,1:1       muted  på paper-2  6,3:1   muted på surface 7,5:1
      hvid   på cta       6,7:1       hvid   på cta-hover 8,8:1
-     cta    på paper     6,2:1       cta    på cta-soft 5,8:1   cta på paper-2 5,8:1
-     field  på surface   4,3:1       field  på paper    4,0:1   (kanter på felter og valg)
-     cta-on-dark på ink  9,5:1       hvid på ink 17,0:1
+     cta    på paper     6,1:1       cta    på surface  6,5:1
+     cta    på paper-2   5,5:1       cta    på cta-soft 5,7:1
+     field  på surface   4,2:1       field  på paper    3,9:1   field på paper-2 3,5:1   (kanter på felter og valg)
+     cta-on-dark på ink  9,7:1       hvid på ink 17,4:1
    npm run brand læser ink, paper og cta herfra.
    ========================================================================= */
 
 @theme {
-  --color-paper: #f5f8fc; /* sidens baggrund */
-  --color-paper-2: #e9f0f8; /* alternative flader (bånd) */
-  --color-surface: #ffffff; /* kort og rammer (med 1px kant) */
-  --color-ink: #0e1d2f; /* tekst, mørke flader, primære knapper */
-  --color-muted: #46566a; /* sekundær tekst */
+  --color-paper: #f8f5ef; /* sidens baggrund */
+  --color-paper-2: #efe9df; /* alternative flader (bånd) */
+  --color-surface: #fffdf9; /* kort og rammer (med 1px kant) */
+  --color-ink: #1c1a17; /* tekst, mørke flader, primære knapper */
+  --color-muted: #5a5349; /* sekundær tekst */
   --color-cta: #1c4fd8; /* sidens ene accent: handlinger, valg, fokus, links */
   --color-cta-hover: #1640b0; /* accent ved hover */
-  --color-cta-soft: #e8efff; /* svag accentflade: valgt valg, flueben */
+  --color-cta-soft: #e8edfb; /* svag accentflade: valgt valg, flueben */
   --color-cta-on-dark: #a9c1ff; /* accent på den mørke flade */
-  --color-rule: #dce4ee; /* hårstreger på paper og surface */
-  --color-rule-strong: #c5d1df; /* hårstreger på paper-2 */
-  --color-field: #6b7c92; /* kant på felter og valg (WCAG 1.4.11) */
+  --color-rule: #e5dfd2; /* hårstreger på paper og surface */
+  --color-rule-strong: #d6ccba; /* hårstreger på paper-2, kortkanter */
+  --color-field: #857a68; /* kant på felter og valg (WCAG 1.4.11) */
 
   --font-sans: "Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-amount: "Instrument Serif", "Instrument Serif Fallback", var(--font-sans);
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   /* Typografisk skala */
-  --text-hero: clamp(2.125rem, 1.15rem + 3.1vw, 3.375rem);
-  --text-h2: clamp(1.75rem, 1.3rem + 1.7vw, 2.5rem);
+  --text-hero: clamp(2.25rem, 1.2rem + 3.6vw, 3.875rem);
+  --text-h2: clamp(1.75rem, 1.3rem + 1.8vw, 2.625rem);
   --text-h3: clamp(1.5rem, 1.2rem + 1.1vw, 2.0625rem);
   --text-h4: 1.3125rem;
   --text-lead: clamp(1.0625rem, 1rem + 0.35vw, 1.1875rem);
   --text-quote: clamp(1.75rem, 3.6vw, 3.25rem);
 
   /* Afstande */
-  --space-section: clamp(3.5rem, 7vw, 6rem);
+  --space-section: clamp(3.75rem, 7.5vw, 6.5rem);
   --space-block: clamp(2.5rem, 5vw, 4.25rem);
   --radius-btn: 10px; /* knapper og felter */
   --radius-card: 14px; /* kort */
   --radius-panel: 20px; /* store flader: beregner, eksempler, faktaboks */
   --radius-frame: 10px; /* rammer om skærmbilleder */
+
+  /* Skygger (varme, aldrig grå) */
+  --shadow-card: 0 1px 2px rgb(28 26 23 / 0.05), 0 14px 32px -20px rgb(28 26 23 / 0.28);
+  --shadow-pop: 0 2px 6px rgb(28 26 23 / 0.06), 0 22px 44px -18px rgb(28 26 23 / 0.32);
 }
 
 @layer base {
@@ -173,8 +182,8 @@
 
   .t-hero {
     font-size: var(--text-hero);
-    line-height: 1.05;
-    letter-spacing: -0.03em;
+    line-height: 1.03;
+    letter-spacing: -0.034em;
   }
   .t-h2 {
     font-size: var(--text-h2);
@@ -355,7 +364,7 @@
 
   @media (hover: hover) {
     .btn-primary:hover {
-      background: #1d3350;
+      background: #3a352e;
     }
     .btn-cta:hover {
       background: var(--color-cta-hover);
@@ -368,7 +377,7 @@
       text-underline-offset: 4px;
     }
     .on-dark .btn-primary:hover {
-      background: #dfe8f5;
+      background: var(--color-paper-2);
       color: var(--color-ink);
     }
     .on-dark .btn-ghost:hover {
@@ -445,7 +454,7 @@
     align-items: center;
     gap: 7px;
     padding: 3px 10px 3px 9px;
-    border: 1px solid #c3d3f7;
+    border: 1px solid color-mix(in srgb, var(--color-cta) 28%, transparent);
     border-radius: 999px;
     background: var(--color-cta-soft);
     font-size: 14px;
@@ -462,7 +471,8 @@
     background: var(--color-cta);
   }
 
-  /* Liste med flueben: hvad der er med. Én hårstreg over gruppen. */
+  /* Liste med flueben: hvad der er med. Fluebenet er en maske i accentens
+     farve (samme streg som Icon.jsx), så farven følger tokenet. Én hårstreg over gruppen. */
   .spec-list {
     display: grid;
     align-content: start;
@@ -478,13 +488,41 @@
     line-height: 1.5;
   }
 
-  .spec-list > li::before {
+  .spec-list > li::before,
+  .x-list > li::before {
     content: "";
-    width: 18px;
-    height: 18px;
-    margin-top: 0.1em;
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Ccircle cx='9' cy='9' r='9' fill='%23e8efff'/%3E%3Cpath d='m5.2 9.3 2.5 2.5 5-5.4' fill='none' stroke='%231c4fd8' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
-      no-repeat center / 18px;
+    width: 20px;
+    height: 20px;
+    margin-top: 0.05em;
+    background: var(--color-cta);
+    -webkit-mask: var(--icon-check) no-repeat center / 20px;
+    mask: var(--icon-check) no-repeat center / 20px;
+  }
+
+  /* Det, der IKKE er med: dæmpet minus i stedet for flueben. */
+  .x-list {
+    display: grid;
+    align-content: start;
+    gap: 10px;
+  }
+
+  .x-list > li {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--color-muted);
+  }
+
+  .x-list > li::before {
+    background: var(--color-muted);
+    -webkit-mask-image: var(--icon-minus);
+    mask-image: var(--icon-minus);
+  }
+
+  :root {
+    --icon-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12.5 4.5 4.5L19 7.5'/%3E%3C/svg%3E");
+    --icon-minus: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12h12'/%3E%3C/svg%3E");
   }
 }
 
@@ -496,8 +534,98 @@
     transition: border-color var(--dur-hover) var(--ease-entrance);
   }
 
-  .nav-link[aria-current] .nav-label {
+  .nav-link[aria-current] .nav-label,
+  .nav-trigger[data-here] .nav-label {
     border-bottom-color: var(--color-cta);
+  }
+
+  .nav-trigger[data-here] {
+    color: var(--color-ink);
+  }
+
+  .nav-chevron {
+    transition: transform var(--dur-hover) var(--ease-entrance);
+  }
+
+  .nav-trigger[aria-expanded='true'] .nav-chevron {
+    transform: rotate(180deg);
+  }
+
+  /* ---- Løsninger: panelet under knappen (desktop) -------------------------
+     Altid i HTML'en; visibility skjuler det for øjne, tastatur og skærmlæsere,
+     mens det er lukket. Ind: opacity og 6px løft, ud: hurtigt. */
+  .solutions-panel {
+    position: absolute;
+    top: calc(100% + 10px);
+    left: -16px;
+    z-index: 60;
+    width: 340px;
+    padding: 8px;
+    border: 1px solid var(--color-rule-strong);
+    border-radius: var(--radius-card);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-pop);
+    visibility: hidden;
+    opacity: 0;
+    transform: translate3d(0, 6px, 0);
+    transition:
+      opacity 140ms var(--ease-exit),
+      transform 140ms var(--ease-exit),
+      visibility 0s linear 140ms;
+  }
+
+  .solutions-panel[data-open='true'] {
+    visibility: visible;
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    transition:
+      opacity var(--dur-hover) var(--ease-entrance),
+      transform var(--dur-hover) var(--ease-entrance),
+      visibility 0s;
+  }
+
+  .solutions-link {
+    display: flex;
+    min-height: 56px;
+    align-items: center;
+    gap: 14px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    touch-action: manipulation;
+    transition: background-color var(--dur-hover) var(--ease-entrance);
+  }
+
+  .solutions-link[aria-current] {
+    background: var(--color-paper);
+  }
+
+  .solutions-link:focus-visible {
+    outline-offset: -3px;
+  }
+
+  @media (hover: hover) {
+    .solutions-link:hover {
+      background: var(--color-paper-2);
+    }
+  }
+
+  .solutions-link:active {
+    background: var(--color-paper-2);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .solutions-panel,
+    .solutions-panel[data-open='true'] {
+      transform: none;
+      transition-duration: 1ms;
+    }
+    .nav-chevron {
+      transition-duration: 1ms;
+    }
+  }
+
+  .icon {
+    flex: none;
   }
 }
 
@@ -505,47 +633,97 @@
   /* ---- Forsidens hero ---------------------------------------------------- */
   .hero {
     padding-top: calc(var(--nav-h) + 28px);
-    padding-bottom: 44px;
+    padding-bottom: 52px;
   }
 
   @media (min-width: 768px) {
     .hero {
       padding-top: calc(var(--nav-h) + 72px);
-      padding-bottom: 80px;
+      padding-bottom: 92px;
     }
   }
 
-  /* Faktaboksen i heroen: hvad man får, med flueben. */
-  .facts {
-    padding: 22px 24px 8px;
-    border: 1px solid var(--color-rule);
-    border-radius: var(--radius-panel);
+  /* Hovedtilbuddet i heroen: én linje med prisen og under den minimumsbetalingen.
+     Aldrig under en "gratis"-overskrift; tallene kommer fra pricing.js/offer.js. */
+  .offer {
+    max-width: 36rem;
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid var(--color-rule-strong);
+  }
+
+  .offer-main {
+    font-size: clamp(1.1875rem, 1rem + 0.9vw, 1.5rem);
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: -0.015em;
+  }
+
+  .offer-sub {
+    margin-top: 4px;
+    font-size: 16px;
+    color: var(--color-muted);
+  }
+
+  /* Kort med fremhævet indhold (hero-kortet, købsmåder, eksempler). */
+  .card {
+    border: 1px solid var(--color-rule-strong);
+    border-radius: var(--radius-card);
     background: var(--color-surface);
   }
 
-  @media (min-width: 768px) {
-    .facts {
-      padding: 28px 32px 12px;
+  .card-panel {
+    border-radius: var(--radius-panel);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* Ikon i en blød accentcirkel. */
+  .icon-tile {
+    display: grid;
+    flex: none;
+    width: 44px;
+    height: 44px;
+    place-items: center;
+    border-radius: 999px;
+    background: var(--color-cta-soft);
+    color: var(--color-cta);
+  }
+
+  /* Et kort, hvor hele fladen er trykbar via ét link (ét tabstop). */
+  .card-link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+  }
+
+  .card-link:focus-visible {
+    outline: none;
+  }
+
+  .card:has(.card-link:focus-visible),
+  .example:has(.card-link:focus-visible) {
+    outline: 3px solid var(--color-cta);
+    outline-offset: 3px;
+  }
+
+  .card-hover {
+    position: relative;
+    transition:
+      border-color var(--dur-hover) var(--ease-entrance),
+      transform var(--dur-hover) var(--ease-entrance),
+      box-shadow var(--dur-hover) var(--ease-entrance);
+  }
+
+  @media (hover: hover) {
+    .card-hover:hover {
+      border-color: var(--color-cta);
     }
   }
 
-  .facts-list > li {
-    display: grid;
-    grid-template-columns: 34px 1fr;
-    align-items: start;
-    padding-block: 14px;
-    border-top: 1px solid var(--color-rule);
-    font-size: 17px;
-    line-height: 1.4;
-  }
-
-  .facts-list > li::before {
-    content: "";
-    width: 22px;
-    height: 22px;
-    margin-top: 0.05em;
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Ccircle cx='9' cy='9' r='9' fill='%23e8efff'/%3E%3Cpath d='m5.2 9.3 2.5 2.5 5-5.4' fill='none' stroke='%231c4fd8' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
-      no-repeat center / 22px;
+  .card-hover:active {
+    transform: scale(0.992);
   }
 
   /* ---- Beregnerens sektion: lyst bånd, så det hvide kort står frem -------- */
@@ -554,30 +732,33 @@
     background: var(--color-paper-2);
   }
 
-  /* ---- Forsidens tre kort ---------------------------------------------- */
-  .service-card {
-    display: flex;
-    height: 100%;
-    flex-direction: column;
-    padding: 26px 26px 22px;
-    border: 1px solid var(--color-rule-strong);
-    border-radius: var(--radius-card);
-    background: var(--color-surface);
-    touch-action: manipulation;
-    transition:
-      border-color var(--dur-hover) var(--ease-entrance),
-      transform var(--dur-hover) var(--ease-entrance);
+  /* Hårstreg-liste: rækker adskilt af hårstreger (vilkår, spørg først, sikkerhed). */
+  .rows > li {
+    padding-block: 16px;
+    border-top: 1px solid var(--color-rule-strong);
   }
 
-  .service-card > :last-child {
-    margin-top: auto;
-    padding-top: 22px;
+  .rows > li:last-child {
+    border-bottom: 1px solid var(--color-rule-strong);
   }
 
-  @media (hover: hover) {
-    .service-card:hover {
-      border-color: var(--color-cta);
-    }
+  /* Statuschip (arbejdsgangsdemoens mini-visning og modulets status). */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 1px 10px;
+    border-radius: 999px;
+    background: var(--color-paper-2);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--color-ink);
+  }
+
+  .chip-accent {
+    background: var(--color-cta-soft);
+    color: var(--color-cta);
   }
 
   /* "fra" og "kr." i sidens skrift, selve tallet i logoets skrift og større. */
@@ -592,21 +773,25 @@
     color: var(--color-ink);
   }
 
-  /* ---- Trin: lodret tidslinje på mobil, tre kolonner fra md ------------- */
+  /* ---- Forløb: lodret tidslinje (fem trin) --------------------------------- */
   .step {
     position: relative;
     display: grid;
     grid-template-columns: 44px 1fr;
     gap: 0 18px;
-    padding-bottom: 30px;
+    padding-bottom: 32px;
+  }
+
+  .step:last-child {
+    padding-bottom: 0;
   }
 
   /* Linjen mellem prikkerne. */
   .step:not(:last-child)::before {
     content: "";
     position: absolute;
-    top: 44px;
-    bottom: 0;
+    top: 52px;
+    bottom: 8px;
     left: 21.5px;
     width: 1px;
     background: var(--color-rule-strong);
@@ -622,22 +807,6 @@
     font-size: 18px;
     font-weight: 600;
     color: var(--color-cta);
-  }
-
-  @media (min-width: 768px) {
-    .step {
-      grid-template-columns: 1fr;
-      gap: 22px;
-      padding-bottom: 0;
-    }
-    .step:not(:last-child)::before {
-      top: 21.5px;
-      bottom: auto;
-      left: 60px;
-      right: -24px;
-      width: auto;
-      height: 1px;
-    }
   }
 
   /* ---- Fast Ring/Mail-bjælke på mobil ----------------------------------- */
@@ -658,8 +827,11 @@
 
   @media (prefers-reduced-motion: reduce) {
     .callbar,
-    .service-card {
+    .card-hover {
       transition-duration: 1ms;
+    }
+    .card-hover:active {
+      transform: none;
     }
   }
 }
@@ -927,7 +1099,7 @@ html[data-calc-pending] :is([data-calc], :has([data-calc])) ~ * {
     border-radius: var(--radius-panel);
     background: var(--color-surface);
     box-shadow:
-      0 1px 2px rgb(14 29 47 / 0.05),
+      0 1px 2px rgb(28 26 23 / 0.05),
       0 18px 40px -22px rgb(28 79 216 / 0.28);
     scroll-margin-top: calc(var(--nav-h) + 12px);
   }
@@ -1161,7 +1333,7 @@ html[data-calc-pending] :is([data-calc], :has([data-calc])) ~ * {
     border: 1px solid var(--color-field);
     border-radius: var(--radius-btn);
     background:
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%230e1d2f' stroke-width='1.5'/%3E%3C/svg%3E")
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%231c1a17' stroke-width='1.5'/%3E%3C/svg%3E")
         no-repeat right 16px center / 12px,
       var(--color-surface);
     font: inherit;
@@ -1355,7 +1527,7 @@ html[data-calc-pending] :is([data-calc], :has([data-calc])) ~ * {
   .example-browser {
     border-bottom: 0;
     border-radius: var(--radius-frame) var(--radius-frame) 0 0;
-    box-shadow: 0 -1px 0 rgb(14 29 47 / 0.04);
+    box-shadow: 0 -1px 0 rgb(28 26 23 / 0.04);
     transition: transform var(--dur-hover) var(--ease-entrance);
   }
 
@@ -1381,7 +1553,7 @@ html[data-calc-pending] :is([data-calc], :has([data-calc])) ~ * {
     border-radius: 18px 18px 0 0;
     background: var(--color-ink);
     outline: 0;
-    box-shadow: 0 10px 28px -8px rgb(14 29 47 / 0.35);
+    box-shadow: 0 10px 28px -8px rgb(28 26 23 / 0.35);
     transition: transform var(--dur-hover) var(--ease-entrance);
   }
 
@@ -1435,5 +1607,149 @@ html[data-calc-pending] :is([data-calc], :has([data-calc])) ~ * {
     .example-phone {
       transition-duration: 1ms;
     }
+  }
+}
+
+@layer components {
+  /* ---- Arbejdsgangskortets skitse (HomeExamples) --------------------------- */
+  .sketch {
+    display: grid;
+    min-height: 216px;
+    align-content: center;
+    gap: 0;
+    padding: 6px 14px 14px;
+    background: var(--color-surface);
+  }
+
+  .sketch-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 62px;
+    border-bottom: 1px solid var(--color-rule);
+  }
+
+  .sketch-row:last-child {
+    border-bottom: 0;
+  }
+
+  .sketch-lines {
+    display: grid;
+    flex: 1;
+    gap: 7px;
+  }
+
+  .sketch-lines > i {
+    display: block;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--color-paper-2);
+  }
+
+  .sketch-lines > i:first-child {
+    height: 10px;
+    background: var(--color-rule-strong);
+  }
+
+  /* ---- Købsmåder (BuyModes) ------------------------------------------------ */
+  .mode {
+    display: flex;
+    flex-direction: column;
+    padding: 28px 22px 26px;
+    border: 1px solid var(--color-rule-strong);
+    border-radius: var(--radius-panel);
+    background: var(--color-surface);
+  }
+
+  @media (min-width: 768px) {
+    .mode {
+      padding: 36px 34px 34px;
+    }
+  }
+
+  .mode[data-primary='true'] {
+    border: 2px solid var(--color-cta);
+    padding: 27px 21px 25px;
+    box-shadow: var(--shadow-card);
+  }
+
+  @media (min-width: 768px) {
+    .mode[data-primary='true'] {
+      padding: 35px 33px 33px;
+    }
+  }
+
+  .mode-price {
+    margin-block: 22px 24px;
+    padding-block: 18px;
+    border-block: 1px solid var(--color-rule);
+  }
+
+  .mode-main {
+    font-size: clamp(1.25rem, 1rem + 1vw, 1.625rem);
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: -0.015em;
+    text-wrap: pretty;
+  }
+
+  .mode-label {
+    margin-top: 24px;
+    margin-bottom: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--color-muted);
+  }
+
+  /* ---- Problemkort ------------------------------------------------------- */
+  .problem {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 26px 24px 24px;
+  }
+
+  /* ---- Vilkår -------------------------------------------------------------- */
+  .term-block {
+    padding: 26px 22px 12px;
+    border: 1px solid var(--color-rule-strong);
+    border-radius: var(--radius-panel);
+    background: var(--color-surface);
+  }
+
+  @media (min-width: 768px) {
+    .term-block {
+      padding: 34px 34px 18px;
+    }
+  }
+
+  .term-block .rows {
+    margin-top: 18px;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  .term-block .rows > li:first-child {
+    border-top-color: var(--color-rule);
+  }
+
+  .term-block .rows > li {
+    border-top-color: var(--color-rule);
+  }
+
+  .term-block .rows > li:last-child {
+    border-bottom: 0;
+  }
+
+  .callout {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 18px 20px;
+    border: 1px solid color-mix(in srgb, var(--color-cta) 28%, transparent);
+    border-radius: var(--radius-card);
+    background: var(--color-cta-soft);
   }
 }

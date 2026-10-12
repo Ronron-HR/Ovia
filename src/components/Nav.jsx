@@ -1,33 +1,148 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { contact } from '../data/pricing.js'
-import { calcHref, links, nav } from '../data/texts.js'
+import { calcHref, links, nav, paths } from '../data/texts.js'
 import { useScrolled } from '../motion/useScrolled.js'
-import ContactButtons, { PhoneIcon } from './ContactButtons.jsx'
+import ContactButtons from './ContactButtons.jsx'
+import Icon from './Icon.jsx'
 import Logo from './Logo.jsx'
 import { Arrow } from './Shots.jsx'
 
 /**
  * NAVIGATION
  *
- * Mærke til venstre, fire links, "Ring" (sekundær) og "Se din pris" (kobolt,
- * sidens eneste farvede knap) til højre.
+ * Mærke til venstre, derefter Løsninger (en disclosure-knap med de fire
+ * løsninger), Eksempler, Priser og Om/Kontakt, og til højre "Ring"
+ * (sekundær) og "Se din pris" (kobolt, sidens eneste farvede knap).
  * "Se din pris" hopper til prisberegneren på siden (#beregner) eller til /priser/.
- * Den side, man står på, markeres med aria-current="page" og en sort streg
- * under ordet (i mobilmenuen: understreget).
+ * Den side, man står på, markeres med aria-current="page" og en streg under
+ * ordet (i mobilmenuen: understreget).
+ *
+ * LØSNINGER (desktop): <button aria-expanded aria-controls>. Åbner og lukker
+ * ved klik/tryk (ikke hover, så det virker på touch), lukker med Escape
+ * (fokus tilbage på knappen), klik udenfor og når fokus forlader menuen.
+ * Pil ned fra knappen åbner og går til det første link; pil op/ned flytter
+ * mellem linkene. Panelet ligger altid i HTML'en (visibility), så linkene kan
+ * læses af søgemaskiner.
  *
  * MOBIL (under lg): mærke, "Ring", "Se din pris" og "Menu".
  * Overlayet er et SØSKENDE til baren, så et fixed overlay ikke måles mod
- * baren. Menuen lukker med Escape og "Luk"; fokus fanges, mens den er åben,
- * og går tilbage til knappen.
+ * baren. Det viser de fire løsninger som en liste under en overskrift og så
+ * de øvrige links. Menuen lukker med Escape og "Luk"; fokus fanges, mens den er
+ * åben, og går tilbage til knappen.
+ *
+ * Teksterne kommer fra nav i texts.js (nav.solutions, nav.items).
  */
 
 const FOCUSABLE = 'a[href], button:not([disabled])'
 
 const clean = (p) => (p || '/').replace(/\/+$/, '') || '/'
-const isHere = (href, path) => clean(href) === clean(path)
+const isHere = (href, path) => !href.includes('#') && clean(href) === clean(path)
+
+const SOLUTION_ICON = {
+  [paths.hjemmeside]: 'browser',
+  [paths.bookingGoogle]: 'pin',
+  [paths.systemer]: 'workflow',
+  [paths.marketing]: 'video',
+}
+
+const solutions = nav.solutions
+const plainLinks = nav.items
 
 const bigLink =
   't-display flex min-h-14 items-center justify-between gap-4 text-[26px] leading-tight aria-[current=page]:underline aria-[current=page]:decoration-2 aria-[current=page]:underline-offset-8'
+
+/** Løsninger som disclosure (desktop). */
+function SolutionsMenu({ path }) {
+  const [open, setOpen] = useState(false)
+  const root = useRef(null)
+  const button = useRef(null)
+  const panel = useRef(null)
+  const here = solutions.items.some((item) => isHere(item.href, path))
+
+  const close = useCallback((focusButton = false) => {
+    setOpen(false)
+    if (focusButton) button.current?.focus({ preventScroll: true })
+  }, [])
+
+  useEffect(() => {
+    if (!open) return
+    const onKey = (event) => {
+      if (event.key === 'Escape') close(true)
+    }
+    const onPointer = (event) => {
+      if (!root.current?.contains(event.target)) close()
+    }
+    document.addEventListener('keydown', onKey)
+    document.addEventListener('pointerdown', onPointer)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.removeEventListener('pointerdown', onPointer)
+    }
+  }, [open, close])
+
+  const items = () => [...(panel.current?.querySelectorAll('a[href]') ?? [])]
+
+  const onButtonKey = (event) => {
+    if (event.key !== 'ArrowDown') return
+    event.preventDefault()
+    setOpen(true)
+    requestAnimationFrame(() => items()[0]?.focus({ preventScroll: true }))
+  }
+
+  const onPanelKey = (event) => {
+    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return
+    event.preventDefault()
+    const list = items()
+    const i = list.indexOf(document.activeElement)
+    const next = event.key === 'ArrowDown' ? (i + 1) % list.length : (i - 1 + list.length) % list.length
+    list[next]?.focus({ preventScroll: true })
+  }
+
+  const onBlur = (event) => {
+    if (!root.current?.contains(event.relatedTarget)) setOpen(false)
+  }
+
+  return (
+    <div ref={root} className="relative" onBlur={onBlur}>
+      <button
+        ref={button}
+        type="button"
+        aria-expanded={open}
+        aria-controls="losninger-menu"
+        data-here={here || undefined}
+        onClick={() => setOpen((v) => !v)}
+        onKeyDown={onButtonKey}
+        className="nav-link nav-trigger flex min-h-11 cursor-pointer items-center gap-1.5 text-[15px] font-medium"
+      >
+        <span className="nav-label">{solutions.label}</span>
+        <Icon name="chevron-down" size={16} className="nav-chevron" />
+      </button>
+
+      <div id="losninger-menu" ref={panel} data-open={open} onKeyDown={onPanelKey} className="solutions-panel">
+        <ul>
+          {solutions.items.map((item) => (
+            <li key={item.href}>
+              <a
+                href={item.href}
+                aria-current={isHere(item.href, path) ? 'page' : undefined}
+                onClick={() => setOpen(false)}
+                className="solutions-link"
+              >
+                <span className="icon-tile">
+                  <Icon name={SOLUTION_ICON[item.href] ?? 'arrow'} size={20} />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-[16px] font-semibold text-ink">{item.label}</span>
+                  {item.text && <span className="mt-0.5 block text-[14px] leading-snug text-muted">{item.text}</span>}
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  )
+}
 
 export default function Nav({ path }) {
   const scrolled = useScrolled()
@@ -114,7 +229,10 @@ export default function Nav({ path }) {
           <div className="hidden items-center gap-8 lg:flex">
             <nav aria-label="Hovednavigation">
               <ul className="flex items-center gap-7">
-                {nav.items.map((item) => (
+                <li>
+                  <SolutionsMenu path={path} />
+                </li>
+                {plainLinks.map((item) => (
                   <li key={item.href}>
                     <a
                       href={item.href}
@@ -130,7 +248,7 @@ export default function Nav({ path }) {
 
             <div className="flex items-center gap-2.5">
               <a href={links.tel} className="btn btn-ghost min-h-11 px-4 text-[15px]" aria-label={`${nav.call} ${contact.phone}`}>
-                <PhoneIcon />
+                <Icon name="phone" />
                 <span>
                   {nav.call}
                   <span className="hidden tabular-nums xl:inline"> {contact.phone}</span>
@@ -146,7 +264,7 @@ export default function Nav({ path }) {
           <div className="flex items-center gap-1.5 lg:hidden">
             {/* Under 380 px skjules ikonet, så "Se din pris" og "Menu" kan være på linjen. */}
             <a href={links.tel} className="nav-call btn btn-ghost min-h-11 px-3 text-[14px] max-[379px]:[&_svg]:hidden" aria-label={`${nav.call} ${contact.phone}`}>
-              <PhoneIcon />
+              <Icon name="phone" />
               {nav.call}
             </a>
             <a href={price} className="nav-call btn btn-cta min-h-11 px-3 text-[14px] whitespace-nowrap">
@@ -178,15 +296,25 @@ export default function Nav({ path }) {
         className="menu-overlay fixed inset-0 z-40 overflow-y-auto bg-paper lg:hidden"
       >
         <nav aria-label="Mobilmenu" className="shell flex min-h-full flex-col pt-[calc(var(--nav-h)+12px)] pb-8">
-          <ul className="flex flex-col">
-            {[{ label: 'Forside', href: '/' }, ...nav.items].map((item) => (
+          <p className="t-eyebrow mt-2">{solutions.label}</p>
+          <ul className="mt-1 flex flex-col">
+            {solutions.items.map((item) => (
               <li key={item.href} className="border-b border-rule">
-                <a
-                  href={item.href}
-                  onClick={close}
-                  aria-current={isHere(item.href, path) ? 'page' : undefined}
-                  className={bigLink}
-                >
+                <a href={item.href} onClick={close} aria-current={isHere(item.href, path) ? 'page' : undefined} className={bigLink}>
+                  <span className="flex items-center gap-3.5">
+                    <Icon name={SOLUTION_ICON[item.href] ?? 'arrow'} size={22} className="text-cta" />
+                    {item.label}
+                  </span>
+                  <Arrow className="text-muted" />
+                </a>
+              </li>
+            ))}
+          </ul>
+
+          <ul className="mt-5 flex flex-col border-t border-rule">
+            {plainLinks.map((item) => (
+              <li key={item.href} className="border-b border-rule">
+                <a href={item.href} onClick={close} aria-current={isHere(item.href, path) ? 'page' : undefined} className={bigLink}>
                   {item.label}
                   <Arrow className="text-muted" />
                 </a>

@@ -1,3 +1,5 @@
+import Icon from './Icon.jsx'
+
 /**
  * Billeder og rammer.
  *
@@ -59,22 +61,7 @@ export function Phone({ children, label, className = '' }) {
   )
 }
 
-/** Lille pil, tegnet som SVG (skrifterne har ikke pile). */
+/** Lille pil (Icon.jsx). `.arrow` får et lille skub ved hover (motion.css). */
 export function Arrow({ className = '' }) {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 16 16"
-      width="14"
-      height="14"
-      className={`arrow ${className}`}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M3 8h10M9 4l4 4-4 4" />
-    </svg>
-  )
+  return <Icon name="arrow" size={16} className={`arrow ${className}`} />
 }

@@ -10,12 +10,12 @@ import { Arrow } from './Shots.jsx'
  */
 export default function ConceptGrid({ eyebrow, title, intro, more }) {
   return (
-    <section aria-labelledby="koncepter-titel" className="section-y bg-paper">
+    <section aria-labelledby="koncepter-titel" className="section-y bg-paper-2">
       <div className="shell">
         <header data-reveal className="grid grid-cols-1 gap-x-14 gap-y-4 lg:grid-cols-12 lg:items-end">
           <div className="lg:col-span-6">
             <p className="t-eyebrow t-eyebrow-strong">{eyebrow}</p>
-            <h2 id="koncepter-titel" className="t-display t-h2 mt-4">
+            <h2 id="koncepter-titel" className="t-display t-h2 mt-3">
               {title}
             </h2>
           </div>
@@ -42,9 +42,9 @@ export default function ConceptGrid({ eyebrow, title, intro, more }) {
                 <span className="tag mt-4">{demos.tagShort}</span>
                 <span className="mt-2.5 flex items-center gap-2 text-[16px] font-medium">
                   {p.name}
-                  <Arrow className="transition-transform duration-200 group-hover:translate-x-1" />
+                  <Arrow />
                 </span>
-                <span className="t-body block text-[14px]">{p.kind}</span>
+                <span className="t-body block text-[15px]">{p.kind}</span>
               </a>
             </li>
           ))}

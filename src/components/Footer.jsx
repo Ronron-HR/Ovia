@@ -1,5 +1,6 @@
 import { company, contact } from '../data/pricing.js'
 import { footer, links } from '../data/texts.js'
+import Icon from './Icon.jsx'
 import Logo from './Logo.jsx'
 
 /** Fodfelt: kontakt, links, CVR og adresse (hver vises, når den er udfyldt i pricing.js). Lys flade under den mørke kontaktsektion. */
@@ -11,15 +12,20 @@ export default function Footer() {
           <div className="col-span-2 md:col-span-5">
             <Logo className="block h-[26px] text-ink" />
             <p className="mt-4 max-w-[40ch]">{footer.tagline}</p>
-            <p className="mt-4">
-              <a href={links.tel} className="link-underline hit font-medium text-ink tabular-nums">
-                {contact.phone}
-              </a>
-              <br />
-              <a href={links.mail} className="link-underline hit font-medium break-all text-ink">
-                {contact.email}
-              </a>
-            </p>
+            <ul className="mt-5 flex flex-col gap-1">
+              <li>
+                <a href={links.tel} className="inline-flex min-h-11 items-center gap-2.5 font-medium text-ink tabular-nums hover:underline hover:underline-offset-4">
+                  <Icon name="phone" className="text-muted" />
+                  {contact.phone}
+                </a>
+              </li>
+              <li>
+                <a href={links.mail} className="inline-flex min-h-11 items-center gap-2.5 font-medium break-all text-ink hover:underline hover:underline-offset-4">
+                  <Icon name="mail" className="text-muted" />
+                  {contact.email}
+                </a>
+              </li>
+            </ul>
           </div>
 
           {footer.columns.map((col, i) => (
@@ -28,7 +34,7 @@ export default function Footer() {
               <ul className="mt-3 flex flex-col">
                 {col.links.map((link) => (
                   <li key={link.href}>
-                    <a href={link.href} className="inline-flex min-h-10 items-center text-muted hover:text-ink hover:underline hover:underline-offset-4">
+                    <a href={link.href} className="inline-flex min-h-11 items-center text-muted hover:text-ink hover:underline hover:underline-offset-4">
                       {link.label}
                     </a>
                   </li>

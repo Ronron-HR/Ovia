@@ -1,15 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
 import {
-  ORDER,
-  priceParts,
+  lineTitle,
+  lokalOf,
   priceText,
   quote,
   resultStep,
+  serviceOf,
+  setWebsite,
   smsBody,
   stepQuestions,
   stepsFor,
   switchTier,
+  toggleService,
   totalText,
+  websiteOf,
 } from '../calculator.js'
 import { useCalc, useGuide } from '../useCalc.js'
 import {
@@ -17,7 +21,6 @@ import {
   driftPlans,
   flags,
   formatKr,
-  fromPriceWithDrift,
   introNote,
   introText,
   priceNote,
@@ -27,19 +30,23 @@ import {
 import Amount from './Amount.jsx'
 import ErrorText from './ErrorText.jsx'
 import NeedsGuide from './NeedsGuide.jsx'
-import PriceDetails, { PriceParts } from './PriceDetails.jsx'
+import PriceDetails, { LokalTerms, PriceParts, TotalBlock } from './PriceDetails.jsx'
 import SendQuote from './SendQuote.jsx'
 import '../calc.css'
 
 /** Etiketterne over totalen i resultatet. "Nu" er calculator.nowLabel med stort. */
 const NOW_LABEL = calculator.nowLabel.charAt(0).toUpperCase() + calculator.nowLabel.slice(1)
 const MONTH_LABEL = 'Pr. måned'
+const LABELS = { once: NOW_LABEL, month: MONTH_LABEL }
 const D = calculator.driftStep
+const M = calculator.modes
 
 /**
  * PRISBEREGNER
  *
- * Trin 1: hvilke ydelser (flervalg). Derefter ét trin pr. valgt ydelse og så
+ * Trin 1: først hjemmesiden, som er enten "Løbende samarbejde" (Lokal) eller "Køb hjemmesiden"
+ * (gensidigt udelukkende radioknapper, og hjemmesiden kan også springes over), derefter tilvalg
+ * (Lokal synlighed og Marketing, afkrydsning). Derefter ét trin pr. valgt ydelse og så
  * resultatet. Hjemmesiden har to trin: siderne (valg 1, pakken) og driften
  * (valg 2, Basis, Plus, Ekstra eller egen konto/hosting). Fremdriftslinjen og
  * "Trin n af m" tæller de faktiske trin. Prisen vises med det samme, uden formular.
@@ -74,6 +81,8 @@ export default function PriceCalculator({ defaults }) {
 
   const [missing, setMissing] = useState(null)
   const [switched, setSwitched] = useState(null)
+  // "Jeg skal ikke have en hjemmeside" er valgt (adresselinjen kan ikke vise et aktivt fravalg).
+  const [noWebsite, setNoWebsite] = useState(false)
   const heading = useRef(null)
   const form = useRef(null)
   const moved = useRef(false)
@@ -113,10 +122,25 @@ export default function PriceCalculator({ defaults }) {
     set({ ...state, step: next })
   }
 
-  const toggleService = (key) => {
+  const toggle = (key) => {
     setMissing(null)
-    const on = selected.includes(key)
-    set({ ...state, selected: ORDER.filter((k) => (k === key ? !on : selected.includes(k))) })
+    set({ ...state, selected: toggleService(selected, key) })
+  }
+
+  // Hjemmesidens købsmåde ('lokal', 'hjemmeside' eller '' = ingen). Tilvalgene beholdes.
+  const chooseWebsite = (value) => {
+    setMissing(null)
+    setNoWebsite(value === '')
+    set({ ...state, selected: setWebsite(selected, value) })
+  }
+
+  // Fra resultatet: skift til den anden købsmåde. Den nye ydelses svar stilles forfra.
+  const swapWebsite = (to) => {
+    setMissing(null)
+    setSwitched(null)
+    setAnimate(true)
+    moved.current = true
+    set({ ...state, selected: setWebsite(selected, to), step: 1 })
   }
 
   const answer = (id, value) => {
@@ -180,7 +204,7 @@ export default function PriceCalculator({ defaults }) {
   }
 
   const q = isResult ? quote(state) : null
-  const totalParts = q ? priceParts(q.total) : null
+  const website = websiteOf(selected)
 
   if (guide) {
     return (
@@ -221,36 +245,67 @@ export default function PriceCalculator({ defaults }) {
               </ErrorText>
             )}
             {step === 0 && (
-              <fieldset>
-                <legend>
-                  <h2 ref={heading} tabIndex={-1} className="t-display t-h3 outline-none">
-                    {calculator.servicesQuestion}
-                  </h2>
-                  <span className="t-body mt-2 block text-[15px]">{calculator.servicesHint}</span>
-                </legend>
-                <div className="mt-6 grid grid-cols-1 gap-3 @2xl:grid-cols-3">
-                  {ORDER.map((key) => (
-                    <label key={key} className="choice">
-                      <input
-                        type="checkbox"
-                        name="ydelser"
-                        value={key}
-                        checked={selected.includes(key)}
-                        onChange={() => toggleService(key)}
-                        className="choice-input"
-                      />
-                      <span className="choice-box">
-                        <span className="choice-mark" aria-hidden="true" />
-                        <span>
-                          <span className="choice-title block text-[17px]">{services[key].name}</span>
-                          <span className="t-body block text-[14px]">{fromPriceWithDrift(services[key])}</span>
+              <>
+                <fieldset>
+                  <legend>
+                    <h2 ref={heading} tabIndex={-1} className="t-display t-h3 outline-none">
+                      {M.legend}
+                    </h2>
+                    <span className="t-body mt-2 block text-[15px]">{M.hint}</span>
+                  </legend>
+                  <div className="mt-6 grid grid-cols-1 gap-3 @2xl:grid-cols-3">
+                    {M.options.map((o) => (
+                      <label key={o.id} className="choice">
+                        <input
+                          type="radio"
+                          name="maade"
+                          value={o.id}
+                          checked={o.value === '' ? website === '' && (noWebsite || selected.length > 0) : website === o.value}
+                          onChange={() => chooseWebsite(o.value)}
+                          className="choice-input"
+                        />
+                        <span className="choice-box">
+                          <span className="choice-mark choice-mark-radio" aria-hidden="true" />
+                          <span>
+                            <span className="choice-title block text-[17px]">{o.title}</span>
+                            <span className="t-body block text-[14px]">{o.text}</span>
+                          </span>
                         </span>
-                      </span>
-                    </label>
-                  ))}
-                </div>
-                {priceNote && <p className="t-body mt-3 text-[14px]">{priceNote}</p>}
-              </fieldset>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+
+                <fieldset className="mt-8">
+                  <legend className="text-[17px] leading-snug font-medium">{M.addonsLegend}</legend>
+                  <span className="t-body mt-1 block text-[14px]">{M.addonsHint}</span>
+                  <div className="mt-4 grid grid-cols-1 gap-3 @2xl:grid-cols-2">
+                    {Object.keys(M.addons).map((key) => (
+                      <label key={key} className="choice">
+                        <input
+                          type="checkbox"
+                          name="ydelser"
+                          value={key}
+                          checked={selected.includes(key)}
+                          onChange={() => toggle(key)}
+                          className="choice-input"
+                        />
+                        <span className="choice-box">
+                          <span className="choice-mark" aria-hidden="true" />
+                          <span>
+                            <span className="choice-title block text-[17px]">{M.addons[key].title}</span>
+                            <span className="t-body block text-[14px]">{M.addons[key].text()}</span>
+                            {key === 'bookingGoogle' && website === 'lokal' && (
+                              <span className="t-body block text-[14px]">{M.addonOverlapLokal}</span>
+                            )}
+                          </span>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                  {priceNote && <p className="t-body mt-3 text-[14px]">{priceNote}</p>}
+                </fieldset>
+              </>
             )}
 
             {step === 0 && (
@@ -269,8 +324,13 @@ export default function PriceCalculator({ defaults }) {
             {current && !isDrift && (
               <div>
                 <h2 ref={heading} tabIndex={-1} className="t-display t-h3 outline-none">
-                  {questions[0]?.heading ?? services[current.key].name}
+                  {questions[0]?.heading ?? (current.key === 'lokal' ? lineTitle({ key: 'lokal', service: serviceOf('lokal') }) : services[current.key].name)}
                 </h2>
+                {current.key === 'lokal' && (
+                  <p className="t-body mt-2 max-w-[60ch] text-[15px]">
+                    {M.options[0].text}. {serviceOf('lokal').tiers[0].summary}
+                  </p>
+                )}
                 {questions.map((question) =>
                   question.kind === 'select' ? (
                     <div key={question.id} className="mt-7">
@@ -297,7 +357,7 @@ export default function PriceCalculator({ defaults }) {
                   ) : (
                     <fieldset key={question.id} className="mt-7">
                       <legend className="text-[17px] leading-snug font-medium">{question.label}</legend>
-                      <Help id={question.id} />
+                      <Help id={question.id} text={question.help} />
                       <div className="mt-3 grid grid-cols-1 gap-2.5 @md:grid-cols-2">
                         {question.options.map((o) => (
                           <label key={o.id} className="choice">
@@ -344,33 +404,10 @@ export default function PriceCalculator({ defaults }) {
               {/* Totalen: små etiketter over beløbene ("Nu", "Pr. måned"). Etiketterne
                   er kun visuelle; skærmlæsere hører "X kr. nu, Y kr. pr. måned". Engangs-
                   og månedsbeløb står hver for sig, og et beløb på 0 vises ikke. */}
-              <div className="calc-total amount-lg mt-4 flex flex-wrap items-end gap-x-10 gap-y-3 tabular-nums">
-                {totalParts.once && (
-                  <p className="calc-total-part">
-                    <span aria-hidden="true" className="t-eyebrow block">
-                      {NOW_LABEL}
-                    </span>
-                    <span className="calc-total-main block">
-                      <Amount text={totalParts.once} />
-                      <span className="sr-only"> {calculator.nowLabel},</span>
-                    </span>
-                  </p>
-                )}
-                {totalParts.month && (
-                  <p className="calc-total-part">
-                    <span aria-hidden="true" className="t-eyebrow block">
-                      {MONTH_LABEL}
-                    </span>
-                    <span className="calc-total-main block">
-                      <Amount text={totalParts.month.replace('/md', '')} />
-                      <span className="sr-only"> {MONTH_LABEL.toLowerCase()}</span>
-                    </span>
-                  </p>
-                )}
-              </div>
+              <TotalBlock q={q} labels={LABELS} className="mt-4" />
               {q.total.noDrift && (
                 <p className="mt-2 text-[16px] text-muted">
-                  {totalParts.month ? calculator.noDriftWithMonthly : calculator.noDriftTotal}
+                  {q.total.monthly ? calculator.noDriftWithMonthly : calculator.noDriftTotal}
                 </p>
               )}
               {q.total.noDrift && calculator.ownAccountNote && (
@@ -383,9 +420,7 @@ export default function PriceCalculator({ defaults }) {
                 {q.lines.map((l) => (
                   <li key={l.key} className="border-b border-rule py-4">
                     <div className="flex flex-col gap-1 @md:flex-row @md:items-baseline @md:justify-between @md:gap-6">
-                      <p className="text-[16px] font-medium">
-                        {l.service.name}: {tierName(l.tier)}
-                      </p>
+                      <p className="text-[16px] font-medium">{lineTitle(l)}</p>
                       <Amount text={priceText(l)} serif={false} className="block text-[16px] tabular-nums" />
                     </div>
                     {l.key === 'marketing' && !flags.hasMarketingCases && (
@@ -406,12 +441,27 @@ export default function PriceCalculator({ defaults }) {
                         </li>
                       ))}
                     </ul>
-                    <TierPicker
-                      line={l}
-                      state={state}
-                      onChange={changeTier}
-                      status={switched?.key === l.key ? switched.text : ''}
-                    />
+                    {l.key === 'lokal' ? (
+                      <p className="mt-3 text-[14px]">
+                        <button type="button" onClick={() => swapWebsite('hjemmeside')} className="calc-link">
+                          {M.switchToKoeb}
+                        </button>
+                      </p>
+                    ) : (
+                      <TierPicker
+                        line={l}
+                        state={state}
+                        onChange={changeTier}
+                        status={switched?.key === l.key ? switched.text : ''}
+                      />
+                    )}
+                    {l.key === 'hjemmeside' && (
+                      <p className="mt-3 text-[14px]">
+                        <button type="button" onClick={() => swapWebsite('lokal')} className="calc-link">
+                          {M.switchToLokal}
+                        </button>
+                      </p>
+                    )}
                     {l.key === 'hjemmeside' && (
                       <DriftPicker
                         line={l}
@@ -434,6 +484,8 @@ export default function PriceCalculator({ defaults }) {
                 ))}
               </ul>
             )}
+
+            {lokalOf(q) && <LokalTerms line={lokalOf(q)} />}
 
             <PriceDetails lines={q.lines} />
 
@@ -525,6 +577,7 @@ function DriftStep({ question, state, heading, onAnswer }) {
                 </span>
                 <Amount text={`${formatKr(plan.monthly)}/md`} serif={false} className="calc-plan-price block tabular-nums" />
                 <span className="mt-1 block text-[14px] font-medium text-ink">{plan.content}</span>
+                <span className="mt-0.5 block text-[14px] font-medium text-ink">{plan.limit}</span>
                 <span className="t-body mt-0.5 block text-[14px]">{plan.summary}</span>
               </>,
             )
@@ -573,8 +626,9 @@ function TierPicker({ line, state, onChange, status }) {
       <legend className="text-[14px] font-medium">{calculator.tierSwitch.legend(line.service.name)}</legend>
       <div className="mt-2 grid grid-cols-1 gap-2 @xl:grid-cols-3">
         {line.service.tiers.map((t) => {
+          // Den valgte pakke viser linjens faktiske pris (fx Start + QR-skilt); de andre prisen efter et skift.
           const after = quote({ ...state, answers: switchTier(key, t.id, state.answers) })
-          const price = priceText(after.lines.find((x) => x.key === key))
+          const price = priceText(line.tier.id === t.id ? line : after.lines.find((x) => x.key === key))
           return (
             <label key={t.id} className="choice choice-sm">
               <input
@@ -656,7 +710,8 @@ function DriftPicker({ line, state, onChange, status }) {
 }
 
 /** Hjælpetekst under et spørgsmål (calculator.help i pricing.js): en tekst eller flere afsnit. */
-function Help({ id }) {
+function Help({ id, text }) {
+  if (text) return <p className="t-body mt-1.5 text-[14px]">{text}</p>
   const help = calculator.help[id]
   if (typeof help !== 'string' && (!help || typeof help !== 'object' || typeof Object.values(help)[0] !== 'string')) return null
   const items = typeof help === 'string' ? [help] : Object.values(help)

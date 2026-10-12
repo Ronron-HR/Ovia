@@ -5,9 +5,14 @@ import {
   driftPlans,
   formatKr,
   legacyDriftPlan,
+  lokal,
+  lokalMinimum,
+  lokalMonthly,
+  lokalService,
   overlap,
   priceNote,
   services,
+  systemModule,
   tierName,
 } from './data/pricing.js'
 
@@ -32,10 +37,24 @@ import {
  * DRIFT: hjemmesidens pakke (sider) og driftsvalget (basis, plus, ekstra eller
  * egen) er uafhængige. Driftsvalget har ingen standardværdi: mangler det, flytter
  * fit() kunden til driftstrinnet, og quote() regner ingen månedspris.
+ *
+ * TO KØBSMÅDER: hjemmesiden er enten "Løbende samarbejde" (ydelsen `lokal`: 0 kr. i
+ * opstart, fast månedspris, mindst seks måneder) eller "Køb hjemmesiden" (ydelsen
+ * `hjemmeside`: engangspris + driftsplan). De to er gensidigt udelukkende (WEBSITE);
+ * parse() og fit() sørger for, at kun én er valgt, så de aldrig opkræves begge.
+ * Gamle links (ydelser=hjemmeside&sider=…&drift=…) er altid "Køb hjemmesiden".
+ *
+ * LOKAL: `lokal` har ingen pakker. Totalen viser opstart, månedspris og minimum
+ * (`total.lokal`) hver for sig. Systemtilvalget (spørgsmålet `system`) lægger kun
+ * en pris til, når systemModule.ready er true; ellers er det et særskilt tilbud.
  */
 
 /** Ydelsernes rækkefølge i beregneren. */
-export const ORDER = ['hjemmeside', 'marketing', 'bookingGoogle']
+export const ORDER = ['lokal', 'hjemmeside', 'marketing', 'bookingGoogle']
+/** De to købsmåder for hjemmesiden: højst én ad gangen. */
+export const WEBSITE = ['lokal', 'hjemmeside']
+/** Ydelsen som objekt med navn (Lokal ligger uden for `services`). */
+export const serviceOf = (key) => (key === 'lokal' ? lokalService : services[key])
 const RANK = ['start', 'vaekst', 'fuld-fart']
 
 const allQuestions = ORDER.flatMap((key) => calculator.questions[key])
@@ -72,8 +91,23 @@ export const stepQuestions = (step, answers) =>
 /** Resultatets trin (0-baseret): efter ydelsesvalget og alle ydelsernes trin. */
 export const resultStep = (selected) => stepsFor(selected).length + 1
 
+/**
+ * Booking & Google er bygget af komponenter: Google-profilen er altid med, og svarene
+ * tilføjer booking og/eller QR-skilt. Pakken er den højeste, hvis komponenter alle er valgt;
+ * valgte komponenter uden for pakken (QR uden booking) lægges til hver for sig (`extras`).
+ */
+export function bookingGoogleParts(answers) {
+  const chosen = visibleQuestions('bookingGoogle', answers).map((q) => optionOf(q, answers))
+  const wanted = new Set(['googleProfile', ...chosen.map((o) => o?.component).filter(Boolean)])
+  const fits = services.bookingGoogle.tiers.filter((t) => t.includes.every((id) => wanted.has(id)))
+  const tier = fits[fits.length - 1]
+  return { tier, extras: [...wanted].filter((id) => !tier.includes.includes(id)), components: [...wanted] }
+}
+
 /** Pakken, svarene peger på: den højeste `tier` blandt de valgte svar. */
 export function tierFor(key, answers) {
+  if (key === 'lokal') return 'lokal'
+  if (key === 'bookingGoogle') return bookingGoogleParts(answers).tier.id
   const tiers = visibleQuestions(key, answers)
     .map((q) => optionOf(q, answers))
     .filter((o) => o && o.tier)
@@ -99,30 +133,53 @@ export function cleanAnswers(answers) {
  * uændret. Ekstra sider ryddes bagefter, som ved ethvert svar.
  */
 export function switchTier(key, tierId, answers) {
+  if (!calculator.tierSwitch[key]) return answers
   return cleanAnswers({ ...answers, ...calculator.tierSwitch[key][tierId].answers })
 }
+
+/* ---- Valg af ydelser (to købsmåder for hjemmesiden) ---------------------- */
+
+/** Højst én af hjemmesidens to købsmåder; ellers den første i `wanted`-rækkefølgen. */
+function oneWebsite(list) {
+  const first = list.find((k) => WEBSITE.includes(k))
+  return ORDER.filter((k) => list.includes(k) && (!WEBSITE.includes(k) || k === first))
+}
+
+/** Slår en ydelse til eller fra. Vælges den ene købsmåde, fravælges den anden. */
+export function toggleService(selected, key) {
+  if (selected.includes(key)) return selected.filter((k) => k !== key)
+  return ORDER.filter((k) => k === key || (selected.includes(k) && !(WEBSITE.includes(key) && WEBSITE.includes(k))))
+}
+
+/** Sætter hjemmesidens købsmåde: 'lokal', 'hjemmeside' eller '' (ingen). Tilvalgene beholdes. */
+export function setWebsite(selected, value) {
+  return ORDER.filter((k) => (k === value ? true : selected.includes(k) && !WEBSITE.includes(k)))
+}
+
+/** Hjemmesidens valgte købsmåde i en tilstand ('lokal', 'hjemmeside' eller ''). */
+export const websiteOf = (selected) => selected.find((k) => WEBSITE.includes(k)) ?? ''
 
 /* ---- Adresselinje ------------------------------------------------------ */
 
 /** Trinnet må ikke vise noget, der kræver svar, som mangler. */
 export function fit(state) {
-  const { selected } = state
+  const selected = oneWebsite(state.selected)
   const answers = cleanAnswers(state.answers)
   const steps = stepsFor(selected)
   const last = steps.length + 1 // resultatet
   let step = Math.min(Math.max(0, state.step), last)
-  if (!selected.length) return { ...state, answers, step: 0 }
+  if (!selected.length) return { ...state, selected, answers, step: 0 }
   for (let i = 0; i < steps.length && step > i + 1; i++) {
     const missing = stepQuestions(steps[i], answers).some((q) => !answers[q.id])
     if (missing) step = i + 1
   }
-  return { ...state, answers, step }
+  return { ...state, selected, answers, step }
 }
 
 export function parse(search, defaults = NONE) {
   const q = new URLSearchParams(search)
   const wanted = q.has('ydelser') ? q.get('ydelser').split(',') : defaults
-  const selected = ORDER.filter((k) => wanted.includes(k))
+  const selected = oneWebsite(wanted)
   const answers = {}
   for (const question of allQuestions) {
     const v = q.get(question.id)
@@ -156,6 +213,43 @@ export function serialize({ selected, answers, step }, defaults = NONE) {
 /* ---- Beregning ---------------------------------------------------------- */
 
 const sum = (parts, field) => parts.reduce((s, p) => s + p[field], 0)
+const capitalize = (text) => text.charAt(0).toUpperCase() + text.slice(1)
+
+/**
+ * Lokal (løbende samarbejde): 0 kr. i opstart, fast månedspris og en minimumsperiode.
+ * Systemtilvalget lægger KUN sin månedspris til, når systemModule.ready er true; ellers
+ * er "Ja" en forespørgsel om et særskilt fast tilbud uden pris (ready læses ved hvert kald).
+ */
+function lokalLine(answers) {
+  const chosen = visibleQuestions('lokal', answers).map((q) => ({ question: q, option: optionOf(q, answers) }))
+  const wantsSystem = chosen.some((c) => c.option?.system)
+  const withSystem = wantsSystem && systemModule.ready
+  const notes = wantsSystem ? [withSystem ? calculator.systemNote.ready() : calculator.systemNote.pending] : []
+  const parts = [{ id: 'lokal', label: lokalService.name, once: lokal.start, monthly: lokal.monthly }]
+  if (withSystem) parts.push({ id: 'system', label: systemModule.name, once: 0, monthly: systemModule.monthly })
+  const once = sum(parts, 'once')
+  const monthly = sum(parts, 'monthly')
+  return {
+    key: 'lokal',
+    service: lokalService,
+    tier: lokalService.tiers[0],
+    chosen,
+    once,
+    monthly,
+    noDrift: false,
+    driftPlan: null,
+    driftMissing: false,
+    parts,
+    notes,
+    includes: [...lokal.includes],
+    withoutExtraPages: once,
+    /** Systemtilvalg ønsket / med i prisen. */
+    system: wantsSystem,
+    systemReady: withSystem,
+    /** Forpligtelsen: mindst så mange måneder, mindste betaling over perioden. */
+    commitment: { monthly, months: lokal.minMonths, minimum: lokalMinimum(withSystem) },
+  }
+}
 
 /**
  * Pris for én ydelse ud fra svarene. Alle priser er faste: `once` er det, der
@@ -164,6 +258,7 @@ const sum = (parts, field) => parts.reduce((s, p) => s + p[field], 0)
  * har negativt beløb), og `driftPlan` er hjemmesidens driftsplan (id eller null).
  */
 function line(key, answers) {
+  if (key === 'lokal') return lokalLine(answers)
   const service = services[key]
   const tierId = tierFor(key, answers)
   const tier = service.tiers.find((t) => t.id === tierId)
@@ -180,6 +275,11 @@ function line(key, answers) {
   let driftPlan = null
   let noDrift = false
   let extraPagesCost = 0
+  // Booking & Google: komponenter uden for pakken (QR uden booking) som egne dele til komponentens pris.
+  const bg = key === 'bookingGoogle' ? bookingGoogleParts(answers) : null
+  for (const id of bg?.extras ?? []) {
+    parts.push({ id, label: capitalize(components[id].label), once: components[id].price, monthly: 0 })
+  }
   if (service.billing !== 'monthly') {
     for (const o of options) {
       const addon = o.addon && service.addons[o.addon]
@@ -200,46 +300,52 @@ function line(key, answers) {
   }
   const once = sum(parts, 'once')
   const monthly = sum(parts, 'monthly')
-  // Det, hjemmesiden reelt indeholder: pakkens dele + booking, hvis den er valgt som tilvalg.
-  const includes = [...new Set([...(tier.includes ?? []), ...options.filter((o) => o.addsBooking).map(() => 'booking')])]
+  // Det, pakken reelt indeholder: pakkens dele + booking, hvis den er valgt som tilvalg på hjemmesiden;
+  // for Booking & Google alle valgte komponenter.
+  const includes = bg
+    ? bg.components
+    : [...new Set([...(tier.includes ?? []), ...options.filter((o) => o.addsBooking).map(() => 'booking')])]
   /** Hjemmesiden uden valgt drift: priserne er ufuldstændige (fit() sender kunden til driftstrinnet). */
   const driftMissing = key === 'hjemmeside' && chosen.some((c) => c.question.id === 'drift' && !c.option)
   return { key, service, tier, chosen, once, monthly, noDrift, driftPlan, driftMissing, parts, notes, includes, withoutExtraPages: once - extraPagesCost }
 }
 
-const capitalize = (text) => text.charAt(0).toUpperCase() + text.slice(1)
-
 /**
  * Komponenter tælles kun én gang: de dele af Booking & Google, der allerede er
- * med i den valgte hjemmesidepakke (`includes` i pricing.js), trækkes fra
+ * med i den valgte hjemmeside (pakkens `includes` i pricing.js, eller Lokal), trækkes fra
  * Booking & Google-prisen, og noten siger, hvad og hvorfor (og fradraget står
  * som en negativ del i `parts`). Prisen bliver aldrig negativ: er hele pakken
  * dækket, koster den ingenting, linjen får `allIncluded`, og intet lægges til totalen.
  */
 function applyOverlap(web, bg) {
   if (!web || !bg) return
-  const shared = bg.tier.includes.filter((id) => web.includes.includes(id))
+  const shared = bg.includes.filter((id) => web.includes.includes(id))
   if (!shared.length) return
   let left = bg.once
   for (const id of shared) {
     // Aldrig mere end det, der er tilbage: linjen bliver ikke negativ.
     const amount = Math.min(left, components[id].price)
     left -= amount
-    bg.notes.push(overlap.note(capitalize(components[id].label), formatKr(amount), overlap.reasons[id](tierName(web.tier))))
+    const reason = web.key === 'lokal' && overlap.reasonsLokal[id] ? overlap.reasonsLokal[id]() : overlap.reasons[id](tierName(web.tier))
+    bg.notes.push(overlap.note(capitalize(components[id].label), formatKr(amount), reason))
     bg.parts.push({ id: `fradrag-${id}`, label: `Trukket fra: ${capitalize(components[id].label)}`, once: -amount, monthly: 0 })
   }
   bg.once = sum(bg.parts, 'once')
-  if (bg.once === 0) bg.allIncluded = true
+  if (bg.once === 0) {
+    bg.allIncluded = true
+    bg.allIncludedText = web.key === 'lokal' ? overlap.allIncludedLokal : overlap.allIncluded
+  }
 }
 
 /** Hele tilbuddet: én linje pr. valgt ydelse, en samlet pris og fælles noter. */
 export function quote({ selected, answers }) {
   const clean = cleanAnswers(answers)
   const lines = selected.map((key) => line(key, clean))
-  const web = lines.find((l) => l.key === 'hjemmeside')
+  const web = lines.find((l) => l.key === 'hjemmeside' || l.key === 'lokal')
   const bg = lines.find((l) => l.key === 'bookingGoogle')
   applyOverlap(web, bg)
   const hasBooking = [web, bg].some((l) => l?.includes.includes('booking'))
+  const lokalLine_ = lines.find((l) => l.key === 'lokal')
   return {
     lines,
     notes: hasBooking ? [bookingSubscriptionNote] : [],
@@ -247,6 +353,8 @@ export function quote({ selected, answers }) {
       once: lines.reduce((s, l) => s + l.once, 0),
       monthly: lines.reduce((s, l) => s + l.monthly, 0),
       noDrift: lines.some((l) => l.noDrift),
+      /** Lokal: forpligtelsen (månedspris, antal måneder, mindste betaling), ellers null. */
+      lokal: lokalLine_ ? lokalLine_.commitment : null,
     },
   }
 }
@@ -262,11 +370,13 @@ export function priceParts({ once, monthly }) {
 /**
  * En linjes pris: engangsbeløb + månedsbeløb, kun månedsbeløb eller kun
  * engangsbeløb. Egen konto: beløbet + calculator.noDriftSuffix. En Booking & Google-
- * linje, der er helt dækket af hjemmesiden, får overlap.allIncluded.
+ * linje, der er helt dækket af hjemmesiden, får overlap.allIncluded. Lokal viser opstarten
+ * (0 kr.) før månedsprisen.
  */
 export function priceText(price) {
-  if (price.allIncluded) return overlap.allIncluded
+  if (price.allIncluded) return price.allIncludedText ?? overlap.allIncluded
   const { once, month } = priceParts(price)
+  if (price.key === 'lokal') return `${formatKr(price.once)} i opstart + ${month}`
   if (price.noDrift && once && !month) return `${once} ${calculator.noDriftSuffix}`
   return once && month ? `${once} + ${month}` : once || month
 }
@@ -277,19 +387,47 @@ export function partText({ once, monthly }) {
   return [once && formatKr(once), monthly && `${formatKr(monthly)}/md`].filter(Boolean).join(' + ')
 }
 
-/** Totalen: engangsbeløbet + calculator.nowLabel og månedsbeløbet (et beløb på 0 udelades). */
+/**
+ * Minimumsperioden for Lokal som tekst: "mindst 6 mdr. = mindst 5.970 kr." Står der også
+ * engangsbeløb eller månedsbeløb uden minimumsperiode i totalen, gælder minimum kun Lokal.
+ */
+export function minimumText(total) {
+  const L = total.lokal
+  if (!L) return ''
+  const T = calculator.lokalTerms
+  if (total.once === 0 && total.monthly === L.monthly) return T.minimum(L.months, formatKr(L.minimum))
+  return T.minimumScoped(formatKr(L.monthly), L.months, formatKr(L.minimum))
+}
+
+/** Totalen: engangsbeløbet + calculator.nowLabel og månedsbeløbet (et beløb på 0 udelades, undtagen opstarten for Lokal). */
 export function totalText(total) {
   const { once, month } = priceParts(total)
-  return [once && `${once} ${calculator.nowLabel}`, month].filter(Boolean).join(' + ')
+  const now = once || (total.lokal ? formatKr(0) : '')
+  const base = [now && `${now} ${calculator.nowLabel}`, month].filter(Boolean).join(' + ')
+  return total.lokal ? `${base} · ${minimumText(total)}` : base
 }
+
+/** Titlen på en linje: "Løbende samarbejde: Lokal" eller "Hjemmeside: Vækst". */
+export const lineTitle = (l) => (l.key === 'lokal' ? `${l.service.label}: ${l.service.name}` : `${l.service.name}: ${tierName(l.tier)}`)
 
 /** Opsummering til SMS og mail: pakke, drift og beløb pr. ydelse og totalen. */
 export function summaryLines(q) {
   const out = q.lines.map((l) => {
     const answers = l.chosen
       .filter((c) => c.option)
-      .map((c) => `${c.question.short}: ${c.option.summary ?? c.option.label}`)
+      .map((c) => {
+        const text = c.option.system
+          ? l.systemReady
+            ? calculator.systemNote.summaryReady
+            : calculator.systemNote.summaryPending
+          : (c.option.summary ?? c.option.label)
+        return `${c.question.short}: ${text}`
+      })
     if (l.driftMissing) answers.push('Drift: ikke valgt')
+    if (l.key === 'lokal') {
+      const c = l.commitment
+      return `${lineTitle(l)}, ${calculator.lokalTerms.summaryLine(formatKr(c.monthly), c.months, formatKr(c.minimum))} (${answers.join('; ')})`
+    }
     return `${l.service.name}, ${tierName(l.tier)}: ${priceText(l)} (${answers.join('; ')})`
   })
   out.push(`I alt: ${totalText(q.total)}`)
@@ -308,3 +446,6 @@ export const sentence = (text) => (text.endsWith('.') ? text : `${text}.`)
 export function smsBody(q) {
   return [calculator.smsIntro, ...summaryLines(q), ...(priceNote ? [priceNote] : [])].join('\n')
 }
+
+/** Lokal-linjen i et tilbud (eller undefined). Resultatet viser vilkårene før formularen. */
+export const lokalOf = (q) => q.lines.find((l) => l.key === 'lokal')

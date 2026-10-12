@@ -1,5 +1,6 @@
 import { contact } from '../data/pricing.js'
 import { cta, links } from '../data/texts.js'
+import Icon from './Icon.jsx'
 
 /**
  * "Ring" og "Mail" — sidens vigtigste knapper. Ring viser altid nummeret,
@@ -57,39 +58,6 @@ export default function ContactButtons({
   )
 }
 
-const iconProps = {
-  'aria-hidden': true,
-  viewBox: '0 0 20 20',
-  width: 18,
-  height: 18,
-  fill: 'none',
-  stroke: 'currentColor',
-  strokeWidth: 1.5,
-  strokeLinecap: 'round',
-  strokeLinejoin: 'round',
-}
-
-export function PhoneIcon() {
-  return (
-    <svg {...iconProps}>
-      <path d="M6.6 2.8 4.4 3.3a1.6 1.6 0 0 0-1.2 1.7c.6 6.1 5.7 11.2 11.8 11.8a1.6 1.6 0 0 0 1.7-1.2l.5-2.2a1 1 0 0 0-.6-1.1l-2.6-1.1a1 1 0 0 0-1.1.3l-1 1.2a9 9 0 0 1-4.4-4.4l1.2-1a1 1 0 0 0 .3-1.1L7.7 3.4a1 1 0 0 0-1.1-.6Z" />
-    </svg>
-  )
-}
-
-export function MailIcon() {
-  return (
-    <svg {...iconProps}>
-      <rect x="2.75" y="4.25" width="14.5" height="11.5" rx="1.5" />
-      <path d="m3.5 5.5 6.5 5 6.5-5" />
-    </svg>
-  )
-}
-
-export function SmsIcon() {
-  return (
-    <svg {...iconProps}>
-      <path d="M4.5 3.75h11a1.75 1.75 0 0 1 1.75 1.75v7a1.75 1.75 0 0 1-1.75 1.75H9l-3.75 3v-3H4.5a1.75 1.75 0 0 1-1.75-1.75v-7A1.75 1.75 0 0 1 4.5 3.75Z" />
-    </svg>
-  )
-}
+export const PhoneIcon = () => <Icon name="phone" />
+export const MailIcon = () => <Icon name="mail" />
+export const SmsIcon = () => <Icon name="sms" />

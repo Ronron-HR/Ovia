@@ -1,6 +1,6 @@
 import { calculator, formatKr, priceNote } from './data/pricing.js'
 import { privacy } from './data/texts.js'
-import { NONE, parse, priceParts, quote, quoteNotes, resultStep, serialize, summaryLines } from './calculator.js'
+import { NONE, lokalOf, minimumText, parse, priceParts, quote, quoteNotes, resultStep, serialize, summaryLines } from './calculator.js'
 
 /**
  * HENVENDELSER FRA PRISBEREGNEREN — fælles for formularen (SendQuote.jsx) og
@@ -17,26 +17,32 @@ export const inquiry = {
   retentionMonths: privacy.retentionMonths,
   endpoint: '/api/henvendelse',
   title: 'Send din forespørgsel',
-  /** Hvad formularen faktisk gør: den sender en forespørgsel til Ronny, ikke et tilbud til kunden. */
+  /** Hvad formularen faktisk gør: den sender en forespørgsel til Ronny, ikke en bestilling og ikke et tilbud til kunden. */
   intro:
-    'Jeg får dine valg og prisen og svarer inden for 24 timer, på mail eller telefon. Der sendes ikke et tilbud automatisk: Jeg gennemgår valgene med dig og bekræfter prisen.',
+    'Det er en forespørgsel, ikke en bestilling. Jeg får dine valg og prisen og svarer inden for 24 timer, på mail eller telefon. Intet er bestilt, og der sendes ikke et tilbud automatisk: Jeg gennemgår valgene med dig og bekræfter prisen, og vi aftaler omfanget skriftligt, før noget starter.',
   contactLabel: 'Din mail eller dit telefonnummer',
   nameLabel: 'Navn / virksomhed',
   optional: '(valgfrit)',
+  messageLabel: 'Besked',
+  /** Hvad beskeden bruges til. */
+  messageHint: 'Fortæl kort, hvad du har brug for, eller hvad du undrer dig over. Jeg bruger den kun til at forstå din forespørgsel og svare dig. Skriv ikke noget følsomt.',
+  /** Tæller under beskedfeltet: tegn tilbage. */
+  messageLeft: (n) => `${n} tegn tilbage`,
   submit: 'Send til Ronny',
   sending: 'Sender …',
   thanks: 'Tak. Jeg svarer inden for 24 timer.',
   /** Fejl: telefonnummeret sættes ind mellem de to dele (contact.phone). */
-  failed: 'Det blev ikke sendt. Ring på',
+  failed: 'Det blev ikke sendt. Dine valg og din besked står stadig her. Ring på',
   failedAfter: ', så tager jeg den derfra.',
   invalid: 'Skriv en gyldig mail eller et dansk telefonnummer (8 cifre).',
   /** Linjen under knappen: hvad oplysningerne bruges til. */
   privacy: 'Bruges kun til at svare dig.',
   privacyLink: 'Privatlivspolitik',
-  mailSubject: (contact) => `Tilbud fra prisberegneren: ${contact}`,
+  mailSubject: (contact) => `Forespørgsel fra prisberegneren: ${contact}`,
 }
 
-export const LIMITS = { contact: 200, name: 160, link: 600 }
+/** Længstetegn pr. felt. message: valgfri besked (højst 1.000 tegn). MAX_BODY i worker/index.js skal kunne rumme dem alle. */
+export const LIMITS = { contact: 200, name: 160, link: 600, message: 1000 }
 
 const EMAIL = /^[^\s@<>"',;()]+@[^\s@<>"',;()]+\.[^\s@<>"',;()]{2,}$/
 
@@ -55,6 +61,18 @@ export const validContact = (value) => {
   return Boolean(v) && (validEmail(v) || Boolean(danishPhone(v)))
 }
 
+/** Beskeden: linjeskift bevares (højst to i træk), øvrige styretegn fjernes, højst LIMITS.message tegn. */
+export function cleanMessage(value) {
+  return String(value ?? '')
+    .replace(/\r\n?/g, '\n')
+    .replace(/[^\S\n]+/g, ' ')
+    .replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, '')
+    .replace(/ ?\n ?/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+    .slice(0, LIMITS.message)
+}
+
 /** Felterne renset (samme på klient og server). */
 export function normalize(raw) {
   const s = (x, max) => String(x ?? '').replace(/[\r\n\t]+/g, ' ').trim().slice(0, max)
@@ -62,6 +80,7 @@ export function normalize(raw) {
     contact: s(raw?.contact, LIMITS.contact),
     name: s(raw?.name, LIMITS.name),
     link: s(raw?.link, LIMITS.link),
+    message: cleanMessage(raw?.message),
     honeypot: s(raw?.website, 200),
     turnstile: s(raw?.turnstile, 4096),
   }
@@ -89,14 +108,15 @@ export function canonicalLink(link, origin) {
 }
 
 /** Mailen til Ronny: kontakt, navn, opsummering med pakker og drift, nu/pr. md, moms og linket. */
-export function composeMail({ contact, name, link, state }) {
+export function composeMail({ contact, name, message = '', link, state }) {
   const q = quote(state)
   const { once, month } = priceParts(q.total)
   const phone = danishPhone(contact)
+  const lokal = lokalOf(q)
   return {
     subject: inquiry.mailSubject(contact),
     text: [
-      'Ny henvendelse fra prisberegneren på oviaspecs.com',
+      'Ny forespørgsel fra prisberegneren på oviaspecs.com (en forespørgsel, ikke en bestilling)',
       '',
       `Kontakt: ${phone ? `${phone} (telefon)` : `${contact} (mail)`}`,
       `Navn / virksomhed: ${name || '(ikke udfyldt)'}`,
@@ -106,9 +126,11 @@ export function composeMail({ contact, name, link, state }) {
       '',
       `Nu: ${once || formatKr(0)}`,
       `Pr. md: ${month || `${formatKr(0)}/md`}`,
+      ...(lokal ? [`Minimum (Lokal): ${minimumText(q.total)}`] : []),
       ...(priceNote ? [priceNote] : []),
       ...(quoteNotes(q).length ? ['', ...quoteNotes(q)] : []),
       ...(calculator.finalNote ? ['', calculator.finalNote] : []),
+      ...(message ? ['', 'Besked fra kunden (hver linje starter med >):', ...message.split('\n').map((l) => `> ${l}`)] : []),
       '',
       `Link til beregningen: ${link}`,
     ].join('\n'),

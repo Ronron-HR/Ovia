@@ -20,7 +20,7 @@ import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { dirname } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
-const { routes, renderPage, renderPrivacy, pageFiles, pageKeyFor, organisationLd } = await import(
+const { routes, renderPage, renderPrivacy, pageFiles, pageKeyFor, organisationLd, privacySeo } = await import(
   pathToFileURL('dist-ssr/entry-server.js').href
 )
 
@@ -28,6 +28,29 @@ const ORIGIN = 'https://oviaspecs.com'
 const MARK = '<div id="root"></div>'
 const template = readFileSync('dist/index.html', 'utf8')
 if (!template.includes(MARK)) throw new Error(`dist/index.html: fandt ikke ${MARK}`)
+
+// Skabelonens grundlag for SEO: sprog, viewport og de felter, der skiftes pr. side.
+for (const needle of ['<html lang="da">', '<meta name="viewport" content="width=device-width, initial-scale=1.0" />', '<link rel="canonical" href="']) {
+  if (!template.includes(needle)) throw new Error(`dist/index.html: mangler ${needle}`)
+}
+
+// Titler og beskrivelser: unikke pr. side og inden for rimelig længde (brief afsnit J).
+// Hård grænse fejler bygget; blød grænse (titel > 60, beskrivelse uden for 110-165) advarer.
+const unique = { title: new Map(), description: new Map() }
+for (const r of routes) {
+  for (const field of ['title', 'description']) {
+    const v = r[field]
+    if (typeof v !== 'string' || !v.trim()) throw new Error(`${r.path}: ${field} mangler (src/data/seo.js)`)
+    if (unique[field].has(v)) throw new Error(`${r.path} og ${unique[field].get(v)} har samme ${field}`)
+    unique[field].set(v, r.path)
+  }
+  if (r.title.length > 70) throw new Error(`${r.path}: titlen er ${r.title.length} tegn (højst 70)`)
+  if (r.description.length > 180) throw new Error(`${r.path}: beskrivelsen er ${r.description.length} tegn (højst 180)`)
+  if (r.title.length > 60) console.warn(`  advarsel: ${r.path} titel er ${r.title.length} tegn (ca. 60 anbefales)`)
+  if (r.description.length < 110 || r.description.length > 165) {
+    console.warn(`  advarsel: ${r.path} beskrivelse er ${r.description.length} tegn (ca. 120-158 anbefales)`)
+  }
+}
 
 // Sidenøglerne i routes.js, pages.jsx og pageKeys.js/pageLoaders.js skal passe sammen.
 for (const route of routes) {
@@ -82,6 +105,7 @@ function build(route) {
   html = setMeta(html, 'name', 'twitter:title', route.title)
   html = setMeta(html, 'name', 'twitter:description', route.description)
   html = html.replace(/(<link rel="canonical" href=")[^"]*(")/, (_, a, b) => `${a}${url}${b}`)
+  if (!html.includes(`<link rel="canonical" href="${url}"`)) throw new Error(`${route.path}: canonical blev ikke sat`)
 
   // Organisationens strukturerede data (bygget fra pricing.js) hører til forsiden.
   const ld = /<script type="application\/ld\+json">[\s\S]*?<\/script>/
@@ -119,16 +143,24 @@ if (!privacy.includes(MARK)) throw new Error(`${privacyFile}: fandt ikke ${MARK}
 writeFileSync(privacyFile, privacy.replace(MARK, () => `<div id="root">${renderPrivacy()}</div>`))
 console.log(`  ${privacyFile}`)
 
-// Sitemap ud fra samme liste.
-const today = new Date().toISOString().slice(0, 10)
-const urls = [...routes.map((r) => r.path), '/privatlivspolitik/']
-writeFileSync(
-  'dist/sitemap.xml',
-  `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls
-    .map((p) => `  <url>\n    <loc>${ORIGIN}${p}</loc>\n    <lastmod>${today}</lastmod>\n  </url>`)
-    .join('\n')}\n</urlset>\n`,
-)
-console.log(`  dist/sitemap.xml  ${urls.length} adresser`)
+// Sitemap ud fra samme liste (src/routes.js) plus privatlivspolitikken. <lastmod> er
+// sidens `updated` i src/data/seo.js (ikke byggedatoen: en dato, der skifter ved
+// hvert build, lærer søgemaskiner at ignorere feltet). Mangler den, udelades feltet.
+const entries = [...routes, privacySeo]
+for (const e of entries) {
+  if (e.updated && !/^\d{4}-\d{2}-\d{2}$/.test(e.updated)) throw new Error(`${e.path}: updated skal være ÅÅÅÅ-MM-DD`)
+}
+const urlEntry = (e) =>
+  ['  <url>', `    <loc>${ORIGIN}${e.path}</loc>`, ...(e.updated ? [`    <lastmod>${e.updated}</lastmod>`] : []), '  </url>'].join('\n')
+const sitemap = [
+  '<?xml version="1.0" encoding="UTF-8"?>',
+  '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+  ...entries.map(urlEntry),
+  '</urlset>',
+  '',
+].join('\n')
+writeFileSync('dist/sitemap.xml', sitemap)
+console.log(`  dist/sitemap.xml  ${entries.length} adresser`)
 
 // Sikkerhedsheaders: indlejrede scripts tillades med hash (public/_headers).
 const htmlFiles = (dir) =>

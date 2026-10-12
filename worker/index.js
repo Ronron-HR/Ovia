@@ -7,7 +7,7 @@ import { canonicalLink, composeMail, inquiry, normalize, validContact, validEmai
  * (wrangler.jsonc: assets.run_worker_first); alt andet serveres direkte.
  *
  * POST /api/henvendelse:
- *   1. kun POST fra siden selv (same origin), højst 8 kB JSON
+ *   1. kun POST fra siden selv (same origin), højst 10 kB JSON
  *   2. honeypot: et udfyldt skjult felt får et almindeligt OK, men intet gemmes eller sendes
  *   3. rate limit pr. IP med Workers Rate Limiting-bindingen (RATE_LIMITER, ikke
  *      hukommelse) — altid. Turnstile kun, når TURNSTILE_SECRET er sat: så er en
@@ -31,7 +31,8 @@ import { canonicalLink, composeMail, inquiry, normalize, validContact, validEmai
  * Tabellen står i worker/schema.sql.
  */
 
-const MAX_BODY = 8_000
+/** Højst så mange tegn i en henvendelse: felterne (LIMITS i src/inquiry.js, besked 1.000 tegn med escapes) + Turnstile-token (4.096) + overhead. */
+const MAX_BODY = 10_000
 /** Genforsøg fra den daglige cron, før en henvendelse markeres 'gave_up'. */
 export const MAX_RETRIES = 3
 
@@ -134,7 +135,7 @@ export async function handleInquiry(request, env, deps) {
 
   // 1. Gem. Uden database er der ingen garanti for, at henvendelsen ikke går tabt: fejl.
   if (!env.DB) return json(503, { ok: false, error: 'not_configured' })
-  const mail = composeMail({ contact: p.contact, name: p.name, link: link.url, state: link.state })
+  const mail = composeMail({ contact: p.contact, name: p.name, message: p.message, link: link.url, state: link.state })
   const id = crypto.randomUUID()
   try {
     await env.DB.prepare(

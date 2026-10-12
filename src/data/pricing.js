@@ -4,8 +4,8 @@
    prisberegneren med. Komponenterne indeholder ingen priser.
 
    Regler (må ikke brydes):
-   - Pakkerne hedder Start, Vækst og Fuld fart. Vækst på hjemmeside er "Anbefalet, hvis du vil findes på Google" (begrundet);
-     ingen mærker om popularitet.
+   - Pakkerne hedder Start, Vækst og Fuld fart. Vækst på hjemmeside er "Anbefalet, hvis du vil have Google-profilen sat op"
+     (begrundet: pakken indeholder den); ingen mærker om popularitet og ingen løfter om placeringer.
    - Ingen rabatkoder, nedtællinger eller kunstigt pres.
    - Ingen opdigtede udtalelser, kundetal eller resultater.
    - Hjemmesidepakken (engangspris) og driftsplanen (Basis, Plus eller Ekstra,
@@ -59,7 +59,7 @@ export const paidStartText = 'Betalte opgaver fra februar 2027.'
 
 /** Mærket på den anbefalede pakke. */
 /** Anbefalingen står kun, hvor den kan begrundes ud fra kundens behov (pakken indeholder Google-profilen). */
-export const recommendedFor = { hjemmeside: { tier: 'vaekst', label: 'Anbefalet, hvis du vil findes på Google' } }
+export const recommendedFor = { hjemmeside: { tier: 'vaekst', label: 'Anbefalet, hvis du vil have Google-profilen sat op' } }
 
 /** Navnene på de tre pakker (bruges af alle ydelser). */
 export const tierNames = { start: 'Start', vaekst: 'Vækst', 'fuld-fart': 'Fuld fart' }
@@ -88,14 +88,16 @@ const makePlan = (id, name, monthly, minutes, content, summary) => ({
   monthly,
   minutes,
   summary,
-  /** Hvad indholdsarbejdet dækker, som en kort sætning med stort begyndelsesbogstav (minutterne vises ikke). */
+  /** Hvad indholdsarbejdet dækker, som en kort sætning med stort begyndelsesbogstav. */
   content,
+  /** Minutterne som tekst (vises sammen med planen): små rettelser med materiale, kunden leverer. */
+  limit: minutes ? `Op til ${minutes} min. små rettelser pr. måned med materiale, du leverer` : 'Ingen indholdsrettelser',
 })
 
 export const driftPlans = {
-  basis: makePlan('basis', 'Basis', 99, 0, 'Ingen inkluderede indholdsændringer', 'Ren drift og sikkerhed. Til dig, der ikke regner med at skulle have ændret noget, og som vil have den billigste løsning til at holde siden kørende.'),
-  plus: makePlan('plus', 'Plus', 199, 15, 'Hjælp til billeder, tekst og nyheder', 'Vi hjælper med udskiftning af billeder, mindre tekstrettelser og opsætning af nyheder. Til små ændringer nu og da, uden at du skal bekymre dig om teknikken.'),
-  ekstra: makePlan('ekstra', 'Ekstra', 399, 30, 'Flere rettelser og nyt indhold hver måned', 'Fuld opdateringsservice. Vi er din faste webmaster, når du jævnligt skal have ændret tekst og billeder.'),
+  basis: makePlan('basis', 'Basis', 99, 0, 'Ingen inkluderede indholdsændringer', 'Hosting, sikkerhed og versionsbackup af hjemmesiden. Ingen indholdsrettelser. Til dig, der ikke regner med at skulle have ændret noget.'),
+  plus: makePlan('plus', 'Plus', 199, 15, 'Hjælp til billeder, tekst og nyheder', 'Op til 15 minutters små rettelser pr. måned med tekst og billeder, du leverer, oveni driften. Ubrugte minutter overføres ikke.'),
+  ekstra: makePlan('ekstra', 'Ekstra', 399, 30, 'Flere rettelser og nyt indhold hver måned', 'Op til 30 minutters små rettelser pr. måned med tekst og billeder, du leverer, oveni driften. Ubrugte minutter overføres ikke.'),
 }
 
 /**
@@ -123,6 +125,9 @@ export const domain = {
   /** Kr. pr. år til almindelig fornyelse af ét standarddomæne. */
   capPerYear: 200,
 }
+
+/** Domænet: samme tekst i Lokal og i driftsplanerne (loftet er `domain.capPerYear`). */
+export const domainText = `Almindelig fornyelse af ét standarddomæne er med, op til ${formatKr(domain.capPerYear)}/år. Premiumdomæner og ekstra domæner er ikke med. Domænet står i dit navn.`
 
 /* ---- Løbende samarbejde: Lokal (rebrand okt. 2026) ----------------------
    Hjemmeside uden opstartspris: 0 kr. i opstart, fast månedspris og en
@@ -192,8 +197,41 @@ export const overlap = {
     googleProfile: (webTier) => `fordi Google-profilen allerede er med i din hjemmesidepakke (${webTier})`,
     booking: () => 'fordi du allerede har valgt booking på din hjemmeside',
   },
+  /** Samme, når hjemmesiden er Lokal (løbende samarbejde). */
+  reasonsLokal: {
+    googleProfile: () => 'fordi Google-profilen allerede er med i Lokal',
+  },
   /** Vises i stedet for en pris, når hele Booking & Google-pakken er dækket (0 kr.). */
   allIncluded: 'Allerede med i din hjemmeside',
+  allIncludedLokal: 'Allerede med i Lokal',
+}
+
+/* ---- Lokal i beregneren --------------------------------------------------
+   Lokal er en egen ydelse i beregneren (`lokal` i ORDER), gensidigt udelukkende
+   med hjemmeside (engangskøb). Den ligger IKKE i `services`, så JSON-LD og
+   ydelsessiderne ikke får en pakke, der ikke er en engangspakke. Tallene kommer
+   fra `lokal` og `systemModule` ovenfor.
+------------------------------------------------------------------------- */
+export const lokalService = {
+  id: 'lokal',
+  name: 'Lokal',
+  /** Etiket foran navnet i resultatet: "Løbende samarbejde: Lokal". */
+  label: 'Løbende samarbejde',
+  billing: 'subscription',
+  tiers: [
+    {
+      id: 'lokal',
+      price: lokal.monthly,
+      summary: 'En hjemmeside uden opstartspris, og lidt løbende hjælp med Google hver måned.',
+      features: [
+        `${lokal.pages.min}-${lokal.pages.max} indholdssider (nødvendige juridiske informationssider tæller ikke med)`,
+        `Mobilvenligt design og én kontakt-/forespørgselsformular, op til ${lokal.revisionRounds} samlede korrekturrunder før lancering`,
+        'Hosting, SSL, teknisk vedligeholdelse og versionsbackup af hjemmesiden',
+        'Indledende SEO på de leverede sider og hjælp til én Google-profil, hvis virksomheden er berettiget',
+        `Hver måned: op til ${lokal.minutes.seo} min. prioriteret lokal SEO, kontrol og kort status, og op til ${lokal.minutes.content} min. mindre tekst- og billedrettelser`,
+      ],
+    },
+  ],
 }
 
 /* ---- Ydelser og pakker -------------------------------------------------
@@ -222,16 +260,16 @@ export const services = {
         id: 'vaekst',
         price: 4000,
         includes: ['googleProfile'],
-        summary: 'Flere sider, og du bliver fundet på Google.',
-        features: ['Op til 5 sider', 'Google-profil sat op', 'Sat op til at blive fundet på Google', '2 rettelserunder'],
+        summary: 'Flere sider og din Google-profil sat op.',
+        features: ['Op til 5 sider', 'Google-profil sat op', 'Siden sat op, så Google kan læse den', '2 rettelserunder'],
         optional: ['bookingOnSite'],
       },
       {
         id: 'fuld-fart',
         price: 5000,
         includes: ['googleProfile'],
-        summary: 'Flest sider og lokal SEO.',
-        features: ['Op til 8 sider', 'Google-profil sat op', 'Fundet på Google, også når folk søger i dit område', '3 rettelserunder'],
+        summary: 'Flest sider og et lokalt SEO-fundament.',
+        features: ['Op til 8 sider', 'Google-profil sat op', 'Lokalt SEO-fundament: titler, struktur og indhold til dit område', '3 rettelserunder'],
         optional: ['bookingOnSite'],
       },
     ],
@@ -279,7 +317,7 @@ export const services = {
      * planens indholdsarbejde.
      */
     drift: {
-      included: ['Siden holdes online og sikker, med domæne og backup'],
+      included: [`Siden holdes online og sikker, med hosting, versionsbackup af hjemmesiden og almindelig fornyelse af ét standarddomæne op til ${formatKr(domain.capPerYear)} om året`],
       /** Teksten på pakkekortet: drift er et særskilt valg (prisen indsættes: laveste plan). */
       fromLine: (price) => `Drift vælger du særskilt, fra ${price}/md`,
       /** Blokken "Drift" på pakkesiderne og /priser/ (valg 2 efter pakken). */
@@ -299,12 +337,13 @@ export const services = {
       /** FAQ'en "Hvad er inkluderet i drift?". Prisen indsættes fra addons.extraPage. */
       morePagesFaq: (price) =>
         `Flere sider: På Start og Vækst opgraderer du til næste pakke. På Fuld fart koster hver side ud over 8 ${price}, når du bestiller siden. Nye sider efter lanceringen aftales særskilt.`,
-      domain: 'Domænet registreres i dit navn.',
-      binding: 'Ingen binding. Opsigelse med 1 måneds varsel.',
+      domain: domainText,
+      binding: 'Ingen bindingsperiode. Opsigelse med 1 måneds varsel.',
       /** Pris for at købe siden fri, når drift opsiges. */
       buyoutPrice: 1000,
-      /** Prisen indsættes fra buyoutPrice. */
-      buyout: (price) => `Stopper du drift, kan du købe siden fri for ${price} og få den overført til din egen konto.`,
+      /** Prisen indsættes fra buyoutPrice. Forklarer, hvad beløbet dækker. */
+      buyout: (price) =>
+        `Stopper du drift, kan du købe siden fri for ${price}. Beløbet dækker, at jeg overfører filerne og sætter siden op på din egen konto. Hosting og domæne på din egen konto betaler du selv til udbyderen.`,
     },
     /** Erstatter paidStartText i "Hvornår kan vi starte?" for denne ydelse. Tom = paidStartText bruges. */
     startNow: 'Du kan få en gratis demo nu. Opstart og betaling fra februar 2027.',
@@ -355,14 +394,15 @@ export const services = {
         'Gratis i 2 uger',
         '4 korte videoer',
         'Til gengæld må jeg bruge resultaterne som case',
-        'Er du tilfreds, giver du en ærlig udtalelse',
+        'Du er ikke forpligtet til at give en udtalelse',
+        'En pilot giver ikke ret til en positiv anmeldelse',
         'Uforpligtende. Efter piloten kan du fortsætte på Vækst',
       ],
       limitText: 'Højst 2 piloter ad gangen',
       /** Link under marketing-prisen i beregnerens resultat (kun når flags.hasMarketingCases er false). */
       calcLink: { label: 'Vil du prøve først? Se pilotforløbet', href: '/marketing/#pilot' },
     },
-    binding: 'Ingen binding. Opsigelse med 1 måneds varsel.',
+    binding: 'Ingen bindingsperiode. Opsigelse med 1 måneds varsel.',
     /** Tom = paidStartText bruges. Pilotforløbet står i PilotSection på /marketing/. */
     startNow: '',
   },
@@ -385,29 +425,46 @@ export const services = {
         id: 'start',
         price: 500,
         includes: ['googleProfile'],
-        summary: 'Din Google-profil i orden.',
+        summary: 'Din Google-profil i orden. En engangsopgave.',
         features: ['Google-profil sat op eller rettet'],
+        /** Tilvalg på kortet (addons): QR-skiltet kan vælges uden booking. */
+        optional: ['qrOpfoelgning'],
       },
       {
         id: 'vaekst',
         price: 1000,
         includes: ['googleProfile', 'booking'],
-        summary: 'Kunderne kan booke selv.',
+        summary: 'Booking koblet på det system, du har, eller et jeg finder sammen med dig.',
         features: ['Google-profil sat op eller rettet', 'Booking koblet på din hjemmeside eller Instagram'],
+        optional: ['qrOpfoelgning'],
       },
       {
         id: 'fuld-fart',
         price: 1500,
         includes: ['googleProfile', 'booking', 'qrOpfoelgning'],
-        summary: 'Flere anmeldelser, og tal på det.',
+        summary: 'Booking, QR-skilt til anmeldelser og opfølgning efter 30 dage.',
         features: [
           'Google-profil sat op eller rettet',
           'Booking koblet på din hjemmeside eller Instagram',
-          'QR-skilt, der beder alle kunder om en anmeldelse',
-          'Opfølgning efter 30 dage med tal',
+          'QR-skilt, der fører til din anmeldelsesside (layout; print og forsendelse er ikke med)',
+          'Opfølgning efter 30 dage med tal fra Google-profilen',
         ],
       },
     ],
+    addons: {
+      /**
+       * QR-skiltet kan vælges uden booking (Start: Google-profil + QR = samme pris som
+       * komponenterne tilsammen). Med booking er det Fuld fart. Layoutet er en
+       * engangsleverance; print og forsendelse er ikke med.
+       */
+      qrOpfoelgning: {
+        label: 'QR-skilt og opfølgning (kan vælges uden booking)',
+        short: 'QR-skilt og opfølgning',
+        price: components.qrOpfoelgning.price,
+        tiers: ['start', 'vaekst'],
+        note: 'Layout af QR-skiltet og opfølgning efter 30 dage med tal. Print og forsendelse er ikke med. Med booking og QR-skilt er det Fuld fart, til samme pris.',
+      },
+    },
   },
 }
 
@@ -426,6 +483,40 @@ export const services = {
 export const calculator = {
   servicesQuestion: 'Hvad skal du bruge?',
   servicesHint: 'Vælg en eller flere.',
+  /**
+   * Trin 0: først hjemmesiden (to købsmåder, gensidigt udelukkende, kan også fravælges),
+   * derefter tilvalg. `value` er den ydelse, valget sætter ('' = ingen hjemmeside).
+   */
+  modes: {
+    legend: 'Hvordan vil du have hjemmesiden?',
+    hint: 'Vælg én måde. Du kan også springe hjemmesiden over.',
+    options: [
+      {
+        id: 'lokal',
+        value: 'lokal',
+        title: 'Løbende samarbejde',
+        text: `${formatKr(lokal.start)} i opstart · ${formatKr(lokal.monthly)}/md · mindst ${lokal.minMonths} måneder`,
+      },
+      {
+        id: 'hjemmeside',
+        value: 'hjemmeside',
+        title: 'Køb hjemmesiden',
+        text: `fra ${formatKr(Math.min(...services.hjemmeside.tiers.map((t) => t.price)))} én gang + drift fra ${formatKr(driftFrom)}/md`,
+      },
+      { id: 'ingen', value: '', title: 'Jeg skal ikke have en hjemmeside', text: 'Spring over og vælg tilvalg nedenfor.' },
+    ],
+    addonsLegend: 'Vil du også have hjælp til',
+    addonsHint: 'Tilvalg. Vælg ingen, en eller flere.',
+    /** Tilvalgenes navne i trin 0 (resultatet bruger ydelsens eget navn). */
+    addons: {
+      bookingGoogle: { title: 'Lokal synlighed (Booking & Google)', text: () => fromPrice(services.bookingGoogle) },
+      marketing: { title: 'Marketing', text: () => fromPriceWithDrift(services.marketing) },
+    },
+    /** Under Booking & Google, når Lokal eller en hjemmesidepakke allerede har Google-profilen. */
+    addonOverlapLokal: `Google-profilen er allerede med i Lokal og trækkes fra (${formatKr(components.googleProfile.price)}).`,
+    switchToKoeb: 'Hellere købe hjemmesiden én gang?',
+    switchToLokal: 'Hellere et løbende samarbejde?',
+  },
   questions: {
     hjemmeside: [
       {
@@ -510,29 +601,104 @@ export const calculator = {
         ],
       },
     ],
+    /**
+     * Booking & Google bygges af komponenter (`component` = nøgle i `components`).
+     * Google-profilen er altid med. Pakken er den højeste, hvis komponenter alle er valgt
+     * (booking → Vækst, booking + QR → Fuld fart); en valgt komponent uden for pakken
+     * lægges til som tilvalg til komponentens pris (QR uden booking = Start + QR).
+     */
     bookingGoogle: [
       {
         id: 'booking',
         short: 'Online booking',
         label: 'Skal kunderne kunne booke dig online?',
         options: [
-          { id: 'nej', label: 'Nej, kun Google-profilen', tier: 'start' },
-          { id: 'ja', label: 'Ja', tier: 'vaekst' },
+          { id: 'nej', label: 'Nej, kun Google-profilen' },
+          { id: 'ja', label: 'Ja', component: 'booking' },
         ],
       },
       {
         id: 'anmeldelser',
         short: 'QR-skilt',
         label: 'Vil du have et QR-skilt, der beder kunderne om en anmeldelse?',
+        help: 'QR-skiltet kan vælges uden booking.',
         options: [
-          { id: 'nej', label: 'Nej', tier: 'start' },
-          { id: 'ja', label: 'Ja, og opfølgning efter 30 dage', tier: 'fuld-fart' },
+          { id: 'nej', label: 'Nej' },
+          { id: 'ja', label: 'Ja, og opfølgning efter 30 dage', component: 'qrOpfoelgning' },
+        ],
+      },
+    ],
+    /**
+     * Lokal (løbende samarbejde): ingen sidevalg, kun spørgsmålet om et system.
+     * Så længe systemModule.ready er false, giver "Ja" ingen pris (se line() i calculator.js).
+     */
+    lokal: [
+      {
+        id: 'system',
+        short: 'Systemtilvalg',
+        label: 'Har du en arbejdsgang, du gerne vil have hjælp til, fx at samle forespørgsler og følge op på dem?',
+        options: [
+          { id: 'nej', label: 'Nej, jeg har brug for hjemmesiden', summary: 'nej' },
+          { id: 'ja', label: 'Ja, jeg har en arbejdsgang, jeg vil have hjælp til', system: true },
         ],
       },
     ],
   },
   /** Linje under prisen. Tom = skjult. Må ikke indeholde "aftales" (prisen er fast; pristesten tjekker). */
   finalNote: '',
+  /**
+   * Løbende samarbejde (Lokal): vilkårene vises i resultatet FØR formularen, så kunden ser
+   * opstart, månedspris, minimumsperiode, minimumsbetaling, eksterne udgifter og
+   * overdragelse, før der bliver bedt om kontaktoplysninger.
+   */
+  lokalTerms: {
+    title: 'Det forpligter du dig til',
+    rows: (withSystem = false) => [
+      { id: 'start', label: 'Opstart', value: formatKr(lokal.start) },
+      { id: 'monthly', label: 'Pr. måned', value: `${formatKr(lokalMonthly(withSystem))}/md` },
+      { id: 'period', label: 'Minimumsperiode', value: `${lokal.minMonths} måneder fra lancering` },
+      { id: 'minimum', label: 'Mindste betaling i alt', value: formatKr(lokalMinimum(withSystem)) },
+      {
+        id: 'notice',
+        label: 'Opsigelse',
+        value: `${lokal.noticeMonths} måneds varsel, tidligst til udgangen af måned ${lokal.minMonths}`,
+      },
+    ],
+    payment:
+      'Første måned betales, før jeg går i gang med den fulde produktion, og beløbet trækkes fra første abonnementsmåned. Det er ikke et ekstra startgebyr.',
+    externalTitle: 'Eksterne udgifter, du betaler direkte til udbyderen',
+    external: [
+      'Abonnementet hos en bookingudbyder, hvis du vælger booking.',
+      'Premiumdomæner, ekstra domæner og andre betalte eksterne tjenester, fx SMS og annoncebudget.',
+    ],
+    domain: domainText,
+    notIncludedTitle: 'Ikke med i prisen',
+    notIncluded: 'Nye sider, nye integrationer, store tekstprojekter, linkbuilding, annoncering og systemudvikling. Det aftaler vi pris på, før jeg går i gang.',
+    handoverTitle: 'Når minimumsperioden er slut',
+    handover: [
+      'Du kan få hjemmesidens filer og nødvendig dokumentation udleveret uden særskilt frikøb, når forfaldne beløb er betalt.',
+      'Du får vedvarende brugsret til den leverede hjemmeside. Generelle moduler kan jeg bruge igen.',
+      'Filudlevering er ikke det samme som flytning: en administreret backend, betalte licenser, eksterne tjenester og flyttearbejde kan koste særskilt.',
+      'Domæne, indhold og data er dine, og du beholder ejerskabet til dine egne konti hos tredjepart.',
+    ],
+    /** Totalen på én linje: "mindst 6 mdr. = mindst 5.970 kr." */
+    minimum: (months, amount) => `mindst ${months} mdr. = mindst ${amount}`,
+    /** Når totalen også har engangsbeløb eller månedsbeløb uden minimumsperiode (fx marketing): minimum gælder kun Lokal. */
+    minimumScoped: (monthly, months, minimum) => `Lokal: ${monthly}/md i mindst ${months} mdr. = mindst ${minimum}`,
+    /** Mailen og SMS'en. */
+    summaryLine: (monthly, months, minimum) => `0 kr. i opstart + ${monthly}/md, mindst ${months} måneder (mindst ${minimum} i alt)`,
+  },
+  /** Systemtilvalg til Lokal: hvad kunden ser, afhængigt af om et færdigt standardmodul findes (systemModule.ready). */
+  systemNote: {
+    /** ready = false: ingen pris. */
+    pending:
+      'Systemtilvalg: Der findes endnu ikke et færdigt standardmodul, så jeg giver ikke en pris her. Du får et særskilt fast tilbud, når jeg har hørt, hvad arbejdsgangen går ud på.',
+    summaryPending: 'ønsker et system, særskilt fast tilbud (ingen pris endnu)',
+    /** ready = true: modulet lægges til månedsprisen. */
+    ready: () =>
+      `Systemtilvalg: ét færdigt standardmodul til én arbejdsgang, op til ${systemModule.limits.users} brugere og ${systemModule.limits.casesPerMonth} nye sager om måneden, og op til ${systemModule.supportMinutes} min. ekstra brugerstøtte om måneden. SMS, betalte integrationer og AI-forbrug er ikke med. Nyudvikling er særskilt.`,
+    summaryReady: 'ja, standardmodul',
+  },
   /** Efter engangsbeløbet i totalen: "5.000 kr. nu". */
   nowLabel: 'nu',
   /**
@@ -615,7 +781,7 @@ export const calculator = {
       const [basis, plus, ekstra] = driftPlanList
       return [
         `Drift er det løbende, efter siden er lavet. ${d.included[0]}. Det er det samme i ${basis.name}, ${plus.name} og ${ekstra.name}.`,
-        `Forskellen er indholdsarbejde. ${d.contentWork} ${basis.name}: ${basis.content.toLowerCase()}. ${plus.name}: ${plus.content.toLowerCase()}. ${ekstra.name}: ${ekstra.content.toLowerCase()}.`,
+        `Forskellen er indholdsarbejde. ${d.contentWork} ${[basis, plus, ekstra].map((p) => `${p.name}: ${p.content.toLowerCase()} (${p.limit.toLowerCase()})`).join('. ')}.`,
         `${d.notContentWork} ${d.unusedTime} ${d.extraWork}`,
         `${d.domain} ${d.binding}`,
         `Vil du hellere passe siden selv, vælger du egen konto/hosting: ${formatKr(services.hjemmeside.addons.ownAccount.price)} én gang i tillæg til pakken. ${services.hjemmeside.addons.ownAccount.note}`,
@@ -640,6 +806,16 @@ export const calculator = {
         ]
       },
       marketing: () => [services.marketing.binding],
+      /** Lokal: hvad månedsprisen dækker (brief afsnit C). `line.system` er true, når et system er med i prisen. */
+      lokal: (line) => [
+        'Hosting, SSL, teknisk vedligeholdelse og versionsbackup af hjemmesiden, og kontrol af formularen.',
+        `Op til ${lokal.minutes.seo} min. om måneden til prioriteret lokal SEO, kontrol og en kort status med arbejdslog.`,
+        `Op til ${lokal.minutes.content} min. om måneden til mindre tekst- og billedrettelser med materiale, du leverer.`,
+        'Ubrugte minutter overføres ikke.',
+        domainText,
+        ...(line?.system ? [calculator.systemNote.ready()] : []),
+        'Faktiske fejl i det aftalte håndterer jeg som fejl, ikke som nye tilvalg.',
+      ],
     },
     ownAccount: {
       title: 'Det overtager du selv',
@@ -651,13 +827,14 @@ export const calculator = {
     },
   },
   /**
-   * Behovsguiden ("Hjælp mig med at vælge"): frivillig, i beregnerens område.
-   * Efter det første spørgsmål højst to opfølgende. Reglerne står i src/guide.js,
-   * teksterne her. Svaret "ved-ikke" (Jeg ved det ikke) giver den mindste løsning.
+   * Behovsguiden ("Hjælp mig med at vælge"): frivillig, i beregnerens område, med en synlig
+   * "Spring over". Højst tre spørgsmål i alt: behov, så (forgrenet) eksisterende løsning,
+   * omfang og ønsket betalingsmodel. Reglerne står i src/guide.js, teksterne her.
+   * "Jeg ved det ikke" giver den mindste løsning. Begrundelserne lover aldrig placeringer.
    */
   guide: {
     entryTitle: 'Hjælp mig med at vælge',
-    entryText: 'Er du usikker? Svar på et par korte spørgsmål.',
+    entryText: 'Er du usikker? Svar på højst tre korte spørgsmål.',
     pickAnswer: 'Vælg et svar for at gå videre.',
     resultTitle: 'Mit forslag til dig',
     whyTitle: 'Derfor foreslår jeg det',
@@ -668,17 +845,30 @@ export const calculator = {
     noOnce: 'Ingen engangspris',
     open: 'Se og ret i beregneren',
     change: 'Ret svarene',
+    /** Den synlige vej direkte til beregneren (på hvert spørgsmål og på resultatet). */
+    skip: 'Spring over',
+    skipHint: 'og vælg selv i beregneren',
     unclearTitle: 'Lad os tage en kort snak',
     unclearText:
       'Ud fra svarene kan jeg ikke give dig en pris endnu, og jeg vil ikke gætte. Ring eller send en SMS, så finder vi sammen ud af, hvad der giver mening for din virksomhed.',
     unclearSms: 'Hej Ronny. Jeg har prøvet hjælp til at vælge på oviaspecs.com, men er stadig i tvivl. Kan vi tage en kort snak?',
+    /** Arbejdsgang, hvor et system kan være relevant, men intet færdigt modul findes (systemModule.ready = false): ingen pris. */
+    offerTitle: 'Særskilt fast tilbud efter en kort snak',
+    offerText:
+      'Det kan give mening at samle forespørgslerne et sted og følge op på dem. Der findes endnu ikke et færdigt standardmodul, så jeg giver ikke en pris her. Jeg hører først, hvad arbejdsgangen går ud på, og giver dig derefter et særskilt fast tilbud.',
+    offerSms: 'Hej Ronny. Jeg har brugt hjælp til at vælge på oviaspecs.com. Jeg har en arbejdsgang, jeg gerne vil have hjælp til. Kan vi tage en kort snak?',
+    /** Har kunden allerede et system, der virker: jeg sælger ikke et nyt. */
+    haveTitle: 'Behold dit system, og lad os se på, om det kan kobles på',
+    haveText: 'Du har allerede et system, der virker. Så foreslår jeg ikke et nyt. Lad os tage en kort snak om, om det kan kobles på din hjemmeside.',
+    haveSms: 'Hej Ronny. Jeg har brugt hjælp til at vælge på oviaspecs.com. Jeg har allerede et system, der virker. Kan vi tage en kort snak om at koble det på?',
     need: {
       id: 'behov',
       label: 'Hvad vil du gerne have hjælp til?',
       options: [
         { id: 'hjemmeside', label: 'En ny eller bedre hjemmeside' },
-        { id: 'google', label: 'At blive fundet på Google' },
+        { id: 'google', label: 'Min Google-profil eller flere anmeldelser' },
         { id: 'booking', label: 'At gøre booking eller bestilling nemmere' },
+        { id: 'arbejdsgang', label: 'Styr på forespørgsler eller en arbejdsgang' },
         { id: 'sociale', label: 'Hjælp til sociale medier' },
         { id: 'usikker', label: 'Jeg er ikke sikker' },
       ],
@@ -689,7 +879,7 @@ export const calculator = {
         id: 'fokus',
         label: 'Hvad er vigtigst for dig lige nu?',
         options: [
-          { id: 'google', label: 'At folk kan finde mig på Google' },
+          { id: 'google', label: 'Min Google-profil' },
           { id: 'booking', label: 'At kunderne kan booke eller bestille' },
           { id: 'sociale', label: 'At jeg er synlig på sociale medier' },
           { id: 'hjemmeside', label: 'At jeg har en (bedre) hjemmeside' },
@@ -702,20 +892,22 @@ export const calculator = {
         help: 'En side er fx forsiden, menukortet, "Om os" eller kontakt.',
         options: [
           { id: '1', label: 'Én side med det vigtigste' },
-          { id: '2-5', label: '2-5 sider' },
+          { id: '2-3', label: '2-3 sider' },
+          { id: '4-5', label: '4-5 sider' },
           { id: '6-8', label: '6-8 sider' },
           { id: 'ved-ikke', label: 'Jeg ved det ikke' },
         ],
       },
-      aendringer: {
-        id: 'aendringer',
-        label: 'Skal du have lavet ændringer på siden, efter den er lanceret?',
-        help: 'Små ændringer er fx ny tekst, nye åbningstider eller nye billeder, som du leverer.',
+      model: {
+        id: 'model',
+        label: 'Hvordan vil du helst betale for hjemmesiden?',
+        help: 'Begge dele kan lade sig gøre. Det er et spørgsmål om, hvad der passer dig.',
         options: [
-          { id: 'nej', label: 'Nej, siden skal bare ligge der' },
-          { id: 'lidt', label: 'Lidt, en gang imellem' },
-          { id: 'jaevnligt', label: 'Ja, jævnligt' },
-          { id: 'egen', label: 'Jeg vil selv passe siden på en konto, jeg ejer' },
+          {
+            id: 'lokal',
+            label: `Løbende: ${formatKr(lokal.start)} i opstart og ${formatKr(lokal.monthly)} om måneden, mindst ${lokal.minMonths} måneder`,
+          },
+          { id: 'koeb', label: 'Én gang: jeg køber hjemmesiden og vælger drift for sig' },
           { id: 'ved-ikke', label: 'Jeg ved det ikke' },
         ],
       },
@@ -732,7 +924,8 @@ export const calculator = {
         id: 'ogsaa-side',
         label: 'Vil du også have en hjemmeside?',
         options: [
-          { id: 'ja', label: 'Ja, bookingen skal ligge på en hjemmeside' },
+          { id: 'koeb', label: 'Ja, og jeg vil købe den én gang' },
+          { id: 'lokal', label: `Ja, og jeg vil hellere betale løbende (${formatKr(lokal.start)} i opstart)` },
           { id: 'nej', label: 'Nej, booking via Instagram og Google er nok' },
           { id: 'ved-ikke', label: 'Jeg ved det ikke' },
         ],
@@ -743,6 +936,25 @@ export const calculator = {
         options: [
           { id: 'ja', label: 'Ja' },
           { id: 'nej', label: 'Nej, kun Google-profilen' },
+          { id: 'ved-ikke', label: 'Jeg ved det ikke' },
+        ],
+      },
+      volumen: {
+        id: 'volumen',
+        label: 'Hvor mange forespørgsler eller sager får du cirka?',
+        help: 'Fx forespørgsler på selskaber, tilbud eller bestillinger.',
+        options: [
+          { id: 'faa', label: 'Få. Jeg kan holde styr på dem i min indbakke' },
+          { id: 'mange', label: 'Mange, og jeg mister overblikket' },
+          { id: 'ved-ikke', label: 'Jeg ved det ikke' },
+        ],
+      },
+      eksisterende: {
+        id: 'eksisterende',
+        label: 'Bruger du allerede et system til det?',
+        options: [
+          { id: 'nej', label: 'Nej, indbakke, papir eller regneark' },
+          { id: 'ja', label: 'Ja, og det virker' },
           { id: 'ved-ikke', label: 'Jeg ved det ikke' },
         ],
       },
@@ -765,25 +977,30 @@ export const calculator = {
         ],
       },
     },
-    /** Begrundelserne i resultatet. */
+    /** Begrundelserne i resultatet. Ingen løfter om placeringer eller resultater. */
     reasons: {
       websiteSmall: 'Jeg starter småt: én side med det vigtigste. Skal der flere sider til, skifter du pakke i beregneren.',
       websitePages: 'Antallet af sider passer til pakken.',
       websiteNoBooking: `Booking er ikke med. Den kan lægges til i beregneren (+${formatKr(components.booking.price)}).`,
       websiteBooking: 'Booking kobles på siden som tilvalg. Det ændrer ikke din driftsplan.',
-      /** Driftsplan efter spørgsmålet om ændringer: den mindste, der dækker svaret. */
-      driftBasis: `${driftPlans.basis.name} er nok: siden holdes online og sikker, og du skal ikke have lavet ændringer. Skal der alligevel rettes noget, aftaler vi prisen, før jeg går i gang.`,
-      driftPlus: `${driftPlans.plus.name} er den mindste plan med indholdsarbejde: ${driftPlans.plus.content.toLowerCase()} til små ændringer med din tekst og dine billeder.`,
-      driftEkstra: `${driftPlans.ekstra.name} har mest tid til indholdsarbejde: ${driftPlans.ekstra.content.toLowerCase()}. Det passer, når du jævnligt skal have ændret tekst og billeder.`,
-      driftOwn: `Du passer selv siden på din egen konto: ${formatKr(services.hjemmeside.addons.ownAccount.price)} i tillæg én gang og ingen månedlig betaling til OviaSpecs for drift. Du kan selv have udgifter til hosting og domæne.`,
-      /** Når spørgsmålet om ændringer ikke stilles (kun to opfølgende spørgsmål) eller svares "Jeg ved det ikke". */
+      /** Driftsplan: der stilles ikke et spørgsmål om ændringer (højst tre spørgsmål), så den mindste vælges. */
       driftDefault: `Jeg har valgt den mindste driftsplan, ${driftPlans.basis.name}. Skal du have ændret tekst og billeder, kan du skifte til ${driftPlans.plus.name} eller ${driftPlans.ekstra.name} i beregneren.`,
-      googleStart: 'Du vil findes på Google. En Google-profil, der er i orden, er den mindste løsning.',
-      googleReviews: 'QR-skiltet og opfølgningen findes kun i Fuld fart. Den pakke indeholder også booking, og prisen er samlet.',
-      bookingHasSite: 'Du har allerede en hjemmeside, så jeg kobler bookingen på den i stedet for at lave en ny.',
+      /** Betalingsmodel. */
+      payLokal: `Du vil helst betale løbende. Lokal koster ${formatKr(lokal.start)} i opstart og ${formatKr(lokal.monthly)} om måneden i mindst ${lokal.minMonths} måneder, i alt mindst ${formatKr(lokalMinimum())}.`,
+      payKoeb: 'Du vil hellere købe hjemmesiden én gang. Så betaler du pakken nu og vælger drift for sig.',
+      payDefault: 'Du var i tvivl om betalingen, så jeg har valgt det mindste køb: en hjemmeside, du betaler én gang. Et løbende samarbejde uden opstartspris kan du vælge i beregneren.',
+      lokalFits: `Lokal rummer ${lokal.pages.min}-${lokal.pages.max} indholdssider, og det passer til det, du beskriver.`,
+      lokalTooSmall: `Lokal rummer ${lokal.pages.min}-${lokal.pages.max} indholdssider. Du har brug for flere, så jeg foreslår den mindste købspakke, der kan rumme dem.`,
+      googleStart: 'Du har brug for hjælp til Google-profilen. En Google-profil, der er sat op eller rettet, er den mindste løsning, og det er en engangsopgave, ikke et abonnement.',
+      googleQr: `QR-skiltet vælges uden booking: Google-profilen og QR-skiltet med opfølgning koster tilsammen ${formatKr(components.googleProfile.price + components.qrOpfoelgning.price)}. Booking er ikke med, for du har ikke bedt om det.`,
+      bookingHasSite: 'Du har allerede en hjemmeside, så jeg kobler bookingen på den. Jeg bygger ikke en ny kalender: bookingen kører i et eksisterende system.',
       bookingUnsureSite: 'Du er ikke sikker på, om du har en hjemmeside, så jeg foreslår ikke en ny. Bookingen kobles på den, du har, eller på Instagram.',
       bookingNoSite: 'Du kan få booking via Instagram og Google uden at bestille en ny hjemmeside.',
       bookingNewSite: 'Du vil have bookingen på en hjemmeside. Jeg foreslår den mindste: én side med booking koblet på.',
+      bookingLokal: 'Du vil have bookingen på en hjemmeside og helst betale løbende. Lokal indeholder Google-profilen, så den trækkes fra. Bookingen kobles på som engangsopgave.',
+      bookingSubscription: 'Abonnementet hos bookingudbyderen betaler du direkte til udbyderen.',
+      arbejdsgangLidt: 'Når der kommer få forespørgsler, er en god formular og din almindelige indbakke ofte nok. Lokal har en forespørgselsformular, og et system ville være mere, end du har brug for.',
+      arbejdsgangSystem: 'Du får mange sager og har ikke et system i dag. Lokal med systemtilvalg samler dem i én arbejdsgang.',
       socialStart: 'Du lægger selv indholdet op. Det er den mindste løsning.',
       socialPost: 'Jeg laver indholdet og lægger det op for dig.',
       socialAds: 'Annoncer på Meta er kun med i Fuld fart, hvor jeg også laver og lægger indholdet op.',

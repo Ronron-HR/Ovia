@@ -1,4 +1,4 @@
-import { calculator } from './data/pricing.js'
+import { calculator, systemModule } from './data/pricing.js'
 import { cleanAnswers, quote, resultStep, serialize } from './calculator.js'
 
 /**
@@ -6,18 +6,21 @@ import { cleanAnswers, quote, resultStep, serialize } from './calculator.js'
  * Tekster og spørgsmål står i calculator.guide (src/data/pricing.js), priserne
  * kommer fra den samme quote() som den direkte beregner bruger.
  *
- * FORLØB: første spørgsmål (behov), derefter højst to opfølgende spørgsmål, som
- * kun stilles, hvis svaret ændrer anbefalingen. Resultatet er enten et forslag
- * (en pakke fra pricing.js, med beregnerens svar sat, så "Se og ret i beregneren"
- * viser præcis samme pris) eller en kort afklaring ("unclear"), hvis svarene ikke
- * er nok. Der opfindes ingen pakker og ingen priser.
+ * FORLØB: højst TRE spørgsmål i alt: behov, så (forgrenet) det, der er relevant for
+ * behovet: eksisterende løsning, omfang og ønsket betalingsmodel. Der spørges aldrig om alt.
+ * Resultatet er et forslag (en pakke fra pricing.js, med beregnerens svar sat, så
+ * "Se og ret i beregneren" viser præcis samme pris), en samtale uden pris ("talk": et system
+ * kan være relevant, men der findes endnu ikke et færdigt standardmodul, eller kunden har
+ * allerede et) eller en kort afklaring ("unclear"). Der opfindes ingen pakker og ingen priser.
  *
- * REGLER: den mindste eksisterende løsning, der dækker behovet. "Jeg ved det
- * ikke" giver den mindste løsning. Har kunden en hjemmeside, sælges en ny ikke
- * automatisk (booking alene giver aldrig en ny hjemmeside). Hjemmesidens driftsplan
- * vælges ud fra spørgsmålet om ændringer efter lanceringen: aldrig en dyrere plan
- * end svaret kræver. Stilles spørgsmålet ikke (højst to opfølgende), bruges den
- * mindste plan, og begrundelsen siger det.
+ * REGLER: den mindste eksisterende løsning, der dækker behovet. "Jeg ved det ikke"
+ * giver den mindste løsning.
+ * - Google alene → Booking & Google Start (engangsopgave); med QR-skilt: Start + QR, aldrig booking.
+ * - Booking → kobles på det system/den hjemmeside, kunden har (aldrig en ny kalender).
+ * - Hjemmeside → Lokal (løbende) eller Køb (engang) efter betalingsmodel; ved køb den mindste
+ *   pakke, der dækker sidebehovet, og driftsplanen Basis (begrundet).
+ * - Arbejdsgang → kun et system, hvis arbejdsgangen er relevant (mange sager, intet system i dag), og
+ *   aldrig med en pris, mens systemModule.ready er false.
  *
  * TILSTAND: i adresselinjen som hjaelp=<trin> og g-<spørgsmål>=<svar> (ingen
  * kontaktoplysninger), sat af src/useCalc.js. Trin 1..n er spørgsmålene, n+1 er
@@ -31,16 +34,17 @@ export const QUESTIONS = { behov: G.need, ...G.questions }
 export const paramOf = (key) => `g-${QUESTIONS[key].id}`
 
 /** Det første opfølgende spørgsmål for hvert behov. */
-const FIRST = { hjemmeside: 'sider', google: 'anmeldelser', booking: 'harSide', sociale: 'opslag' }
+const FIRST = { hjemmeside: 'sider', google: 'anmeldelser', booking: 'harSide', arbejdsgang: 'volumen', sociale: 'opslag' }
 /** Behovets opfølgende spørgsmål, når svaret afgør hvilke. */
 const FOLLOW = {
-  hjemmeside: () => ['sider', 'aendringer'],
+  hjemmeside: () => ['sider', 'model'],
   google: () => ['anmeldelser'],
   booking: (a) => ['harSide', ...(a.harSide === 'nej' ? ['ogsaaSide'] : [])],
+  arbejdsgang: (a) => ['volumen', ...(a.volumen === 'mange' ? ['eksisterende'] : [])],
   sociale: () => ['opslag', 'annoncer'],
 }
 
-/** Spørgsmålene i rækkefølge med de svar, der er givet (højst 1 + 2). */
+/** Spørgsmålene i rækkefølge med de svar, der er givet (højst 3). */
 export function questionList(a) {
   if (!a.behov) return ['behov']
   if (a.behov === 'usikker') {
@@ -55,6 +59,7 @@ export function plannedTotal(a) {
   if (!a.behov) return null
   if (a.behov === 'usikker' && !a.fokus) return null
   if (a.behov === 'booking' && !a.harSide) return null
+  if (a.behov === 'arbejdsgang' && !a.volumen) return null
   return questionList(a).length
 }
 
@@ -112,35 +117,24 @@ export function serializeGuide(guide) {
 
 /* ---- Anbefaling -------------------------------------------------------- */
 
-const tierState = (key, tier, extra = {}) => {
-  const selected = [key]
-  const answers = cleanAnswers({ ...calculator.tierSwitch[key][tier].answers, ...extra })
-  return { selected, answers, step: resultStep(selected) }
-}
+/** Beregnerens tilstand (resultattrinnet) for et forslag; svarene renses som i beregneren. */
+const stateOf = (selected, answers) => ({ selected, answers: cleanAnswers(answers), step: resultStep(selected) })
 
-/** Driftsvalget ud fra svaret om ændringer efter lanceringen (den mindste dækkende plan) og begrundelsen. */
-function driftFor(changes) {
-  const R = calculator.guide.reasons
-  switch (changes) {
-    case 'nej':
-      return { drift: 'basis', reason: R.driftBasis }
-    case 'lidt':
-      return { drift: 'plus', reason: R.driftPlus }
-    case 'jaevnligt':
-      return { drift: 'ekstra', reason: R.driftEkstra }
-    case 'egen':
-      return { drift: 'egen', reason: R.driftOwn }
-    default: // "Jeg ved det ikke" eller ikke stillet
-      return { drift: 'basis', reason: R.driftDefault }
-  }
-}
+/** Køb hjemmesiden: pakkens svar fra tierSwitch, uden booking og med driftsplanen Basis (den mindste). */
+const koebState = (tier, extra = {}) =>
+  stateOf(['hjemmeside'], { ...calculator.tierSwitch.hjemmeside[tier].answers, bestilling: 'nej', drift: 'basis', ...extra })
+
+/** Pakken for sidebehovet (den mindste, der kan rumme siderne). */
+const TIER_FOR_PAGES = { 1: 'start', '2-3': 'vaekst', '4-5': 'vaekst', '6-8': 'fuld-fart' }
+/** Sidebehov, som Lokal kan rumme (1-3 indholdssider). */
+const LOKAL_FITS = new Set(['1', '2-3', 'ved-ikke'])
 
 const RANK = ['start', 'vaekst', 'fuld-fart']
 const higher = (x, y) => (RANK.indexOf(x) >= RANK.indexOf(y) ? x : y)
 
 /**
- * Anbefalingen ud fra svarene: { kind: 'plan', state, reasons } eller
- * { kind: 'unclear', reasons }. `state` er beregnerens tilstand (resultattrinnet),
+ * Anbefalingen ud fra svarene: { kind: 'plan', state, reasons }, { kind: 'talk', title, text, sms, reasons }
+ * eller { kind: 'unclear', reasons }. `state` er beregnerens tilstand (resultattrinnet),
  * så guidens pris og beregnerens pris er den samme udregning.
  */
 export function recommend(a) {
@@ -155,35 +149,63 @@ export function recommend(a) {
   const done = (state) => ({ kind: 'plan', state, reasons })
 
   if (need === 'hjemmeside') {
-    const tier = { 1: 'start', '2-5': 'vaekst', '6-8': 'fuld-fart' }[a.sider] ?? 'start'
-    const { drift, reason } = driftFor(a.aendringer)
-    reasons.push(tier === 'start' ? R.websiteSmall : R.websitePages)
-    reasons.push(R.websiteNoBooking, reason)
-    if (unsure('sider', 'aendringer')) reasons.push(R.unsureDefault)
-    return done(tierState('hjemmeside', tier, { bestilling: 'nej', drift }))
+    const wantsLokal = a.model === 'lokal'
+    // Lokal rummer 1-3 sider: kræver sidebehovet flere, foreslås den mindste købspakke, der kan rumme dem.
+    if (wantsLokal && LOKAL_FITS.has(a.sider)) {
+      reasons.push(R.payLokal, R.lokalFits)
+      if (unsure('sider')) reasons.push(R.unsureDefault)
+      return done(stateOf(['lokal'], { system: 'nej' }))
+    }
+    const tier = TIER_FOR_PAGES[a.sider] ?? 'start'
+    if (wantsLokal) reasons.push(R.lokalTooSmall)
+    else reasons.push(a.model === 'koeb' ? R.payKoeb : R.payDefault)
+    reasons.push(tier === 'start' ? R.websiteSmall : R.websitePages, R.websiteNoBooking, R.driftDefault)
+    if (unsure('sider')) reasons.push(R.unsureDefault)
+    return done(koebState(tier))
   }
 
   if (need === 'google') {
+    // Google alene er en engangsopgave. QR-skiltet vælges uden booking.
     const qr = a.anmeldelser === 'ja'
-    reasons.push(qr ? R.googleReviews : R.googleStart)
+    reasons.push(R.googleStart)
+    if (qr) reasons.push(R.googleQr)
     if (unsure('anmeldelser')) reasons.push(R.unsureDefault)
-    return done(tierState('bookingGoogle', qr ? 'fuld-fart' : 'start'))
+    return done(stateOf(['bookingGoogle'], { booking: 'nej', anmeldelser: qr ? 'ja' : 'nej' }))
   }
 
   if (need === 'booking') {
-    // Har kunden en hjemmeside, kobles bookingen på den: ingen ny hjemmeside.
+    // Har kunden en hjemmeside, kobles bookingen på den: ingen ny hjemmeside og aldrig en ny kalender.
     if (a.harSide === 'ja' || a.harSide === 'ved-ikke') {
-      reasons.push(a.harSide === 'ja' ? R.bookingHasSite : R.bookingUnsureSite)
-      return done(tierState('bookingGoogle', 'vaekst'))
+      reasons.push(a.harSide === 'ja' ? R.bookingHasSite : R.bookingUnsureSite, R.bookingSubscription)
+      return done(stateOf(['bookingGoogle'], { booking: 'ja', anmeldelser: 'nej' }))
     }
-    if (a.ogsaaSide === 'ja') {
-      // Kun to opfølgende spørgsmål: driftsplanen spørges ikke, så den mindste vælges.
-      reasons.push(R.bookingNewSite, R.websiteBooking, driftFor().reason)
-      return done(tierState('hjemmeside', 'start', { bestilling: 'ja', drift: driftFor().drift }))
+    if (a.ogsaaSide === 'koeb') {
+      reasons.push(R.bookingNewSite, R.websiteBooking, R.driftDefault, R.bookingSubscription)
+      return done(koebState('start', { bestilling: 'ja' }))
     }
-    reasons.push(R.bookingNoSite)
+    if (a.ogsaaSide === 'lokal') {
+      reasons.push(R.bookingLokal, R.bookingSubscription)
+      return done(stateOf(['lokal', 'bookingGoogle'], { system: 'nej', booking: 'ja', anmeldelser: 'nej' }))
+    }
+    reasons.push(R.bookingNoSite, R.bookingSubscription)
     if (unsure('ogsaaSide')) reasons.push(R.unsureDefault)
-    return done(tierState('bookingGoogle', 'vaekst'))
+    return done(stateOf(['bookingGoogle'], { booking: 'ja', anmeldelser: 'nej' }))
+  }
+
+  if (need === 'arbejdsgang') {
+    if (a.volumen === 'mange') {
+      // Har kunden et system, der virker, sælges et nyt ikke.
+      if (a.eksisterende === 'ja') return { kind: 'talk', title: G.haveTitle, text: G.haveText, sms: G.haveSms, reasons }
+      if (systemModule.ready) {
+        reasons.push(R.arbejdsgangSystem)
+        return done(stateOf(['lokal'], { system: 'ja' }))
+      }
+      // Intet færdigt standardmodul: ingen pris, kun et særskilt fast tilbud efter en snak.
+      return { kind: 'talk', title: G.offerTitle, text: G.offerText, sms: G.offerSms, reasons }
+    }
+    reasons.push(R.arbejdsgangLidt)
+    if (unsure('volumen')) reasons.push(R.unsureDefault)
+    return done(stateOf(['lokal'], { system: 'nej' }))
   }
 
   if (need === 'sociale') {
@@ -193,7 +215,7 @@ export function recommend(a) {
     reasons.push(tier === 'fuld-fart' ? R.socialAds : tier === 'vaekst' ? R.socialPost : R.socialStart)
     // Annoncer giver Fuld fart: så er det ikke "den mindste løsning" for et usikkert svar.
     if (unsure('opslag', 'annoncer') && tier !== 'fuld-fart') reasons.push(R.unsureDefault)
-    return done(tierState('marketing', tier))
+    return done(stateOf(['marketing'], calculator.tierSwitch.marketing[tier].answers))
   }
 
   return { kind: 'unclear', reasons: [] }
