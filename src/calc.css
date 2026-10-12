@@ -178,4 +178,25 @@
       gap: 16px;
     }
   }
+
+  /* ---- Løbende samarbejde: vilkår før formularen ------------------------------ */
+  .lokal-terms {
+    padding: 16px 18px;
+    border: 1px solid var(--color-rule-strong);
+    border-radius: var(--radius-card);
+    background: var(--color-surface);
+  }
+
+  .lokal-terms-rows > div {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 2px 16px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--color-rule);
+  }
+
+  .lokal-terms-rows > div:last-child {
+    border-bottom: 0;
+  }
 }

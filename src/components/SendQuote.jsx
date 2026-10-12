@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { contact } from '../data/pricing.js'
 import { cta, links, paths } from '../data/texts.js'
-import { inquiry, sendInquiry, validContact } from '../inquiry.js'
+import { LIMITS, inquiry, sendInquiry, validContact } from '../inquiry.js'
 import { PhoneIcon, SmsIcon } from './ContactButtons.jsx'
 import ErrorText from './ErrorText.jsx'
 
@@ -13,8 +13,10 @@ const TURNSTILE_SRC = 'https://challenges.cloudflare.com/turnstile/v0/api.js?ren
  * "SEND DIN FORESPØRGSEL" — slutningen af prisberegneren (samme komponent på alle
  * sider med beregneren).
  *
- * Et felt til mail eller telefon, et valgfrit felt til navn/virksomhed og
- * "Send til Ronny". Ring og SMS står under som sekundære links. Formularen
+ * Et felt til mail eller telefon, et valgfrit felt til navn/virksomhed, en valgfri besked
+ * (højst LIMITS.message tegn, sendes med og står i mailen) og "Send til Ronny". Det er en
+ * forespørgsel, ikke en bestilling; teksten siger det. Felterne er ukontrollerede og står
+ * urørt ved en fejl, så intet skal skrives forfra. Ring og SMS står under som sekundære links. Formularen
  * sender linket med valgene; serveren regner selv opsummeringen ud fra det.
  *
  * Tak vises KUN, når serveren har svaret OK (sendInquiry). Ved fejl står
@@ -26,6 +28,7 @@ export default function SendQuote({ smsText, link }) {
   const id = useId()
   const [status, setStatus] = useState('idle') // idle | sending | sent | failed
   const [invalid, setInvalid] = useState(false)
+  const [left, setLeft] = useState(LIMITS.message)
   const contactRef = useRef(null)
   const doneRef = useRef(null)
   const token = useTurnstile(id)
@@ -49,6 +52,7 @@ export default function SendQuote({ smsText, link }) {
     const ok = await sendInquiry({
       contact: value,
       name: data.get('name'),
+      message: data.get('message'),
       website: data.get('website'),
       link: link ?? `${window.location.pathname}${window.location.search}`,
       turnstile: SITE_KEY ? await token.get() : '',
@@ -102,6 +106,26 @@ export default function SendQuote({ smsText, link }) {
             {inquiry.nameLabel} <span className="font-normal text-muted">{inquiry.optional}</span>
           </label>
           <input id={`${id}-navn`} name="name" type="text" autoComplete="organization" maxLength={160} className="field mt-2" />
+        </div>
+        <div>
+          <label htmlFor={`${id}-besked`} className="block text-[15px] font-medium">
+            {inquiry.messageLabel} <span className="font-normal text-muted">{inquiry.optional}</span>
+          </label>
+          <p id={`${id}-besked-hjaelp`} className="t-body mt-1 text-[14px]">
+            {inquiry.messageHint}
+          </p>
+          <textarea
+            id={`${id}-besked`}
+            name="message"
+            rows={4}
+            maxLength={LIMITS.message}
+            aria-describedby={`${id}-besked-hjaelp ${id}-besked-antal`}
+            onChange={(e) => setLeft(LIMITS.message - e.target.value.length)}
+            className="field mt-2"
+          />
+          <p id={`${id}-besked-antal`} className="t-body mt-1 text-[13px]">
+            {inquiry.messageLeft(left)}
+          </p>
         </div>
         {/* Honeypot: skjult for mennesker og skærmlæsere; en robot, der udfylder den, får intet sendt. */}
         <div className="send-trap" aria-hidden="true">

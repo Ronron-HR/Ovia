@@ -4,7 +4,7 @@
  *   npm run build && npm run preview     (i et andet vindue)
  *   npm run test:e2e
  *
- * Hjemmeside: svar 6-8 sider (Fuld fart) og driften Plus (eget trin), skift til Vækst
+ * Hjemmeside ("Køb hjemmesiden"): svar 6-8 sider (Fuld fart) og driften Plus (eget trin), skift til Vækst
  * i resultatet, genindlæs, og tjek at resultatet er Vækst, at adresselinjen siger 2-5
  * sider og stadig drift=plus (pakkeskiftet overskriver ikke driftsvalget), og at
  * "Ret svarene" viser 2-5 sider (og driften på sit trin). Marketing: 12 videoer, jeg poster,
@@ -63,7 +63,8 @@ const result = () =>
 async function run({ name, service, steps, from, to, expectLine, expectParams }) {
   await page.bringToFront()
   await page.goto(`${SITE}/priser/`, { waitUntil: 'networkidle0' })
-  await tap(`#beregner label.choice:has(input[name=ydelser][value=${service}])`)
+  // Hjemmesiden vælges som købsmåde (radio), de øvrige ydelser som tilvalg (afkrydsning).
+  await tap(service === 'hjemmeside' ? '#beregner label.choice:has(input[name=maade][value=hjemmeside])' : `#beregner label.choice:has(input[name=ydelser][value=${service}])`)
   await tap('#beregner button[type=submit]')
   await answerSteps(steps)
 

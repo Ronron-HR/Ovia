@@ -14,7 +14,7 @@ import '../calc.css'
  * PAKKER — alle tal og al tekst kommer fra src/data/pricing.js.
  *
  * PackageCard: én pakke. Den anbefalede (Vækst) får kant i blæk og mærket
- * "Anbefalet". En pakke med `limit` (fx "Højst 1 kunde ad gangen") viser det
+ * "Anbefalet" (kun hvor det kan begrundes). En pakke med `limit` (fx "Højst 1 kunde ad gangen") viser det
  * som et lille mærke; det er en oplysning, ikke en nedtælling. Mærkerne sidder
  * på kortets overkant, så de ikke skubber titlen ned.
  *
@@ -130,6 +130,7 @@ export function DriftTerms({ service, className = '', headingLevel = 3 }) {
               <span className="package-per">{b.perMonth}</span>
             </p>
             <p className="drift-plan-content">{p.content}</p>
+            <p className="drift-plan-content">{p.limit}</p>
             <p className="t-body text-[14px]">{p.summary}</p>
           </li>
         ))}

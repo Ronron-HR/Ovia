@@ -34,7 +34,7 @@ export default function Footer() {
               <ul className="mt-3 flex flex-col">
                 {col.links.map((link) => (
                   <li key={link.href}>
-                    <a href={link.href} className="inline-flex min-h-11 items-center text-muted hover:text-ink hover:underline hover:underline-offset-4">
+                    <a href={link.href} className="inline-flex min-h-11 min-w-11 items-center text-muted hover:text-ink hover:underline hover:underline-offset-4">
                       {link.label}
                     </a>
                   </li>

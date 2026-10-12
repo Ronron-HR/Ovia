@@ -5,12 +5,14 @@
  *   npx vite --port 5176
  *   SITE=http://localhost:5176 node scripts/test-tour-e2e.mjs
  *
- * Kører på 375 og 1440 px, hvert scenarie i en ren browserkontekst (frisk localStorage):
- * invitationen ved første besøg (vises efter kort tid, lukkes, kommer ikke igen),
- * start, næste, tilbage, spring over, Escape, afslutning, genåbning, fokusfælde,
- * fokus tilbage til knappen, spotlight om målet, dialog inden for skærmen, scroll,
- * ingen ændring af adresse/valg under touren, manglende/skjulte mål, ingen mål,
- * fejl ved hentning, uden lagring, reduceret bevægelse og ingen konsolfejl.
+ * Kører på 375 og 1440 px, hvert scenarie i en ren browserkontekst. Hjælp kun på brugerens
+ * initiativ: ingen automatisk invitation (hverken ved første besøg eller midt i beregneren
+ * eller guiden) og ingen lagring i browseren. Dernæst: start, næste, tilbage, spring over,
+ * Escape, afslutning, genåbning, fokusfælde, fokus tilbage til knappen, spotlight om målet,
+ * dialog inden for skærmen, scroll, ingen ændring af adresse/valg under touren,
+ * manglende/skjulte mål (fx drift, som kun vises ved "Køb hjemmesiden"), ingen mål,
+ * fejl ved hentning, reduceret bevægelse og ingen konsolfejl. Siden /priser/ bruges, fordi
+ * beregneren står der uanset forsidens opbygning.
  *
  * Er launcheren eller [data-tour]-målene endnu ikke sat ind på siden af de andre
  * agenter, indsætter testen dem midlertidigt i den åbne side (sidens egne kilder
@@ -20,7 +22,7 @@ import puppeteer from 'puppeteer-core'
 
 const CHROME = process.env.CHROME ?? 'C:/Program Files/Google/Chrome/Application/chrome.exe'
 const SITE = process.env.SITE ?? 'http://localhost:4173'
-const INVITE_WAIT = 5200 // tour.inviteDelay (4500) + margin
+const INVITE_WAIT = 5200 // længere end den gamle invitationsforsinkelse: der må stadig intet dukke op
 
 const failures = []
 const notes = new Set()
@@ -60,7 +62,7 @@ async function newPage(ctx, width, { reduceMotion = false, noStorage = false, bl
 }
 
 /** Åbner siden og sørger for launcher og mål (fra siden selv, ellers midlertidigt indsat). */
-async function open(page, path = '/', { harness = true } = {}) {
+async function open(page, path = '/priser/', { harness = true } = {}) {
   await page.goto(`${SITE}${path}`, { waitUntil: 'networkidle0' })
   await wait(500)
   if (!harness) return
@@ -87,14 +89,16 @@ async function open(page, path = '/', { harness = true } = {}) {
       const react = urls.find((u) => /\/deps\/react\.js/.test(u))
       const client = urls.find((u) => /\/deps\/react-dom_client\.js/.test(u))
       if (!react || !client) throw new Error('kunne ikke finde React i dev-serveren til launcher-fixturen')
-      const [{ default: React }, { createRoot }, { default: Launcher }] = await Promise.all([
+      const [reactMod, clientMod, { default: Launcher }] = await Promise.all([
         import(react),
         import(client),
         import('/src/components/TourLauncher.jsx'),
       ])
+      const React = reactMod.default ?? reactMod
+      const createRoot = clientMod.createRoot ?? clientMod.default.createRoot
       const host = document.createElement('div')
       host.setAttribute('data-tour-harness', '')
-      host.style.cssText = 'position:absolute;top:96px;left:16px;z-index:5'
+      host.style.cssText = 'position:fixed;top:88px;left:16px;z-index:60'
       document.querySelector('main').prepend(host)
       createRoot(host).render(React.createElement(Launcher, { className: 'btn btn-ghost min-h-11 px-4' }))
       await new Promise((r) => setTimeout(r, 200))
@@ -186,92 +190,28 @@ async function checkStep(page, tag, label, { loose = false } = {}) {
 }
 
 const pageState = (page) => page.evaluate(() => ({ url: location.href, root: { inert: document.getElementById('root').hasAttribute('inert'), hidden: document.getElementById('root').getAttribute('aria-hidden') } }))
-const choice = (page) => page.evaluate(() => localStorage.getItem('oviaspecs-tour'))
+/** Intet gemmes i browseren om rundvisningen. */
+const stored = (page) => page.evaluate(() => Object.keys(localStorage).filter((k) => /tour/i.test(k)))
 
 for (const width of [375, 1440]) {
   const tag = `${width}px`
 
-  // ---- 1: invitationen ved første besøg -------------------------------------------
+  // ---- 1: ingen automatisk invitation (hjælp kun på brugerens initiativ) ---------------------
   {
     const ctx = await browser.createBrowserContext()
     const page = await newPage(ctx, width)
     await open(page)
     check(await launcher(page), `${tag}: knappen "Vis mig rundt" findes ikke`)
     check((await page.evaluate(() => document.querySelector('[data-tour-launcher]')?.textContent.trim())) === 'Vis mig rundt', `${tag}: knapteksten er ikke "Vis mig rundt"`)
-    const before = await page.evaluate(() => ({ h: document.documentElement.scrollHeight, y: document.querySelector('#beregner').getBoundingClientRect().top }))
-    check(!(await page.$('[data-tour-invite]')), `${tag}: invitationen vises med det samme`)
     await wait(INVITE_WAIT)
-    const inv = await page.evaluate(() => {
-      const el = document.querySelector('[data-tour-invite]')
-      if (!el) return null
-      const r = el.getBoundingClientRect()
-      const cb = document.querySelector('.callbar')
-      const cbr = cb && cb.dataset.show === 'true' ? cb.getBoundingClientRect() : null
-      return {
-        pos: getComputedStyle(el).position,
-        r: { l: r.left, t: r.top, r: r.right, b: r.bottom },
-        callTop: cbr?.top ?? null,
-        vw: innerWidth,
-        vh: innerHeight,
-        blocking: document.getElementById('root').hasAttribute('inert') || !!document.querySelector('[role="dialog"][aria-modal="true"][data-tour-popup]'),
-        h: document.documentElement.scrollHeight,
-        y: document.querySelector('#beregner').getBoundingClientRect().top,
-        focusStolen: el.contains(document.activeElement),
-      }
-    })
-    check(!!inv, `${tag}: invitationen vises ikke ved første besøg`)
-    if (inv) {
-      check(inv.pos === 'fixed', `${tag}: invitationen er ikke fixed`)
-      check(inv.r.l >= 0 && inv.r.r <= inv.vw && inv.r.b <= inv.vh && inv.r.t >= 0, `${tag}: invitationen ligger uden for skærmen`)
-      check(!inv.blocking && !inv.focusStolen, `${tag}: invitationen blokerer eller stjæler fokus`)
-      check(inv.h === before.h && Math.abs(inv.y - before.y) < 1, `${tag}: invitationen giver layoutskift`)
-      if (inv.callTop !== null) check(inv.r.b <= inv.callTop, `${tag}: invitationen ligger over bundbjælken`)
-    }
-    // på mobil: scroll, til bundbjælken er synlig, og tjek, at invitationen ligger over den
-    if (width < 768) {
-      await page.evaluate(() => document.querySelector('#eksempler')?.scrollIntoView())
-      await wait(700)
-      const over = await page.evaluate(() => {
-        const el = document.querySelector('[data-tour-invite]')
-        const cb = document.querySelector('.callbar')
-        if (!el || !cb || cb.dataset.show !== 'true') return null
-        return el.getBoundingClientRect().bottom <= cb.getBoundingClientRect().top
-      })
-      check(over !== false, `${tag}: invitationen overlapper den faste bundbjælke`)
-      if (over === null) notes.add(`${tag}: bundbjælken var ikke synlig ved scroll (overlap ikke målt)`)
-      await page.evaluate(() => window.scrollTo(0, 0))
-    }
-    // "Nej tak" lukker og huskes
-    const btn = await page.evaluateHandle(() => [...document.querySelectorAll('[data-tour-invite] button')].find((b) => b.textContent.trim() === 'Nej tak'))
-    await btn.asElement().click()
-    await wait(200)
-    check(!(await page.$('[data-tour-invite]')), `${tag}: "Nej tak" lukkede ikke invitationen`)
-    check((await choice(page)) === 'declined', `${tag}: "Nej tak" blev ikke husket`)
-    await page.reload({ waitUntil: 'networkidle0' })
+    check(!(await page.$('[data-tour-invite]')) && !(await dialog(page)), `${tag}: der dukkede en invitation eller rundvisning op af sig selv`)
+    check(!(await pageState(page)).root.inert, `${tag}: siden blev inert uden at brugeren startede touren`)
+    // Midt i guiden: ingen invitation.
+    const guideBtn = await page.evaluateHandle(() => [...document.querySelectorAll('#beregner button')].find((b) => b.textContent.trim().startsWith('Hjælp mig med at vælge')))
+    await guideBtn.asElement().click()
     await wait(INVITE_WAIT)
-    check(!(await page.$('[data-tour-invite]')), `${tag}: invitationen kom igen efter "Nej tak"`)
-    await ctx.close()
-  }
-
-  // ---- 1b: invitationen -> "Ja" starter touren; efter afslutning kommer den ikke igen ----
-  {
-    const ctx = await browser.createBrowserContext()
-    const page = await newPage(ctx, width)
-    await open(page)
-    await wait(INVITE_WAIT)
-    const yes = await page.$('[data-tour-invite-yes]')
-    check(!!yes, `${tag}: "Ja, vis mig rundt" i invitationen findes ikke`)
-    if (yes) {
-      await yes.click()
-      await wait(500)
-      check(!!(await dialog(page)) && !(await page.$('[data-tour-invite]')), `${tag}: "Ja" startede ikke touren / invitationen blev stående`)
-      await page.keyboard.press('Escape')
-      await wait(300)
-      check((await choice(page)) === 'skipped', `${tag}: lukning blev ikke husket (${await choice(page)})`)
-      await page.reload({ waitUntil: 'networkidle0' })
-      await wait(INVITE_WAIT)
-      check(!(await page.$('[data-tour-invite]')), `${tag}: invitationen kom igen efter en lukket rundvisning`)
-    }
+    check(!(await page.$('[data-tour-invite]')) && !(await dialog(page)), `${tag}: invitation midt i guiden`)
+    check((await stored(page)).length === 0, `${tag}: rundvisningen gemmer noget i browseren: ${await stored(page)}`)
     await ctx.close()
   }
 
@@ -387,7 +327,6 @@ for (const width of [375, 1440]) {
     check(!after.root.inert && after.root.hidden === null, `${tag}: inert/aria-hidden blev ikke fjernet efter afslutning`)
     check(after.url === before.url && (await calcText(page)) === calcBefore, `${tag}: adresse eller beregner ændret af touren`)
     check(await page.evaluate(() => document.activeElement === document.querySelector('[data-tour-launcher]')), `${tag}: fokus kom ikke tilbage til "Vis mig rundt"`)
-    check((await choice(page)) === 'done', `${tag}: afslutning blev ikke husket (${await choice(page)})`)
 
     // genåbning
     await page.click('[data-tour-launcher]')
@@ -402,7 +341,6 @@ for (const width of [375, 1440]) {
     await wait(300)
     check(!(await dialog(page)) && !(await pageState(page)).root.inert, `${tag}: "Spring over" lukkede ikke rent`)
     check(await page.evaluate(() => document.activeElement === document.querySelector('[data-tour-launcher]')), `${tag}: fokus tilbage efter "Spring over"`)
-    check((await choice(page)) === 'skipped', `${tag}: "Spring over" blev ikke husket`)
 
     // Escape midt i touren
     await page.click('[data-tour-launcher]')
@@ -474,8 +412,6 @@ for (const width of [375, 1440]) {
     const ctx = await browser.createBrowserContext()
     const page = await newPage(ctx, width, { noStorage: true })
     await open(page)
-    await wait(INVITE_WAIT)
-    check(!(await page.$('[data-tour-invite]')), `${tag}: uden lagring vises invitationen alligevel`)
     await page.click('[data-tour-launcher]')
     await page.waitForSelector('[data-tour-popup]', { timeout: 5000 })
     const nx = await page.evaluateHandle(() => [...document.querySelectorAll('[data-tour-popup] button')].find((b) => b.textContent.trim() === 'Næste'))
@@ -491,7 +427,7 @@ for (const width of [375, 1440]) {
   {
     const ctx = await browser.createBrowserContext()
     const page = await newPage(ctx, width)
-    await open(page, '/?ydelser=hjemmeside&sider=2-5&bestilling=nej&drift=plus&trin=3')
+    await open(page, '/priser/?ydelser=hjemmeside&sider=2-5&bestilling=nej&drift=plus&trin=4')
     const present = await page.evaluate(() => ({ drift: !!document.querySelector('[data-tour="drift"]'), price: !!document.querySelector('[data-tour="price"]') }))
     if (!present.drift && !present.price) {
       notes.add(`${tag}: data-tour="drift"/"price" findes ikke endnu på siden (kontrakt, ejes af priser) — drift/pris-trin ikke afprøvet`)
@@ -532,4 +468,4 @@ if (failures.length) {
   console.error(`Rundvisning-browsertest FEJLET (${failures.length}):\n- ${failures.join('\n- ')}`)
   process.exit(1)
 }
-console.log('Rundvisning-browsertest bestået (375 og 1440 px): invitation, start, næste/tilbage, spring over, Escape, færdig, genåbning, fokus, spotlight, mål der mangler, fejl, uden lagring, reduceret bevægelse, ingen konsolfejl.')
+console.log('Rundvisning-browsertest bestået (375 og 1440 px): ingen invitation, start, næste/tilbage, spring over, Escape, færdig, genåbning, fokus, spotlight, mål der mangler, fejl, ingen lagring, reduceret bevægelse, ingen konsolfejl.')

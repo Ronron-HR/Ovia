@@ -7,7 +7,6 @@ import {
   legacyDriftPlan,
   lokal,
   lokalMinimum,
-  lokalMonthly,
   lokalService,
   overlap,
   priceNote,
@@ -38,7 +37,7 @@ import {
  * egen) er uafhængige. Driftsvalget har ingen standardværdi: mangler det, flytter
  * fit() kunden til driftstrinnet, og quote() regner ingen månedspris.
  *
- * TO KØBSMÅDER: hjemmesiden er enten "Løbende samarbejde" (ydelsen `lokal`: 0 kr. i
+ * TO KØBSMÅDER: hjemmesiden er enten "Løbende samarbejde" (ydelsen `lokal`: ingen opstartspris i
  * opstart, fast månedspris, mindst seks måneder) eller "Køb hjemmesiden" (ydelsen
  * `hjemmeside`: engangspris + driftsplan). De to er gensidigt udelukkende (WEBSITE);
  * parse() og fit() sørger for, at kun én er valgt, så de aldrig opkræves begge.
@@ -216,7 +215,7 @@ const sum = (parts, field) => parts.reduce((s, p) => s + p[field], 0)
 const capitalize = (text) => text.charAt(0).toUpperCase() + text.slice(1)
 
 /**
- * Lokal (løbende samarbejde): 0 kr. i opstart, fast månedspris og en minimumsperiode.
+ * Lokal (løbende samarbejde): ingen opstartspris, fast månedspris og en minimumsperiode.
  * Systemtilvalget lægger KUN sin månedspris til, når systemModule.ready er true; ellers
  * er "Ja" en forespørgsel om et særskilt fast tilbud uden pris (ready læses ved hvert kald).
  */
@@ -371,7 +370,7 @@ export function priceParts({ once, monthly }) {
  * En linjes pris: engangsbeløb + månedsbeløb, kun månedsbeløb eller kun
  * engangsbeløb. Egen konto: beløbet + calculator.noDriftSuffix. En Booking & Google-
  * linje, der er helt dækket af hjemmesiden, får overlap.allIncluded. Lokal viser opstarten
- * (0 kr.) før månedsprisen.
+ * (nul) før månedsprisen.
  */
 export function priceText(price) {
   if (price.allIncluded) return price.allIncludedText ?? overlap.allIncluded
@@ -388,7 +387,7 @@ export function partText({ once, monthly }) {
 }
 
 /**
- * Minimumsperioden for Lokal som tekst: "mindst 6 mdr. = mindst 5.970 kr." Står der også
+ * Minimumsperioden for Lokal som tekst: "mindst N mdr. = mindst beløbet" Står der også
  * engangsbeløb eller månedsbeløb uden minimumsperiode i totalen, gælder minimum kun Lokal.
  */
 export function minimumText(total) {

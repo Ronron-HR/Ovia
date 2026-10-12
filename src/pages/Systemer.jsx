@@ -1,21 +1,18 @@
 import ContactButtons from '../components/ContactButtons.jsx'
 import ContactSection from '../components/ContactSection.jsx'
 import Icon from '../components/Icon.jsx'
+import WorkflowDemo from '../components/WorkflowDemo.jsx'
 import { systems } from '../data/offer.js'
 
 /**
  * /systemer/: små systemer til én arbejdsgang, og kun hvis den findes.
  *
  * Rækkefølge: overskrift med modulets status (ærligt og synligt fra start) ·
- * jeg spørger først · tre eksempler (med og uden) · arbejdsgangsdemoen (id="demo")
- * · sikkerhed og pris · kontakt. Teksterne står i src/data/offer.js (systems).
+ * jeg spørger først · tre eksempler (med og uden) · sikkerhed og pris ·
+ * arbejdsgangsdemoen (id="demo", med synlig disclaimer) · kontakt. Teksterne står i src/data/offer.js (systems).
  *
- * Arbejdsgangsdemoen (F) hentes, når filen findes: components/WorkflowDemo.jsx
- * (ingen props). import.meta.glob giver et tomt resultat, hvis filen mangler, så
- * siden bygger uanset. Demoen er mærket Demo i sektionen og i selve komponenten.
+ * Arbejdsgangsdemoen (WorkflowDemo.jsx) er mærket Demo i sektionen og i selve komponenten.
  */
-const found = import.meta.glob('../components/WorkflowDemo.jsx', { eager: true })
-const WorkflowDemo = Object.values(found)[0]?.default
 
 const QUESTION_ICON = ['inbox', 'search', 'clock', 'workflow']
 
@@ -111,10 +108,12 @@ export default function Systemer() {
                   </ul>
 
                   {ex.skipIf && (
-                    <p className="mt-auto flex gap-2.5 border-t border-rule pt-5 text-[15px] text-muted">
-                      <Icon name="info" size={18} className="mt-0.5" />
-                      <span>{ex.skipIf}</span>
-                    </p>
+                    <div className="mt-auto pt-6">
+                      <p className="flex gap-2.5 border-t border-rule pt-5 text-[15px] text-muted">
+                        <Icon name="info" size={18} className="mt-0.5" />
+                        <span>{ex.skipIf}</span>
+                      </p>
+                    </div>
                   )}
                 </article>
               </li>
@@ -122,27 +121,6 @@ export default function Systemer() {
           </ul>
         </div>
       </section>
-
-      {WorkflowDemo && (
-        <section id="demo" aria-labelledby="demo-titel" className="section-y bg-paper-2">
-          <div className="shell">
-            <header data-reveal className="max-w-[48rem]">
-              <p className="tag">{s.demo.label}</p>
-              <h2 id="demo-titel" className="t-display t-h2 mt-4">
-                {s.demo.title}
-              </h2>
-              <p className="t-body t-lead mt-3 max-w-[58ch]">{s.demo.intro}</p>
-            </header>
-            <div className="callout mt-6 max-w-[48rem]">
-              <Icon name="info" size={20} className="mt-0.5 text-cta" />
-              <p className="text-[16px] font-medium">{s.demo.disclaimer}</p>
-            </div>
-            <div className="mt-7 md:mt-9">
-              <WorkflowDemo />
-            </div>
-          </div>
-        </section>
-      )}
 
       <section aria-labelledby="sikkerhed-titel" className="section-y bg-paper">
         <div className="shell">
@@ -167,6 +145,25 @@ export default function Systemer() {
                 <p className="t-body mt-4 text-[16px] leading-relaxed">{s.pricing.text}</p>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="demo" aria-labelledby="demo-titel" className="section-y bg-paper-2">
+        <div className="shell">
+          <header data-reveal className="max-w-[48rem]">
+            <p className="tag">{s.demo.label}</p>
+            <h2 id="demo-titel" className="t-display t-h2 mt-4">
+              {s.demo.title}
+            </h2>
+            <p className="t-body t-lead mt-3 max-w-[58ch]">{s.demo.intro}</p>
+          </header>
+          <div className="callout mt-6 max-w-[48rem]">
+            <Icon name="info" size={20} className="mt-0.5 text-cta" />
+            <p className="text-[16px] font-medium">{s.demo.disclaimer}</p>
+          </div>
+          <div className="mt-7 md:mt-9">
+            <WorkflowDemo />
           </div>
         </div>
       </section>

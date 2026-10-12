@@ -94,7 +94,7 @@ export const demoSeo = Object.fromEntries(
 )
 
 /** Privatlivspolitikken er sin egen indgang (ikke i routes.js), men står i sitemap.xml. */
-export const privacySeo = { path: paths.privatliv, updated: '2026-10-07' }
+export const privacySeo = { path: paths.privatliv, updated: '2026-10-12' }
 
 /* ---- Strukturerede data (JSON-LD) ----------------------------------------
    Kun det, der står på siden og er verificeret: navn, adresse på nettet, mail,

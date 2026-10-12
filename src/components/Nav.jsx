@@ -237,7 +237,7 @@ export default function Nav({ path }) {
                     <a
                       href={item.href}
                       aria-current={isHere(item.href, path) ? 'page' : undefined}
-                      className="nav-link flex min-h-11 items-center text-[15px] font-medium"
+                      className="nav-link flex min-h-11 min-w-11 items-center text-[15px] font-medium"
                     >
                       <span className="nav-label">{item.label}</span>
                     </a>

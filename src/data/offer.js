@@ -31,7 +31,6 @@ const web = services.hjemmeside
 /* ---- Hjælpere (bygger tekst af tallene) --------------------------------- */
 
 const perMonth = (n) => `${formatKr(n)}/md.`
-const driftFromPrice = Math.min(...driftPlanList.map((p) => p.monthly))
 const lastMonth = lokal.minMonths
 /** Planerne med månedspris, fx "Basis ... og Ekstra ...". */
 const planPrices = () => {
@@ -80,7 +79,7 @@ export const buyModes = {
       'Betalte eksterne tjenester er særskilte. Betaler du selv et abonnement eller et domæne direkte, bliver det ikke opkrævet to gange.',
       'Et system. Det beskrives på siden Systemer og får sin egen pris.',
     ],
-    cta: { label: 'Beregn Lokal', href: '#beregner' },
+    cta: { label: 'Beregn Lokal', href: '?ydelser=lokal#beregner' },
     note: `${priceNote} Opsigelse, overdragelse og ejerskab står under Vilkår.`,
   },
 
@@ -102,7 +101,7 @@ export const buyModes = {
       'Drift, som du vælger særskilt. Den er ikke med i pakkeprisen.',
       'Bookingudbyderens eget abonnement. Det betaler du direkte til udbyderen.',
     ],
-    cta: { label: 'Beregn engangspris', href: '#beregner' },
+    cta: { label: 'Beregn engangspris', href: '?ydelser=hjemmeside#beregner' },
     note: `${priceNote} Vilkår for drift og frikøb står under Vilkår.`,
   },
 

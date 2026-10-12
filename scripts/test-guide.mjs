@@ -1,19 +1,22 @@
 /**
  * Test af behovsguiden (src/guide.js). De forventede priser er regnet ud for hånd
  * ud fra prislisten, ikke hentet fra koden: hjemmeside 2.500 / 4.000 / 5.000 kr. engangs,
- * driftsplaner Basis 99 / Plus 199 / Ekstra 399 kr. om måneden, egen konto +1.000 kr.
- * engangs (ingen månedspris), booking på siden +500, Booking & Google 500 / 1.000 /
- * 1.500, marketing 1.500 / 2.500 / 4.000 pr. måned.
+ * driftsplaner Basis 99 / Plus 199 / Ekstra 399 kr. om måneden, booking på siden +500,
+ * Booking & Google 500 / 1.000 / 1.500 (Google-profil 500, booking 500, QR-skilt og
+ * opfølgning 500), marketing 1.500 / 2.500 / 4.000 pr. måned, Lokal 0 kr. i opstart og
+ * 995 kr./md i mindst 6 måneder (5.970 kr.).
  *
- * Tjekker: højst 3 spørgsmål (første + to opfølgende), forventet pris og driftsplan pr.
- * forløb (den mindste plan, der dækker svaret om ændringer; aldrig en dyrere), at en
- * kunde med hjemmeside aldrig får en ny på grund af booking, at "Jeg ved det ikke"
- * giver et forslag eller en afklaring uden pris, at senere svar nulstilles, når et
- * tidligere ændres, at adresselinjen kan læses igen, og at forslaget giver samme pris
- * i beregneren.
+ * Tjekker: højst 3 spørgsmål i alle forgreninger, forventet ydelse og pris pr. forløb,
+ * "Google + QR → ingen booking" (Start + QR = 1.000 kr.), at et QR-skilt aldrig giver
+ * booking, at booking aldrig giver en ny kalender eller (med hjemmeside) en ny hjemmeside,
+ * at et system aldrig anbefales med pris, mens standardmodulet ikke findes (og med pris,
+ * når flaget sættes midlertidigt), at "Jeg ved det ikke" giver den mindste løsning, at
+ * begrundelserne ikke lover placeringer, at senere svar nulstilles, at adresselinjen kan
+ * læses igen, og at forslaget giver samme pris i beregneren.
  */
-import { parse, quote } from '../src/calculator.js'
-import { fitGuide, parseGuide, proposal, questionList, serializeGuide, withAnswer } from '../src/guide.js'
+import { parse, quote, totalText } from '../src/calculator.js'
+import { fitGuide, parseGuide, proposal, questionList, serializeGuide, withAnswer, QUESTIONS } from '../src/guide.js'
+import { calculator, systemModule } from '../src/data/pricing.js'
 
 const failures = []
 const check = (ok, msg) => {
@@ -21,73 +24,136 @@ const check = (ok, msg) => {
 }
 
 const cases = [
-  // [navn, svar, engangs, pr. md, ydelse]
-  ['hjemmeside 1 side, ingen ændringer', { behov: 'hjemmeside', sider: '1', aendringer: 'nej' }, 2500, 99, 'hjemmeside'],
-  ['hjemmeside 2-5, lidt ændringer', { behov: 'hjemmeside', sider: '2-5', aendringer: 'lidt' }, 4000, 199, 'hjemmeside'],
-  ['hjemmeside 6-8, jævnlige ændringer', { behov: 'hjemmeside', sider: '6-8', aendringer: 'jaevnligt' }, 5000, 399, 'hjemmeside'],
-  ['hjemmeside 6-8, ingen ændringer (ikke Ekstra)', { behov: 'hjemmeside', sider: '6-8', aendringer: 'nej' }, 5000, 99, 'hjemmeside'],
-  ['hjemmeside 1 side, jævnlige ændringer', { behov: 'hjemmeside', sider: '1', aendringer: 'jaevnligt' }, 2500, 399, 'hjemmeside'],
-  ['hjemmeside 2-5, egen konto', { behov: 'hjemmeside', sider: '2-5', aendringer: 'egen' }, 5000, 0, 'hjemmeside'],
-  ['hjemmeside ved ikke', { behov: 'hjemmeside', sider: 'ved-ikke', aendringer: 'ved-ikke' }, 2500, 99, 'hjemmeside'],
-  ['hjemmeside, ved ikke om ændringer', { behov: 'hjemmeside', sider: '2-5', aendringer: 'ved-ikke' }, 4000, 99, 'hjemmeside'],
+  // [navn, svar, engangs, pr. md, ydelser i forslaget]
+  // Hjemmeside: køb. Mindste pakke, der dækker siderne, og driftsplanen Basis.
+  ['køb 1 side', { behov: 'hjemmeside', sider: '1', model: 'koeb' }, 2500, 99, 'hjemmeside'],
+  ['køb 2-3 sider', { behov: 'hjemmeside', sider: '2-3', model: 'koeb' }, 4000, 99, 'hjemmeside'],
+  ['køb 4-5 sider', { behov: 'hjemmeside', sider: '4-5', model: 'koeb' }, 4000, 99, 'hjemmeside'],
+  ['køb 6-8 sider', { behov: 'hjemmeside', sider: '6-8', model: 'koeb' }, 5000, 99, 'hjemmeside'],
+  ['køb, ved ikke om sider (mindste)', { behov: 'hjemmeside', sider: 'ved-ikke', model: 'koeb' }, 2500, 99, 'hjemmeside'],
+  ['betaling ved ikke → engangskøb (mindste)', { behov: 'hjemmeside', sider: '2-3', model: 'ved-ikke' }, 4000, 99, 'hjemmeside'],
+  // Hjemmeside: Lokal, 0 kr. i opstart og 995 kr./md.
+  ['Lokal 1 side', { behov: 'hjemmeside', sider: '1', model: 'lokal' }, 0, 995, 'lokal'],
+  ['Lokal 2-3 sider', { behov: 'hjemmeside', sider: '2-3', model: 'lokal' }, 0, 995, 'lokal'],
+  ['Lokal, ved ikke om sider', { behov: 'hjemmeside', sider: 'ved-ikke', model: 'lokal' }, 0, 995, 'lokal'],
+  // Lokal rummer højst 3 sider: kræver kunden flere, foreslås den mindste købspakke, der kan rumme dem.
+  ['Lokal ønsket, men 4-5 sider → køb Vækst', { behov: 'hjemmeside', sider: '4-5', model: 'lokal' }, 4000, 99, 'hjemmeside'],
+  ['Lokal ønsket, men 6-8 sider → køb Fuld fart', { behov: 'hjemmeside', sider: '6-8', model: 'lokal' }, 5000, 99, 'hjemmeside'],
+  // Google: engangsopgave. QR-skiltet vælges uden booking.
   ['google uden QR', { behov: 'google', anmeldelser: 'nej' }, 500, 0, 'bookingGoogle'],
-  ['google med QR', { behov: 'google', anmeldelser: 'ja' }, 1500, 0, 'bookingGoogle'],
-  ['google ved ikke', { behov: 'google', anmeldelser: 'ved-ikke' }, 500, 0, 'bookingGoogle'],
+  ['google + QR → ingen booking (Google 500 + QR 500)', { behov: 'google', anmeldelser: 'ja' }, 1000, 0, 'bookingGoogle'],
+  ['google ved ikke om QR', { behov: 'google', anmeldelser: 'ved-ikke' }, 500, 0, 'bookingGoogle'],
+  // Booking: kobles på det, kunden har; aldrig en ny kalender.
   ['booking, har hjemmeside', { behov: 'booking', harSide: 'ja' }, 1000, 0, 'bookingGoogle'],
   ['booking, ved ikke om hjemmeside', { behov: 'booking', harSide: 'ved-ikke' }, 1000, 0, 'bookingGoogle'],
-  ['booking, ingen side, vil have side (mindste plan)', { behov: 'booking', harSide: 'nej', ogsaaSide: 'ja' }, 3000, 99, 'hjemmeside'],
+  ['booking, ingen side, vil købe side (mindste)', { behov: 'booking', harSide: 'nej', ogsaaSide: 'koeb' }, 3000, 99, 'hjemmeside'],
+  ['booking, ingen side, vil have Lokal (Google-profil trukket fra)', { behov: 'booking', harSide: 'nej', ogsaaSide: 'lokal' }, 500, 995, 'lokal,bookingGoogle'],
   ['booking, ingen side, nok med Instagram', { behov: 'booking', harSide: 'nej', ogsaaSide: 'nej' }, 1000, 0, 'bookingGoogle'],
   ['booking, ingen side, ved ikke', { behov: 'booking', harSide: 'nej', ogsaaSide: 'ved-ikke' }, 1000, 0, 'bookingGoogle'],
+  // Arbejdsgang: få sager → Lokal med en god formular (ingen pris på system).
+  ['arbejdsgang, få sager', { behov: 'arbejdsgang', volumen: 'faa' }, 0, 995, 'lokal'],
+  ['arbejdsgang, ved ikke om antal (mindste)', { behov: 'arbejdsgang', volumen: 'ved-ikke' }, 0, 995, 'lokal'],
+  // Sociale medier
   ['sociale, poster selv', { behov: 'sociale', opslag: 'nej', annoncer: 'nej' }, 0, 1500, 'marketing'],
   ['sociale, jeg poster', { behov: 'sociale', opslag: 'ja', annoncer: 'nej' }, 0, 2500, 'marketing'],
   ['sociale, annoncer', { behov: 'sociale', opslag: 'nej', annoncer: 'ja' }, 0, 4000, 'marketing'],
   ['sociale ved ikke', { behov: 'sociale', opslag: 'ved-ikke', annoncer: 'ved-ikke' }, 0, 1500, 'marketing'],
+  // Usikker
   ['usikker, Google', { behov: 'usikker', fokus: 'google', anmeldelser: 'nej' }, 500, 0, 'bookingGoogle'],
+  ['usikker, Google + QR', { behov: 'usikker', fokus: 'google', anmeldelser: 'ja' }, 1000, 0, 'bookingGoogle'],
   ['usikker, booking, har side', { behov: 'usikker', fokus: 'booking', harSide: 'ja' }, 1000, 0, 'bookingGoogle'],
   ['usikker, booking, ingen side', { behov: 'usikker', fokus: 'booking', harSide: 'nej' }, 1000, 0, 'bookingGoogle'],
-  ['usikker, hjemmeside', { behov: 'usikker', fokus: 'hjemmeside', sider: '1' }, 2500, 99, 'hjemmeside'],
+  ['usikker, hjemmeside (betaling ukendt → engangskøb)', { behov: 'usikker', fokus: 'hjemmeside', sider: '1' }, 2500, 99, 'hjemmeside'],
 ]
+
+const PROMISE = /placering|nummer 1|øverst på google|fundet på google|flere kunder|garanti/i
 
 for (const [name, a, once, monthly, key] of cases) {
   const list = questionList(a)
   check(list.length <= 3, `${name}: ${list.length} spørgsmål (højst 3)`)
   check(list.every((k) => a[k]), `${name}: svar mangler til ${list.filter((k) => !a[k])}`)
   const rec = proposal(a)
-  check(rec.kind === 'plan', `${name}: ingen anbefaling`)
+  check(rec.kind === 'plan', `${name}: ingen anbefaling (${rec.kind})`)
   if (rec.kind !== 'plan') continue
-  check(rec.state.selected.length === 1 && rec.state.selected[0] === key, `${name}: ydelse ${rec.state.selected} (forventet ${key})`)
+  check(rec.state.selected.join() === key, `${name}: ydelse ${rec.state.selected} (forventet ${key})`)
   check(rec.quote.total.once === once, `${name}: engangspris ${rec.quote.total.once} (forventet ${once})`)
   check(rec.quote.total.monthly === monthly, `${name}: månedspris ${rec.quote.total.monthly} (forventet ${monthly})`)
   check(rec.reasons.length > 0, `${name}: ingen begrundelse`)
+  check(!rec.reasons.some((r) => PROMISE.test(r)), `${name}: begrundelsen lover noget: ${rec.reasons.filter((r) => PROMISE.test(r))}`)
   const g = fitGuide({ step: list.length + 1, a })
   check(g.step === list.length + 1, `${name}: resultattrinnet nås ikke`)
   const again = parseGuide(serializeGuide(g))
   check(JSON.stringify(again) === JSON.stringify(g), `${name}: guidens adresselinje kan ikke læses igen`)
-  // Beregneren, åbnet fra forslaget, giver samme pris.
-  const search = '?' + new URLSearchParams({ ydelser: key, ...rec.state.answers, trin: String(rec.state.step + 1) })
-  const total = quote(parse(search)).total
-  check(total.once === once && total.monthly === monthly, `${name}: beregneren giver ${total.once}/${total.monthly}`)
+  // Beregneren, åbnet fra forslaget, giver samme pris (adresselinjen fra forslaget).
+  const search = '?' + new URLSearchParams({ ydelser: rec.state.selected.join(), ...rec.state.answers, trin: String(rec.state.step + 1) })
+  const calc = quote(parse(search))
+  check(calc.total.once === once && calc.total.monthly === monthly, `${name}: beregneren giver ${calc.total.once}/${calc.total.monthly}`)
+  check(totalText(calc.total) === totalText(rec.quote.total), `${name}: totaltekst forskellig i guide og beregner`)
+  // Et system anbefales aldrig med pris, mens standardmodulet ikke findes.
+  check(!rec.state.answers.system || rec.state.answers.system === 'nej', `${name}: foreslår et system, mens modulet ikke findes`)
 }
 
-// Hjemmesiden: spørgsmålet om ændringer afløser bookingspørgsmålet, og planen følger svaret.
-check(questionList({ behov: 'hjemmeside' }).join() === 'behov,sider,aendringer', `hjemmesidens spørgsmål: ${questionList({ behov: 'hjemmeside' })}`)
-for (const [aendringer, plan, maxMonthly] of [['nej', 'basis', 99], ['lidt', 'plus', 199], ['jaevnligt', 'ekstra', 399], ['egen', 'egen', 0], ['ved-ikke', 'basis', 99]]) {
-  const rec = proposal({ behov: 'hjemmeside', sider: '2-5', aendringer })
-  check(rec.state.answers.drift === plan, `ændringer=${aendringer} gav drift=${rec.state.answers.drift} (forventet ${plan})`)
-  check(rec.state.answers.bestilling === 'nej', `ændringer=${aendringer}: booking blev lagt til af sig selv`)
-  // Aldrig dyrere end svaret kræver: månedsprisen er højst planens egen.
-  check(rec.quote.total.monthly <= maxMonthly, `ændringer=${aendringer}: for dyr plan (${rec.quote.total.monthly}/md)`)
-  check(rec.reasons.some((r) => /Basis|Plus|Ekstra|egen konto/.test(r)), `ændringer=${aendringer}: begrundelsen nævner ikke planen`)
+// Højst tre spørgsmål i alle forgreninger: gennemløb alle kombinationer af svar.
+{
+  let paths = 0
+  const walk = (a) => {
+    const list = questionList(a)
+    const next = list.find((k) => !a[k])
+    if (!next) {
+      paths++
+      check(list.length <= 3, `forgrening ${JSON.stringify(a)}: ${list.length} spørgsmål`)
+      const rec = proposal(a)
+      check(['plan', 'talk', 'unclear'].includes(rec.kind), `forgrening ${JSON.stringify(a)}: ${rec.kind}`)
+      if (rec.kind === 'plan') {
+        check(!rec.state.answers.system || rec.state.answers.system === 'nej', `forgrening ${JSON.stringify(a)}: system med pris`)
+        // Aldrig en ny hjemmeside på grund af booking hos en kunde med hjemmeside, og aldrig booking på grund af QR.
+        if ((a.behov === 'booking' && (a.harSide === 'ja' || a.harSide === 'ved-ikke')) || a.behov === 'google') {
+          check(!rec.state.selected.includes('hjemmeside') && !rec.state.selected.includes('lokal'), `forgrening ${JSON.stringify(a)}: ny hjemmeside`)
+        }
+        if (a.behov === 'google' || (a.behov === 'usikker' && a.fokus === 'google')) {
+          check(rec.state.answers.booking === 'nej', `forgrening ${JSON.stringify(a)}: booking med Google/QR`)
+        }
+      }
+      return
+    }
+    for (const o of QUESTIONS[next].options) walk({ ...a, [next]: o.id })
+  }
+  walk({})
+  check(paths > 50, `kun ${paths} forgreninger gennemløbet`)
 }
-// Stilles spørgsmålet om ændringer ikke (usikker → hjemmeside), siger begrundelsen, at den mindste plan er valgt.
-check(proposal({ behov: 'usikker', fokus: 'hjemmeside', sider: '1' }).reasons.some((r) => /mindste driftsplan/.test(r)), 'uden svar om ændringer siger begrundelsen ikke, at den mindste plan er valgt')
 
-// En kunde med hjemmeside får aldrig en ny hjemmeside på grund af booking.
-for (const harSide of ['ja', 'ved-ikke']) {
-  const rec = proposal({ behov: 'booking', harSide })
-  check(!rec.state.selected.includes('hjemmeside'), `booking med hjemmeside=${harSide} giver ny hjemmeside`)
-  const via = proposal({ behov: 'usikker', fokus: 'booking', harSide })
-  check(!via.state.selected.includes('hjemmeside'), `usikker/booking med hjemmeside=${harSide} giver ny hjemmeside`)
+// Arbejdsgang med mange sager: intet færdigt standardmodul → ingen pris, en samtale/særskilt tilbud.
+{
+  const offer = proposal({ behov: 'arbejdsgang', volumen: 'mange', eksisterende: 'nej' })
+  check(offer.kind === 'talk' && !offer.quote && !offer.state && /særskilt fast tilbud/.test(offer.text), `arbejdsgang mange, intet system: ${offer.kind}`)
+  const have = proposal({ behov: 'arbejdsgang', volumen: 'mange', eksisterende: 'ja' })
+  check(have.kind === 'talk' && !have.quote, `arbejdsgang mange, har system: ${have.kind} (sælger et nyt)`)
+  const unsure = proposal({ behov: 'arbejdsgang', volumen: 'mange', eksisterende: 'ved-ikke' })
+  check(unsure.kind === 'talk' && !unsure.quote, `arbejdsgang mange, ved ikke om system: ${unsure.kind}`)
+  check(questionList({ behov: 'arbejdsgang', volumen: 'mange' }).join() === 'behov,volumen,eksisterende', 'arbejdsgang mange stiller ikke spørgsmålet om eksisterende system')
+  check(questionList({ behov: 'arbejdsgang', volumen: 'faa' }).join() === 'behov,volumen', 'arbejdsgang få stiller for mange spørgsmål')
+  // Med et færdigt standardmodul (flaget sættes midlertidigt): Lokal + system, 1.495 kr./md og mindst 8.970 kr.
+  systemModule.ready = true
+  try {
+    const ready = proposal({ behov: 'arbejdsgang', volumen: 'mange', eksisterende: 'nej' })
+    check(ready.kind === 'plan' && ready.quote.total.monthly === 1495 && ready.quote.total.lokal.minimum === 8970, `arbejdsgang med modul: ${ready.kind} ${ready.quote?.total.monthly}`)
+    const stillHave = proposal({ behov: 'arbejdsgang', volumen: 'mange', eksisterende: 'ja' })
+    check(stillHave.kind === 'talk', 'har kunden et system, sælges et nyt også med modul')
+  } finally {
+    systemModule.ready = false
+  }
+}
+
+// Hjemmesiden: Lokal passer kun til 1-3 sider; køb vælger driftsplanen Basis og siger det.
+{
+  const lokal = proposal({ behov: 'hjemmeside', sider: '1', model: 'lokal' })
+  check(lokal.quote.total.lokal?.minimum === 5970 && lokal.quote.total.lokal.months === 6, 'Lokal-forslaget mangler minimum 5.970 kr./6 mdr.')
+  check(lokal.reasons.some((r) => /Lokal/.test(r)), 'Lokal-forslaget nævner ikke Lokal i begrundelsen')
+  const koeb = proposal({ behov: 'hjemmeside', sider: '2-3', model: 'koeb' })
+  check(koeb.state.answers.drift === 'basis' && koeb.state.answers.bestilling === 'nej', `køb: drift ${koeb.state.answers.drift}, booking ${koeb.state.answers.bestilling}`)
+  check(koeb.reasons.some((r) => /mindste driftsplan, Basis/.test(r)), 'køb: begrundelsen siger ikke, hvorfor Basis er valgt')
+  check(questionList({ behov: 'hjemmeside' }).join() === 'behov,sider,model', `hjemmesidens spørgsmål: ${questionList({ behov: 'hjemmeside' })}`)
+  check(proposal({ behov: 'hjemmeside', sider: '4-5', model: 'lokal' }).reasons.some((r) => /rummer/.test(r)), 'Lokal ønsket med 4-5 sider forklarer ikke, hvorfor der foreslås køb')
 }
 
 // "Jeg ved det ikke" først: ingen pris, ingen opfundet pakke.
@@ -96,21 +162,23 @@ check(unclear.kind === 'unclear' && !unclear.quote && !unclear.state, 'usikker +
 check(questionList({ behov: 'usikker', fokus: 'ved-ikke' }).length === 2, 'usikker + ved ikke stiller flere end 2 spørgsmål')
 
 // Ændrede svar: senere svar nulstilles, og gamle tilvalg hænger ikke ved.
-let g = { step: 4, a: { behov: 'hjemmeside', sider: '6-8', aendringer: 'jaevnligt' } }
+let g = { step: 4, a: { behov: 'hjemmeside', sider: '6-8', model: 'koeb' } }
 g = withAnswer(g, 'behov', 'google')
-check(!('sider' in g.a) && !('aendringer' in g.a), `skift af behov rydder ikke: ${JSON.stringify(g.a)}`)
+check(!('sider' in g.a) && !('model' in g.a), `skift af behov rydder ikke: ${JSON.stringify(g.a)}`)
 check(g.step <= 2, `trinnet efter skift er ${g.step}`)
-g = withAnswer({ step: 3, a: { behov: 'hjemmeside', sider: '1', aendringer: 'lidt' } }, 'sider', '2-5')
-check(g.a.sider === '2-5' && !('aendringer' in g.a), `skift af sider rydder ikke senere svar: ${JSON.stringify(g.a)}`)
-const same = withAnswer({ step: 4, a: { behov: 'hjemmeside', sider: '1', aendringer: 'lidt' } }, 'sider', '1')
-check(same.a.aendringer === 'lidt', 'samme svar igen mistede det senere svar')
+g = withAnswer({ step: 3, a: { behov: 'hjemmeside', sider: '1', model: 'lokal' } }, 'sider', '2-3')
+check(g.a.sider === '2-3' && !('model' in g.a), `skift af sider rydder ikke senere svar: ${JSON.stringify(g.a)}`)
+const same = withAnswer({ step: 4, a: { behov: 'hjemmeside', sider: '1', model: 'lokal' } }, 'sider', '1')
+check(same.a.model === 'lokal', 'samme svar igen mistede det senere svar')
 // Ugyldige adresselinjer
 check(parseGuide('?hjaelp=3&g-behov=hjemmeside')?.step === 2, 'trin foran ubesvaret spørgsmål blev ikke rettet')
 check(parseGuide('?hjaelp=1&g-behov=noget-andet')?.a.behov === undefined, 'ugyldigt svar blev accepteret')
 check(parseGuide('?ydelser=hjemmeside') === null, 'guiden åbnes uden hjaelp')
+// Spring over: teksterne findes (UI'et går direkte til beregneren).
+check(Boolean(calculator.guide.skip), 'guiden mangler "Spring over"')
 
 if (failures.length) {
-  console.error(`Guidetest FEJLET (${failures.length}):\n- ${failures.join('\n- ')}`)
+  console.error(`Guidetest FEJLET (${failures.length}):\n- ${failures.slice(0, 25).join('\n- ')}`)
   process.exit(1)
 }
-console.log(`Guidetest bestået: ${cases.length} forløb med uafhængigt udregnede priser, nulstilling, adresselinje og "ved ikke".`)
+console.log(`Guidetest bestået: ${cases.length} forløb med uafhængigt udregnede priser, alle forgreninger højst 3 spørgsmål, Google + QR uden booking, system aldrig med pris, nulstilling, adresselinje og "ved ikke".`)

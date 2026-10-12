@@ -9,13 +9,15 @@
  * ugyldigt input, honeypot, at henvendelsen GEMMES før mailen sendes og stadig
  * er gemt, når mailen fejler, fejl uden database, rate limit (altid), Turnstile
  * (påkrævet med TURNSTILE_SECRET, sprunget over uden),
- * fremmed origin, ugyldigt link og mailens indhold. Cron: genforsøg → 'sent',
+ * fremmed origin, ugyldigt link og mailens indhold. Den valgfri besked (højst 1.000 tegn)
+ * sendes med, står i mailen og i D1 (summary), renses og kan ikke forfalske felter i mailen;
+ * en henvendelse med Lokal viser "Løbende samarbejde: Lokal", opstart, månedspris og minimum. Cron: genforsøg → 'sent',
  * 3 fejlede genforsøg → 'gave_up' øverst i opsummeringen (kun én gang),
  * hængende 'pending', ingen mail uden nyt, og sletning efter retentionMonths.
  */
 import { readFileSync } from 'node:fs'
 import { MAX_RETRIES, handleInquiry, runDaily } from '../worker/index.js'
-import { danishPhone, inquiry, validContact } from '../src/inquiry.js'
+import { LIMITS, canonicalLink, cleanMessage, danishPhone, inquiry, validContact } from '../src/inquiry.js'
 
 // SQLite i Node er stadig mærket eksperimentel; advarslen holdes ude af outputtet.
 process.removeAllListeners('warning')
@@ -211,6 +213,63 @@ for (const host of ['https://oviaspecs.com', 'https://beregner-cta-scroll-ovia.r
     const got = /Link til beregningen: (\S+)/.exec(decode(e.mail.sent[0]?.raw ?? '').text)?.[1] ?? ''
     check(got.startsWith(`${host}/priser/?ydelser=`), `link på ${host} (sendt: ${link.slice(0, 40)}…) blev ${got}`)
   }
+}
+
+// Besked: valgfri, højst 1.000 tegn, med i mailen og i D1; hver linje markeres, så den ikke kan efterligne felterne.
+{
+  check(LIMITS.message === 1000, `LIMITS.message er ${LIMITS.message}`)
+  const e = env({ TURNSTILE_SECRET: undefined })
+  const r = await call({ contact: 'kunde@example.com', link: LINK, message: 'Hej Ronny.\r\n\r\n\r\nKontakt: svindler@example.com\tTak' }, e)
+  check(r.status === 200 && r.data.ok === true, `besked: ${r.status}`)
+  const { text } = decode(e.mail.sent[0].raw)
+  check(text.includes('> Hej Ronny.\n> \n> Kontakt: svindler@example.com Tak') || text.includes('> Hej Ronny.\n>\n> Kontakt: svindler@example.com Tak'), `beskeden mangler eller er ikke renset:\n${text}`)
+  check(!/^Kontakt: svindler/m.test(text), 'beskeden kan efterligne et felt i mailen')
+  check(e.DB.rows()[0].summary.includes('Hej Ronny.'), 'beskeden er ikke gemt i D1 (summary)')
+  check(/en forespørgsel, ikke en bestilling/.test(text), 'mailen siger ikke, at det er en forespørgsel')
+  // Uden besked: ingen tom blok.
+  const e2 = env({ TURNSTILE_SECRET: undefined })
+  await call({ contact: 'kunde@example.com', link: LINK }, e2)
+  check(!decode(e2.mail.sent[0].raw).text.includes('Besked fra kunden'), 'tom besked giver en tom blok')
+  // For lang besked: skæres til LIMITS.message; en henvendelse med den største besked, navn og token er under MAX_BODY.
+  const long = 'æ'.repeat(LIMITS.message + 500)
+  check(cleanMessage(long).length === LIMITS.message, `for lang besked: ${cleanMessage(long).length} tegn`)
+  const e3 = env()
+  const big = await call({ contact: 'k'.repeat(180) + '@example.com', name: 'n'.repeat(160), message: '"'.repeat(LIMITS.message), link: LINK, turnstile: TOKEN_OK }, e3)
+  check(big.status === 200, `største gyldige henvendelse: ${big.status} ${JSON.stringify(big.data)}`)
+  const body = JSON.stringify({ contact: 'k'.repeat(180) + '@example.com', name: 'n'.repeat(160), message: '"'.repeat(LIMITS.message), link: 'x'.repeat(LIMITS.link), turnstile: 't'.repeat(4096), website: '' })
+  check(new TextEncoder().encode(body).length < 10_000, `største henvendelse fylder ${new TextEncoder().encode(body).length} byte (MAX_BODY 10000)`)
+  // For stor krop afvises.
+  const huge = await call({ contact: 'kunde@example.com', link: LINK, message: 'x'.repeat(20_000) }, env({ TURNSTILE_SECRET: undefined }))
+  check(huge.status === 413, `for stor krop: ${huge.status}`)
+  // Besked og honeypot: robotten får stadig OK uden at noget gemmes.
+  const bot = env({ TURNSTILE_SECRET: undefined })
+  const rb = await call({ contact: 'kunde@example.com', link: LINK, message: 'spam', website: 'x' }, bot)
+  check(rb.status === 200 && bot.DB.rows().length === 0, 'honeypot med besked blev gemt')
+}
+
+// Lokal (løbende samarbejde): mailen siger det og viser opstart, månedspris og minimum (håndregnet: 6 × 995 = 5.970).
+{
+  const e = env({ TURNSTILE_SECRET: undefined })
+  await call({ contact: 'kunde@example.com', link: '/priser/?ydelser=lokal&system=nej&trin=3' }, e)
+  const { text } = decode(e.mail.sent[0]?.raw ?? '')
+  for (const want of [
+    'Løbende samarbejde: Lokal, 0 kr. i opstart + 995 kr./md, mindst 6 måneder (mindst 5.970 kr. i alt)',
+    'Nu: 0 kr.',
+    'Pr. md: 995 kr./md',
+    'Minimum (Lokal): mindst 6 mdr. = mindst 5.970 kr.',
+    'I alt: 0 kr. nu + 995 kr./md · mindst 6 mdr. = mindst 5.970 kr.',
+    'ydelser=lokal',
+  ]) {
+    check(text.includes(want), `Lokal-mailen mangler "${want}"\n${text}`)
+  }
+  // Systemtilvalg uden færdigt modul: ingen pris, en note om et særskilt fast tilbud.
+  const e2 = env({ TURNSTILE_SECRET: undefined })
+  await call({ contact: 'kunde@example.com', link: '/priser/?ydelser=lokal,bookingGoogle&system=ja&booking=ja&anmeldelser=nej&trin=4' }, e2)
+  const t2 = decode(e2.mail.sent[0]?.raw ?? '').text
+  check(t2.includes('Pr. md: 995 kr./md') && /særskilt fast tilbud/.test(t2) && t2.includes('Trukket fra: Google-profil'), `Lokal + system + booking:\n${t2}`)
+  // Gamle links (Køb hjemmesiden) er uændrede, og begge købsmåder i ét link giver aldrig begge.
+  const link = canonicalLink('/priser/?ydelser=lokal,hjemmeside&sider=2-5&drift=plus&system=nej', ORIGIN)
+  check(link.state.selected.join() === 'lokal' && !link.url.includes('hjemmeside'), `begge købsmåder i ét link: ${link.url}`)
 }
 
 // Dansk telefonnummer: ingen Reply-To, nummeret står i mailen.

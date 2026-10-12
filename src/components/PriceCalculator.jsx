@@ -6,6 +6,7 @@ import {
   quote,
   resultStep,
   serviceOf,
+  sentence,
   setWebsite,
   smsBody,
   stepQuestions,
@@ -218,7 +219,7 @@ export default function PriceCalculator({ defaults }) {
     <div id="beregner" data-calc data-tour="calc" data-callbar-hide className="calc @container">
       {/* Annonceres for skærmlæsere, når prisen vises. */}
       <p className="sr-only" aria-live="polite">
-        {isResult ? `Din pris: ${totalText(q.total)}.${calculator.finalNote ? ` ${calculator.finalNote}.` : ''}` : ''}
+        {isResult ? `Din pris: ${sentence(totalText(q.total))}${calculator.finalNote ? ` ${calculator.finalNote}.` : ''}` : ''}
       </p>
 
       <div className="flex items-center justify-between gap-4">

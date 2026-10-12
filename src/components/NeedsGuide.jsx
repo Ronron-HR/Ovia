@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
-import { priceParts, serialize, smsBody } from '../calculator.js'
+import { lineTitle, lokalOf, priceText, serialize, smsBody } from '../calculator.js'
 import { QUESTIONS, plannedTotal, proposal, questionList, recommend, withAnswer } from '../guide.js'
-import { calculator, contact, priceNote, tierName } from '../data/pricing.js'
+import { calculator, contact, priceNote } from '../data/pricing.js'
 import { cta, links } from '../data/texts.js'
 import Amount from './Amount.jsx'
 import { MailIcon, PhoneIcon, SmsIcon } from './ContactButtons.jsx'
 import ErrorText from './ErrorText.jsx'
-import PriceDetails, { PriceParts } from './PriceDetails.jsx'
+import PriceDetails, { LokalTerms, PriceParts, TotalBlock } from './PriceDetails.jsx'
 import SendQuote from './SendQuote.jsx'
 
 const G = calculator.guide
@@ -14,7 +14,7 @@ const G = calculator.guide
 /**
  * BEHOVSGUIDEN ("Hjælp mig med at vælge") inde i beregnerens område. Frivillig:
  * åbnes kun af kunden, har altid "Tilbage" og "Vælg selv i beregneren", og tager
- * ikke siden over. Reglerne står i src/guide.js; svarene i adresselinjen
+ * ikke siden over. Højst tre spørgsmål, og "Spring over" står synligt på hvert spørgsmål og på resultatet. Reglerne står i src/guide.js; svarene i adresselinjen
  * (useGuide), så genindlæsning og tilbage-knappen i guiden mister intet.
  *
  * Tilgængelighed som beregneren: fieldset med legend og almindelige radioknapper
@@ -117,9 +117,10 @@ export default function NeedsGuide({ guide, setGuide, onExit, onOpen, focusOnOpe
             )}
           </div>
           <p className="mt-5">
-            <button type="button" onClick={onExit} className="calc-link">
-              Vælg selv i beregneren
-            </button>
+            <button type="button" onClick={onExit} className="btn btn-ghost" data-guide-skip>
+              {G.skip}
+            </button>{' '}
+            <span className="t-body text-[14px]">{G.skipHint}</span>
           </p>
         </form>
       )}
@@ -131,13 +132,14 @@ export default function NeedsGuide({ guide, setGuide, onExit, onOpen, focusOnOpe
 function Result({ guide, heading, onOpen, onChange, onExit }) {
   const rec = proposal(guide.a)
 
-  if (rec.kind === 'unclear') {
+  if (rec.kind === 'unclear' || rec.kind === 'talk') {
+    const talk = rec.kind === 'talk'
     return (
       <div className="mt-7">
         <h2 ref={heading} tabIndex={-1} className="t-display t-h3 outline-none">
-          {G.unclearTitle}
+          {talk ? rec.title : G.unclearTitle}
         </h2>
-        <p className="t-body mt-3 max-w-[52ch] text-[16px]">{G.unclearText}</p>
+        <p className="t-body mt-3 max-w-[52ch] text-[16px]">{talk ? rec.text : G.unclearText}</p>
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
           <a href={links.tel} className="btn btn-primary whitespace-nowrap">
             <PhoneIcon />
@@ -145,7 +147,7 @@ function Result({ guide, heading, onOpen, onChange, onExit }) {
               {cta.call} <span className="tabular-nums">{contact.phone}</span>
             </span>
           </a>
-          <a href={links.sms(G.unclearSms)} className="btn btn-ghost">
+          <a href={links.sms(talk ? rec.sms : G.unclearSms)} className="btn btn-ghost">
             <SmsIcon />
             {cta.sms}
           </a>
@@ -158,8 +160,8 @@ function Result({ guide, heading, onOpen, onChange, onExit }) {
           <button type="button" onClick={onChange} className="calc-link">
             {G.change}
           </button>
-          <button type="button" onClick={onExit} className="calc-link">
-            Vælg selv i beregneren
+          <button type="button" onClick={onExit} className="calc-link" data-guide-skip>
+            {G.skip} {G.skipHint}
           </button>
         </div>
       </div>
@@ -167,39 +169,27 @@ function Result({ guide, heading, onOpen, onChange, onExit }) {
   }
 
   const { quote: q, state, reasons } = rec
-  const line = q.lines[0]
-  const parts = priceParts(q.total)
   const link = `${window.location.pathname}${serialize(state)}`
   return (
     <div className="mt-7">
       <h2 ref={heading} tabIndex={-1} className="t-display t-h3 outline-none">
         {G.resultTitle}
       </h2>
-      <p className="mt-3 text-[18px] font-medium">
-        {line.service.name}: {tierName(line.tier)}
-      </p>
-      <p className="t-body mt-1 text-[15px]">{line.tier.summary}</p>
+      {q.lines.map((line) => (
+        <div key={line.key} className="mt-3">
+          <p className="text-[18px] font-medium">{lineTitle(line)}</p>
+          <p className="t-body mt-1 text-[15px]">{line.tier.summary}</p>
+          <p className="mt-1 text-[15px] font-medium">
+            <Amount text={priceText(line)} serif={false} className="tabular-nums" />
+          </p>
+          <PriceParts parts={line.parts} className="mt-2" />
+        </div>
+      ))}
 
-      <div data-tour="price" className="calc-total amount-lg mt-4 flex flex-wrap items-end gap-x-10 gap-y-3 tabular-nums">
-        <p className="calc-total-part">
-          <span className="t-eyebrow block">
-            {G.oncePrice}
-          </span>
-          <span className="calc-total-sub block">
-            {parts.once ? <Amount text={parts.once} /> : <span className="text-[20px]">{G.noOnce}</span>}
-          </span>
-        </p>
-        <p className="calc-total-part">
-          <span className="t-eyebrow block">
-            {G.monthPrice}
-          </span>
-          <span className="calc-total-sub block">
-            {parts.month ? <Amount text={parts.month.replace('/md', '')} /> : <span className="text-[20px]">{G.noMonthly}</span>}
-          </span>
-        </p>
+      <div data-tour="price">
+        <TotalBlock q={q} labels={{ once: G.oncePrice, month: G.monthPrice }} always sub className="mt-4" />
       </div>
       {priceNote && <p className="t-body mt-2 text-[14px]">{priceNote}</p>}
-      <PriceParts parts={line.parts} className="mt-3" />
       {q.total.noDrift && calculator.ownAccountNote && <p className="mt-3 max-w-[52ch] text-[15px] text-ink">{calculator.ownAccountNote}</p>}
 
       <h3 className="mt-6 text-[15px] font-medium">{G.whyTitle}</h3>
@@ -211,20 +201,22 @@ function Result({ guide, heading, onOpen, onChange, onExit }) {
 
       <h3 className="mt-5 text-[15px] font-medium">{G.includesTitle}</h3>
       <ul className="t-body mt-1 list-disc pl-5 text-[15px]">
-        {line.tier.features.map((f) => (
-          <li key={f}>{f}</li>
-        ))}
-        {line.notes.map((n) => (
-          <li key={n} className="text-ink">
-            {n}
-          </li>
-        ))}
+        {q.lines.flatMap((line) => [
+          ...line.tier.features.map((f) => <li key={`${line.key}-${f}`}>{f}</li>),
+          ...line.notes.map((n) => (
+            <li key={`${line.key}-${n}`} className="text-ink">
+              {n}
+            </li>
+          )),
+        ])}
       </ul>
       {q.notes.map((n) => (
         <p key={n} className="calc-aside mt-3">
           {n}
         </p>
       ))}
+
+      {lokalOf(q) && <LokalTerms line={lokalOf(q)} />}
 
       <PriceDetails lines={q.lines} />
 
@@ -234,6 +226,9 @@ function Result({ guide, heading, onOpen, onChange, onExit }) {
         </button>
         <button type="button" onClick={onChange} className="calc-link">
           {G.change}
+        </button>
+        <button type="button" onClick={onExit} className="calc-link" data-guide-skip>
+          {G.skip} {G.skipHint}
         </button>
       </div>
 

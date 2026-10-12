@@ -8,7 +8,9 @@
  * - honeypot-feltet er skjult og ikke i tab-rækkefølgen
  * - "Tak" vises først, NÅR serveren har svaret OK (ikke mens den svarer)
  * - serverfejl (500) og { ok: false }: fejltekst med telefonnummeret, ingen tak
- * - requesten indeholder kontakt, navn og linket med valgene
+ * - requesten indeholder kontakt, navn, besked (valgfri, højst 1.000 tegn) og linket med valgene
+ * - ved en serverfejl står alle felter og valg uændrede, og teksten siger, at det er en forespørgsel, ikke en bestilling
+ * - Lokal (løbende samarbejde): vilkårene står FØR formularen
  * - Ring og SMS står som sekundære links
  */
 import puppeteer from 'puppeteer-core'
@@ -16,6 +18,7 @@ import puppeteer from 'puppeteer-core'
 const CHROME = process.env.CHROME ?? 'C:/Program Files/Google/Chrome/Application/chrome.exe'
 const SITE = process.env.SITE ?? 'http://localhost:4173'
 const RESULT = `${SITE}/priser/?ydelser=hjemmeside&sider=2-5&bestilling=nej&drift=plus&trin=4`
+const LOKAL = `${SITE}/priser/?ydelser=lokal&system=nej&trin=3`
 
 const failures = []
 const check = (ok, msg) => {
@@ -50,6 +53,8 @@ const form = () =>
       alert: document.querySelector('#beregner .send [role=alert]')?.textContent.trim() ?? '',
       invalid: document.querySelector('#beregner input[name=contact]')?.getAttribute('aria-invalid'),
       focused: document.activeElement?.name ?? document.activeElement?.tagName,
+      values: { contact: document.querySelector('#beregner input[name=contact]')?.value, name: document.querySelector('#beregner input[name=name]')?.value, message: document.querySelector('#beregner textarea[name=message]')?.value },
+      search: location.pathname + location.search,
     }
   })
 
@@ -59,7 +64,7 @@ async function open() {
   requests.length = 0
 }
 
-async function fill(contact, name = '') {
+async function fill(contact, name = '', message = '') {
   const c = await page.waitForSelector('#beregner input[name=contact]')
   await c.evaluate((e) => e.scrollIntoView({ block: 'center', behavior: 'instant' }))
   await c.tap()
@@ -67,6 +72,10 @@ async function fill(contact, name = '') {
   if (name) {
     await (await page.$('#beregner input[name=name]')).tap()
     await page.keyboard.type(name)
+  }
+  if (message) {
+    await (await page.$('#beregner textarea[name=message]')).tap()
+    await page.keyboard.type(message)
   }
   await (await page.$('#beregner .send button[type=submit]')).tap()
   await wait(150)
@@ -88,10 +97,14 @@ await open()
       mailto: Boolean(box.querySelector('a[href^="mailto:"]')),
       trapHidden: trap.tabIndex === -1 && r.right <= 0,
       newsletter: /nyhedsbrev/i.test(box.textContent),
+      messageMax: box.querySelector('textarea[name=message]')?.maxLength,
+      messageHelp: /bruger den kun til at forstå din forespørgsel/.test(box.textContent),
+      requestNotOrder: /forespørgsel, ikke en bestilling/.test(box.textContent),
     }
   })
   check(ui.title === 'Send din forespørgsel', `overskrift: ${ui.title}`)
-  check(ui.labels[0] === 'Din mail eller dit telefonnummer' && ui.labels[1]?.startsWith('Navn / virksomhed'), `labels: ${ui.labels}`)
+  check(ui.labels[0] === 'Din mail eller dit telefonnummer' && ui.labels[1]?.startsWith('Navn / virksomhed') && ui.labels[2]?.startsWith('Besked'), `labels: ${ui.labels}`)
+  check(ui.messageMax === 1000 && ui.messageHelp && ui.requestNotOrder, `beskedfelt (maks ${ui.messageMax}, hjælp ${ui.messageHelp}) eller teksten om forespørgsel/bestilling mangler`)
   check(ui.button === 'Send til Ronny', `knap: ${ui.button}`)
   check(ui.tel && ui.sms && !ui.mailto, 'Ring/SMS mangler, eller mailto står stadig')
   check(ui.trapHidden, 'honeypot-feltet er synligt eller kan nås med tab')
@@ -112,7 +125,7 @@ await open()
 let release
 hold = new Promise((r) => (release = r))
 reply = { status: 200, body: { ok: true } }
-await fill('+45 53 61 36 99', 'Café Test')
+await fill('+45 53 61 36 99', 'Café Test', 'Vi er 20 personer og vil gerne høre om Lokal.')
 await wait(400)
 let f = await form()
 check(!f.thanks, 'tak vist, før serveren har svaret')
@@ -124,7 +137,7 @@ f = await form()
 check(f.thanks, `ingen tak efter OK: ${JSON.stringify(f)}`)
 check(requests.length === 1, `${requests.length} requests for ét tryk`)
 const sent = requests[0] ?? {}
-check(sent.contact === '+45 53 61 36 99' && sent.name === 'Café Test' && sent.website === '', `request: ${JSON.stringify(sent)}`)
+check(sent.contact === '+45 53 61 36 99' && sent.name === 'Café Test' && sent.message === 'Vi er 20 personer og vil gerne høre om Lokal.' && sent.website === '', `request: ${JSON.stringify(sent)}`)
 check(sent.link?.startsWith('/priser/?ydelser=hjemmeside') && sent.link.includes('sider=2-5') && sent.link.includes('drift=plus') && !sent.link.includes('example'), `link: ${sent.link}`)
 
 // Fejl fra serveren: ingen tak, telefonnummeret står.
@@ -135,11 +148,30 @@ for (const r of [
 ]) {
   await open()
   reply = r
-  await fill('kunde@example.com')
+  await fill('kunde@example.com', 'Café', 'Besked, der skal blive stående')
   await wait(300)
   f = await form()
   check(!f.thanks, `tak vist ved ${r.status} ${JSON.stringify(r.body)}`)
-  check(/^Det blev ikke sendt\. Ring på 53 61 36 99, så tager jeg den derfra\.$/.test(f.alert), `fejltekst ved ${r.status}: "${f.alert}"`)
+  check(/^Det blev ikke sendt\. Dine valg og din besked står stadig her\. Ring på 53 61 36 99, så tager jeg den derfra\.$/.test(f.alert), `fejltekst ved ${r.status}: "${f.alert}"`)
+  check(f.values.contact === 'kunde@example.com' && f.values.name === 'Café' && f.values.message === 'Besked, der skal blive stående' && f.search === RESULT.slice(SITE.length), `felter eller valg mistet efter fejl ${r.status}: ${JSON.stringify(f.values)} ${f.search}`)
+}
+
+// Lokal: vilkårene (opstart, månedspris, minimum, eksterne udgifter, overdragelse) står før formularen.
+{
+  await page.bringToFront()
+  await page.goto(LOKAL, { waitUntil: 'networkidle0' })
+  const order = await page.evaluate(() => {
+    const terms = document.querySelector('#beregner [data-lokal-terms]')
+    const form = document.querySelector('#beregner .send')
+    return {
+      terms: terms?.textContent ?? '',
+      before: !!terms && !!form && Boolean(terms.compareDocumentPosition(form) & Node.DOCUMENT_POSITION_FOLLOWING),
+      total: document.querySelector('#beregner [data-lokal-minimum]')?.textContent ?? '',
+    }
+  })
+  check(order.before, 'Lokal: vilkårene står ikke før formularen')
+  for (const want of ['Opstart', '995', 'Minimumsperiode', '5.970', 'Eksterne udgifter', 'filer', 'frikøb']) check(order.terms.includes(want), `Lokal-vilkår mangler "${want}"`)
+  check(/mindst 6 mdr\. = mindst 5\.970 kr\./.test(order.total), `Lokal-minimum: "${order.total}"`)
 }
 
 await browser.close()

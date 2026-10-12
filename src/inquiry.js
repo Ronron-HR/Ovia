@@ -66,6 +66,7 @@ export function cleanMessage(value) {
   return String(value ?? '')
     .replace(/\r\n?/g, '\n')
     .replace(/[^\S\n]+/g, ' ')
+    // oxlint-disable-next-line no-control-regex
     .replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, '')
     .replace(/ ?\n ?/g, '\n')
     .replace(/\n{3,}/g, '\n\n')

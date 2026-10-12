@@ -20,9 +20,7 @@ import Logo from './Logo.jsx'
  * - skrifterne er selvhostede (public/fonts)
  * - prisberegnerens valg står i adresselinjen og sendes kun med formularen
  * - koncepterne husker i sessionStorage, hvilken side man kom fra (DemoShell)
- * - rundvisningen "Vis mig rundt" (TourLauncher.jsx, data/tour.js) husker i localStorage
- *   (nøgle oviaspecs-tour) kun, om den er afsluttet, sprunget over eller fravalgt, så
- *   invitationen ikke kommer igen. Mærket bliver i browseren og sendes ikke
+ * - rundvisningen "Vis mig rundt" (TourLauncher.jsx) starter kun ved klik og gemmer intet
  * Ændrer noget af det sig, skal politikken ændres SAMTIDIG.
  *
  * Det er en fornuftig standardtekst, ikke juridisk rådgivning.
@@ -213,11 +211,8 @@ export default function Privatlivspolitik() {
               gemmer intet.
             </p>
             <p>
-              Rundvisningen &quot;Vis mig rundt&quot; husker i din egen browser (localStorage), om du har afsluttet den,
-              sprunget den over eller sagt nej tak til invitationen, så den ikke dukker op igen. Det er kun et lille
-              ja/nej-mærke. Det sendes ikke til mig eller andre, er ikke en cookie og bruges ikke til at følge dig. Du
-              kan slette det ved at rydde websitedata i din browser. Rundvisningen ændrer ikke dine valg i
-              prisberegneren og sender ingenting.
+              Rundvisningen &quot;Vis mig rundt&quot; starter kun, når du selv trykker på den. Den gemmer intet i din
+              browser, ændrer ikke dine valg i prisberegneren og sender ingenting.
             </p>
           </Section>
 

@@ -299,7 +299,7 @@ export const meta = {
 /* ---- Privatlivspolitik ------------------------------------------------- */
 
 export const privacy = {
-  updated: '7. oktober 2026',
+  updated: '12. oktober 2026',
   /** Henvendelser slettes efter så mange måneder (også automatisk i databasen, worker/index.js). */
   retentionMonths: 12,
   /** [udbyder, hvad den bruges til] */

@@ -22,7 +22,7 @@ export function PriceParts({ parts, className = '' }) {
 
 /**
  * Totalen: "Nu" og "Pr. måned" hver for sig (et beløb på 0 vises ikke), og for Lokal altid opstarten
- * (0 kr.) samt en linje med minimumsperioden og den mindste betaling, så et engangsbeløb og et
+ * (nul) samt en linje med minimumsperioden og den mindste betaling, så et engangsbeløb og et
  * abonnement aldrig blandes uklart. `labels` er etiketterne over beløbene; `always` viser begge
  * felter også ved 0 (guiden).
  */

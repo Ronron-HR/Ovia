@@ -1,7 +1,9 @@
+import BuyModes from '../components/BuyModes.jsx'
 import ContactSection from '../components/ContactSection.jsx'
 import { Addons, DriftTerms, PackageGrid, PriceNote } from '../components/Packages.jsx'
 import PriceCalculator from '../components/PriceCalculator.jsx'
 import { Arrow } from '../components/Shots.jsx'
+import Terms from '../components/Terms.jsx'
 import { calculator, introNote, introText, services } from '../data/pricing.js'
 import { priser as p } from '../data/services.js'
 import { paths } from '../data/texts.js'
@@ -12,7 +14,9 @@ const SERVICES = [
   { key: 'bookingGoogle', href: paths.bookingGoogle },
 ]
 
-/** /priser/: prisberegneren øverst og alle pakker for alle tre ydelser under den. */
+/**
+ * /priser/: overskrift → beregner → de to købsmåder (BuyModes) → alle pakker → vilkår (Terms, id="vilkaar") → kontakt.
+ */
 export default function Priser() {
   return (
     <>
@@ -26,12 +30,21 @@ export default function Priser() {
             <div data-hero="fade" style={{ '--d': '80ms' }} className="mt-4 md:mt-6">
               <PriceCalculator />
             </div>
-            <p className="t-body mt-4 text-[15px]">{p.lead}</p>
+            <p className="t-body mt-4 text-[15px]">
+              {p.lead}{' '}
+              {p.termsLink && (
+                <a href={p.termsLink.href} className="link-underline">
+                  {p.termsLink.label}
+                </a>
+              )}
+            </p>
           </div>
         </div>
       </section>
 
-      <section id="pakker" aria-labelledby="alle-titel" className="section-y bg-paper-2">
+      <BuyModes tone="grey" />
+
+      <section id="pakker" aria-labelledby="alle-titel" className="section-y">
         <div className="shell">
           <header data-reveal>
             <div className="flex flex-wrap items-center gap-3">
@@ -73,6 +86,8 @@ export default function Priser() {
           <PriceNote className="mt-10" />
         </div>
       </section>
+
+      <Terms tone="grey" />
 
       <ContactSection title={p.contact.title} body={p.contact.body} />
     </>
