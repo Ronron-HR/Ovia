@@ -150,12 +150,12 @@ check(danishPhone('+45 53 61 36 99') === '53613699', 'dansk nummer normaliseres 
   for (const want of [
     'Kontakt: kunde@example.com (mail)',
     'Navn / virksomhed: Café Test',
-    'Hjemmeside, Vækst: 4.000 kr. + 199 kr./md',
-    'Drift: Plus, 199 kr./md, hjælp til billeder, tekst og nyheder',
-    'Marketing, Vækst: 2.500 kr./md',
-    'Nu: 4.000 kr.',
-    'Pr. md: 2.699 kr./md',
-    'I alt: 4.000 kr. nu + 2.699 kr./md',
+    'Hjemmeside, Vækst: 8\.000 kr. + 398 kr./md',
+    'Drift: Plus, 398 kr./md, hjælp til billeder, tekst og nyheder',
+    'Marketing, Vækst: 5\.000 kr./md',
+    'Nu: 8\.000 kr.',
+    'Pr. md: 5\.398 kr./md',
+    'I alt: 8\.000 kr. nu + 5\.398 kr./md',
     'Alle priser er ekskl. moms.',
     `Link til beregningen: ${ORIGIN}/priser/?ydelser=hjemmeside%2Cmarketing&sider=2-5&bestilling=nej&drift=plus&videoer=8&poste=ja&annoncer=nej&trin=5#beregner`,
   ]) {
@@ -165,10 +165,10 @@ check(danishPhone('+45 53 61 36 99') === '53613699', 'dansk nummer normaliseres 
 
 // Mailens opsummering viser pakke, driftsplan og beløb for hver plan og for egen konto (håndregnet).
 for (const [drift, want] of [
-  ['basis', ['Hjemmeside, Vækst: 4.000 kr. + 99 kr./md', 'Drift: Basis, 99 kr./md, ingen inkluderede indholdsændringer', 'Nu: 4.000 kr.', 'Pr. md: 99 kr./md']],
-  ['plus', ['Hjemmeside, Vækst: 4.000 kr. + 199 kr./md', 'Drift: Plus, 199 kr./md, hjælp til billeder, tekst og nyheder', 'Pr. md: 199 kr./md']],
-  ['ekstra', ['Hjemmeside, Vækst: 4.000 kr. + 399 kr./md', 'Drift: Ekstra, 399 kr./md, flere rettelser og nyt indhold hver måned', 'Pr. md: 399 kr./md']],
-  ['egen', ['Hjemmeside, Vækst: 5.000 kr. i alt, ingen månedlig drift', 'Drift: Egen konto/hosting (ingen månedlig betaling til OviaSpecs for drift)', 'Nu: 5.000 kr.', 'Pr. md: 0 kr./md']],
+  ['basis', ['Hjemmeside, Vækst: 8\.000 kr. + 198 kr./md', 'Drift: Basis, 198 kr./md, ingen inkluderede indholdsændringer', 'Nu: 8\.000 kr.', 'Pr. md: 198 kr./md']],
+  ['plus', ['Hjemmeside, Vækst: 8\.000 kr. + 398 kr./md', 'Drift: Plus, 398 kr./md, hjælp til billeder, tekst og nyheder', 'Pr. md: 398 kr./md']],
+  ['ekstra', ['Hjemmeside, Vækst: 8\.000 kr. + 798 kr./md', 'Drift: Ekstra, 798 kr./md, flere rettelser og nyt indhold hver måned', 'Pr. md: 798 kr./md']],
+  ['egen', ['Hjemmeside, Vækst: 10\.000 kr. i alt, ingen månedlig drift', 'Drift: Egen konto/hosting (ingen månedlig betaling til OviaSpecs for drift)', 'Nu: 10\.000 kr.', 'Pr. md: 0 kr./md']],
 ]) {
   const e = env({ TURNSTILE_SECRET: undefined })
   await call({ contact: 'kunde@example.com', link: `/priser/?ydelser=hjemmeside&sider=2-5&bestilling=nej&drift=${drift}&trin=3` }, e)
@@ -176,16 +176,16 @@ for (const [drift, want] of [
   for (const w of want) check(text.includes(w), `mail med drift=${drift} mangler "${w}"\n${text}`)
 }
 
-// Booking tvinger ingen plan: Fuld fart + Basis + booking = 5.500 kr. nu + 99 kr./md.
+// Booking tvinger ingen plan: Fuld fart + Basis + booking = 11\.000 kr. nu + 198 kr./md.
 {
   const e = env({ TURNSTILE_SECRET: undefined })
   await call({ contact: 'kunde@example.com', link: '/priser/?ydelser=hjemmeside&sider=6-8&bestilling=ja&drift=basis&trin=3' }, e)
   const { text } = decode(e.mail.sent[0]?.raw ?? '')
-  check(text.includes('I alt: 5.500 kr. nu + 99 kr./md') && text.includes('Ikke med i priserne fra OviaSpecs'), `Fuld fart + Basis + booking:\n${text}`)
+  check(text.includes('I alt: 11\.000 kr. nu + 198 kr./md') && text.includes('Ikke med i priserne fra OviaSpecs'), `Fuld fart + Basis + booking:\n${text}`)
 }
 
 // Gammelt link (drift=drift) i en henvendelse: Plus for Vækst og Ekstra for Fuld fart, og linket i mailen er det nye.
-for (const [sider, plan, month] of [['2-5', 'plus', '199'], ['6-8', 'ekstra', '399']]) {
+for (const [sider, plan, month] of [['2-5', 'plus', '398'], ['6-8', 'ekstra', '798']]) {
   const e = env({ TURNSTILE_SECRET: undefined })
   await call({ contact: 'kunde@example.com', link: `/priser/?ydelser=hjemmeside&sider=${sider}&bestilling=nej&drift=drift&trin=3` }, e)
   const { text } = decode(e.mail.sent[0]?.raw ?? '')
@@ -253,11 +253,11 @@ for (const host of ['https://oviaspecs.com', 'https://beregner-cta-scroll-ovia.r
   await call({ contact: 'kunde@example.com', link: '/priser/?ydelser=lokal&system=nej&trin=3' }, e)
   const { text } = decode(e.mail.sent[0]?.raw ?? '')
   for (const want of [
-    'Løbende samarbejde: Lokal, 0 kr. i opstart + 995 kr./md, mindst 6 måneder (mindst 5.970 kr. i alt)',
+    'Løbende samarbejde: Lokal, 0 kr. i opstart + 1.990 kr./md, mindst 6 måneder (mindst 11\.940 kr. i alt)',
     'Nu: 0 kr.',
-    'Pr. md: 995 kr./md',
-    'Minimum (Lokal): mindst 6 mdr. = mindst 5.970 kr.',
-    'I alt: 0 kr. nu + 995 kr./md · mindst 6 mdr. = mindst 5.970 kr.',
+    'Pr. md: 1.990 kr./md',
+    'Minimum (Lokal): mindst 6 mdr. = mindst 11\.940 kr.',
+    'I alt: 0 kr. nu + 1.990 kr./md · mindst 6 mdr. = mindst 11\.940 kr.',
     'ydelser=lokal',
   ]) {
     check(text.includes(want), `Lokal-mailen mangler "${want}"\n${text}`)
@@ -266,7 +266,7 @@ for (const host of ['https://oviaspecs.com', 'https://beregner-cta-scroll-ovia.r
   const e2 = env({ TURNSTILE_SECRET: undefined })
   await call({ contact: 'kunde@example.com', link: '/priser/?ydelser=lokal,bookingGoogle&system=ja&booking=ja&anmeldelser=nej&trin=4' }, e2)
   const t2 = decode(e2.mail.sent[0]?.raw ?? '').text
-  check(t2.includes('Pr. md: 995 kr./md') && /særskilt fast tilbud/.test(t2) && t2.includes('Trukket fra: Google-profil'), `Lokal + system + booking:\n${t2}`)
+  check(t2.includes('Pr. md: 1.990 kr./md') && /særskilt fast tilbud/.test(t2) && t2.includes('Trukket fra: Google-profil'), `Lokal + system + booking:\n${t2}`)
   // Gamle links (Køb hjemmesiden) er uændrede, og begge købsmåder i ét link giver aldrig begge.
   const link = canonicalLink('/priser/?ydelser=lokal,hjemmeside&sider=2-5&drift=plus&system=nej', ORIGIN)
   check(link.state.selected.join() === 'lokal' && !link.url.includes('hjemmeside'), `begge købsmåder i ét link: ${link.url}`)

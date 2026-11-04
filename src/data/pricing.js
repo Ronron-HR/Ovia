@@ -49,7 +49,7 @@ export const introNote = 'Priserne er introduktionspriser, mens OviaSpecs er nyt
  * booking, evt. med egen konto). Gælder ikke Fuld fart, der med egen konto
  * koster pakke + egen konto (+ ekstra sider). Tjekkes af scripts/test-pricing.mjs.
  */
-export const maxWebsiteNoIntegrations = 5000
+export const maxWebsiteNoIntegrations = 10000
 
 /**
  * Svaret på "Hvornår kan vi starte?" på ydelsessiderne. Har ydelsen sin egen
@@ -95,9 +95,9 @@ const makePlan = (id, name, monthly, minutes, content, summary) => ({
 })
 
 export const driftPlans = {
-  basis: makePlan('basis', 'Basis', 99, 0, 'Ingen inkluderede indholdsændringer', 'Hosting, sikkerhed og versionsbackup af hjemmesiden. Ingen indholdsrettelser. Til dig, der ikke regner med at skulle have ændret noget.'),
-  plus: makePlan('plus', 'Plus', 199, 15, 'Hjælp til billeder, tekst og nyheder', 'Op til 15 minutters små rettelser pr. måned med tekst og billeder, du leverer, oveni driften. Ubrugte minutter overføres ikke.'),
-  ekstra: makePlan('ekstra', 'Ekstra', 399, 30, 'Flere rettelser og nyt indhold hver måned', 'Op til 30 minutters små rettelser pr. måned med tekst og billeder, du leverer, oveni driften. Ubrugte minutter overføres ikke.'),
+  basis: makePlan('basis', 'Basis', 198, 0, 'Ingen inkluderede indholdsændringer', 'Hosting, sikkerhed og versionsbackup af hjemmesiden. Ingen indholdsrettelser. Til dig, der ikke regner med at skulle have ændret noget.'),
+  plus: makePlan('plus', 'Plus', 398, 15, 'Hjælp til billeder, tekst og nyheder', 'Op til 15 minutters små rettelser pr. måned med tekst og billeder, du leverer, oveni driften. Ubrugte minutter overføres ikke.'),
+  ekstra: makePlan('ekstra', 'Ekstra', 798, 30, 'Flere rettelser og nyt indhold hver måned', 'Op til 30 minutters små rettelser pr. måned med tekst og billeder, du leverer, oveni driften. Ubrugte minutter overføres ikke.'),
 }
 
 /**
@@ -139,7 +139,7 @@ export const lokal = {
   name: 'Lokal',
   /** Opstartspris. */
   start: 0,
-  monthly: 995,
+  monthly: 1990,
   /** Mindst så mange abonnementsmåneder fra lancering. */
   minMonths: 6,
   /** Indholdssider i alt (nødvendige juridiske informationssider tæller ikke med). */
@@ -164,7 +164,7 @@ export const lokal = {
 export const systemModule = {
   id: 'system',
   name: 'Systemtilvalg',
-  monthly: 500,
+  monthly: 1000,
   ready: false,
   /** Ekstra brugerstøtte pr. måned (nyudvikling er separat). */
   supportMinutes: 30,
@@ -184,9 +184,9 @@ export const lokalMinimum = (withSystem = false) => lokalMonthly(withSystem) * l
    Booking & Google-pakkernes pris = summen af deres komponenter.
 ------------------------------------------------------------------------- */
 export const components = {
-  googleProfile: { label: 'Google-profil', price: 500 },
-  booking: { label: 'booking', price: 500 },
-  qrOpfoelgning: { label: 'QR-skilt og opfølgning', price: 500 },
+  googleProfile: { label: 'Google-profil', price: 1000 },
+  booking: { label: 'booking', price: 1000 },
+  qrOpfoelgning: { label: 'QR-skilt og opfølgning', price: 1000 },
 }
 
 export const overlap = {
@@ -249,7 +249,7 @@ export const services = {
     tiers: [
       {
         id: 'start',
-        price: 2500,
+        price: 5000,
         includes: [],
         summary: 'Én side med det vigtigste.',
         features: ['Alt samlet på én side', '1 rettelserunde'],
@@ -258,7 +258,7 @@ export const services = {
       },
       {
         id: 'vaekst',
-        price: 4000,
+        price: 8000,
         includes: ['googleProfile'],
         summary: 'Flere sider og din Google-profil sat op.',
         features: ['Op til 5 sider', 'Google-profil sat op', 'Siden sat op, så Google kan læse den', '2 rettelserunder'],
@@ -266,7 +266,7 @@ export const services = {
       },
       {
         id: 'fuld-fart',
-        price: 5000,
+        price: 10000,
         includes: ['googleProfile'],
         summary: 'Flest sider og et lokalt SEO-fundament.',
         features: ['Op til 8 sider', 'Google-profil sat op', 'Lokalt SEO-fundament: titler, struktur og indhold til dit område', '3 rettelserunder'],
@@ -282,7 +282,7 @@ export const services = {
       ownAccount: {
         label: 'Egen konto/hosting i stedet for en driftsplan',
         short: 'Egen konto/hosting',
-        price: 1000,
+        price: 2000,
         unit: 'én gang',
         note: 'Ingen månedlig betaling til OviaSpecs for drift. Du kan selv have udgifter til hosting og domæne.',
         tiers: ['start', 'vaekst', 'fuld-fart'],
@@ -302,7 +302,7 @@ export const services = {
       /** Kun Fuld fart: sider ud over de 8, der er med i pakken. */
       extraPage: {
         label: 'Ekstra underside ud over 8 (kun Fuld fart)',
-        price: 400,
+        price: 800,
         unit: 'pr. side',
         tiers: ['fuld-fart'],
       },
@@ -340,7 +340,7 @@ export const services = {
       domain: domainText,
       binding: 'Ingen bindingsperiode. Opsigelse med 1 måneds varsel.',
       /** Pris for at købe siden fri, når drift opsiges. */
-      buyoutPrice: 1000,
+      buyoutPrice: 2000,
       /** Prisen indsættes fra buyoutPrice. Forklarer, hvad beløbet dækker. */
       buyout: (price) =>
         `Stopper du drift, kan du købe siden fri for ${price}. Beløbet dækker, at jeg overfører filerne og sætter siden op på din egen konto. Hosting og domæne på din egen konto betaler du selv til udbyderen.`,
@@ -358,19 +358,19 @@ export const services = {
     tiers: [
       {
         id: 'start',
-        price: 1500,
+        price: 3000,
         summary: 'Videoer, du selv lægger op.',
         features: ['4 korte videoer om måneden', 'Du poster selv'],
       },
       {
         id: 'vaekst',
-        price: 2500,
+        price: 5000,
         summary: 'Jeg laver indholdet og poster det.',
         features: ['8 korte videoer om måneden', '4 opslag om måneden', 'Jeg poster på 2 kanaler', 'Månedsrapport'],
       },
       {
         id: 'fuld-fart',
-        price: 4000,
+        price: 8000,
         summary: 'Mere indhold og annoncer på Meta.',
         features: [
           '12 korte videoer om måneden',
@@ -423,7 +423,7 @@ export const services = {
     tiers: [
       {
         id: 'start',
-        price: 500,
+        price: 1000,
         includes: ['googleProfile'],
         summary: 'Din Google-profil i orden. En engangsopgave.',
         features: ['Google-profil sat op eller rettet'],
@@ -432,7 +432,7 @@ export const services = {
       },
       {
         id: 'vaekst',
-        price: 1000,
+        price: 2000,
         includes: ['googleProfile', 'booking'],
         summary: 'Booking koblet på det system, du har, eller et jeg finder sammen med dig.',
         features: ['Google-profil sat op eller rettet', 'Booking koblet på din hjemmeside eller Instagram'],
@@ -440,7 +440,7 @@ export const services = {
       },
       {
         id: 'fuld-fart',
-        price: 1500,
+        price: 3000,
         includes: ['googleProfile', 'booking', 'qrOpfoelgning'],
         summary: 'Booking, QR-skilt til anmeldelser og opfølgning efter 30 dage.',
         features: [

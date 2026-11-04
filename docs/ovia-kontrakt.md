@@ -9,10 +9,10 @@ Preview (hovedagent bygger): `npm run build && npm run preview` → :4173. Agent
 - **Hovedagent:** integration i fælles filer, package.json, README, docs/, scripts/ovia-shots.mjs
 
 ## Datamodel for drift (P implementerer, andre læser)
-- `driftPlans` i pricing.js: `basis` 99 kr./md (0 min), `plus` 199 (op til 15 min), `ekstra` 399 (op til 30 min). Alle tre: samme tekniske drift (kun det, der allerede står i pricing.js `services.hjemmeside.drift`).
-- Beregnerens spørgsmål `drift` (hjemmeside) har svar `basis|plus|ekstra|egen`; URL `drift=...`. Ingen standardværdi. `egen` = egen konto/hosting (tillæg `ownAccount` 1.000 kr. engang, ingen månedlig betaling til OviaSpecs for drift).
-- Gamle links: `drift=drift` migreres til planen med samme indhold som linket viste (Start/Vækst → plus 199, Fuld fart → ekstra 399). Manglende `drift` = ubesvaret; kunden vælger.
-- Pakke (`sider`), drift og booking er uafhængige. Booking (+500 kr.) tvinger ingen plan.
+- `driftPlans` i pricing.js: `basis` 198 kr./md (0 min), `plus` 398 (op til 15 min), `ekstra` 798 (op til 30 min). Alle tre: samme tekniske drift (kun det, der allerede står i pricing.js `services.hjemmeside.drift`).
+- Beregnerens spørgsmål `drift` (hjemmeside) har svar `basis|plus|ekstra|egen`; URL `drift=...`. Ingen standardværdi. `egen` = egen konto/hosting (tillæg `ownAccount` 2.000 kr. engang, ingen månedlig betaling til OviaSpecs for drift).
+- Gamle links: `drift=drift` migreres til planen med samme indhold som linket viste (Start/Vækst → plus 398, Fuld fart → ekstra 798). Manglende `drift` = ubesvaret; kunden vælger.
+- Pakke (`sider`), drift og booking er uafhængige. Booking (+1.000 kr.) tvinger ingen plan.
 - `quote().lines[i]` får `driftPlan` (id eller null) og `parts` (`[{id,label,once,monthly}]`: hvad der indgår i summen).
 
 ## data-tour-mål (rundvisningen finder elementer med `[data-tour="…"]`; manglende mål springes over)

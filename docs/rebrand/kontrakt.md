@@ -15,12 +15,12 @@ Brief: `docs/rebrand/brief.md` (læs det hele). Gren: `rebrand-lokal`. Projektet
 ## Accepterede priser (låst; må ikke ændres)
 
 Data i `src/data/pricing.js`:
-- `lokal`: 0 kr. opstart, 995 kr./md, mindst 6 mdr. fra lancering (`lokalMinimum()` = 5.970 kr.), 1–3 indholdssider, 2 korrekturrunder, pr. md. op til 45 min. lokal SEO/status + 15 min. små rettelser, `includes: ['googleProfile']`, 1 måneds varsel.
-- `systemModule`: +500 kr./md (samlet 1.495, minimum 8.970), **`ready: false`**: intet standardmodul findes endnu. Så længe `ready` er false, må INTET sted sælge modulet til den pris. Vis "særskilt fast tilbud efter afgrænsning" og evt. den planlagte pris tydeligt mærket som "ikke klar endnu".
+- `lokal`: 0 kr. opstart, 1.990 kr./md, mindst 6 mdr. fra lancering (`lokalMinimum()` = 11.940 kr.), 1–3 indholdssider, 2 korrekturrunder, pr. md. op til 45 min. lokal SEO/status + 15 min. små rettelser, `includes: ['googleProfile']`, 1 måneds varsel.
+- `systemModule`: +1.000 kr./md (samlet 2.990, minimum 17.940), **`ready: false`**: intet standardmodul findes endnu. Så længe `ready` er false, må INTET sted sælge modulet til den pris. Vis "særskilt fast tilbud efter afgrænsning" og evt. den planlagte pris tydeligt mærket som "ikke klar endnu".
 - `domain.capPerYear`: 200 kr./år til almindelig fornyelse af ét standarddomæne. Gælder både Lokal og driftsplanerne (samme tekst begge steder).
-- Engangskøb (uændret): Start 2.500, Vækst 4.000, Fuld fart 5.000; drift Basis 99 / Plus 199 / Ekstra 399 kr./md (Plus op til 15 min., Ekstra op til 30 min. små rettelser med kundeleveret materiale; minutterne VISES nu: ny præcisering fra briefet); egen konto +1.000 én gang; frikøb/overførsel ved stop af drift 1.000 kr. (forklar hvad beløbet dækker; skriv aldrig "ingen udtrædelsesomkostninger"); booking +500; ekstra side efter 8 +400 (kun Fuld fart).
-- Booking & Google (uændrede pakkepriser: 500 / 1.000 / 1.500 = summen af komponenterne Google-profil 500, booking 500, QR-skilt og opfølgning 500). NYT: QR-skiltet kan vælges uden booking (komponentpris 500 som tilvalg). Google + QR uden booking = 1.000 kr. QR-layout er en engangsleverance; print og forsendelse er ikke med.
-- Marketing (uændret): 1.500 / 2.500 / 4.000 kr./md; Fuld fart højst 1 kunde ad gangen; annoncebudget separat.
+- Engangskøb (priser fordoblet 4. nov. 2026): Start 5.000, Vækst 8.000, Fuld fart 10.000; drift Basis 198 / Plus 398 / Ekstra 798 kr./md (Plus op til 15 min., Ekstra op til 30 min. små rettelser med kundeleveret materiale; minutterne VISES nu: ny præcisering fra briefet); egen konto +2.000 én gang; frikøb/overførsel ved stop af drift 2.000 kr. (forklar hvad beløbet dækker; skriv aldrig "ingen udtrædelsesomkostninger"); booking +1.000; ekstra side efter 8 +800 (kun Fuld fart).
+- Booking & Google (pakkepriser fordoblet 4. nov. 2026: 1.000 / 2.000 / 3.000 = summen af komponenterne Google-profil 1.000, booking 1.000, QR-skilt og opfølgning 1.000). NYT: QR-skiltet kan vælges uden booking (komponentpris 1.000 som tilvalg). Google + QR uden booking = 2.000 kr. QR-layout er en engangsleverance; print og forsendelse er ikke med.
+- Marketing (fordoblet 4. nov. 2026): 3.000 / 5.000 / 8.000 kr./md; Fuld fart højst 1 kunde ad gangen; annoncebudget separat.
 - Moms: `priceNote` ("Alle priser er ekskl. moms.") bevares. Momsregistrering/CVR er uverificeret og står som åbent punkt.
 
 ## Designretning (D ejer tokens; andre bruger kun tokens og klasser)
@@ -42,7 +42,7 @@ Navigation: **Løsninger** (Hjemmesider `/hjemmeside/`, Lokal synlighed `/bookin
 URL'er bevares (`/booking-google/` får navnet "Lokal synlighed" i menu og overskrift; adressen ændres ikke). Ny side: `/systemer/` (stub findes; routes, pageKeys, pages og pageLoaders er koblet).
 
 Forsiden (`src/pages/Home.jsx`, D), i denne rækkefølge:
-1. `HomeHero`: værdi, målgruppe, hovedtilbud ("0 kr. i opstart · 995 kr./md. · mindst 6 måneder", "I alt mindst 5.970 kr." fra `lokalMinimum()`), kontakt (Ring + "Se priser"). Ingen beregner i heroen.
+1. `HomeHero`: værdi, målgruppe, hovedtilbud ("0 kr. i opstart · 1.990 kr./md. · mindst 6 måneder", "I alt mindst 11.940 kr." fra `lokalMinimum()`), kontakt (Ring + "Se priser"). Ingen beregner i heroen.
 2. `HomeExamples`: restaurant- og salondemo + et kort til arbejdsgangsdemoen (`/systemer/#demo`), tydeligt mærket "Demo".
 3. `Problems` (ny): tre problemer → links til løsningssiderne.
 4. `BuyModes` (ny, `id="koebsmaader"`): de to købsmåder med priser og minimumsbetaling, link til `/priser/#vilkaar`.

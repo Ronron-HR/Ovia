@@ -170,8 +170,8 @@ for (const r of [
     }
   })
   check(order.before, 'Lokal: vilkårene står ikke før formularen')
-  for (const want of ['Opstart', '995', 'Minimumsperiode', '5.970', 'Eksterne udgifter', 'filer', 'frikøb']) check(order.terms.includes(want), `Lokal-vilkår mangler "${want}"`)
-  check(/mindst 6 mdr\. = mindst 5\.970 kr\./.test(order.total), `Lokal-minimum: "${order.total}"`)
+  for (const want of ['Opstart', '1.990', 'Minimumsperiode', '11.940', 'Eksterne udgifter', 'filer', 'frikøb']) check(order.terms.includes(want), `Lokal-vilkår mangler "${want}"`)
+  check(/mindst 6 mdr\. = mindst 11\.940 kr\./.test(order.total), `Lokal-minimum: "${order.total}"`)
 }
 
 await browser.close()

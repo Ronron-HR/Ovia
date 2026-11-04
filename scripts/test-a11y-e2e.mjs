@@ -152,19 +152,19 @@ async function click(page, text, selector = '#beregner label, #beregner button, 
    1. PRISER
    ===================================================================== */
 const PACK = {
-  start: { label: 'Én side med det hele', sider: '1', once: 2500, name: 'Start' },
-  vaekst: { label: '2-5 sider', sider: '2-5', once: 4000, name: 'Vækst' },
-  'fuld-fart': { label: '6-8 sider', sider: '6-8', once: 5000, name: 'Fuld fart' },
+  start: { label: 'Én side med det hele', sider: '1', once: 5000, name: 'Start' },
+  vaekst: { label: '2-5 sider', sider: '2-5', once: 8000, name: 'Vækst' },
+  'fuld-fart': { label: '6-8 sider', sider: '6-8', once: 10000, name: 'Fuld fart' },
 }
 const PLAN = {
-  basis: { label: 'Basis', monthly: 99, extra: 0 },
-  plus: { label: 'Plus', monthly: 199, extra: 0 },
-  ekstra: { label: 'Ekstra', monthly: 399, extra: 0 },
-  egen: { label: 'Egen konto/hosting', monthly: 0, extra: 1000 },
+  basis: { label: 'Basis', monthly: 198, extra: 0 },
+  plus: { label: 'Plus', monthly: 398, extra: 0 },
+  ekstra: { label: 'Ekstra', monthly: 798, extra: 0 },
+  egen: { label: 'Egen konto/hosting', monthly: 0, extra: 2000 },
 }
 const kr = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 /** Håndregnet forventning: engang = pakke + egen konto + booking; måned = plan (egen konto: 0). */
-const expected = (pack, plan, booking) => ({ once: PACK[pack].once + PLAN[plan].extra + (booking ? 500 : 0), monthly: PLAN[plan].monthly })
+const expected = (pack, plan, booking) => ({ once: PACK[pack].once + PLAN[plan].extra + (booking ? 1000 : 0), monthly: PLAN[plan].monthly })
 
 /** Det, resultatet viser: total (Nu/Pr. måned), live-tekst og første linje. */
 const shown = (page) =>
@@ -247,12 +247,12 @@ async function testPrices() {
   // Skift i resultatet: pakke uden at driften ændres, drift uden at pakken ændres, plan <-> egen konto.
   for (const booking of [false, true]) {
     await runThrough(page2, 'vaekst', 'ekstra', booking)
-    const bk = booking ? 500 : 0
+    const bk = booking ? 1000 : 0
     for (const [pack, label] of [['start', 'Start'], ['fuld-fart', 'Fuld fart'], ['vaekst', 'Vækst']]) {
       await click(page2, label, 'label', '[data-tour="price"] fieldset:not([data-tour="drift"])')
       const s = await shown(page2)
       const checked = await page2.evaluate(() => document.querySelector('#beregner input[name=drift]:checked')?.value)
-      check(checked === 'ekstra' && s.once === PACK[pack].once + bk && s.monthly === 399, `SKIFT pakke ${label}${booking ? ' + booking' : ''}: drift ${checked}, ${s.once}/${s.monthly}`)
+      check(checked === 'ekstra' && s.once === PACK[pack].once + bk && s.monthly === 798, `SKIFT pakke ${label}${booking ? ' + booking' : ''}: drift ${checked}, ${s.once}/${s.monthly}`)
     }
     for (const plan of ['egen', 'basis', 'egen', 'plus', 'ekstra']) {
       await click(page2, PLAN[plan].label, 'label', '[data-tour="drift"]')
@@ -302,20 +302,20 @@ async function testState() {
   const backUrl = await page.evaluate(() => location.pathname + location.search)
   await page.goForward()
   await wait(400)
-  check((await search(page)) === resultUrl && (await shown(page)).once === 4000, 'TILSTAND browser-frem gendannede ikke resultatet')
+  check((await search(page)) === resultUrl && (await shown(page)).once === 8000, 'TILSTAND browser-frem gendannede ikke resultatet')
   note(`browser-tilbage fra resultatet (${hist} historikposter) gik til "${backUrl}" (ikke et trin tilbage; beregneren bruger replaceState)`)
 
   // Delbart link i frisk kontekst (ingen delt tilstand).
   const fresh = await newPage(375)
   await open(fresh, resultUrl.startsWith('?') ? `/${resultUrl}` : resultUrl)
-  check((await shown(fresh)).once === 4000 && (await shown(fresh)).monthly === 199, 'TILSTAND delt link giver ikke samme pris i en frisk browser')
+  check((await shown(fresh)).once === 8000 && (await shown(fresh)).monthly === 398, 'TILSTAND delt link giver ikke samme pris i en frisk browser')
   // Gamle links.
   await open(fresh, '/?ydelser=hjemmeside&sider=2-5&bestilling=nej&drift=drift&trin=3')
   let s = await shown(fresh)
-  check(s.once === 4000 && s.monthly === 199, `GAMMELT link Vækst: ${s.once}/${s.monthly} ${await search(fresh)}`)
+  check(s.once === 8000 && s.monthly === 398, `GAMMELT link Vækst: ${s.once}/${s.monthly} ${await search(fresh)}`)
   await open(fresh, '/?ydelser=hjemmeside&sider=6-8&bestilling=nej&drift=drift&trin=3')
   s = await shown(fresh)
-  check(s.once === 5000 && s.monthly === 399, `GAMMELT link Fuld fart: ${s.once}/${s.monthly} ${await search(fresh)}`)
+  check(s.once === 10000 && s.monthly === 798, `GAMMELT link Fuld fart: ${s.once}/${s.monthly} ${await search(fresh)}`)
   await open(fresh, '/?ydelser=hjemmeside&sider=2-5&bestilling=nej&drift=egen&trin=3')
   const egenCalc = await calc(fresh)
   check(await fresh.evaluate(() => document.querySelector('#beregner input[name=drift]:checked')?.value === 'egen' || /5\.000/.test(document.querySelector('#beregner')?.textContent ?? '')), `GAMMELT link egen: egen konto er ikke bevaret (${egenCalc.slice(0, 80)})`)
@@ -354,7 +354,7 @@ async function testState() {
   check(!/hjaelp|g-/.test(afterGuide) && /drift=basis/.test(afterGuide) && /sider=2-5/.test(afterGuide), `GUIDE -> beregner: adresselinje ${afterGuide}`)
   await click(page, 'Egen konto/hosting', 'label', '[data-tour="drift"]')
   s = await shown(page)
-  check(s.once === 5000 && s.monthly === 0, `GUIDE -> beregner, skift til egen: ${s.once}/${s.monthly}`)
+  check(s.once === 10000 && s.monthly === 0, `GUIDE -> beregner, skift til egen: ${s.once}/${s.monthly}`)
   // Retur til guiden efter ændring: guiden åbner igen uden at beregnerens valg går tabt.
   await click(page, 'Start forfra')
   await click(page, 'Hjælp mig med at vælge')
@@ -800,7 +800,7 @@ async function testMotionAndNoJs() {
       const calcText = document.querySelector('#beregner')?.textContent ?? ''
       return { len: text.length, h1: main?.querySelector('h1')?.textContent ?? '', prices: /\d\.\d{3}\s*kr\./.test(document.body.textContent), hidden: hidden.map((e) => `${e.tagName} ${e.textContent.slice(0, 25)}`), calcText, sw: document.documentElement.scrollWidth }
     })
-    check(path === '/priser/' ? /2\.500/.test(await page.evaluate(() => document.body.textContent)) && /5\.000/.test(await page.evaluate(() => document.body.textContent)) && /(?<![\d.,])99\s*kr/.test(await page.evaluate(() => document.body.textContent)) : true, `UDEN JS ${path}: pakke- og driftspriser mangler`)
+    check(path === '/priser/' ? /2\.500/.test(await page.evaluate(() => document.body.textContent)) && /5\.000/.test(await page.evaluate(() => document.body.textContent)) && /(?<![\d.,])198\s*kr/.test(await page.evaluate(() => document.body.textContent)) : true, `UDEN JS ${path}: pakke- og driftspriser mangler`)
     check(r.len > 400 && r.h1 && r.prices, `UDEN JS ${path}: indhold mangler (tekst ${r.len}, h1 "${r.h1}", priser ${r.prices})`)
     check(r.hidden.length === 0, `UDEN JS ${path}: usynlig tekst: ${r.hidden.join('; ')}`)
     check(r.sw <= 376, `UDEN JS ${path}: vandret scroll ${r.sw}`)
@@ -840,20 +840,20 @@ async function testRegressions() {
       await click(page, 'Ekstra')
       await click(page, 'Vis min pris')
       const s = await shown(page)
-      check(s.once === 4000 && s.monthly === 399, `YDELSESSIDE ${path}: pris ${s.once}/${s.monthly}`)
+      check(s.once === 8000 && s.monthly === 798, `YDELSESSIDE ${path}: pris ${s.once}/${s.monthly}`)
     } else if (path === '/marketing/') {
       await click(page, 'Næste')
       await click(page, '8 videoer')
       await click(page, 'Ja, gerne')
       await click(page, '=Nej')
       await click(page, 'Vis min pris')
-      check(/2\.500\s*kr\./.test(await calc(page)) && /\/md|måned/.test(await calc(page)), `YDELSESSIDE ${path}: pris ${(await calc(page)).slice(0, 120)}`)
+      check(/5\.000\s*kr\./.test(await calc(page)) && /\/md|måned/.test(await calc(page)), `YDELSESSIDE ${path}: pris ${(await calc(page)).slice(0, 120)}`)
     } else if (path === '/booking-google/') {
       await click(page, 'Næste')
       await click(page, '=Ja')
       await click(page, '=Nej')
       await click(page, 'Vis min pris')
-      check(/1\.000\s*kr\./.test(await calc(page)), `YDELSESSIDE ${path}: pris ${(await calc(page)).slice(0, 120)}`)
+      check(/2\.000\s*kr\./.test(await calc(page)), `YDELSESSIDE ${path}: pris ${(await calc(page)).slice(0, 120)}`)
     }
     check(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), `YDELSESSIDE ${path}: vandret scroll`)
   }
@@ -869,7 +869,7 @@ async function testRegressions() {
   check(links.sms.length >= 2 && links.sms.every((h) => h.startsWith('sms:+4553613699')), `KONTAKT sms-links: ${links.sms.map((h) => h.slice(0, 30))}`)
   check(links.mail.length >= 1 && links.mail.every((h) => h.startsWith('mailto:kontakt@oviaspecs.com')), `KONTAKT mail-links: ${links.mail}`)
   const smsBody = decodeURIComponent(links.sms.find((h) => h.includes('body='))?.split('body=')[1] ?? '')
-  check(/4\.000 kr\./.test(smsBody) && /199 kr\./.test(smsBody) && /Plus/.test(smsBody), `KONTAKT sms i beregneren indeholder ikke valg og pris: ${smsBody.slice(0, 120)}`)
+  check(/8\.000 kr\./.test(smsBody) && /398 kr\./.test(smsBody) && /Plus/.test(smsBody), `KONTAKT sms i beregneren indeholder ikke valg og pris: ${smsBody.slice(0, 120)}`)
 
   // Guidens afklaring: "Jeg er ikke sikker" -> "Jeg ved det ikke" giver ingen pris, men Ring/SMS.
   await open(page, '/')

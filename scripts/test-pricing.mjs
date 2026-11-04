@@ -3,10 +3,10 @@
  * led i `npm run build`, så en pris, der bryder reglerne, stopper udgivelsen.
  *
  * De forventede priser er regnet ud for hånd her i testen (ikke hentet fra koden):
- * hjemmesidepakker 2.500 / 4.000 / 5.000 kr. engangs, driftsplaner Basis 99 /
- * Plus 199 / Ekstra 399 kr. pr. måned (0 / 15 / 30 min. indholdsarbejde), egen konto
- * +1.000 kr. engangs (ingen månedspris), booking på siden +500 kr., ekstra sider i
- * Fuld fart 400 kr. pr. side over 8.
+ * hjemmesidepakker 2.500 / 4.000 / 10\.000 kr. engangs, driftsplaner Basis 198 /
+ * Plus 398 / Ekstra 798 kr. pr. måned (0 / 15 / 30 min. indholdsarbejde), egen konto
+ * +2\.000 kr. engangs (ingen månedspris), booking på siden +1.000 kr., ekstra sider i
+ * Fuld fart 800 kr. pr. side over 8.
  *
  * Alle kombinationer af valgte ydelser og svar (pakker, sider, drift, Booking & Google)
  * gennemløbes. Testen fejler, hvis:
@@ -16,17 +16,17 @@
  * - "aftales" eller "ca." står ved en pris
  * - drift + frikøb kan blive billigere end egen konto fra start
  * - Booking & Google-pakkernes pris ≠ summen af deres komponenter
- * - et beløb ("123 kr.", "1.500 kr./md") står hardkodet uden for pricing.js
+ * - et beløb ("246 kr.", "3\.000 kr./md") står hardkodet uden for pricing.js
  * - de 9 kombinationer pakke × plan (+ egen konto) ikke giver de håndregnede beløb, eller
  *   booking, ekstra sider, Booking & Google-overlap eller marketing giver dobbeltregning
  * - gamle links (drift=drift) ikke migreres til planen med samme månedspris, eller drift
  *   får en standardværdi
  * - et pakkeskift i resultatet giver noget andet end at svare direkte med pakkens svar,
  *   eller ændrer driftsvalget
- * - Lokal (løbende samarbejde): 0 kr. i opstart, 995 kr./md, mindst 6 mdr. = 5.970 kr. (håndregnet); systemtilvalget
- *   får ingen pris, mens systemModule.ready er false, og 1.495 kr./md (8.970 kr.) når flaget midlertidigt sættes til true
+ * - Lokal (løbende samarbejde): 0 kr. i opstart, 1.990 kr./md, mindst 6 mdr. = 11\.940 kr. (håndregnet); systemtilvalget
+ *   får ingen pris, mens systemModule.ready er false, og 2\.990 kr./md (17\.940 kr.) når flaget midlertidigt sættes til true
  * - Lokal og "Køb hjemmesiden" kan ikke være valgt samtidig (adresselinje, toggle, fit)
- * - QR-skiltet uden booking = Google-profil + QR = 1.000 kr.; booking + QR = Fuld fart (1.500 kr.); Google-profilen
+ * - QR-skiltet uden booking = Google-profil + QR = 2\.000 kr.; booking + QR = Fuld fart (3\.000 kr.); Google-profilen
  *   trækkes fra, når den allerede er med i Lokal eller i Vækst/Fuld fart
  * - gamle driftløfter (2 hverdage, 2 små ændringer) eller "mest populær" står et sted
  *   (koncepterne i src/demos er undtaget: deres menupriser er fiktivt indhold)
@@ -72,11 +72,11 @@ const subsets = ORDER.reduce((acc, k) => [...acc, ...acc.map((s) => [...s, k])],
 const ctx = (selected, answers) => JSON.stringify({ selected, answers })
 
 /* ---- Håndregnede forventninger (uafhængige af koden) --------------------- */
-const PACKAGE = { '1': ['start', 2500], '2-5': ['vaekst', 4000], '6-8': ['fuld-fart', 5000] }
-const PLAN = { basis: 99, plus: 199, ekstra: 399 }
-const OWN_ACCOUNT = 1000
-const BOOKING = 500
-const EXTRA_PAGE = 400
+const PACKAGE = { '1': ['start', 5000], '2-5': ['vaekst', 8000], '6-8': ['fuld-fart', 10000] }
+const PLAN = { basis: 198, plus: 398, ekstra: 798 }
+const OWN_ACCOUNT = 2000
+const BOOKING = 1000
+const EXTRA_PAGE = 800
 
 let checked = 0
 const outcomes = new Map()
@@ -137,7 +137,7 @@ for (const selected of subsets) {
 const web1 = (answers, selected = ['hjemmeside']) => quote({ selected, answers }).lines.find((l) => l.key === 'hjemmeside')
 const total = (selected, answers) => quote({ selected, answers }).total
 
-// De 9 kombinationer pakke × plan, begge uafhængige: engangs 2.500/4.000/5.000, måned 99/199/399.
+// De 9 kombinationer pakke × plan, begge uafhængige: engangs 2.500/4.000/5.000, måned 198/398/399.
 for (const [sider, [tier, once]] of Object.entries(PACKAGE)) {
   for (const [plan, monthly] of Object.entries(PLAN)) {
     const answers = { sider, bestilling: 'nej', drift: plan }
@@ -145,31 +145,31 @@ for (const [sider, [tier, once]] of Object.entries(PACKAGE)) {
     if (t.once !== once || t.monthly !== monthly || t.noDrift) fail(`${tier} + ${plan}: ${t.once} + ${t.monthly}/md (forventet ${once} + ${monthly})`)
     const l = web1(answers)
     if (l.driftPlan !== plan || l.tier.id !== tier) fail(`${tier} + ${plan}: driftPlan ${l.driftPlan}, pakke ${l.tier.id}`)
-    // Booking: præcis +500 engangs, ingen anden plan og ingen månedlig ændring.
+    // Booking: præcis +1000 engangs, ingen anden plan og ingen månedlig ændring.
     const b = total(['hjemmeside'], { ...answers, bestilling: 'ja' })
     if (b.once !== once + BOOKING || b.monthly !== monthly) fail(`${tier} + ${plan} + booking: ${b.once} + ${b.monthly}/md (forventet ${once + BOOKING} + ${monthly})`)
   }
-  // Egen konto: +1.000 engangs, ingen månedspris; med booking +500 (antaget muligt).
+  // Egen konto: +1.000 engangs, ingen månedspris; med booking +1000 (antaget muligt).
   const own = total(['hjemmeside'], { sider, bestilling: 'nej', drift: 'egen' })
   if (own.once !== once + OWN_ACCOUNT || own.monthly !== 0 || !own.noDrift) fail(`${tier} + egen konto: ${own.once} + ${own.monthly}/md (forventet ${once + OWN_ACCOUNT} + 0)`)
   const ownBooking = total(['hjemmeside'], { sider, bestilling: 'ja', drift: 'egen' })
   if (ownBooking.once !== once + OWN_ACCOUNT + BOOKING || ownBooking.monthly !== 0) fail(`${tier} + egen konto + booking: ${ownBooking.once} + ${ownBooking.monthly}/md`)
 }
 
-// Ekstra sider i Fuld fart: 400 kr. pr. side over 8 (9 sider = 1 ekstra), uafhængigt af planen.
+// Ekstra sider i Fuld fart: 800 kr. pr. side over 8 (9 sider = 1 ekstra), uafhængigt af planen.
 for (const [ekstra, extra] of [['9', 1], ['12', 4], ['20', 12]]) {
   for (const [plan, monthly] of Object.entries(PLAN)) {
     const t = total(['hjemmeside'], { sider: '9+', ekstra, bestilling: 'nej', drift: plan })
-    if (t.once !== 5000 + extra * EXTRA_PAGE || t.monthly !== monthly) fail(`${ekstra} sider + ${plan}: ${t.once} + ${t.monthly}/md (forventet ${5000 + extra * EXTRA_PAGE} + ${monthly})`)
+    if (t.once !== 10000 + extra * EXTRA_PAGE || t.monthly !== monthly) fail(`${ekstra} sider + ${plan}: ${t.once} + ${t.monthly}/md (forventet ${10000 + extra * EXTRA_PAGE} + ${monthly})`)
   }
   const t = total(['hjemmeside'], { sider: '9+', ekstra, bestilling: 'ja', drift: 'egen' })
-  if (t.once !== 5000 + extra * EXTRA_PAGE + OWN_ACCOUNT + BOOKING || t.monthly !== 0) fail(`${ekstra} sider + egen konto + booking: ${t.once} + ${t.monthly}/md`)
+  if (t.once !== 10000 + extra * EXTRA_PAGE + OWN_ACCOUNT + BOOKING || t.monthly !== 0) fail(`${ekstra} sider + egen konto + booking: ${t.once} + ${t.monthly}/md`)
 }
 
 // Fuld fart kræver ikke Ekstra, og ingen plan er forvalgt: uden drift er der ingen månedspris, og det markeres.
 {
   const basis = web1({ sider: '6-8', bestilling: 'nej', drift: 'basis' })
-  if (basis.monthly !== 99) fail(`Fuld fart + Basis: ${basis.monthly}/md`)
+  if (basis.monthly !== 198) fail(`Fuld fart + Basis: ${basis.monthly}/md`)
   const none = web1({ sider: '6-8', bestilling: 'nej' })
   if (none.monthly !== 0 || !none.driftMissing || none.driftPlan) fail(`Uden drift er der en standard: ${none.monthly}/md ${none.driftPlan}`)
   const drift = calculator.questions.hjemmeside.find((x) => x.id === 'drift')
@@ -178,18 +178,18 @@ for (const [ekstra, extra] of [['9', 1], ['12', 4], ['20', 12]]) {
 
 // Overlap med Booking & Google (håndregnet): delene tælles kun én gang.
 {
-  // Vækst indeholder Google-profilen: Booking & Google Vækst (1.000) minus 500 = 500.
+  // Vækst indeholder Google-profilen: Booking & Google Vækst (1.000) minus 1000 = 500.
   const a = total(['hjemmeside', 'bookingGoogle'], { sider: '2-5', bestilling: 'nej', drift: 'plus', booking: 'ja', anmeldelser: 'nej' })
-  if (a.once !== 4500 || a.monthly !== 199) fail(`Vækst + B&G Vækst: ${a.once} + ${a.monthly}/md (forventet 4500 + 199)`)
+  if (a.once !== 9000 || a.monthly !== 398) fail(`Vækst + B&G Vækst: ${a.once} + ${a.monthly}/md (forventet 9000 + 398)`)
   // Med booking på siden er hele B&G Vækst dækket.
   const b = quote({ selected: ['hjemmeside', 'bookingGoogle'], answers: { sider: '2-5', bestilling: 'ja', drift: 'plus', booking: 'ja', anmeldelser: 'nej' } })
-  if (b.total.once !== 4500 || b.total.monthly !== 199 || !b.lines[1].allIncluded) fail(`Vækst + booking + B&G Vækst: ${b.total.once} + ${b.total.monthly}/md`)
+  if (b.total.once !== 9000 || b.total.monthly !== 398 || !b.lines[1].allIncluded) fail(`Vækst + booking + B&G Vækst: ${b.total.once} + ${b.total.monthly}/md`)
   // Start har ikke Google-profilen: B&G Fuld fart (1.500) uden fradrag = 2.500 + 1.500.
   const c = total(['hjemmeside', 'bookingGoogle'], { sider: '1', bestilling: 'nej', drift: 'basis', booking: 'ja', anmeldelser: 'ja' })
-  if (c.once !== 4000 || c.monthly !== 99) fail(`Start + B&G Fuld fart: ${c.once} + ${c.monthly}/md (forventet 4000 + 99)`)
-  // Start + booking på siden + B&G Fuld fart: booking (500) trækkes fra B&G.
+  if (c.once !== 8000 || c.monthly !== 198) fail(`Start + B&G Fuld fart: ${c.once} + ${c.monthly}/md (forventet 8000 + 198)`)
+  // Start + booking på siden + B&G Fuld fart: booking (1000) trækkes fra B&G.
   const d = total(['hjemmeside', 'bookingGoogle'], { sider: '1', bestilling: 'ja', drift: 'basis', booking: 'ja', anmeldelser: 'ja' })
-  if (d.once !== 4000 || d.monthly !== 99) fail(`Start + booking + B&G Fuld fart: ${d.once} + ${d.monthly}/md (forventet 4000 + 99)`)
+  if (d.once !== 8000 || d.monthly !== 198) fail(`Start + booking + B&G Fuld fart: ${d.once} + ${d.monthly}/md (forventet 8000 + 198)`)
   // "1 side + booking via siden" = "Start + Booking & Google Vækst" minus Google-profilen.
   const viaSite = total(['hjemmeside'], { sider: '1', bestilling: 'ja', drift: 'plus' })
   const viaBg = total(['hjemmeside', 'bookingGoogle'], { sider: '1', bestilling: 'nej', drift: 'plus', booking: 'ja', anmeldelser: 'nej' })
@@ -206,85 +206,85 @@ for (const [ekstra, extra] of [['9', 1], ['12', 4], ['20', 12]]) {
 // Marketing: sin egen månedspris, lagt oven i hjemmesidens drift uden dobbeltregning.
 {
   const t = total(['hjemmeside', 'marketing'], { sider: '2-5', bestilling: 'nej', drift: 'plus', videoer: '8', poste: 'ja', annoncer: 'nej' })
-  if (t.once !== 4000 || t.monthly !== 199 + 2500) fail(`Hjemmeside + marketing: ${t.once} + ${t.monthly}/md (forventet 4000 + 2699)`)
+  if (t.once !== 8000 || t.monthly !== 398 + 5000) fail(`Hjemmeside + marketing: ${t.once} + ${t.monthly}/md (forventet 8000 + 5398)`)
   const own = total(['hjemmeside', 'marketing'], { sider: '1', bestilling: 'nej', drift: 'egen', videoer: '4', poste: 'nej', annoncer: 'nej' })
-  if (own.once !== 3500 || own.monthly !== 1500 || !own.noDrift) fail(`Egen konto + marketing: ${own.once} + ${own.monthly}/md (forventet 3500 + 1500)`)
+  if (own.once !== 7000 || own.monthly !== 3000 || !own.noDrift) fail(`Egen konto + marketing: ${own.once} + ${own.monthly}/md (forventet 7000 + 3000)`)
 }
 
 // Booking & Google som komponenter (håndregnet): QR-skiltet kan vælges uden booking.
 {
   const t = (answers) => total(['bookingGoogle'], answers)
   const cases = [
-    [{ booking: 'nej', anmeldelser: 'nej' }, 500, 'start'],
-    [{ booking: 'ja', anmeldelser: 'nej' }, 1000, 'vaekst'],
-    [{ booking: 'ja', anmeldelser: 'ja' }, 1500, 'fuld-fart'],
-    // Google-profil (500) + QR-skilt og opfølgning (500) uden booking = 1.000 kr.
-    [{ booking: 'nej', anmeldelser: 'ja' }, 1000, 'start'],
+    [{ booking: 'nej', anmeldelser: 'nej' }, 1000, 'start'],
+    [{ booking: 'ja', anmeldelser: 'nej' }, 2000, 'vaekst'],
+    [{ booking: 'ja', anmeldelser: 'ja' }, 3000, 'fuld-fart'],
+    // Google-profil (1000) + QR-skilt og opfølgning (1000) uden booking = 2\.000 kr.
+    [{ booking: 'nej', anmeldelser: 'ja' }, 2000, 'start'],
   ]
   for (const [answers, once, tier] of cases) {
     const q = quote({ selected: ['bookingGoogle'], answers })
     if (q.total.once !== once || q.total.monthly !== 0 || q.lines[0].tier.id !== tier) fail(`B&G ${JSON.stringify(answers)}: ${q.total.once} (${q.lines[0].tier.id}), forventet ${once} (${tier})`)
   }
   const qrOnly = quote({ selected: ['bookingGoogle'], answers: { booking: 'nej', anmeldelser: 'ja' } }).lines[0]
-  if (qrOnly.includes.includes('booking') || !qrOnly.parts.some((p) => p.id === 'qrOpfoelgning' && p.once === 500)) fail('QR uden booking tog booking med eller mangler QR-delen')
-  if (!services.bookingGoogle.addons.qrOpfoelgning || services.bookingGoogle.addons.qrOpfoelgning.price !== 500) fail('QR-tilvalget mangler på Booking & Google (pakkekort)')
+  if (qrOnly.includes.includes('booking') || !qrOnly.parts.some((p) => p.id === 'qrOpfoelgning' && p.once === 1000)) fail('QR uden booking tog booking med eller mangler QR-delen')
+  if (!services.bookingGoogle.addons.qrOpfoelgning || services.bookingGoogle.addons.qrOpfoelgning.price !== 1000) fail('QR-tilvalget mangler på Booking & Google (pakkekort)')
   if (t({ booking: 'nej', anmeldelser: 'ja' }).noDrift) fail('QR uden booking får driftsflag')
 }
 
-// Lokal: 0 kr. i opstart, 995 kr./md, mindst 6 mdr. (håndregnet: 6 × 995 = 5.970; med system 6 × 1.495 = 8.970).
+// Lokal: 0 kr. i opstart, 1.990 kr./md, mindst 6 mdr. (håndregnet: 6 × 1990 = 5.970; med system 6 × 1.495 = 8.970).
 {
   const L = (answers, selected = ['lokal']) => quote({ selected, answers })
   const a = L({ system: 'nej' })
-  if (a.total.once !== 0 || a.total.monthly !== 995 || a.total.lokal?.minimum !== 5970 || a.total.lokal?.months !== 6) {
+  if (a.total.once !== 0 || a.total.monthly !== 1990 || a.total.lokal?.minimum !== 11940 || a.total.lokal?.months !== 6) {
     fail(`Lokal: ${a.total.once} + ${a.total.monthly}/md, minimum ${a.total.lokal?.minimum}/${a.total.lokal?.months}`)
   }
-  const want = '0 kr. nu + 995 kr./md · mindst 6 mdr. = mindst 5.970 kr.'
+  const want = '0 kr. nu + 1.990 kr./md · mindst 6 mdr. = mindst 11\.940 kr.'
   if (totalText(a.total) !== want) fail(`Lokal total: "${totalText(a.total)}" (forventet "${want}")`)
-  if (priceText(a.lines[0]) !== '0 kr. i opstart + 995 kr./md') fail(`Lokal linje: "${priceText(a.lines[0])}"`)
+  if (priceText(a.lines[0]) !== '0 kr. i opstart + 1.990 kr./md') fail(`Lokal linje: "${priceText(a.lines[0])}"`)
   const text = summaryLines(a).join('\n')
-  for (const w of ['Løbende samarbejde: Lokal', 'mindst 6 måneder', 'mindst 5.970 kr.']) if (!text.includes(w)) fail(`Lokal-opsummeringen mangler "${w}":\n${text}`)
+  for (const w of ['Løbende samarbejde: Lokal', 'mindst 6 måneder', 'mindst 11\.940 kr.']) if (!text.includes(w)) fail(`Lokal-opsummeringen mangler "${w}":\n${text}`)
 
   // Systemtilvalget: INTET standardmodul endnu (ready=false) → ingen pris, men en note om et særskilt fast tilbud.
   if (systemModule.ready !== false) fail('systemModule.ready er ikke false (testen forudsætter det)')
   const noModule = L({ system: 'ja' })
-  if (noModule.total.monthly !== 995 || noModule.total.lokal.minimum !== 5970 || !noModule.lines[0].system || noModule.lines[0].systemReady) {
+  if (noModule.total.monthly !== 1990 || noModule.total.lokal.minimum !== 11940 || !noModule.lines[0].system || noModule.lines[0].systemReady) {
     fail(`System uden færdigt modul: ${noModule.total.monthly}/md, minimum ${noModule.total.lokal.minimum}`)
   }
   if (!/særskilt fast tilbud/.test(noModule.lines[0].notes.join(' ')) || /1\.495|8\.970/.test(summaryLines(noModule).join(' ') + totalText(noModule.total))) fail('System uden modul sælges til en pris eller mangler noten')
-  // Når modulet findes (flaget sættes midlertidigt): 1.495 kr./md og mindst 8.970 kr.
+  // Når modulet findes (flaget sættes midlertidigt): 2\.990 kr./md og mindst 17\.940 kr.
   systemModule.ready = true
   try {
     const withModule = L({ system: 'ja' })
-    if (withModule.total.monthly !== 1495 || withModule.total.lokal.minimum !== 8970 || !withModule.lines[0].systemReady) {
-      fail(`System med færdigt modul: ${withModule.total.monthly}/md, minimum ${withModule.total.lokal.minimum} (forventet 1495 / 8970)`)
+    if (withModule.total.monthly !== 2990 || withModule.total.lokal.minimum !== 17940 || !withModule.lines[0].systemReady) {
+      fail(`System med færdigt modul: ${withModule.total.monthly}/md, minimum ${withModule.total.lokal.minimum} (forventet 2990 / 17940)`)
     }
-    if (totalText(withModule.total) !== '0 kr. nu + 1.495 kr./md · mindst 6 mdr. = mindst 8.970 kr.') fail(`System-total: "${totalText(withModule.total)}"`)
+    if (totalText(withModule.total) !== '0 kr. nu + 2\.990 kr./md · mindst 6 mdr. = mindst 17\.940 kr.') fail(`System-total: "${totalText(withModule.total)}"`)
   } finally {
     systemModule.ready = false
   }
 
-  // Overlap: Google-profilen (500) er med i Lokal og trækkes fra Booking & Google.
+  // Overlap: Google-profilen (1000) er med i Lokal og trækkes fra Booking & Google.
   const g = (answers) => L({ system: 'nej', ...answers }, ['lokal', 'bookingGoogle'])
   const start = g({ booking: 'nej', anmeldelser: 'nej' })
   if (start.total.once !== 0 || !start.lines[1].allIncluded || priceText(start.lines[1]) !== 'Allerede med i Lokal') fail(`Lokal + B&G Start: ${start.total.once}, "${priceText(start.lines[1])}"`)
   const vaekst = g({ booking: 'ja', anmeldelser: 'nej' })
-  if (vaekst.total.once !== 500 || vaekst.total.monthly !== 995) fail(`Lokal + B&G Vækst: ${vaekst.total.once} + ${vaekst.total.monthly}/md (forventet 500 + 995)`)
+  if (vaekst.total.once !== 1000 || vaekst.total.monthly !== 1990) fail(`Lokal + B&G Vækst: ${vaekst.total.once} + ${vaekst.total.monthly}/md (forventet 1000 + 1990)`)
   const fuld = g({ booking: 'ja', anmeldelser: 'ja' })
-  if (fuld.total.once !== 1000) fail(`Lokal + B&G Fuld fart: ${fuld.total.once} (forventet 1000)`)
+  if (fuld.total.once !== 2000) fail(`Lokal + B&G Fuld fart: ${fuld.total.once} (forventet 2000)`)
   const qr = g({ booking: 'nej', anmeldelser: 'ja' })
-  if (qr.total.once !== 500) fail(`Lokal + QR uden booking: ${qr.total.once} (forventet 500)`)
+  if (qr.total.once !== 1000) fail(`Lokal + QR uden booking: ${qr.total.once} (forventet 1000)`)
   if (!start.lines[1].notes.some((n) => /Google-profil/.test(n) && /Lokal/.test(n))) fail('Lokal + B&G: noten om fradraget mangler')
   // Totalen med engangsbeløb: minimum gælder kun Lokal og siger det.
-  if (!/^500 kr\. nu \+ 995 kr\.\/md · Lokal: 995 kr\.\/md i mindst 6 mdr\. = mindst 5\.970 kr\.$/.test(totalText(vaekst.total))) fail(`Total med engangsbeløb: "${totalText(vaekst.total)}"`)
+  if (!/^1.000 kr\. nu \+ 1.990 kr\.\/md · Lokal: 1.990 kr\.\/md i mindst 6 mdr\. = mindst 11\.940 kr\.$/.test(totalText(vaekst.total))) fail(`Total med engangsbeløb: "${totalText(vaekst.total)}"`)
   // Lokal + marketing: månedsbeløb lægges sammen, minimum kun for Lokal.
   const mk = L({ system: 'nej', videoer: '4', poste: 'nej', annoncer: 'nej' }, ['lokal', 'marketing'])
-  if (mk.total.monthly !== 995 + 1500 || mk.total.lokal.minimum !== 5970 || !/^Lokal: 995 kr\./.test(minimumText(mk.total))) fail(`Lokal + marketing: ${mk.total.monthly}/md, "${minimumText(mk.total)}"`)
+  if (mk.total.monthly !== 1990 + 3000 || mk.total.lokal.minimum !== 11940 || !/^Lokal: 1.990 kr\./.test(minimumText(mk.total))) fail(`Lokal + marketing: ${mk.total.monthly}/md, "${minimumText(mk.total)}"`)
 
-  // Overlap med engangskøb (uændret): Vækst indeholder Google-profilen; Start Booking & Google = 500 - 500.
+  // Overlap med engangskøb (uændret): Vækst indeholder Google-profilen; Start Booking & Google = 1000 - 500.
   const web = total(['hjemmeside', 'bookingGoogle'], { sider: '2-5', bestilling: 'nej', drift: 'basis', booking: 'nej', anmeldelser: 'nej' })
-  if (web.once !== 4000 || web.monthly !== 99) fail(`Vækst + B&G Start: ${web.once} + ${web.monthly}/md (forventet 4000 + 99)`)
+  if (web.once !== 8000 || web.monthly !== 198) fail(`Vækst + B&G Start: ${web.once} + ${web.monthly}/md (forventet 8000 + 198)`)
   const web2 = total(['hjemmeside', 'bookingGoogle'], { sider: '6-8', bestilling: 'nej', drift: 'basis', booking: 'nej', anmeldelser: 'ja' })
-  if (web2.once !== 5500) fail(`Fuld fart + Google + QR: ${web2.once} (forventet 5000 + 500)`)
+  if (web2.once !== 11000) fail(`Fuld fart + Google + QR: ${web2.once} (forventet 10000 + 1000)`)
 }
 
 // Gensidig udelukkelse: Lokal og "Køb hjemmesiden" kan aldrig være valgt samtidig.
@@ -306,12 +306,12 @@ for (const [ekstra, extra] of [['9', 1], ['12', 4], ['20', 12]]) {
   if (parse('?ydelser=lokal&trin=3').step !== 1) fail('Lokal uden svar om system lander ikke på spørgsmålet')
 }
 
-// Gamle links: drift=drift → planen med samme indhold som linket viste (Start/Vækst → Plus, Fuld fart 399 → Ekstra).
+// Gamle links: drift=drift → planen med samme indhold som linket viste (Start/Vækst → Plus, Fuld fart 798 → Ekstra).
 for (const [search, plan, monthly] of [
-  ['sider=1', 'plus', 199],
-  ['sider=2-5', 'plus', 199],
-  ['sider=6-8', 'ekstra', 399],
-  ['sider=9%2B&ekstra=10', 'ekstra', 399],
+  ['sider=1', 'plus', 398],
+  ['sider=2-5', 'plus', 398],
+  ['sider=6-8', 'ekstra', 798],
+  ['sider=9%2B&ekstra=10', 'ekstra', 798],
 ]) {
   const state = parse(`?ydelser=hjemmeside&${search}&bestilling=nej&drift=drift&trin=3`)
   const l = quote(state).lines[0]
@@ -352,7 +352,7 @@ if (/aftales|ca\./i.test(calculator.finalNote)) fail(`finalNote: "${calculator.f
 // Planerne: tre, i rækkefølge, med de forventede minutter, og ingen er "mest populær".
 {
   const list = Object.values(driftPlans)
-  const want = [['basis', 99, 0], ['plus', 199, 15], ['ekstra', 399, 30]]
+  const want = [['basis', 198, 0], ['plus', 398, 15], ['ekstra', 798, 30]]
   if (list.length !== 3 || want.some(([id, m, min], i) => list[i].id !== id || list[i].monthly !== m || list[i].minutes !== min)) {
     fail(`Driftsplaner: ${JSON.stringify(list.map((p) => [p.id, p.monthly, p.minutes]))}`)
   }
@@ -457,7 +457,7 @@ if (switchMismatches((key, tierId, answers) => answers, false) === 0) {
 {
   const q = quote({ selected: ['hjemmeside'], answers: { sider: '2-5', bestilling: 'nej', drift: 'plus' } })
   const text = summaryLines(q).join('\n')
-  for (const want of ['Hjemmeside, Vækst: 4.000 kr. + 199 kr./md', 'Drift: Plus, 199 kr./md, hjælp til billeder, tekst og nyheder', 'I alt: 4.000 kr. nu + 199 kr./md']) {
+  for (const want of ['Hjemmeside, Vækst: 8\.000 kr. + 398 kr./md', 'Drift: Plus, 398 kr./md, hjælp til billeder, tekst og nyheder', 'I alt: 8\.000 kr. nu + 398 kr./md']) {
     if (!text.includes(want)) fail(`Opsummeringen mangler "${want}":\n${text}`)
   }
 }

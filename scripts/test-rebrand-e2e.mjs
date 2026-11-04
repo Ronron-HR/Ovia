@@ -58,12 +58,12 @@ const CONTACT = { tel: 'tel:+4553613699', phone: '53 61 36 99', mail: 'kontakt@o
 
 /** Gamle beregnerlinks (skal virke uændret som "Køb hjemmesiden"). once/monthly er håndregnet. */
 const OLD_LINKS = [
-  { q: 'ydelser=hjemmeside&sider=1&bestilling=nej&drift=basis&trin=4', once: 2500, monthly: 99 },
-  { q: 'ydelser=hjemmeside&sider=2-5&bestilling=nej&drift=plus&trin=4', once: 4000, monthly: 199 },
-  { q: 'ydelser=hjemmeside&sider=6-8&bestilling=ja&drift=ekstra&trin=4', once: 5500, monthly: 399 },
-  { q: 'ydelser=hjemmeside&sider=2-5&bestilling=nej&drift=egen&trin=4', once: 5000, monthly: 0 },
-  { q: 'ydelser=hjemmeside&sider=2-5&bestilling=nej&drift=drift&trin=3', once: 4000, monthly: 199 }, // gammelt drift=drift: Vækst -> Plus
-  { q: 'ydelser=hjemmeside&sider=6-8&bestilling=nej&drift=drift&trin=3', once: 5000, monthly: 399 }, // Fuld fart -> Ekstra
+  { q: 'ydelser=hjemmeside&sider=1&bestilling=nej&drift=basis&trin=4', once: 5000, monthly: 198 },
+  { q: 'ydelser=hjemmeside&sider=2-5&bestilling=nej&drift=plus&trin=4', once: 8000, monthly: 398 },
+  { q: 'ydelser=hjemmeside&sider=6-8&bestilling=ja&drift=ekstra&trin=4', once: 11000, monthly: 798 },
+  { q: 'ydelser=hjemmeside&sider=2-5&bestilling=nej&drift=egen&trin=4', once: 10000, monthly: 0 },
+  { q: 'ydelser=hjemmeside&sider=2-5&bestilling=nej&drift=drift&trin=3', once: 8000, monthly: 398 }, // gammelt drift=drift: Vækst -> Plus
+  { q: 'ydelser=hjemmeside&sider=6-8&bestilling=nej&drift=drift&trin=3', once: 10000, monthly: 798 }, // Fuld fart -> Ekstra
 ]
 const FORM_URL = `/?${OLD_LINKS[1].q}`
 
@@ -135,9 +135,9 @@ const WORKFLOW_DEMO = '#demo' // på /systemer/
 
 /** Tekster, der aldrig må stå på siden. */
 const FORBIDDEN = [
-  { re: /gratis\s+(hjemmeside|website|webside)/i, why: '"gratis hjemmeside" er ikke tilladt (brug "0 kr. i opstart - 995 kr./md. - mindst 6 måneder")' },
-  { re: /ingen\s+udtrædelsesomkostning/i, why: '"ingen udtrædelsesomkostninger" modsiger frikøbet på 1.000 kr.' },
-  { re: /(?<![\d.,])2\.?700(?!\d)/, why: 'historisk pris 2.700 kr. må ikke stå som offentlig pris' },
+  { re: /gratis\s+(hjemmeside|website|webside)/i, why: '"gratis hjemmeside" er ikke tilladt (brug "0 kr. i opstart - 1.990 kr./md. - mindst 6 måneder")' },
+  { re: /ingen\s+udtrædelsesomkostning/i, why: '"ingen udtrædelsesomkostninger" modsiger frikøbet på 2.000 kr.' },
+  { re: /(?<![\d.,])2\.?700(?!\d)/, why: 'historisk pris 5.400 kr. må ikke stå som offentlig pris' },
   { re: /webmaster/i, why: '"webmaster" (bruges i dag i driftsplanen Ekstra) er et stort bureau-ord og skal væk' },
   { re: /ekspert/i, why: '"ekspert" er udokumenteret' },
   { re: /revolutioner/i, why: '"revolutionerende" er buzzword' },
@@ -155,22 +155,22 @@ const RISKY = [
 ]
 const NEGATION = /(ingen|ikke|uden|aldrig|kan\s+ikke|lover\s+ikke|giver\s+ikke|ingen\s+form\s+for)/i
 /** Beløb (kr), der må stå på de statiske sider. Andre beløb giver en advarsel (kan være gamle priser eller summer). */
-const ALLOWED_AMOUNTS = new Set([0, 99, 199, 200, 399, 400, 495, 500, 995, 1000, 1495, 1500, 2500, 4000, 5000, 5500, 5970, 6500, 8970, 11940, 17940])
+const ALLOWED_AMOUNTS = new Set([0, 99, 198, 199, 200, 398, 399, 400, 495, 500, 798, 800, 990, 995, 1000, 1495, 1500, 1990, 2000, 2500, 2990, 3000, 4000, 5000, 5500, 5970, 6500, 8000, 8970, 10000, 11000, 11940, 13000, 17940, 23880, 35880])
 
 /* =====================================================================
    AC-KATALOG (skal følge docs/rebrand/qa-kriterier.md)
    ===================================================================== */
 const CATALOG = [
   // Priser og vilkår
-  ['AC-1', 'Priser og vilkår', 'Lokal-tilbuddet (0 kr. opstart, 995 kr./md., mindst 6 mdr., minimum 5.970 kr.) i hero og på /priser/'],
+  ['AC-1', 'Priser og vilkår', 'Lokal-tilbuddet (0 kr. opstart, 1.990 kr./md., mindst 6 mdr., minimum 11.940 kr.) i hero og på /priser/'],
   ['AC-2', 'Priser og vilkår', 'Lokal-omfang: 1-3 sider, 2 korrekturrunder, 45+15 min./md., domæneloft 200 kr./år, support på hverdage'],
   ['AC-3', 'Priser og vilkår', 'Systemmodulet sælges ikke til en pris, mens systemModule.ready=false (alle sider, JSON-LD, beregner, guide)'],
   ['AC-4', 'Priser og vilkår', 'Engangspriser Start 2.500 / Vækst 4.000 / Fuld fart 5.000'],
   ['AC-5', 'Priser og vilkår', 'Drift Basis 99 / Plus 199 (15 min.) / Ekstra 399 (30 min.); egen konto +1.000 én gang'],
-  ['AC-6', 'Priser og vilkår', 'Frikøb/overførsel 1.000 kr. vist og forklaret; aldrig "ingen udtrædelsesomkostninger"'],
+  ['AC-6', 'Priser og vilkår', 'Frikøb/overførsel 2.000 kr. vist og forklaret; aldrig "ingen udtrædelsesomkostninger"'],
   ['AC-7', 'Priser og vilkår', 'Bookingintegration +500, ekstra side +400, udbyderens abonnement betales direkte'],
   ['AC-8', 'Priser og vilkår', 'Booking & Google 500/1.000/1.500; QR uden booking; Google + QR = 1.000; QR er engangsleverance'],
-  ['AC-9', 'Priser og vilkår', 'Marketing 1.500/2.500/4.000 kr./md., annoncebudget separat'],
+  ['AC-9', 'Priser og vilkår', 'Marketing 1.500/2.500/8.000 kr./md., annoncebudget separat'],
   ['AC-10', 'Priser og vilkår', 'Moms-note ("ekskl. moms"); ingen opdigtet CVR/adresse'],
   ['AC-11', 'Priser og vilkår', 'Vilkår som synlig sektion (#vilkaar) på /priser/, ikke gemt i FAQ'],
   ['AC-12', 'Priser og vilkår', 'Ingen skjult binding: opsigelse/minimum, filudlevering, brugsret, dataeksport er formuleret'],
@@ -269,20 +269,20 @@ const want = (group) => !ONLY || ONLY.includes(group)
 
 /* ---- små hjælpere til tekst og beløb ---- */
 const fmt = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
-/** Beløb som regulært udtryk: "995 kr.", "5.970 kr.", "995 /md" (ikke en del af et større tal). */
+/** Beløb som regulært udtryk: "1.990 kr.", "11.940 kr.", "995 /md" (ikke en del af et større tal). */
 const A = (n) => new RegExp(`(?<![\\d.,])${fmt(n).replace(/\./g, '\\.')}(?!\\d)(?:\\s*(?:kr|,-)|\\s*/\\s*md)`, 'i')
 const hasAmount = (text, n) => A(n).test(text)
 const amountsIn = (text) => [...text.matchAll(/(?<![\d.,])(\d{1,3}(?:\.\d{3})*|\d+)(?!\d)\s*(?:kr\b|,-)/gi)].map((m) => Number(m[1].replace(/\./g, '')))
 const around = (text, index, len = 120) => text.slice(Math.max(0, index - len), index + len)
 const MODULE_CONTEXT = /ikke klar|endnu ikke|ikke tilgængelig|planlagt|særskilt fast tilbud|findes ikke|under udvikling|ikke færdig|ikke udviklet|ikke endnu/i
-/** Finder steder, hvor systemmodulet (1.495 kr./md. eller 8.970 kr. minimum) vises uden at være tydeligt mærket "ikke klar". */
+/** Finder steder, hvor systemmodulet (2.990 kr./md. eller 17.940 kr. minimum) vises uden at være tydeligt mærket "ikke klar". */
 function moduleViolations(text) {
   const out = []
   for (const m of text.matchAll(/(?<![\d.,])(?:1\.?495|8\.?970)(?!\d)/g)) {
     if (!MODULE_CONTEXT.test(around(text, m.index, 300))) out.push(`"${m[0]}" uden "ikke klar"-mærkning: ...${around(text, m.index, 60)}...`)
   }
   for (const m of text.matchAll(/(?:system|modul)[^.]{0,120}(?<![\d.,])500\s*kr\.?\s*\/\s*md|(?<![\d.,])500\s*kr\.?\s*\/\s*md[^.]{0,120}(?:system|modul)/gi)) {
-    if (!MODULE_CONTEXT.test(around(text, m.index, 300))) out.push(`modulpris "+500 kr./md." uden "ikke klar"-mærkning: ...${short(m[0], 100)}...`)
+    if (!MODULE_CONTEXT.test(around(text, m.index, 300))) out.push(`modulpris "+1.000 kr./md." uden "ikke klar"-mærkning: ...${short(m[0], 100)}...`)
   }
   return out
 }
@@ -476,7 +476,7 @@ const snapshot = () => {
   const norm = (s) => s.replace(/\s+/g, ' ').trim()
   const clone = document.body.cloneNode(true)
   clone.querySelectorAll('script,style,noscript,template').forEach((e) => e.remove())
-  // Mellemrum efter hvert element, så "…videoer." og "4.000 kr." i naboelementer ikke klistres sammen.
+  // Mellemrum efter hvert element, så "…videoer." og "8.000 kr." i naboelementer ikke klistres sammen.
   clone.querySelectorAll('*').forEach((e) => e.append(' '))
   const h1 = document.querySelector('h1')
   const heroEl = h1 ? (h1.closest('section') ?? h1.parentElement?.parentElement ?? h1.parentElement) : null
@@ -553,18 +553,18 @@ function analyseText() {
   // Påkrævede strenge pr. side.
   const OFFER = [
     ['"0 kr. i opstart"', /0\s*kr\.?\s*i\s*opstart/i],
-    ['"995 kr./md."', A(995)],
+    ['"1.990 kr./md."', A(1990)],
     ['"mindst 6 måneder"', /mindst\s+(?:6|seks)\s+(?:abonnements)?måneder/i],
-    ['minimumsbetaling "5.970 kr."', A(5970)],
+    ['minimumsbetaling "11.940 kr."', A(11940)],
   ]
   const amounts = (...ns) => ns.map((n) => [`${fmt(n)} kr.`, A(n)])
   const REQUIRED = [
     { ac: 'AC-1', pages: ['/', '/priser/'], items: OFFER },
-    { ac: 'AC-1', pages: ['/hjemmeside/'], items: [['995 kr.', A(995)], ['5.970 kr.', A(5970)]] },
+    { ac: 'AC-1', pages: ['/hjemmeside/'], items: [['1.990 kr.', A(1990)], ['11.940 kr.', A(11940)]] },
     { ac: 'AC-2', pages: ['/priser/'], items: [['45 min. SEO/status', /45\s*(?:min|minutter)/i], ['15 min. rettelser', /15\s*(?:min|minutter)/i], ['domæneloft 200 kr.', A(200)], ['1-3 sider', /1\s*[–-]\s*3\s*(?:indholds)?sider|op til\s+(?:3|tre)\s+(?:indholds)?sider/i], ['korrekturrunder', /korrekturrunde/i], ['support på hverdage', /hverdage/i], ['opsigelse/varsel', /varsel|opsig/i]] },
     { ac: 'AC-4', pages: ['/priser/', '/hjemmeside/'], items: amounts(2500, 4000, 5000) },
-    { ac: 'AC-5', pages: ['/priser/', '/hjemmeside/'], items: [...amounts(99, 199, 399, 1000), ['15 min. (Plus)', /15\s*(?:min|minutter)/i], ['30 min. (Ekstra)', /30\s*(?:min|minutter)/i]] },
-    { ac: 'AC-6', pages: ['/priser/'], items: [['frikøb/overførsel', /frikøb|overfør/i], ['1.000 kr.', A(1000)]] },
+    { ac: 'AC-5', pages: ['/priser/', '/hjemmeside/'], items: [...amounts(198, 398, 798, 2000), ['15 min. (Plus)', /15\s*(?:min|minutter)/i], ['30 min. (Ekstra)', /30\s*(?:min|minutter)/i]] },
+    { ac: 'AC-6', pages: ['/priser/'], items: [['frikøb/overførsel', /frikøb|overfør/i], ['2.000 kr.', A(2000)]] },
     { ac: 'AC-7', pages: ['/priser/'], items: [...amounts(500, 400), ['bookingudbyder betales direkte', /direkte til (?:udbyderen|bookingudbyderen)|betaler du selv|betales direkte/i]] },
     { ac: 'AC-8', pages: ['/priser/', '/booking-google/'], items: [...amounts(500, 1000, 1500), ['QR-skilt', /qr/i]] },
     { ac: 'AC-9', pages: ['/priser/', '/marketing/'], items: [...amounts(1500, 2500, 4000), ['annoncebudget separat', /annoncebudget|annonce(?:ring)?budget|budget til annoncer/i]] },
@@ -585,7 +585,7 @@ function analyseText() {
   // Tilbudslinjen i heroen (forsiden) ved 1440 og 390.
   for (const vp of [1440, 390]) {
     const hero = SNAP['/']?.[vp]?.hero ?? ''
-    ok('AC-1', hasAmount(hero, 995) && hasAmount(hero, 5970), `/ ${vp}px: heroen (sektionen med h1) viser ikke både 995 kr./md. og minimum 5.970 kr. (fandt: "${short(hero, 120)}")`)
+    ok('AC-1', hasAmount(hero, 1990) && hasAmount(hero, 11940), `/ ${vp}px: heroen (sektionen med h1) viser ikke både 1.990 kr./md. og minimum 11.940 kr. (fandt: "${short(hero, 120)}")`)
   }
 
   // Systemmodul: ingen pris uden "ikke klar" (alle sider, alle bredder).
@@ -603,7 +603,7 @@ function analyseText() {
       const m = f.re.exec(text)
       ok('AC-59', !m, `${p}: "${m?.[0]}" - ${f.why} (...${m ? around(text, m.index, 50) : ''}...)`)
       if (f.re.source.startsWith('ingen\\s+udtræd') && m) ok('AC-6', false, `${p}: "ingen udtrædelsesomkostninger" står på siden`)
-      if (f.re.source.includes('2\\.?700') && m) ok('AC-13', false, `${p}: gammel pris 2.700 kr. står på siden`)
+      if (f.re.source.includes('2\\.?700') && m) ok('AC-13', false, `${p}: gammel pris 5.400 kr. står på siden`)
     }
     // "garanti": kun afvisende sammenhæng.
     for (const m of text.matchAll(/garanti\w*/gi)) {
@@ -643,10 +643,10 @@ function analyseText() {
     const s1 = [...new Set(amountsIn(b1))].sort((a, b) => a - b).join(',')
     const s2 = [...new Set(amountsIn(b2))].sort((a, b) => a - b).join(',')
     ok('AC-13', s1 === s2, `købsmåder-beløb forskellige: forsiden [${s1}] mod /priser/ [${s2}]`)
-    ok('AC-13', hasAmount(b1, 995) && hasAmount(b1, 5970), `#koebsmaader mangler 995 kr. eller 5.970 kr. (fandt [${s1}])`)
+    ok('AC-13', hasAmount(b1, 1990) && hasAmount(b1, 11940), `#koebsmaader mangler 1.990 kr. eller 11.940 kr. (fandt [${s1}])`)
   }
   // Samme pakkepris på /hjemmeside/ og /priser/.
-  for (const n of [2500, 4000, 5000, 99, 199, 399]) {
+  for (const n of [5000, 8000, 10000, 198, 398, 798]) {
     ok('AC-13', hasAmount(t1440('/hjemmeside/'), n) === hasAmount(t1440('/priser/'), n), `${fmt(n)} kr. findes kun på én af /hjemmeside/ og /priser/`)
   }
 
@@ -666,13 +666,13 @@ function analyseText() {
     ok('AC-12', !/binding|bundet/i.test(terms.text) || /(seks|6)\s*måneder/i.test(terms.text), '#vilkaar nævner binding uden at sige længden')
     // Beløbet skal stå ved købet fri/frikøb/overførsel og efterfølges af en forklaring af, hvad det dækker.
     const buyouts = [...terms.text.matchAll(/(?:købe\s+siden\s+fri|frikøb|overfør\w*)[^.]{0,40}?(?<![\d.,])1\.000\s*kr\.?/gi)]
-    ok('AC-6', buyouts.length > 0, '#vilkaar: 1.000 kr. står ikke ved frikøb/"købe siden fri"/overførsel')
-    ok('AC-6', buyouts.some((m) => /dækker|omfatter|inkluderer|du betaler for/i.test(terms.text.slice(m.index, m.index + 400))), '#vilkaar: frikøbet på 1.000 kr. er ikke forklaret (hvad dækker beløbet?)')
+    ok('AC-6', buyouts.length > 0, '#vilkaar: 2.000 kr. står ikke ved frikøb/"købe siden fri"/overførsel')
+    ok('AC-6', buyouts.some((m) => /dækker|omfatter|inkluderer|du betaler for/i.test(terms.text.slice(m.index, m.index + 400))), '#vilkaar: frikøbet på 2.000 kr. er ikke forklaret (hvad dækker beløbet?)')
   }
   // Frikøbsbeløbet står ved ordet frikøb/overførsel.
   {
     const text = t1440('/priser/')
-    ok('AC-6', /(?:frikøb|købe\s+siden\s+fri|overfør\w*)[^.]{0,60}?(?<![\d.,])1\.000\s*kr/i.test(text), '/priser/: 1.000 kr. står ikke ved frikøb/overførsel')
+    ok('AC-6', /(?:frikøb|købe\s+siden\s+fri|overfør\w*)[^.]{0,60}?(?<![\d.,])1\.000\s*kr/i.test(text), '/priser/: 2.000 kr. står ikke ved frikøb/overførsel')
   }
   // Moms, CVR, adresse.
   for (const p of ['/', '/priser/']) {
@@ -986,9 +986,9 @@ async function testCalculator() {
       const iContact = t.search(CALC.contactLabel)
       const checks = [
         ['opstart 0 kr.', t.search(/0\s*kr\.?[^.]{0,30}opstart|opstart[^.]{0,30}0\s*kr/i)],
-        ['995 kr./md.', t.search(A(995))],
+        ['1.990 kr./md.', t.search(A(1990))],
         ['minimumsperiode (mindst 6 måneder)', t.search(/(?:mindst|minimum)[^.]{0,25}(?:6|seks)\s+(?:abonnements)?måneder|minimumsperiode/i)],
-        ['minimumsbetaling 5.970 kr.', t.search(A(5970))],
+        ['minimumsbetaling 11.940 kr.', t.search(A(11940))],
         ['eksterne udgifter', t.search(/eksterne|særskilt|betales direkte|ikke med/i)],
         ['overdragelse/udlevering', t.search(/overdrag|udlever|filerne|brugsret|efter (?:de )?(?:6|seks) måneder/i)],
       ]
@@ -998,7 +998,7 @@ async function testCalculator() {
       }
       const price = head(await p.evaluate((sel) => document.querySelector(sel)?.innerText.replace(/\s+/g, ' ') ?? '', CALC.pricePanel))
       if (price) {
-        ok('AC-15', hasAmount(price, 995) && !hasAmount(price, 2500) && !hasAmount(price, 4000) && !hasAmount(price, 5000) && !hasAmount(price, 99) && !hasAmount(price, 199) && !hasAmount(price, 399), `${vp}px: Lokal-prisen blandes med engangspris eller drift (dobbeltbetaling): "${short(price, 200)}"`)
+        ok('AC-15', hasAmount(price, 1990) && !hasAmount(price, 5000) && !hasAmount(price, 8000) && !hasAmount(price, 10000) && !hasAmount(price, 198) && !hasAmount(price, 398) && !hasAmount(price, 798), `${vp}px: Lokal-prisen blandes med engangspris eller drift (dobbeltbetaling): "${short(price, 200)}"`)
         ok('AC-3', moduleReady || moduleViolations(price).length === 0, `${vp}px: Lokal-resultatet sælger systemmodulet: ${moduleViolations(price)[0]}`)
       } else {
         skip('AC-15', `${vp}px: ${CALC.pricePanel} findes ikke i Lokal-resultatet (data-tour-målet skal bevares); dobbeltbetaling kontrolleres manuelt`)
@@ -1015,7 +1015,7 @@ async function testCalculator() {
     const reached = await advance(page)
     const price = head(await page.evaluate((sel) => document.querySelector(sel)?.innerText.replace(/\s+/g, ' ') ?? '', CALC.pricePanel))
     ok('AC-15', reached, `"Køb hjemmesiden" nåede ikke resultatet (sidste tekst: "${short(await calcText(page), 160)}")`)
-    if (price) ok('AC-15', !hasAmount(price, 995) && !hasAmount(price, 5970), `"Køb hjemmesiden"-resultatet viser Lokal-abonnementet (dobbeltbetaling): "${short(price, 200)}"`)
+    if (price) ok('AC-15', !hasAmount(price, 1990) && !hasAmount(price, 11940), `"Køb hjemmesiden"-resultatet viser Lokal-abonnementet (dobbeltbetaling): "${short(price, 200)}"`)
   }
 
   // Gamle links.
@@ -1029,7 +1029,7 @@ async function testCalculator() {
       const id = `${base}?${q}`
       ok('AC-16', hasAmount(scope, once), `gammelt link ${id}: engangsprisen ${fmt(once)} kr. vises ikke (fandt: "${short(scope, 180)}")`)
       ok('AC-16', monthly === 0 ? !/\/\s*md/.test(price || '') : hasAmount(scope, monthly), `gammelt link ${id}: driften ${monthly ? fmt(monthly) + ' kr./md.' : '(ingen månedlig betaling)'} vises ikke korrekt`)
-      ok('AC-16', !hasAmount(scope, 995), `gammelt link ${id}: viser Lokal-abonnementet i stedet for engangskøb`)
+      ok('AC-16', !hasAmount(scope, 1990), `gammelt link ${id}: viser Lokal-abonnementet i stedet for engangskøb`)
       ok('AC-19', (await search(page)).includes('ydelser=hjemmeside'), `gammelt link ${id}: adresselinjen mistede valgene (${await search(page)})`)
       orderCheck.push(id)
     }
@@ -1044,7 +1044,7 @@ async function testCalculator() {
   ok('AC-19', (await calcText(page)) === before && (await search(page)).includes('trin=4'), 'genindlæsning på resultatet ændrede siden')
   const fresh = await newPage(390)
   await open(fresh, `/?${OLD_LINKS[1].q}`)
-  ok('AC-19', hasAmount(await calcText(fresh), 4000) && hasAmount(await calcText(fresh), 199), 'delt link giver ikke samme pris i en frisk browser')
+  ok('AC-19', hasAmount(await calcText(fresh), 8000) && hasAmount(await calcText(fresh), 398), 'delt link giver ikke samme pris i en frisk browser')
   await closePage(fresh)
 
   // Samme pris på skærm, afsendt link og genberegning. Intet sendes rigtigt (mock).
@@ -1191,7 +1191,7 @@ async function testGuide() {
     const L = lf.labels.join(' | ')
     const id = `[${lf.labels.map((l) => short(l, 28)).join(' > ')}]`
     ok('AC-25', moduleReady || moduleViolations(lf.text).length === 0, `guide ${id}: sælger systemmodulet: ${moduleViolations(lf.text)[0]}`)
-    ok('AC-25', !(moduleReady === false && /(?<![\d.,])1\.?495/.test(lf.text)), `guide ${id}: viser 1.495 kr./md.`)
+    ok('AC-25', !(moduleReady === false && /(?<![\d.,])1\.?495/.test(lf.text)), `guide ${id}: viser 2.990 kr./md.`)
     ok('AC-3', moduleReady || moduleViolations(lf.text).length === 0, `guide ${id}: modulpris uden "ikke klar"`)
     // Par af (spørgsmål, valgt svar) afgør, om QR er valgt ("Ja" til QR-spørgsmålet) eller fravalgt ("Nej, kun Google-profilen").
     const pairs = lf.labels.map((o, i) => ({ q: lf.legends[i] ?? '', o }))
@@ -1199,12 +1199,12 @@ async function testGuide() {
     const qrNo = pairs.some((p) => /qr/i.test(p.q) && /^nej/i.test(p.o))
     const bookingYes = wantsBooking(L) || pairs.some((p) => /booking|bestilling/i.test(p.q) && /^ja/i.test(p.o))
     if (qrYes && !bookingYes) {
-      ok('AC-23', !hasAmount(lf.text, 1500) && !/fuld fart/i.test(lf.text.slice(0, 600)), `guide ${id}: QR uden booking giver alligevel 1.500 kr./Booking & Google Fuld fart (tvinger booking med): "${short(lf.text, 160)}"`)
-      ok('AC-23', hasAmount(lf.text, 1000), `guide ${id}: Google + QR uden booking viser ikke 1.000 kr.: "${short(lf.text, 160)}"`)
+      ok('AC-23', !hasAmount(lf.text, 3000) && !/fuld fart/i.test(lf.text.slice(0, 600)), `guide ${id}: QR uden booking giver alligevel 3.000 kr./Booking & Google Fuld fart (tvinger booking med): "${short(lf.text, 160)}"`)
+      ok('AC-23', hasAmount(lf.text, 2000), `guide ${id}: Google + QR uden booking viser ikke 2.000 kr.: "${short(lf.text, 160)}"`)
     }
     if (qrNo && !bookingYes) {
-      ok('AC-22', !hasAmount(lf.text, 1500) && !hasAmount(lf.text, 1000), `guide ${id}: Google-profil alene giver 1.000/1.500 kr. i stedet for engangsopgaven (500 kr.): "${short(lf.text, 160)}"`)
-      ok('AC-22', hasAmount(lf.text, 500), `guide ${id}: Google-profil alene viser ikke 500 kr.: "${short(lf.text, 160)}"`)
+      ok('AC-22', !hasAmount(lf.text, 3000) && !hasAmount(lf.text, 2000), `guide ${id}: Google-profil alene giver 1.000/3.000 kr. i stedet for engangsopgaven (1.000 kr.): "${short(lf.text, 160)}"`)
+      ok('AC-22', hasAmount(lf.text, 1000), `guide ${id}: Google-profil alene viser ikke 1.000 kr.: "${short(lf.text, 160)}"`)
     }
     if (/booking/i.test(L) && wantsBooking(L)) {
       warn('AC-24', /integr|eksisterende|kobl|instagram|dit system|din kalender/i.test(lf.text) && !/(?<!ikke (?:en )?)(?:ny kalender|nyt bookingsystem)/i.test(lf.text), `guide ${id}: booking omtales ikke som integration af eksisterende system`)
@@ -1872,8 +1872,8 @@ async function testTech() {
       ok('AC-67', r.len > 400 && !!r.h1, `${tag}: indholdet mangler (tekst ${r.len} tegn, h1 "${r.h1}")`)
       ok('AC-67', r.hidden.length === 0, `${tag}: usynlig tekst: ${r.hidden.join('; ')}`)
       ok('AC-67', r.sw <= 391, `${tag}: vandret overflow (${r.sw})`)
-      if (p === '/' || p === '/priser/') ok('AC-67', hasAmount(r.text, 995) && hasAmount(r.text, 5970), `${tag}: tilbudslinjen (995 kr./md., 5.970 kr.) mangler`)
-      if (p === '/priser/') ok('AC-67', hasAmount(r.text, 2500) && hasAmount(r.text, 99), `${tag}: engangs- og driftspriser mangler`)
+      if (p === '/' || p === '/priser/') ok('AC-67', hasAmount(r.text, 1990) && hasAmount(r.text, 11940), `${tag}: tilbudslinjen (1.990 kr./md., 11.940 kr.) mangler`)
+      if (p === '/priser/') ok('AC-67', hasAmount(r.text, 5000) && hasAmount(r.text, 198), `${tag}: engangs- og driftspriser mangler`)
       await closePage(page)
     }
   }

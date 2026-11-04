@@ -114,16 +114,16 @@ for (const width of [375, 1440]) {
   await click(page, 'Plus')
   await click(page, 'Vis min pris')
   text = await calc(page)
-  check(/4\.000\s*kr\./.test(text) && /199\s*kr\./.test(text) && /ekskl\. moms/.test(text) && /Hvad dækker månedsprisen/.test(text), `${tag}: A direkte pris: ${text.slice(0, 200)}`)
+  check(/8\.000\s*kr\./.test(text) && /398\s*kr\./.test(text) && /ekskl\. moms/.test(text) && /Hvad dækker månedsprisen/.test(text), `${tag}: A direkte pris: ${text.slice(0, 200)}`)
   check(await page.evaluate(() => !!document.querySelector('#beregner [data-tour="price"]') && !!document.querySelector('[data-tour="calc"]')), `${tag}: A data-tour=price/calc mangler`)
   check(!/Det forpligter du dig til/.test(text), `${tag}: A Lokal-vilkår vises ved et engangskøb`)
   // Gamle links virker uændret som "Køb hjemmesiden"
   await open(page, '/priser/?ydelser=hjemmeside&sider=2-5&bestilling=nej&drift=plus&trin=4')
   text = await calc(page)
-  check(/Din pris/.test(text) && /Hjemmeside: Vækst/.test(text) && /4\.000\s*kr\./.test(text) && /199\s*kr\./.test(text), `${tag}: A gammelt link: ${text.slice(0, 160)}`)
+  check(/Din pris/.test(text) && /Hjemmeside: Vækst/.test(text) && /8\.000\s*kr\./.test(text) && /398\s*kr\./.test(text), `${tag}: A gammelt link: ${text.slice(0, 160)}`)
   await open(page, '/priser/?ydelser=hjemmeside&sider=6-8&bestilling=nej&drift=drift&trin=3')
   text = await calc(page)
-  check(/Drift Ekstra/.test(text) && /5\.000\s*kr\./.test(text) && /399\s*kr\./.test(text), `${tag}: A gammelt drift=drift-link: ${text.slice(0, 160)}`)
+  check(/Drift Ekstra/.test(text) && /10\.000\s*kr\./.test(text) && /798\s*kr\./.test(text), `${tag}: A gammelt drift=drift-link: ${text.slice(0, 160)}`)
 
   // ---- L: Lokal ---------------------------------------------------------------
   await open(page)
@@ -136,7 +136,7 @@ for (const width of [375, 1440]) {
   await click(page, 'Nej, jeg har brug for hjemmesiden')
   await click(page, 'Vis min pris')
   text = await calc(page)
-  check(/Løbende samarbejde: Lokal/.test(text) && /0\s*kr\./.test(text) && /995\s*kr\./.test(text) && /mindst 6 mdr\. = mindst 5\.970\s*kr\./.test(text), `${tag}: L resultat: ${text.slice(0, 300)}`)
+  check(/Løbende samarbejde: Lokal/.test(text) && /0\s*kr\./.test(text) && /1\.990\s*kr\./.test(text) && /mindst 6 mdr\. = mindst 11\.940\s*kr\./.test(text), `${tag}: L resultat: ${text.slice(0, 300)}`)
   check(/Det forpligter du dig til/.test(text) && /Minimumsperiode/.test(text) && /Mindste betaling i alt/.test(text) && /Eksterne udgifter/.test(text) && /Når minimumsperioden er slut/.test(text) && /uden særskilt frikøb/.test(text), `${tag}: L vilkår mangler`)
   check(await page.evaluate(() => {
     const t = document.querySelector('#beregner [data-lokal-terms]')
@@ -151,15 +151,15 @@ for (const width of [375, 1440]) {
   // Systemtilvalg uden færdigt modul: ingen pris
   await open(page, '/priser/?ydelser=lokal&system=ja&trin=3')
   text = await calc(page)
-  check(/særskilt fast tilbud/.test(text) && /995\s*kr\./.test(text) && !/1\.495|8\.970/.test(text), `${tag}: L system uden modul viser en pris eller mangler noten: ${text.slice(0, 200)}`)
+  check(/særskilt fast tilbud/.test(text) && /1\.990\s*kr\./.test(text) && !/2\.990|17\.940/.test(text), `${tag}: L system uden modul viser en pris eller mangler noten: ${text.slice(0, 200)}`)
 
   // ---- O: Lokal + Booking & Google, QR uden booking -------------------------------
   await open(page, '/priser/?ydelser=lokal,bookingGoogle&system=nej&booking=ja&anmeldelser=nej&trin=4')
   text = await calc(page)
-  check(/Booking & Google: Vækst/.test(text) && /Trukket fra: Google-profil/.test(text) && /Lokal/.test(text) && /500\s*kr\. nu|500\s*kr\.\s*Pr\. måned/.test(text.replace(/\s+/g, ' ')) || /500\s*kr\./.test(text), `${tag}: O Lokal + B&G: ${text.slice(0, 300)}`)
+  check(/Booking & Google: Vækst/.test(text) && /Trukket fra: Google-profil/.test(text) && /Lokal/.test(text) && /1\.000\s*kr\. nu|1\.000\s*kr\.\s*Pr\. måned/.test(text.replace(/\s+/g, ' ')) || /1\.000\s*kr\./.test(text), `${tag}: O Lokal + B&G: ${text.slice(0, 300)}`)
   await open(page, '/priser/?ydelser=bookingGoogle&booking=nej&anmeldelser=ja&trin=3')
   text = await calc(page)
-  check(/Booking & Google: Start/.test(text) && /QR-skilt og opfølgning/.test(text) && /1\.000\s*kr\./.test(text) && !/Booking koblet/.test(text), `${tag}: O QR uden booking: ${text.slice(0, 260)}`)
+  check(/Booking & Google: Start/.test(text) && /QR-skilt og opfølgning/.test(text) && /2\.000\s*kr\./.test(text) && !/Booking koblet/.test(text), `${tag}: O QR uden booking: ${text.slice(0, 260)}`)
 
   // ---- G: guiden --------------------------------------------------------------------
   await open(page)
@@ -174,7 +174,7 @@ for (const width of [375, 1440]) {
   text = await calc(page)
   check(/Hvordan vil du have hjemmesiden/.test(text) && !/hjaelp/.test(await search(page)), `${tag}: G "Spring over" fører ikke til beregneren`)
 
-  // Google + QR → ingen booking (Start + QR = 1.000 kr.)
+  // Google + QR → ingen booking (Start + QR = 2\.000 kr.)
   await open(page)
   await click(page, 'Hjælp mig med at vælge')
   await click(page, 'Min Google-profil eller flere anmeldelser')
@@ -184,12 +184,12 @@ for (const width of [375, 1440]) {
   await click(page, 'Ja')
   await click(page, 'Vis mit forslag')
   text = await calc(page)
-  check(/Booking & Google: Start/.test(text) && /1\.000\s*kr\./.test(text) && !/Fuld fart/.test(text) && !/Booking koblet/.test(text) && /uden booking/.test(text), `${tag}: G Google + QR: ${text.slice(0, 300)}`)
+  check(/Booking & Google: Start/.test(text) && /2\.000\s*kr\./.test(text) && !/Fuld fart/.test(text) && !/Booking koblet/.test(text) && /uden booking/.test(text), `${tag}: G Google + QR: ${text.slice(0, 300)}`)
   check(/Spring over/.test(text) && /Se og ret i beregneren/.test(text) && /Send din forespørgsel/.test(text), `${tag}: G resultatets handlinger`)
   check(await page.evaluate(() => !!document.querySelector('#beregner [data-tour="price"]')), `${tag}: G data-tour=price mangler`)
   await click(page, 'Se og ret i beregneren')
   text = await calc(page)
-  check(/Din pris/.test(text) && /Booking & Google: Start/.test(text) && /1\.000\s*kr\./.test(text) && /anmeldelser=ja/.test(await search(page)) && /booking=nej/.test(await search(page)), `${tag}: G forslaget i beregneren: ${await search(page)}`)
+  check(/Din pris/.test(text) && /Booking & Google: Start/.test(text) && /2\.000\s*kr\./.test(text) && /anmeldelser=ja/.test(await search(page)) && /booking=nej/.test(await search(page)), `${tag}: G forslaget i beregneren: ${await search(page)}`)
 
   // Hjemmeside: betalingsmodel. Lokal → 0 kr. i opstart; køb → mindste pakke og Basis.
   await open(page)
@@ -204,14 +204,14 @@ for (const width of [375, 1440]) {
   await click(page, 'Løbende:')
   await click(page, 'Vis mit forslag')
   text = await calc(page)
-  check(/Løbende samarbejde: Lokal/.test(text) && /995\s*kr\./.test(text) && /5\.970\s*kr\./.test(text) && /Det forpligter du dig til/.test(text), `${tag}: G Lokal-forslag: ${text.slice(0, 300)}`)
+  check(/Løbende samarbejde: Lokal/.test(text) && /1\.990\s*kr\./.test(text) && /11\.940\s*kr\./.test(text) && /Det forpligter du dig til/.test(text), `${tag}: G Lokal-forslag: ${text.slice(0, 300)}`)
   await click(page, 'Ret svarene')
   await click(page, 'Næste')
   await click(page, 'Næste')
   await click(page, 'Én gang:')
   await click(page, 'Vis mit forslag')
   text = await calc(page)
-  check(/Hjemmeside: Vækst/.test(text) && /4\.000\s*kr\./.test(text) && /99\s*kr\./.test(text) && /Basis/.test(text) && !/Det forpligter du dig til/.test(text), `${tag}: G køb-forslag: ${text.slice(0, 300)}`)
+  check(/Hjemmeside: Vækst/.test(text) && /8\.000\s*kr\./.test(text) && /198\s*kr\./.test(text) && /Basis/.test(text) && !/Det forpligter du dig til/.test(text), `${tag}: G køb-forslag: ${text.slice(0, 300)}`)
   check(/Engangspris/.test(text) && /Pr\. måned/.test(text) && /ekskl\. moms/.test(text) && /Derfor foreslår jeg det/.test(text), `${tag}: G resultatets dele`)
   check(await noOverflow(page), `${tag}: G vandret scroll i resultatet`)
 
@@ -247,7 +247,7 @@ for (const width of [375, 1440]) {
   await click(page, 'Næste')
   await click(page, 'Én gang:')
   await click(page, 'Vis mit forslag')
-  check(/5\.000\s*kr\./.test(await calc(page)), `${tag}: G første forslag`)
+  check(/10\.000\s*kr\./.test(await calc(page)), `${tag}: G første forslag`)
   await click(page, 'Ret svarene')
   await click(page, 'Min Google-profil')
   check(!/g-sider|g-model/.test(await search(page)), `${tag}: G gamle svar i adresselinjen: ${await search(page)}`)
@@ -255,7 +255,7 @@ for (const width of [375, 1440]) {
   await click(page, 'Nej, kun Google-profilen')
   await click(page, 'Vis mit forslag')
   text = await calc(page)
-  check(/Booking & Google: Start/.test(text) && /500\s*kr\./.test(text) && !/5\.000|Hjemmeside:/.test(text), `${tag}: G gamle tilvalg hænger ved: ${text.slice(0, 200)}`)
+  check(/Booking & Google: Start/.test(text) && /1\.000\s*kr\./.test(text) && !/5\.000|Hjemmeside:/.test(text), `${tag}: G gamle tilvalg hænger ved: ${text.slice(0, 200)}`)
   await click(page, 'Tilbage')
   check(await page.evaluate(() => document.querySelector('#beregner input[type=radio]:checked')?.closest('label')?.innerText.includes('Nej, kun Google-profilen')), `${tag}: G tilbage mistede svaret`)
 
