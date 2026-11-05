@@ -28,7 +28,7 @@ const VAT = 'Alle priser er ekskl. moms.'
 
 export const seo = {
   home: {
-    title: 'Hjemmesider og lokal SEO i Aarhus | OviaSpecs',
+    title: 'Hjemmeside til restauranter og caféer i Aarhus | OviaSpecs',
     description: `Hjemmeside, Google-profil, booking og korte videoer til restauranter og caféer i Aarhus. Hjemmeside fra ${from('web')} ${VAT}`,
     updated: UPDATED,
   },
@@ -39,17 +39,17 @@ export const seo = {
   },
   bookingGoogle: {
     title: 'Google-profil og booking i Aarhus | OviaSpecs',
-    description: `Hjælp til din Google-profil, booking på hjemmeside eller Instagram og et QR-skilt til anmeldelser. Fra ${from('book')}. ${VAT}`,
+    description: `Hjælp til din Google-profil, booking på hjemmeside eller Instagram og et QR-skilt til anmeldelser. Fra ${from('book')} ${VAT}`,
     updated: UPDATED,
   },
   marketing: {
     title: 'Korte videoer og opslag til sociale medier | OviaSpecs',
-    description: `Korte videoer og opslag til dine sociale medier hver måned, fra ${from('mkt')}. Annoncebudget betales direkte til Meta. ${VAT}`,
+    description: `Korte videoer og opslag til dine sociale medier hver måned, fra ${from('mkt')} Annoncebudget betales direkte til Meta. ${VAT}`,
     updated: UPDATED,
   },
   priser: {
     title: 'Priser på hjemmeside, marketing og booking | OviaSpecs',
-    description: `Alle pakker side om side: hjemmeside fra ${from('web')}, marketing fra ${from('mkt')} og Booking & Google fra ${from('book')}. ${VAT}`,
+    description: `Alle pakker side om side: hjemmeside fra ${from('web')}, marketing fra ${from('mkt')} og Booking & Google fra ${from('book')} ${VAT}`,
     updated: UPDATED,
   },
   demoer: {
@@ -120,7 +120,10 @@ export const organisationLd = () => ({
       telephone: contact.phoneHref,
       description: 'Hjemmeside, Google-profil, booking og korte videoer til restauranter og caféer. Base i Aarhusområdet.',
       founder: { '@type': 'Person', name: contact.name },
-      areaServed: { '@type': 'Country', name: 'Danmark' },
+      areaServed: [
+        { '@type': 'City', name: 'Aarhus' },
+        { '@type': 'Country', name: 'Danmark' },
+      ],
       knowsLanguage: 'da',
       contactPoint: {
         '@type': 'ContactPoint',

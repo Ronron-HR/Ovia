@@ -67,7 +67,7 @@ export const demos = {
       mobile: { src: '/demoer/cafe-mobile.webp', ...MOBILE },
       metaTitle: 'Cafédemo | Koncept fra OviaSpecs',
       metaDescription:
-        'Koncept. Opdigtet indhold: en café-hjemmeside med menu i kategorier, åbningstider og kontakt.',
+        'Koncept. Opdigtet indhold: en café-hjemmeside med menu i kategorier, åbningstider og en lokal beskedformular. Prøv den på din telefon.',
     },
     {
       id: 'restaurant',
@@ -90,7 +90,7 @@ export const demos = {
       mobile: { src: '/demoer/restaurant-mobile.webp', ...MOBILE },
       metaTitle: 'Restaurantdemo | Koncept fra OviaSpecs',
       metaDescription:
-        'Koncept. Opdigtet indhold: en restaurant-hjemmeside med menukort i faner og et eksempel på bordbestilling.',
+        'Koncept. Opdigtet indhold: en restaurant-hjemmeside med menukort i faner og et eksempel på bordbestilling. Intet bliver reserveret.',
     },
     {
       id: 'salon',
@@ -113,7 +113,7 @@ export const demos = {
       mobile: { src: '/demoer/salon-mobile.webp', ...MOBILE },
       metaTitle: 'Salondemo | Koncept fra OviaSpecs',
       metaDescription:
-        'Koncept. Opdigtet indhold: en salon-hjemmeside med behandlinger, eksempelpriser og et lokalt bookingeksempel.',
+        'Koncept. Opdigtet indhold: en salon-hjemmeside med behandlinger, eksempelpriser og et lokalt bookingeksempel. Intet bliver booket.',
     },
     {
       id: 'vinbar',
@@ -136,7 +136,7 @@ export const demos = {
       mobile: { src: '/demoer/vinbar-mobile.webp', ...MOBILE },
       metaTitle: 'Vinbardemo | Koncept fra OviaSpecs',
       metaDescription:
-        'Koncept. Opdigtet indhold: en vinbar-hjemmeside med vinkort i kategorier og et eksempel på en gruppehenvendelse.',
+        'Koncept. Opdigtet indhold: en vinbar-hjemmeside med vinkort i kategorier og et eksempel på en gruppehenvendelse. Intet bliver sendt.',
     },
   ],
 }

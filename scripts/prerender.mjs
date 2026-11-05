@@ -43,6 +43,7 @@ for (const r of routes) {
     if (typeof v !== 'string' || !v.trim()) throw new Error(`${r.path}: ${field} mangler (src/data/seo.js)`)
     if (unique[field].has(v)) throw new Error(`${r.path} og ${unique[field].get(v)} har samme ${field}`)
     unique[field].set(v, r.path)
+    if (/\.\.(?!\.)/.test(v)) throw new Error(`${r.path}: ${field} har dobbelt punktum: "${v}"`)
   }
   if (r.title.length > 70) throw new Error(`${r.path}: titlen er ${r.title.length} tegn (højst 70)`)
   if (r.description.length > 180) throw new Error(`${r.path}: beskrivelsen er ${r.description.length} tegn (højst 180)`)
