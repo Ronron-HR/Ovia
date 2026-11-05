@@ -136,6 +136,32 @@ for (const [w, h] of [
     return { nextBottom: next.bottom, barTop: bar.top }
   })
   check(rects.nextBottom <= rects.barTop + 0.5, `Næste ligger over bundbaren (${Math.round(rects.nextBottom)} ≤ ${Math.round(rects.barTop)})`)
+  // Stram rytme på trin 1: Næste sidder ca. 24 px under sidste valg (når indholdet er kortere end skærmen), kort med ca. 16 px luft og 8 px imellem,
+  // afkrydsningen flugter med titlen, og bundbaren viser kun totaler med et beløb og "ekskl. moms" på én linje.
+  const lay = await page.evaluate(() => {
+    const btns = [...document.querySelectorAll('#prisberegner button')]
+    const cards = btns.filter((b) => b.hasAttribute('aria-pressed') && /Hjemmeside|Marketing|Booking/.test(b.textContent) && b.textContent.includes('fra '))
+    const next = btns.find((b) => b.textContent.startsWith('Næste'))
+    const last = cards.at(-1).getBoundingClientRect()
+    const first = cards[0].getBoundingClientRect()
+    const second = cards[1].getBoundingClientRect()
+    const title = cards[0].querySelector('span > span').getBoundingClientRect()
+    const check = cards[0].querySelector('[aria-hidden="true"]').getBoundingClientRect()
+    const moms = [...document.querySelectorAll('#prisberegner [role="button"] span')].find((e) => e.textContent === 'ekskl. moms')
+    return {
+      gapNext: Math.round(next.getBoundingClientRect().top - last.bottom),
+      cardGap: Math.round(second.top - first.bottom),
+      pad: Math.round(cards[0].querySelector('span').getBoundingClientRect().top - first.top),
+      alignDy: Math.abs(title.top + title.height / 2 - (check.top + check.height / 2)),
+      momsLines: moms ? Math.round(moms.getBoundingClientRect().height / parseFloat(getComputedStyle(moms).lineHeight)) : null,
+      fits: cards.at(-1).getBoundingClientRect().bottom + 24 + 56 < document.querySelector('#prisberegner [role="button"][aria-label*="kvittering"]').getBoundingClientRect().top,
+    }
+  })
+  if (lay.fits) check(Math.abs(lay.gapNext - 24) <= 2, `Næste sidder ca. 24 px under sidste valg (${lay.gapNext} px)`)
+  check(lay.cardGap === 8, `8 px mellem ydelseskortene (${lay.cardGap} px)`)
+  check(lay.pad >= 14 && lay.pad <= 18, `ca. 16 px padding i ydelseskortene (${lay.pad} px)`)
+  check(lay.alignDy <= 1.5, `afkrydsningsboksen flugter med titlen (${lay.alignDy.toFixed(1)} px forskel)`)
+  check(lay.momsLines === 1, `"ekskl. moms" står på én linje (${lay.momsLines} linje)`)
 
   // Trin 2: én ydelse ad gangen.
   await press(page, 'Næste: Vælg pakke')

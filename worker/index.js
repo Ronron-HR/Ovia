@@ -14,7 +14,8 @@ import { canonicalLink, composeMail, danishPhone, inquiry, normalize, validate, 
  *      sat, kræves en gyldig token (403 uden). Uden hemmeligheden springes den over (se README).
  *   4. felterne tjekkes igen (src/inquiry.js); kvitteringen regnes ud af valgene i linket med calculate.js
  *   5. henvendelsen GEMMES i D1 (DB) — først derefter sendes mailen
- *   6. mailen sendes med Cloudflare Email Routing (SEND_EMAIL, MAIL_FROM → MAIL_TO)
+ *   6. kunden får svar (OK) HER; mailen sendes bagefter i baggrunden (ctx.waitUntil) med Cloudflare Email Routing
+ *      (SEND_EMAIL, MAIL_FROM → MAIL_TO), og rækken opdateres til sent/failed
  *
  * Svaret er { ok: true } (200), når henvendelsen er gemt. Fejler mailen bagefter,
  * er henvendelsen stadig gemt (mail_status = 'failed'), og kunden får OK, fordi
@@ -114,7 +115,7 @@ const timer = () => {
   }
 }
 
-export async function handleInquiry(request, env, deps) {
+export async function handleInquiry(request, env, deps, ctx) {
   const tm = timer()
   if (request.method !== 'POST') return json(405, { ok: false, error: 'method' }, { Allow: 'POST' })
 
@@ -173,24 +174,33 @@ export async function handleInquiry(request, env, deps) {
   }
 
   tm.mark('d1_insert')
-  // 2. Send. Fejler mailen, er henvendelsen gemt som 'failed', og den daglige cron prøver igen.
-  let status = 'sent'
-  let error = null
-  try {
-    await sendMail(env, { subject: mail.subject, text: mail.text, replyTo: p.email }, deps)
-  } catch (e) {
-    status = 'failed'
-    error = errorText(e)
-    console.error('henvendelse: mail fejlede (henvendelsen er gemt)', id, e)
+
+  // 2. Send i baggrunden: kunden får svar lige efter validering og gem (send_email tager flere sekunder). Fejler mailen,
+  // er forespørgslen allerede gemt, rækken markeres 'failed' med fejlen, og den daglige cron prøver igen. Afbrydes
+  // workeren midt i, står rækken som 'pending', og cronen sender den, når den er over en time gammel.
+  const finish = async () => {
+    const t = Date.now()
+    let status = 'sent'
+    let error = null
+    try {
+      await sendMail(env, { subject: mail.subject, text: mail.text, replyTo: p.email }, deps)
+    } catch (e) {
+      status = 'failed'
+      error = errorText(e)
+      console.error('henvendelse: mail fejlede (henvendelsen er gemt)', id, e)
+    }
+    const sent = Date.now() - t
+    try {
+      await env.DB.prepare('UPDATE henvendelser SET mail_status = ?, last_error = ? WHERE id = ?').bind(status, error, id).run()
+    } catch (e) {
+      console.error('henvendelse: status kunne ikke skrives', id, e)
+    }
+    console.log('henvendelse baggrund', JSON.stringify({ id, status, send_email_ms: sent, total_ms: Date.now() - t }))
   }
-  tm.mark('send_email')
-  try {
-    await env.DB.prepare('UPDATE henvendelser SET mail_status = ?, last_error = ? WHERE id = ?').bind(status, error, id).run()
-  } catch (e) {
-    console.error('henvendelse: status kunne ikke skrives', id, e)
-  }
-  tm.mark('d1_status')
-  console.log('henvendelse tid', tm.header())
+  if (ctx?.waitUntil) ctx.waitUntil(finish())
+  else await finish() // uden ctx (tests, lokal kørsel) venter vi, så resultatet er til at teste
+
+  console.log('henvendelse tid (svar til kunden)', tm.header())
   return json(200, { ok: true }, { 'Server-Timing': tm.header() })
 }
 
@@ -227,6 +237,13 @@ export function composeDigest({ gaveUp, recent, now = new Date() }) {
 }
 
 /** Den daglige cron: genforsøg, opgivelse, opsummering og oprydning. */
+/**
+ * Cronen rører kun forespørgsler fra redesignet og frem. Ældre rækker i D1 (fra den gamle formular og det gamle priskort) sendes
+ * ALDRIG igen og kommer ikke med i opsummeringen, selv om de står som 'failed' eller 'pending'. De slettes stadig efter
+ * retentionMonths (trin 3 nedenfor). Rækker fra før denne dato kan ikke genopbygges til den nye mail.
+ */
+export const CRON_FROM = '2026-11-05T00:00:00.000Z'
+
 export async function runDaily(env, deps, now = new Date()) {
   if (!env.DB) return { skipped: 'no_db' }
   const db = env.DB
@@ -234,8 +251,8 @@ export async function runDaily(env, deps, now = new Date()) {
 
   // 1. Genforsøg: fejlede og hængende (pending i over en time).
   const { results: due } = await db
-    .prepare("SELECT * FROM henvendelser WHERE mail_status = 'failed' OR (mail_status = 'pending' AND created_at < ?) ORDER BY created_at")
-    .bind(ago(3600_000))
+    .prepare("SELECT * FROM henvendelser WHERE created_at >= ? AND (mail_status = 'failed' OR (mail_status = 'pending' AND created_at < ?)) ORDER BY created_at")
+    .bind(CRON_FROM, ago(3600_000))
     .all()
   let resent = 0
   for (const r of due) {
@@ -255,11 +272,12 @@ export async function runDaily(env, deps, now = new Date()) {
 
   // 2. Opsummering. Opgivne kommer med, indtil en opsummering faktisk er sendt.
   const { results: gaveUp } = await db
-    .prepare("SELECT * FROM henvendelser WHERE mail_status = 'gave_up' AND reported_at IS NULL ORDER BY created_at")
+    .prepare("SELECT * FROM henvendelser WHERE created_at >= ? AND mail_status = 'gave_up' AND reported_at IS NULL ORDER BY created_at")
+    .bind(CRON_FROM)
     .all()
   const { results: recent } = await db
     .prepare('SELECT created_at, contact, name, mail_status FROM henvendelser WHERE created_at >= ? ORDER BY created_at DESC')
-    .bind(ago(24 * 3600_000))
+    .bind(ago(24 * 3600_000) > CRON_FROM ? ago(24 * 3600_000) : CRON_FROM)
     .all()
   let digest = 'none'
   if (gaveUp.length || recent.length) {
@@ -283,9 +301,9 @@ export async function runDaily(env, deps, now = new Date()) {
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const { pathname } = new URL(request.url)
-    if (pathname === inquiry.endpoint) return handleInquiry(request, env)
+    if (pathname === inquiry.endpoint) return handleInquiry(request, env, undefined, ctx)
     if (pathname.startsWith('/api/')) return json(404, { ok: false, error: 'not_found' })
     return env.ASSETS.fetch(request)
   },

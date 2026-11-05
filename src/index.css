@@ -298,6 +298,13 @@
   opacity: 0;
 }
 
+/* En total, der mister sit beløb, folder først sammen, når nedtællingen er færdig. */
+.fold-x.after-count[data-exiting] {
+  transition:
+    grid-template-columns 320ms var(--ease-bar) 360ms,
+    opacity 220ms ease-out 360ms;
+}
+
 /* Tom tilstand: totalerne tæller ned og toner så ud (swap-out), og beskeden toner ind bagefter (swap-in). */
 .swap-out {
   transition: opacity 220ms ease-out;

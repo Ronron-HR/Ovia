@@ -55,13 +55,14 @@ class EmailMessage {
     Object.assign(this, { from, to, raw })
   }
 }
-const sim = { mails: [], failMail: false, failRequest: false, delay: 0 }
+const sim = { mails: [], failMail: false, failRequest: false, delay: 0, mailDelay: 0, background: [] }
 const env = {
   DB: d1,
   MAIL_FROM: 'kontakt@oviaspecs.com',
   MAIL_TO: 'ronnyhong723@gmail.com',
   SEND_EMAIL: {
     async send(m) {
+      if (sim.mailDelay) await wait(sim.mailDelay)
       if (sim.failMail) throw new Error('simuleret mailfejl')
       sim.mails.push(m)
       if (EML) writeFileSync(join(EML, `forespoergsel-${sim.mails.length}.eml`), m.raw)
@@ -85,7 +86,8 @@ const server = createServer(async (req, res) => {
     }
     const origin = `http://${req.headers.host}`
     const request = new Request(origin + url.pathname, { method: req.method, headers: { 'Content-Type': 'application/json', Origin: origin, 'CF-Connecting-IP': '203.0.113.9' }, body: req.method === 'POST' ? body : undefined })
-    const out = await handleInquiry(request, env, { EmailMessage })
+    // Som i Cloudflare: svaret går, når forespørgslen er gemt; mailen sendes i baggrunden (ctx.waitUntil).
+    const out = await handleInquiry(request, env, { EmailMessage }, { waitUntil: (p) => sim.background.push(p) })
     res.writeHead(out.status, { 'Content-Type': 'application/json' }).end(await out.text())
     return
   }
@@ -206,6 +208,7 @@ async function run(label, width, height, mobile) {
 
   // Sender-tilstand og sendt-tilstand.
   sim.delay = 900
+  sim.mailDelay = 1500 // en langsom send_email: kunden må ikke vente på den
   await send()
   await wait(250)
   const sending = await page.$eval('#prisberegner form button[type="submit"]', (e) => ({ disabled: e.disabled, busy: e.getAttribute('aria-busy'), text: e.textContent, spinner: !!e.querySelector('.animate-spin') }))
@@ -213,6 +216,9 @@ async function run(label, width, height, mobile) {
   await shot('form-sender')
   await page.waitForFunction(() => document.querySelector('#prisberegner [role="status"]')?.textContent.includes('Tak,'), { timeout: 8000 })
   sim.delay = 0
+  check(sim.mails.length === base.mails, 'tak-tilstanden vises, før den langsomme mail (1,5 s) er sendt')
+  await Promise.all(sim.background)
+  sim.mailDelay = 0
   const thanks = await text('#prisberegner [role="status"]')
   check(thanks.includes('Tak, Mette Hansen.') && thanks.includes('Jeg vender tilbage inden for 24 timer.'), `sendt: "${thanks.slice(0, 70)}"`)
   const sums = await page.$$eval('#prisberegner [role="status"] [role="img"][aria-label]', (els) => els.map((e) => e.getAttribute('aria-label')))

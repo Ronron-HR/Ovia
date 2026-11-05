@@ -12,7 +12,7 @@
  * Reply-To og del-link. Cron: genforsøg, gave_up efter 3, opsummering, hængende pending og sletning.
  */
 import { readFileSync } from 'node:fs'
-import { MAX_RETRIES, handleInquiry, runDaily } from '../worker/index.js'
+import { CRON_FROM, MAX_RETRIES, handleInquiry, runDaily } from '../worker/index.js'
 import { LIMITS, canonicalLink, cleanMessage, composeMail, danishPhone, inquiry, normalize, validate } from '../src/inquiry.js'
 
 // SQLite i Node er stadig mærket eksperimentel; advarslen holdes ude af outputtet.
@@ -22,6 +22,8 @@ const { DatabaseSync } = await import('node:sqlite')
 // Workerens fejl-logning (forventet i testene) holdes ude af outputtet.
 const logError = console.error
 console.error = () => {}
+const logInfo = console.log
+console.log = () => {}
 
 const failures = []
 const check = (ok, msg) => {
@@ -343,6 +345,51 @@ for (const [label, e] of [['uden Turnstile', env()], ['med Turnstile', env({ TUR
   check(m.subject === 'Ny forespørgsel: X – 9.000 kr. + 5.398 kr./md.', `composeMail emne: ${m.subject}`)
 }
 
+// Svar først, mail bagefter (ctx.waitUntil): kunden får OK lige efter validering og gem, mens send_email er langsom;
+// rækken er 'pending', til mailen er sendt, og så 'sent'. Fejler mailen i baggrunden, står rækken som 'failed', og cron sender igen.
+{
+  const makeCtx = () => ({ promises: [], waitUntil(p) { this.promises.push(p) } })
+  const slow = (ms) => {
+    const e = env()
+    e.SEND_EMAIL.send = async (m) => {
+      await new Promise((r) => setTimeout(r, ms))
+      if (e.mail.down) throw new Error('Email Routing: simuleret fejl')
+      e.mail.sent.push(m)
+    }
+    return e
+  }
+  const e = slow(400)
+  const ctx = makeCtx()
+  const t0 = Date.now()
+  const res = await handleInquiry(post(GOOD), e, { EmailMessage }, ctx)
+  const took = Date.now() - t0
+  check(res.status === 200 && (await res.json()).ok === true, `baggrundsmail: svar ${res.status}`)
+  check(took < 250, `kunden får svar, før den langsomme mail (400 ms) er sendt (${took} ms)`)
+  check(e.DB.rows().length === 1 && e.DB.rows()[0].mail_status === 'pending' && e.mail.sent.length === 0, `ved svaret er forespørgslen gemt som pending og mailen ikke sendt endnu (${e.DB.rows()[0]?.mail_status})`)
+  check(ctx.promises.length === 1, 'mailen er lagt i ctx.waitUntil')
+  await Promise.all(ctx.promises)
+  check(e.mail.sent.length === 1 && e.DB.rows()[0].mail_status === 'sent', `bagefter er mailen sendt og rækken sent (${e.DB.rows()[0].mail_status}, ${e.mail.sent.length} mail)`)
+
+  // Mailfejl i baggrunden: svaret er stadig OK, rækken er 'failed' med fejlen, og cron sender den igen.
+  const f = slow(50)
+  f.mail.down = true
+  const fctx = makeCtx()
+  const fres = await handleInquiry(post({ ...GOOD, email: 'fejl@example.com' }), f, { EmailMessage }, fctx)
+  check(fres.status === 200, `baggrundsfejl: svar ${fres.status}`)
+  await Promise.all(fctx.promises)
+  const frow = f.DB.rows()[0]
+  check(frow.mail_status === 'failed' && /simuleret/.test(frow.last_error), `mailfejl i baggrunden markerer rækken failed (${frow.mail_status}, ${frow.last_error})`)
+  f.mail.down = false
+  await runDaily(f, { EmailMessage }, new Date(Date.now() + 24 * 3600_000))
+  check(f.DB.rows()[0].mail_status === 'sent' && f.mail.sent.length >= 1, `cron sender den fejlede mail igen (${f.DB.rows()[0].mail_status})`)
+
+  // Afbrudt efter gem (workeren stoppet før baggrundsarbejdet): rækken står som pending, og cron sender den, når den er over en time gammel.
+  const g = env()
+  g.DB.raw.prepare('INSERT INTO henvendelser (id, created_at, contact, name, link, subject, summary, mail_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run('afbrudt', new Date(Date.now() - 2 * 3600_000).toISOString(), 'a@b.dk', 'X', LINK, 'Emne', 'Tekst', 'pending')
+  await runDaily(g, { EmailMessage }, new Date())
+  check(g.DB.rows()[0].mail_status === 'sent', 'afbrudt pending sendes af cron')
+}
+
 /* ---- Daglig cron (runDaily) med simuleret mailfejl ---------------------- */
 {
   const e = env()
@@ -425,10 +472,28 @@ for (const [label, e] of [['uden Turnstile', env()], ['med Turnstile', env({ TUR
   check(!('gammel' in rows), `forespørgsel ældre end ${inquiry.retentionMonths} md ikke slettet`)
 }
 
+// Gamle rækker i D1 (før redesignet) sendes ALDRIG igen af cron og kommer ikke med i opsummeringen, men slettes stadig efter retentionMonths.
+{
+  const e = env()
+  const ins = (id, created, status, retries = 0) =>
+    e.DB.raw
+      .prepare('INSERT INTO henvendelser (id, created_at, contact, name, link, subject, summary, mail_status, retries) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+      .run(id, created, id + '@gammel.dk', '', LINK, 'Gammelt emne', 'Gammel tekst (Lokal)', status, retries)
+  ins('gammel-failed', '2026-10-20T10:00:00.000Z', 'failed')
+  ins('gammel-pending', '2026-11-04T20:00:00.000Z', 'pending')
+  ins('gammel-gaveup', '2026-10-10T10:00:00.000Z', 'gave_up', 3)
+  check(CRON_FROM === '2026-11-05T00:00:00.000Z', 'CRON_FROM er redesignets dato')
+  const res = await runDaily(e, { EmailMessage }, new Date())
+  const st = Object.fromEntries(e.DB.rows().map((r) => [r.id, r.mail_status]))
+  check(e.mail.sent.length === 0 && res.digest === 'none' && res.retried === 0, `gamle rækker udløste mail eller opsummering: ${JSON.stringify(res)}, ${e.mail.sent.length} mails`)
+  check(st['gammel-failed'] === 'failed' && st['gammel-pending'] === 'pending' && st['gammel-gaveup'] === 'gave_up', `gamle rækker blev ændret: ${JSON.stringify(st)}`)
+}
+
 // Uden database gør cron ingenting (og fejler ikke).
 check((await runDaily({}, { EmailMessage })).skipped === 'no_db', 'cron uden database')
 
 console.error = logError
+console.log = logInfo
 globalThis.fetch = realFetch
 if (failures.length) {
   console.error(`Forespørgselstest FEJLEDE (${failures.length}):\n- ${failures.join('\n- ')}`)

@@ -36,12 +36,12 @@ function Services({ calc }) {
       <button
         type="button"
         onClick={() => dispatch({ type: 'helpStart' })}
-        className="press mt-[14px] flex min-h-[52px] w-full items-center justify-between bg-surface px-4 active:bg-ink active:text-paper"
+        className="press mt-3 flex min-h-12 w-full items-center justify-between bg-surface px-4 active:bg-ink active:text-paper"
       >
         <span className="text-[15px] font-medium whitespace-nowrap">Hjælp mig med at vælge</span>
         <span aria-hidden="true">→</span>
       </button>
-      <div className="mt-4 flex flex-col gap-2">
+      <div className="mt-3 flex flex-col gap-2">
         {SERVICE_KEYS.map((key) => {
           const s = prices.services[key]
           const meta = serviceMeta[key]
@@ -53,14 +53,14 @@ function Services({ calc }) {
               aria-pressed={sel}
               data-removal={sel ? '' : undefined}
               onClick={() => dispatch({ type: 'toggleService', key })}
-              className={`${choice(sel)} flex items-start gap-[14px] px-4 py-[14px] [--press:.98]`}
+              className={`${choice(sel)} flex flex-col gap-[2px] p-4 [--press:.98]`}
             >
-              <span className="flex min-w-0 flex-1 flex-col gap-1">
+              <span className="flex w-full items-center justify-between gap-3">
                 <span className={`${heading} text-[clamp(18px,5.2vw,22px)] leading-[1.1] tracking-[-0.025em]`}>{s.name}</span>
-                <span className="text-sm leading-[1.35]">{meta.desc}</span>
-                <span className="price mt-[2px] text-[13px]">fra {formatKr(s.packages[0].price, meta.month)}</span>
+                <Check on={sel} size={24} />
               </span>
-              <Check on={sel} size={24} />
+              <span className="text-sm leading-[1.3]">{meta.desc}</span>
+              <span className="price text-[13px] leading-4">fra {formatKr(s.packages[0].price, meta.month)}</span>
             </button>
           )
         })}
@@ -95,7 +95,7 @@ function Packages({ calc }) {
             aria-pressed={cur === i}
             data-removal={i < cur ? '' : undefined}
             onClick={() => dispatch({ type: 'setService', key, value: i })}
-            className={`${choice(cur === i)} flex flex-col gap-2 px-4 py-[14px] [--press:.98]`}
+            className={`${choice(cur === i)} flex flex-col gap-[6px] p-4 [--press:.98]`}
           >
             <span className="flex w-full items-center gap-[10px]">
               <span className={`${heading} text-lg tracking-[-0.02em] whitespace-nowrap`}>{p.name}</span>
@@ -131,7 +131,7 @@ function Drift({ calc }) {
             aria-pressed={cur === c.key}
             data-removal={cheaper(c.key, cur) ? '' : undefined}
             onClick={() => dispatch({ type: 'setDrift', drift: c.key })}
-            className={`${choice(cur === c.key)} flex flex-col gap-1 px-4 py-[13px] [--press:.98]`}
+            className={`${choice(cur === c.key)} flex flex-col gap-1 p-4 [--press:.98]`}
           >
             <span className="flex w-full items-center gap-[10px]">
               <span className={`${heading} text-[17px] tracking-[-0.015em] whitespace-nowrap`}>{driftName(c)}</span>
@@ -163,7 +163,7 @@ function Addons({ calc }) {
           data-removal={on ? '' : undefined}
           disabled={included}
           onClick={() => dispatch({ type: 'toggleBooking' })}
-          className={`${choice(on)} flex items-center gap-[14px] p-4 [--press:.98]`}
+          className={`${choice(on)} flex items-center gap-3 p-4 [--press:.98]`}
         >
           <span className="flex flex-1 flex-col gap-1">
             <span className="text-base font-semibold">
@@ -279,9 +279,9 @@ function HelpQuestion({ calc }) {
               type="button"
               aria-pressed={on}
               onClick={() => dispatch({ type: 'helpAnswer', i })}
-              className={`${choice(on)} flex min-h-16 items-center gap-[14px] px-4 [--press:.98]`}
+              className={`${choice(on)} flex min-h-14 items-center gap-3 px-4 [--press:.98]`}
             >
-              <span className="flex-1 py-3 text-[17px] leading-[1.3] font-medium">{label}</span>
+              <span className="flex-1 py-[10px] text-[17px] leading-[1.3] font-medium">{label}</span>
               <Check on={on} size={24} />
             </button>
           )
@@ -424,22 +424,23 @@ function BarAndSheet({ calc, barRef, barVisible }) {
             </span>
             <span className="flex-none text-[13px] font-semibold whitespace-nowrap">{sheet ? 'Luk kvittering ↓' : 'Se kvittering ↑'}</span>
           </div>
-          <div className="swap-out mt-[6px] grid items-end gap-[10px]" data-off={any ? undefined : ''} style={{ gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) auto' }}>
-            <div className="relative flex flex-col gap-[3px]">
-              <span className="text-xs text-on-ink-2">Engang</span>
-              {delta?.o < 0 && <DeltaChip key={delta.id} amount={delta.o} className="top-0 right-0" />}
-              <Total value={receipt.o} unit="kr." size={22} unitSize={12} gap={4} unitPad={1} />
+          {/* Kun de totaler, der har et beløb (kun Marketing = kun "Pr. måned"); en total folder sig ud, når den får et beløb, og sammen efter nedtællingen, når den mister det. */}
+          <div className="swap-out mt-[6px] flex items-end" data-off={any ? undefined : ''}>
+            <div className="fold-x after-count" data-exiting={receipt.o > 0 ? undefined : ''}>
+              <div className="relative flex flex-col gap-[3px] pr-5">
+                <span className="text-xs text-on-ink-2">Engang</span>
+                {delta?.o < 0 && <DeltaChip key={delta.id} amount={delta.o} className="top-0 right-0" />}
+                <Total value={receipt.o} unit="kr." size={22} unitSize={12} gap={4} unitPad={1} />
+              </div>
             </div>
-            <div className="relative flex flex-col gap-[3px]">
-              <span className="text-xs text-on-ink-2">Pr. måned</span>
-              {delta?.m < 0 && <DeltaChip key={delta.id} amount={delta.m} monthly className="top-0 right-0" />}
-              <Total value={receipt.m} unit="kr./md." size={22} unitSize={12} gap={4} unitPad={1} />
+            <div className="fold-x after-count" data-exiting={receipt.m > 0 ? undefined : ''}>
+              <div className="relative flex flex-col gap-[3px] pr-5">
+                <span className="text-xs text-on-ink-2">Pr. måned</span>
+                {delta?.m < 0 && <DeltaChip key={delta.id} amount={delta.m} monthly className="top-0 right-0" />}
+                <Total value={receipt.m} unit="kr./md." size={22} unitSize={12} gap={4} unitPad={1} />
+              </div>
             </div>
-            <span className="text-right text-[11px] leading-tight text-on-ink-2">
-              ekskl.
-              <br />
-              moms
-            </span>
+            <span className="ml-auto flex-none self-end pb-[2px] text-[11px] leading-tight whitespace-nowrap text-on-ink-2">ekskl. moms</span>
           </div>
         </div>
       </div>
@@ -571,6 +572,37 @@ export default function Mobile({ calc, barRef, fly }) {
     panelRef.current?.focus({ preventScroll: true })
   }, [panelKey])
 
+  // Handlingsknapperne ligger i rullefeltet: lige under sidste valg (16 px margen + 8 px polstring = 24 px), og klæbet til bunden over bundbaren, hvis indholdet er højere.
+  const actions =
+    !inHelp && step < 4 ? (
+      <button
+        type="button"
+        disabled={nextDisabled}
+        onClick={() => dispatch({ type: 'mNext' })}
+        className={`btn w-full justify-center ${nextDisabled ? '' : 'btn-ink'}`}
+      >
+        {nextLabel}
+      </button>
+    ) : inHelp && hq === 1 ? (
+      <button
+        type="button"
+        disabled={!multiNextOk}
+        onClick={() => dispatch({ type: 'helpNextQ' })}
+        className={`btn w-full justify-center ${multiNextOk ? 'btn-ink' : ''}`}
+      >
+        Næste spørgsmål
+      </button>
+    ) : inHelp && hq === 3 ? (
+      <div className="grid grid-cols-2 gap-2">
+        <button type="button" onClick={() => dispatch({ type: 'helpCustomize' })} className="btn btn-surface min-h-14 justify-center px-4 text-[15px]">
+          Tilpas selv
+        </button>
+        <button type="button" onClick={() => dispatch({ type: 'helpToSummary' })} className="btn btn-ink min-h-14 justify-center px-4 text-[15px]">
+          Se opsummering
+        </button>
+      </div>
+    ) : null
+
   return (
     <div className="relative flex h-full flex-col overflow-clip">
       <div className="flex min-h-[52px] flex-none items-center gap-3 px-4 pt-[10px] pb-[2px]">
@@ -621,7 +653,7 @@ export default function Mobile({ calc, barRef, fly }) {
         )}
       </div>
 
-      <div ref={bodyRef} className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-4 pt-3 pb-4" style={{ scrollbarWidth: 'none' }}>
+      <div ref={bodyRef} className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-4 pt-3 pb-3" style={{ scrollbarWidth: 'none' }}>
         <div key={panelKey} ref={panelRef} tabIndex={-1} className="anim-step outline-none">
           {inHelp ? (
             hq < 3 ? (
@@ -643,43 +675,12 @@ export default function Mobile({ calc, barRef, fly }) {
             <Summary calc={calc} />
           )}
         </div>
+        {actions && (
+          <div className="sticky bottom-0 z-[1] -mx-4 mt-4 bg-paper px-4 pt-2 pb-3">{actions}</div>
+        )}
       </div>
 
       <div className="flex-none">
-        {!inHelp && step < 4 && (
-          <div className="px-4 py-2">
-            <button
-              type="button"
-              disabled={nextDisabled}
-              onClick={() => dispatch({ type: 'mNext' })}
-              className={`btn w-full justify-center ${nextDisabled ? '' : 'btn-ink'}`}
-            >
-              {nextLabel}
-            </button>
-          </div>
-        )}
-        {inHelp && hq === 1 && (
-          <div className="px-4 pt-2 pb-4">
-            <button
-              type="button"
-              disabled={!multiNextOk}
-              onClick={() => dispatch({ type: 'helpNextQ' })}
-              className={`btn w-full justify-center ${multiNextOk ? 'btn-ink' : ''}`}
-            >
-              Næste spørgsmål
-            </button>
-          </div>
-        )}
-        {inHelp && hq === 3 && (
-          <div className="grid grid-cols-2 gap-2 px-4 py-2">
-            <button type="button" onClick={() => dispatch({ type: 'helpCustomize' })} className="btn btn-surface min-h-14 justify-center px-4 text-[15px]">
-              Tilpas selv
-            </button>
-            <button type="button" onClick={() => dispatch({ type: 'helpToSummary' })} className="btn btn-ink min-h-14 justify-center px-4 text-[15px]">
-              Se opsummering
-            </button>
-          </div>
-        )}
         <BarAndSheet calc={calc} barRef={barRef} barVisible={barVisible} />
       </div>
       {fly}
