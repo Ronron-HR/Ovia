@@ -175,6 +175,9 @@ check(danishPhone('+45 53 61 36 99') === '53613699', 'dansk nummer normaliseres 
     check(text.includes(want), `mailen mangler "${want}"\n${text}`)
   }
   check(!/^Kontakt: svindler/m.test(text), 'beskeden kan efterligne et felt i mailen')
+  // Hver valgt linje (under "Valg") har sin pris til sidst: "- Hjemmeside – Vækst: 8.000 kr.", "- Marketing – Vækst: 5.000 kr./md.".
+  const valgLines = text.slice(text.indexOf('Valg (')).split('\n').filter((l) => l.startsWith('- '))
+  check(valgLines.length === 4 && valgLines.every((l) => /: [\d.]+ kr\.(\/md\.)?$/.test(l)), `en valgt linje mangler pris:\n${valgLines.join('\n')}`)
   check(rows[0].summary.includes('Hej Ronny.') && rows[0].contact === 'kunde@example.com' && rows[0].name === 'Café Test (Café Test ApS)', `D1-rækken: ${JSON.stringify(rows[0])}`)
 }
 
