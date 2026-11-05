@@ -26,8 +26,16 @@ const logInfo = console.log
 console.log = () => {}
 
 const failures = []
+const sections = [{ name: 'øvrige', checks: 0, failed: 0 }]
+/** Starter et navngivet afsnit; tælles og vises i slutningen (kun navngivne afsnit listes). */
+const section = (name) => sections.push({ name, checks: 0, failed: 0 })
 const check = (ok, msg) => {
-  if (!ok) failures.push(msg)
+  const cur = sections.at(-1)
+  cur.checks++
+  if (!ok) {
+    cur.failed++
+    failures.push(msg)
+  }
 }
 
 const ORIGIN = 'https://oviaspecs.com'
@@ -493,6 +501,7 @@ for (const [label, e] of [['uden Turnstile', env()], ['med Turnstile', env({ TUR
   }
 
   // Fejl, så succes: sendt ved andet forsøg.
+  section('retry 1: fejl, så succes → sendt ved andet forsøg')
   const a = flaky(1)
   const actx = makeCtx()
   const ares = await handleInquiry(post(GOOD), a, DEPS, actx)
@@ -502,6 +511,7 @@ for (const [label, e] of [['uden Turnstile', env()], ['med Turnstile', env({ TUR
   check(a.DB.rows()[0].mail_status === 'sent' && a.DB.rows()[0].last_error === null, `retry: rækken er sent uden fejl (${a.DB.rows()[0].mail_status})`)
 
   // Succes første gang: ingen ekstra forsøg.
+  section('retry 2: succes første gang → intet ekstra forsøg')
   const b = flaky(0)
   const bctx = makeCtx()
   await handleInquiry(post(GOOD), b, DEPS, bctx)
@@ -509,6 +519,7 @@ for (const [label, e] of [['uden Turnstile', env()], ['med Turnstile', env({ TUR
   check(b.calls() === 1 && b.DB.rows()[0].mail_status === 'sent', `retry: ingen ekstra forsøg, når første lykkes (${b.calls()})`)
 
   // Fejl begge gange: præcis to forsøg, rækken failed med den sidste fejl, og cron sender den senere.
+  section('retry 3: fejl begge gange → to forsøg, failed, cron sender senere')
   const c = flaky(2)
   const cctx = makeCtx()
   const cres = await handleInquiry(post(GOOD), c, DEPS, cctx)
@@ -520,6 +531,7 @@ for (const [label, e] of [['uden Turnstile', env()], ['med Turnstile', env({ TUR
   check(c.DB.rows()[0].mail_status === 'sent' && c.mail.sent.length >= 1, `retry-fejl: cron sender den (${c.DB.rows()[0].mail_status})`)
 
   // Svaret afventer hverken første forsøg, pausen eller genforsøget (langsom mail + 300 ms pause).
+  section('retry 4: kunden får svar før forsøg og pause')
   const d = flaky(1, 200)
   const dctx = makeCtx()
   const t0 = Date.now()
@@ -531,6 +543,7 @@ for (const [label, e] of [['uden Turnstile', env()], ['med Turnstile', env({ TUR
   check(d.calls() === 2 && d.DB.rows()[0].mail_status === 'sent', `bagefter er mailen sendt efter retry (${d.calls()} forsøg)`)
 }
 
+section('øvrige')
 // Gamle rækker i D1 (før redesignet) sendes ALDRIG igen af cron og kommer ikke med i opsummeringen, men slettes stadig efter retentionMonths.
 {
   const e = env()
@@ -558,6 +571,10 @@ if (failures.length) {
   console.error(`Forespørgselstest FEJLEDE (${failures.length}):\n- ${failures.join('\n- ')}`)
   process.exit(1)
 }
+const total = sections.reduce((n, x) => n + x.checks, 0)
+const retry = sections.filter((x) => x.name.startsWith('retry'))
+console.log(`Forespørgselstest: ${total} kontroller, ${failures.length} fejl`)
+for (const r of retry) console.log(`  ✔ ${r.name} (${r.checks} kontroller)`)
 console.log(
   'Forespørgselstest bestået: validering, honeypot, gem-før-mail, fejltilstand ved mailfejl, Turnstile som valgfrit fejlflag, rate limit, mailens emne og indhold med priser genregnet på serveren, Reply-To og daglig cron (genforsøg, gave_up efter 3, opsummering, oprydning).',
 )
