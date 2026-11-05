@@ -5,21 +5,7 @@ import Site from './Site.jsx'
 import { pageKeyFor } from './pageKeys.js'
 import { pageLoaders } from './pageLoaders.js'
 
-/**
- * Gamle ankerlinks til den lange forside (fx oviaspecs.com/#ydelser) føres
- * videre til den nye side, så delte og gemte links stadig virker.
- */
-const OLD_ANCHORS = {
-  '#ydelser': '/hjemmeside/',
-  '#hjemmesider': '/hjemmeside/',
-  '#synlighed': '/marketing/',
-  '#arbejde': '/demoer/',
-}
-
-const { pathname, hash } = window.location
-if (pathname === '/' && OLD_ANCHORS[hash]) {
-  window.location.replace(OLD_ANCHORS[hash])
-}
+const { pathname } = window.location
 
 // Kun den side, adressen viser, hentes, og den hentes FØR hydreringen, så
 // første render er identisk med den forudrenderede HTML.

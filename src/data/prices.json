@@ -1,0 +1,211 @@
+{
+  "_note": "Alle priser i kr., ekskl. moms. Eneste kilde til priser: beregner, /priser og ydelsessider læser herfra.",
+  "currency": "DKK",
+  "vatIncluded": false,
+  "services": {
+    "web": {
+      "key": "web",
+      "no": "01",
+      "name": "Hjemmeside",
+      "slug": "/hjemmeside",
+      "period": "once",
+      "packages": [
+        {
+          "key": "start",
+          "name": "Start",
+          "price": 5000,
+          "recommended": false,
+          "points": [
+            "Én side med det vigtigste",
+            "1 rettelserunde"
+          ],
+          "pages": 1,
+          "revisions": 1
+        },
+        {
+          "key": "vaekst",
+          "name": "Vækst",
+          "price": 8000,
+          "recommended": true,
+          "points": [
+            "Op til 5 sider",
+            "Google-profil sat op",
+            "Sat op til at blive fundet på Google",
+            "2 rettelserunder"
+          ],
+          "pages": 5,
+          "revisions": 2
+        },
+        {
+          "key": "fuldfart",
+          "name": "Fuld fart",
+          "price": 10000,
+          "recommended": false,
+          "points": [
+            "Op til 8 sider",
+            "Google-profil",
+            "Lokal SEO",
+            "3 rettelserunder"
+          ],
+          "pages": 8,
+          "revisions": 3
+        }
+      ]
+    },
+    "mkt": {
+      "key": "mkt",
+      "no": "02",
+      "name": "Marketing",
+      "slug": "/marketing",
+      "period": "month",
+      "packages": [
+        {
+          "key": "start",
+          "name": "Start",
+          "price": 3000,
+          "recommended": false,
+          "points": [
+            "3 korte videoer om måneden",
+            "Du poster selv"
+          ]
+        },
+        {
+          "key": "vaekst",
+          "name": "Vækst",
+          "price": 5000,
+          "recommended": true,
+          "points": [
+            "6 korte videoer om måneden",
+            "4 opslag",
+            "Jeg poster på 2 kanaler",
+            "Månedsrapport"
+          ]
+        },
+        {
+          "key": "fuldfart",
+          "name": "Fuld fart",
+          "price": 8000,
+          "recommended": false,
+          "points": [
+            "9 korte videoer om måneden",
+            "8 opslag",
+            "3 kanaler",
+            "Styring af Meta-annoncer (annoncebudget betales direkte til Meta)",
+            "Månedsrapport"
+          ]
+        }
+      ]
+    },
+    "book": {
+      "key": "book",
+      "no": "03",
+      "name": "Booking & Google",
+      "slug": "/booking-google",
+      "period": "once",
+      "packages": [
+        {
+          "key": "start",
+          "name": "Start",
+          "price": 1000,
+          "recommended": false,
+          "points": [
+            "Google-profil sat op eller rettet"
+          ],
+          "includesBooking": false
+        },
+        {
+          "key": "vaekst",
+          "name": "Vækst",
+          "price": 2000,
+          "recommended": true,
+          "points": [
+            "Google-profil",
+            "Booking koblet på hjemmeside eller Instagram"
+          ],
+          "includesBooking": true
+        },
+        {
+          "key": "fuldfart",
+          "name": "Fuld fart",
+          "price": 3000,
+          "recommended": false,
+          "points": [
+            "Alt i Vækst",
+            "QR-skilt til anmeldelser",
+            "Opfølgning efter 30 dage med tal"
+          ],
+          "includesBooking": true
+        }
+      ]
+    }
+  },
+  "drift": {
+    "appliesTo": "web",
+    "period": "month",
+    "plans": [
+      {
+        "key": "basis",
+        "name": "Basis",
+        "price": 198,
+        "description": "Drift og sikkerhed. Ingen indholdsændringer."
+      },
+      {
+        "key": "plus",
+        "name": "Plus",
+        "price": 398,
+        "description": "Hjælp til billeder, tekst og nyheder."
+      },
+      {
+        "key": "ekstra",
+        "name": "Ekstra",
+        "price": 798,
+        "description": "Fast webmaster. Flere rettelser hver måned."
+      }
+    ],
+    "defaultPlan": "basis",
+    "includedInAll": [
+      "Online",
+      "Sikker",
+      "Domæne",
+      "Backup"
+    ]
+  },
+  "addons": {
+    "booking": {
+      "name": "Booking koblet på",
+      "price": 1000,
+      "period": "once",
+      "note": "Bookingsystemets abonnement betales direkte til udbyderen.",
+      "includedWhen": "book.includesBooking"
+    },
+    "ownHosting": {
+      "name": "Egen konto/hosting",
+      "price": 2000,
+      "period": "once",
+      "note": "Erstatter driftsplanen. Månedspris 0.",
+      "replaces": "drift"
+    },
+    "extraPage": {
+      "name": "Ekstra underside",
+      "price": 800,
+      "period": "once",
+      "unit": "pr. side",
+      "note": "Ud over 8 sider. Kun Fuld fart.",
+      "onlyPackage": "fuldfart",
+      "max": 20
+    },
+    "buyout": {
+      "name": "Frikøb af siden",
+      "price": 2000,
+      "period": "once",
+      "note": "Ved stop af drift. Vises som vilkår, ikke som valg i beregneren."
+    }
+  },
+  "terms": [
+    "Ingen binding.",
+    "1 måneds opsigelse.",
+    "Domænet registreres i kundens navn.",
+    "Frikøb af siden: 2.000 kr.",
+    "Alle priser er ekskl. moms."
+  ]
+}

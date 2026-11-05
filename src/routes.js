@@ -1,6 +1,6 @@
 import { demos } from './content.demos.js'
 import { demoSeo, seo } from './data/seo.js'
-import { paths } from './data/texts.js'
+import { paths } from './data/site.js'
 
 /**
  * Sidernes adresser og metadata. Bruges af forudrenderingen (én HTML-fil pr.
@@ -18,7 +18,6 @@ export const routes = [
   { path: paths.home, page: 'home', ...seo.home },
   { path: paths.hjemmeside, page: 'hjemmeside', ...seo.hjemmeside },
   { path: paths.bookingGoogle, page: 'bookingGoogle', ...seo.bookingGoogle },
-  { path: paths.systemer, page: 'systemer', ...seo.systemer },
   { path: paths.marketing, page: 'marketing', ...seo.marketing },
   { path: paths.priser, page: 'priser', ...seo.priser },
   { path: paths.demoer, page: 'demoer', ...seo.demoer },

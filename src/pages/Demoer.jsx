@@ -1,62 +1,67 @@
-import ContactSection from '../components/ContactSection.jsx'
-import { WorkflowSketch } from '../components/HomeExamples.jsx'
-import { Arrow } from '../components/Shots.jsx'
-import Work from '../components/Work.jsx'
+import Contact from '../components/layout/Contact.jsx'
 import { demos } from '../content.demos.js'
-import { home } from '../data/texts.js'
 
-/** /demoer/: de fire koncepter, mærket "Koncept – ikke en kundeopgave". */
+const heading = 'font-[family-name:var(--font-display)] font-bold [font-stretch:125%]'
+
+/** /demoer/ (Eksempler): de fire koncepter, mærket "Koncepter. Opdigtet indhold". */
 export default function Demoer() {
   return (
     <>
-      <section className="pt-[calc(var(--nav-h)+36px)] pb-[var(--space-block)] md:pt-[calc(var(--nav-h)+64px)]">
-        <div className="shell">
-          <div className="grid grid-cols-1 gap-x-14 gap-y-8 lg:grid-cols-12 lg:items-end">
-            <div className="lg:col-span-7">
-              <h1 data-hero="lift" className="t-display t-hero max-w-[18ch]">
-                {demos.title}
-              </h1>
-              <p data-hero="lift" style={{ '--d': '140ms' }} className="t-body t-lead mt-5 max-w-[52ch]">
-                {demos.intro}
-              </p>
-            </div>
-            <div data-hero="fade" style={{ '--d': '200ms' }} className="lg:col-span-5">
-              <div className="rounded-[var(--radius-panel)] border border-rule-strong bg-surface p-5 md:p-7">
-                <p className="tag">{demos.tag}</p>
-                <p className="t-body mt-3 text-[16px]">{demos.note}</p>
-              </div>
-            </div>
-          </div>
+      <section aria-labelledby="demoer-titel" className="mx-auto max-w-[1440px] px-5 pt-7 pb-8 md:px-14 md:pt-28 md:pb-20">
+        <h1 id="demoer-titel" className="display display-hero text-[clamp(40px,12vw,56px)] md:text-[clamp(72px,9vw,140px)]">
+          Eksempler
+        </h1>
+        <div className="mt-5 flex flex-wrap items-end justify-between gap-6 md:mt-14 md:ml-[33%]">
+          <p className="m-0 max-w-[36ch] text-[17px] leading-[1.45] text-pretty md:text-[clamp(17px,1.5vw,21px)]">
+            Fire små hjemmesider, du kan prøve på din telefon. {demos.localNote}
+          </p>
         </div>
       </section>
-      <Work />
 
-      {demos.workflow && (
-        <section aria-labelledby="arbejdsgang-titel" className="section-y bg-paper-2">
-          <div className="shell">
-            <div data-reveal className="card card-panel grid grid-cols-1 items-center gap-x-14 gap-y-8 p-6 md:p-10 lg:grid-cols-12">
-              <div className="lg:col-span-6">
-                <p className="tag">{home.examples.workflow.tag}</p>
-                <h2 id="arbejdsgang-titel" className="t-display t-h3 mt-4">
-                  {demos.workflow.title}
-                </h2>
-                <p className="t-body t-lead mt-3 max-w-[48ch]">{demos.workflow.text}</p>
-                <p className="mt-3 text-[15px] font-medium">{demos.workflow.label}</p>
-                <a href={demos.workflow.href} className="btn btn-primary mt-6">
-                  {demos.workflow.open}
-                  <Arrow />
+      <section aria-labelledby="koncepter-titel" className="bg-surface">
+        <div className="mx-auto max-w-[1440px] px-5 pt-12 pb-14 md:px-14 md:pt-24 md:pb-32">
+          <h2 id="koncepter-titel" className="m-0 text-[15px] font-semibold [font-family:var(--font-body)] [font-stretch:100%] tracking-normal">
+            Koncepter. Opdigtet indhold
+          </h2>
+          <ul className="m-0 mt-6 grid list-none gap-x-10 gap-y-12 p-0 md:grid-cols-2 md:gap-y-20">
+            {demos.projects.map((p) => (
+              <li key={p.id} id={`demo-${p.id}`} className="flex scroll-mt-24 flex-col gap-[14px]">
+                <a href={p.path} className="grid items-end gap-3 no-underline" style={{ gridTemplateColumns: 'minmax(0,1fr) 28%' }} aria-label={`${p.name}. ${demos.open}`}>
+                  <img
+                    src={p.desktop.src}
+                    alt={p.label}
+                    width={p.desktop.width}
+                    height={p.desktop.height}
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full bg-paper object-cover object-top"
+                    style={{ aspectRatio: '16 / 10' }}
+                  />
+                  <img
+                    src={p.mobile.src}
+                    alt={p.labelMobile}
+                    width={p.mobile.width}
+                    height={p.mobile.height}
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full bg-paper object-cover object-top"
+                    style={{ aspectRatio: '9 / 19.5' }}
+                  />
                 </a>
-              </div>
-              <div className="lg:col-span-6" aria-hidden="true">
-                <div className="browser">
-                  <WorkflowSketch />
+                <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+                  <h3 className={`${heading} m-0 text-xl tracking-[-0.02em]`}>{p.kind}</h3>
+                  <a href={p.path} className="flex min-h-12 items-center text-[15px] font-semibold">
+                    {demos.open} →
+                  </a>
                 </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-      <ContactSection form={false} />
+                <p className="m-0 max-w-[46ch] text-[15px] leading-normal">{p.task}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <Contact />
     </>
   )
 }

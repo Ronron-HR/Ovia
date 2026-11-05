@@ -1,0 +1,94 @@
+{
+  "springs": {
+    "press": {
+      "css": "cubic-bezier(.3,1.6,.5,1)",
+      "ms": 300,
+      "use": "alle knapper/valgflader ved :active, scale .96-.985"
+    },
+    "step": {
+      "css": "cubic-bezier(.2,1.2,.35,1)",
+      "ms": 520,
+      "use": "nyt trin: translateX(40px)->0, opacity .15->1"
+    },
+    "line": {
+      "css": "cubic-bezier(.2,1.3,.4,1)",
+      "ms": 440,
+      "use": "kvitteringslinje og forslagslinje: translateX(28px)->0"
+    },
+    "slide": {
+      "css": "cubic-bezier(.3,1.35,.5,1)",
+      "ms": 420,
+      "use": "mørk valgmarkering glider mellem Start/Vækst/Fuld fart og driftsplaner; progress-bar bredde"
+    },
+    "check": {
+      "css": "cubic-bezier(.3,1.7,.5,1)",
+      "ms": 300,
+      "opacityMs": 120,
+      "use": "flueben scale .4->1"
+    },
+    "odometer": {
+      "css": "cubic-bezier(.25,1.3,.45,1)",
+      "ms": 340,
+      "use": "ciffer-ruller (translateY(-d em) i en søjle 0-9), ét ciffer pr. kolonne. Aldrig over ~350 ms."
+    },
+    "sheet": {
+      "css": "cubic-bezier(.2,1.12,.3,1)",
+      "ms": 460,
+      "use": "bottom sheet translateY(100%)->0"
+    },
+    "menu": {
+      "css": "cubic-bezier(.2,1.25,.4,1)",
+      "ms": 360,
+      "linkMs": 420,
+      "linkStaggerMs": 35
+    }
+  },
+  "flyingAmount": {
+    "durationMs": 640,
+    "easing": "cubic-bezier(.5,0,.25,1)",
+    "removeAfterMs": 720,
+    "startsAt": "trykpunktet (pointerdown) relativt til beregneren",
+    "endsAt": "midten af bundbaren, 52px under dens top",
+    "content": "+8.000 kr.  +198 kr./md. (tegn − ved fjernelse)",
+    "style": "flad #1A1712-boks, hvid Geist Mono 14px, 2px hvid kant (ingen skygge)",
+    "odometerDelayMs": 420,
+    "note": "Tælleværket i bundbaren starter 420 ms efter trykket, så beløbet lander før tallet ruller. Vises kun hvis bundbaren er synlig. Ingen flyvning ved reduced motion."
+  },
+  "bottomSheet": {
+    "openBy": [
+      "tryk på bundbaren",
+      "træk op >40px",
+      "Enter/Space på bundbaren"
+    ],
+    "closeBy": [
+      "træk ned >60px",
+      "tryk på bagtæppe",
+      "knappen Luk",
+      "Escape"
+    ],
+    "tapThresholdPx": 6,
+    "maxHeight": "86% af beregneren",
+    "scrim": "rgba(26,23,18,.45), opacity 300ms ease-out",
+    "backdropClickCloses": true,
+    "dragHandle": "36x4 px #7A766F",
+    "bar": {
+      "maxHeightPct": "≈15% af skærmhøjde",
+      "hiddenOn": [
+        "opsummering",
+        "guidet hjælp (spørgsmål)"
+      ],
+      "hideTransition": "max-height 420ms cubic-bezier(.2,1,.3,1)",
+      "content": "X valg + korte linjer (ellipsis) + Engang + Pr. måned + 'ekskl. moms' + 'Se kvittering ↑' (sheet åben: 'Luk kvittering ↓')"
+    },
+    "neverCoverNextButton": "Næste-knappen ligger i flow lige over bundbaren, ikke bag den"
+  },
+  "other": {
+    "carouselDot": {
+      "ms": 320,
+      "easing": "cubic-bezier(.3,1.5,.5,1)",
+      "note": "aktiv prik 28px, øvrige 12px"
+    },
+    "colorTransitions": "140-240 ms ease-out",
+    "reducedMotion": "alle transitions og animationer fjernes; valg skifter øjeblikkeligt; ingen flyvende beløb; tælleværket viser slutværdien"
+  }
+}

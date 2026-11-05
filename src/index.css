@@ -1,125 +1,30 @@
 @import "tailwindcss";
-@import "./motion/motion.css";
-@import "./stage.css";
+
+/* Skrifter: selvhostet via npm (@fontsource-variable), ingen kald til Google Fonts.
+   Archivo med bredde-aksen (wdth 62–125) giver Archivo Expanded ved font-stretch:125%. */
+@import "@fontsource-variable/archivo/wdth.css";
+@import "@fontsource-variable/geist/index.css";
+@import "@fontsource-variable/geist-mono/index.css";
+
+@import "./styles/tokens.css";
+@import "./styles/motion.css";
 @import "./demos/demos.css";
 
-/* Selvhostede skrifter (latin dækker æ, ø, å, € og tankestreg). Begge er SIL
-   Open Font License; licenserne ligger ved siden af filerne i public/fonts.
-   Instrument Sans er én variabel fil med en wght-akse fra 400 til 700, så
-   overskrifter og brødtekst er ægte vægte og ikke syntetisk fed.
-   JetBrains Mono bruges kun til små tekniske detaljer, derfor kun vægt 400. */
-@font-face {
-  font-family: "Instrument Sans";
-  font-style: normal;
-  font-weight: 400 700;
-  font-display: swap;
-  src: url("/fonts/instrument-sans-latin.woff2") format("woff2");
-}
-
-@font-face {
-  font-family: "JetBrains Mono";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("/fonts/jetbrains-mono-latin-400.woff2") format("woff2");
-}
-
-/* Logoets skrift (Instrument Serif) bruges KUN til beløb: pakkekort, beregnerens
-   resultat, pakkevælgeren og "fra"-priserne på forsidens kort. Filen er skåret
-   ned til cifre, punktum, mellemrum og "kr" (4 KB, unicode-range herunder), så
-   alt andet aldrig hentes i den.
-   Ingen preload: beløbene står under folden, og swap må ikke forsinke LCP.
-   Fallbacken er Times New Roman skaleret til samme bredde og højde
-   (size-adjust/ascent-override målt på et typisk pakkebeløb), så beløbet ikke hopper
-   ved skiftet. Licens: public/fonts/LICENSE-instrument-serif.txt. */
-@font-face {
-  font-family: "Instrument Serif";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("/fonts/instrument-serif-tal.woff2") format("woff2");
-  unicode-range: U+0020, U+002E, U+0030-0039, U+006B, U+0072;
-}
-
-@font-face {
-  font-family: "Instrument Serif Fallback";
-  src: local("Times New Roman"), local("TimesNewRomanPSMT"), local("Times"), local("Liberation Serif");
-  size-adjust: 85%;
-  ascent-override: 116.5%;
-  descent-override: 36.5%;
-  line-gap-override: 0%;
-  unicode-range: U+0020, U+002E, U+0030-0039, U+006B, U+0072;
-}
-
-/* =========================================================================
-   RETNING: VARM OG PRÆCIS (okt. 2026)
-   Lys VARM flade (paper), kort og felter i næsten-hvid (surface) med fine
-   varme hårstreger, varm næsten-sort tekst (ink) og ÉN accent, kobolt (cta),
-   som bærer alt aktivt: primær handling, valgt valg, fokusring, flueben og
-   links. Alt andet er ink eller dæmpet ink. Den mørke flade (kontaktsektionen)
-   er ink.
-
-   Former varierer efter rang: store flader 20px, kort 14px, knapper og felter
-   10px, rammer om skærmbilleder 10px, mærker som piller. Kanter er 1px; kun
-   beregneren og det fremhævede hovedtilbud har en skygge (varm, ikke grå).
-
-   Skrift: Instrument Sans bærer alt. Overskrifter vægt 600 og tæt sat,
-   forklaringer i dæmpet ink, hjælpetekst mindre, priser i Instrument Serif
-   (kun cifre), monoskrift kun til det tekniske "Trin n". Ingen versaler.
-   Linjer højst ca. 65 tegn; luft mellem sektioner (--space-section).
-
-   Ikoner: components/Icon.jsx (24x24, streg 1,75, runde ender, currentColor).
-
-   DESIGNTOKENS: farver, skrift og afstande defineres her og kun her.
-   Andre filer bruger variablerne, aldrig egne farver.
-   Kontrast (målt mod WCAG 2.x, mindst 4,5:1 til tekst, 3:1 til kanter):
-     ink    på paper    16,0:1       muted  på paper    7,0:1
-     ink    på surface  17,1:1       muted  på paper-2  6,3:1   muted på surface 7,5:1
-     hvid   på cta       6,7:1       hvid   på cta-hover 8,8:1
-     cta    på paper     6,1:1       cta    på surface  6,5:1
-     cta    på paper-2   5,5:1       cta    på cta-soft 5,7:1
-     field  på surface   4,2:1       field  på paper    3,9:1   field på paper-2 3,5:1   (kanter på felter og valg)
-     cta-on-dark på ink  9,7:1       hvid på ink 17,4:1
-   npm run brand læser ink, paper og cta herfra.
-   ========================================================================= */
-
+/* Breakpoints fra designet: under 760 px er mobillayout, under 1120 px foldes menuen. */
 @theme {
-  --color-paper: #f8f5ef; /* sidens baggrund */
-  --color-paper-2: #efe9df; /* alternative flader (bånd) */
-  --color-surface: #fffdf9; /* kort og rammer (med 1px kant) */
-  --color-ink: #1c1a17; /* tekst, mørke flader, primære knapper */
-  --color-muted: #5a5349; /* sekundær tekst */
-  --color-cta: #1c4fd8; /* sidens ene accent: handlinger, valg, fokus, links */
-  --color-cta-hover: #1640b0; /* accent ved hover */
-  --color-cta-soft: #e8edfb; /* svag accentflade: valgt valg, flueben */
-  --color-cta-on-dark: #a9c1ff; /* accent på den mørke flade */
-  --color-rule: #e5dfd2; /* hårstreger på paper og surface */
-  --color-rule-strong: #d6ccba; /* hårstreger på paper-2, kortkanter */
-  --color-field: #857a68; /* kant på felter og valg (WCAG 1.4.11) */
+  --breakpoint-md: 47.5rem;
+  --breakpoint-nav: 70rem;
+}
 
-  --font-sans: "Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-amount: "Instrument Serif", "Instrument Serif Fallback", var(--font-sans);
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-
-  /* Typografisk skala */
-  --text-hero: clamp(2.25rem, 1.2rem + 3.6vw, 3.875rem);
-  --text-h2: clamp(1.75rem, 1.3rem + 1.8vw, 2.625rem);
-  --text-h3: clamp(1.5rem, 1.2rem + 1.1vw, 2.0625rem);
-  --text-h4: 1.3125rem;
-  --text-lead: clamp(1.0625rem, 1rem + 0.35vw, 1.1875rem);
-  --text-quote: clamp(1.75rem, 3.6vw, 3.25rem);
-
-  /* Afstande */
-  --space-section: clamp(3.75rem, 7.5vw, 6.5rem);
-  --space-block: clamp(2.5rem, 5vw, 4.25rem);
-  --radius-btn: 10px; /* knapper og felter */
-  --radius-card: 14px; /* kort */
-  --radius-panel: 20px; /* store flader: beregner, eksempler, faktaboks */
-  --radius-frame: 10px; /* rammer om skærmbilleder */
-
-  /* Skygger (varme, aldrig grå) */
-  --shadow-card: 0 1px 2px rgb(28 26 23 / 0.05), 0 14px 32px -20px rgb(28 26 23 / 0.28);
-  --shadow-pop: 0 2px 6px rgb(28 26 23 / 0.06), 0 22px 44px -18px rgb(28 26 23 / 0.32);
+@theme inline {
+  --color-ink: var(--ink);
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-muted: var(--muted);
+  --color-muted-2: var(--muted-2);
+  --color-hairline: var(--hairline);
+  --color-hairline-dark: var(--hairline-dark);
+  --color-on-ink-2: var(--on-ink-2);
 }
 
 @layer base {
@@ -127,1629 +32,200 @@
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
   }
-
-  /* Smooth scroll må aldrig gøre siden træg at navigere. */
-  @media (prefers-reduced-motion: reduce) {
-    html {
-      scroll-behavior: auto;
-    }
-  }
-
   body {
-    background-color: var(--color-paper);
-    color: var(--color-ink);
-    font-family: var(--font-sans);
-    font-size: 16px;
-    line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
     overflow-x: clip;
   }
-
-  ::selection {
-    background: var(--color-cta);
-    color: #fff;
-  }
-
-  /* Alle interaktive elementer har en tydelig fokusring: 3px accent med luft
-     om elementet. Radius følger elementets egen. På den mørke flade er ringen
-     hvid (se .on-dark herunder). */
-  :focus-visible {
-    outline: 3px solid var(--color-cta);
-    outline-offset: 3px;
-  }
-
-  /* Ankre må ikke lande bag den faste bar. */
-  [id] {
-    scroll-margin-top: calc(var(--nav-h) + 16px);
-  }
-
-  img {
-    max-width: 100%;
-    height: auto;
-  }
-}
-
-@layer components {
-  /* ---- Typografi ---------------------------------------------------------- */
-  /* Overskrifter: vægt 600, tæt sat. */
-  .t-display {
-    font-family: var(--font-sans);
-    font-weight: 600;
-    line-height: 1.08;
-    letter-spacing: -0.026em;
-    text-wrap: balance;
-  }
-
-  .t-hero {
-    font-size: var(--text-hero);
-    line-height: 1.03;
-    letter-spacing: -0.034em;
-  }
-  .t-h2 {
-    font-size: var(--text-h2);
-  }
-  .t-h3 {
-    font-size: var(--text-h3);
-    line-height: 1.14;
-  }
-  .t-h4 {
-    font-size: var(--text-h4);
-    line-height: 1.22;
-    letter-spacing: -0.02em;
-  }
-
-  /* Lille mærkat over en overskrift eller en etiket over et tal. Sætningsskrift,
-     ikke versaler. */
-  .t-eyebrow {
-    font-size: 14px;
-    font-weight: 600;
-    line-height: 1.4;
-    color: var(--color-muted);
-  }
-
-  /* Fremhævet mærkat i accenten. */
-  .t-eyebrow-strong {
-    color: var(--color-cta);
-  }
-
-  /* Forklaring: dæmpet ink. */
-  .t-body {
-    color: var(--color-muted);
-    line-height: 1.65;
-  }
-
-  .t-lead {
-    font-size: var(--text-lead);
-    line-height: 1.6;
-  }
-
-  /* Sektionernes lodrette luft. */
-  .section-y {
-    padding-block: var(--space-section);
-  }
-
-  .shell {
-    width: 100%;
-    max-width: 1200px;
-    margin-inline: auto;
-    padding-inline: 20px;
-  }
-
-  @media (min-width: 768px) {
-    .shell {
-      padding-inline: 40px;
-    }
-  }
-
-  .rule {
-    border-top: 1px solid var(--color-rule);
-  }
-
-  /* Trykflade på små tekstlinks: selve linket forbliver lille, men området
-     rundt om er mindst 44px højt. */
-  .hit {
-    position: relative;
-  }
-
-  .hit::before {
-    content: "";
-    position: absolute;
-    inset: -12px -6px;
-  }
-
-  /* Afstand fra kanten af viewporten til kanten af .shell's indhold. Bruges
-     af elementer, der bevidst løber ud til skærmkanten. */
-  :root {
-    --gutter: 20px;
-  }
-  @media (min-width: 768px) {
-    :root {
-      --gutter: max(40px, calc((100vw - 1200px) / 2 + 40px));
-    }
-  }
-}
-
-@layer components {
-  /* Skip-link: usynlig indtil den får fokus med tastatur. */
-  .skip-link {
-    position: fixed;
-    top: 8px;
-    left: 8px;
-    z-index: 100;
-    transform: translateY(-160%);
-    border-radius: var(--radius-btn);
-    background: var(--color-ink);
-    color: var(--color-surface);
-    padding: 12px 16px;
-    font-size: 15px;
-    transition: transform var(--dur-hover) var(--ease-entrance);
-  }
-
-  .skip-link:focus-visible {
-    transform: translateY(0);
-  }
-}
-
-@layer components {
-  /* ---- Knapper --------------------------------------------------------- */
-  .btn {
-    display: inline-flex;
-    touch-action: manipulation;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    min-height: 48px;
-    padding: 0 22px;
-    border: 1px solid transparent;
-    border-radius: var(--radius-btn);
-    font-size: 16px;
-    font-weight: 600;
-    line-height: 1.2;
-    text-align: center;
-  }
-
-  /* Stor knap: sidens hovedhandling i heroen. */
-  .btn-lg {
-    min-height: 56px;
-    padding: 0 28px;
-    font-size: 17px;
-  }
-
-  .btn-primary {
-    background: var(--color-ink);
-    color: var(--color-surface);
-  }
-
-  /* Sidens hovedhandling: "Se din pris" og "Send forespørgsel". */
-  .btn-cta {
-    background: var(--color-cta);
-    color: #fff;
-  }
-
-  /* Tekstlink med pil: sekundær handling. */
-  .btn-text {
-    min-height: 44px;
-    padding: 0;
-    border: 0;
-    border-radius: 0;
-    color: var(--color-cta);
-    font-size: 16px;
-    font-weight: 600;
-  }
-
-  .btn-ghost {
-    border-color: var(--color-field);
-    background: var(--color-surface);
-    color: var(--color-ink);
-  }
-
-  .on-dark .btn-primary {
-    background: var(--color-surface);
-    color: var(--color-ink);
-  }
-
-  .on-dark .btn-ghost {
-    border-color: rgb(255 255 255 / 0.45);
-    background: transparent;
-    color: var(--color-surface);
-  }
-
-  .on-dark .btn-text {
-    color: var(--color-surface);
-  }
-
-  .on-dark :focus-visible {
-    outline-color: #fff;
-  }
-
-  @media (hover: hover) {
-    .btn-primary:hover {
-      background: #3a352e;
-    }
-    .btn-cta:hover {
-      background: var(--color-cta-hover);
-    }
-    .btn-ghost:hover {
-      border-color: var(--color-ink);
-    }
-    .btn-text:hover {
-      text-decoration: underline;
-      text-underline-offset: 4px;
-    }
-    .on-dark .btn-primary:hover {
-      background: var(--color-paper-2);
-      color: var(--color-ink);
-    }
-    .on-dark .btn-ghost:hover {
-      background: rgb(255 255 255 / 0.1);
-      border-color: #fff;
-    }
-  }
-
-  /* ---- Rammer om skærmbilleder ---------------------------------------- */
-  .browser {
-    overflow: hidden;
-    border: 1px solid var(--color-rule-strong);
-    border-radius: var(--radius-frame);
-    background: var(--color-surface);
-  }
-
-  .browser-bar {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    height: 34px;
-    padding-inline: 12px;
-    border-bottom: 1px solid var(--color-rule);
-    background: var(--color-surface);
-  }
-
-  .browser-bar > i {
-    width: 8px;
-    height: 8px;
-    border-radius: 999px;
-    background: var(--color-rule-strong);
-  }
-
-  .browser-url {
-    margin-left: 10px;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    padding: 3px 10px;
-    border-radius: 6px;
-    background: var(--color-paper);
-    font-family: var(--font-mono);
-    font-size: 13px;
-    line-height: 1.4;
-    color: var(--color-muted);
-  }
-
-  .browser img {
-    display: block;
-    width: 100%;
-    height: auto;
-  }
-
-  .phone {
-    overflow: hidden;
-    border-radius: 26px;
-    background: var(--color-ink);
-    padding: 5px;
-    outline: 1px solid var(--color-rule-strong);
-  }
-
-  .phone img {
-    display: block;
-    width: 100%;
-    height: auto;
-    border-radius: 21px;
-  }
-
-  /* Mærke "Demo" / "Koncept". Sidens vigtigste ærlighedsdetalje: står på hver
-     eneste visning af et projekt, der ikke er en dokumenteret kundeopgave. */
-  .tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 3px 10px 3px 9px;
-    border: 1px solid color-mix(in srgb, var(--color-cta) 28%, transparent);
-    border-radius: 999px;
-    background: var(--color-cta-soft);
-    font-size: 14px;
-    font-weight: 600;
-    line-height: 1.4;
-    color: var(--color-cta);
-  }
-
-  .tag::before {
-    content: "";
-    width: 6px;
-    height: 6px;
-    border-radius: 999px;
-    background: var(--color-cta);
-  }
-
-  /* Liste med flueben: hvad der er med. Fluebenet er en maske i accentens
-     farve (samme streg som Icon.jsx), så farven følger tokenet. Én hårstreg over gruppen. */
-  .spec-list {
-    display: grid;
-    align-content: start;
-    gap: 10px;
-    padding-top: 16px;
-    border-top: 1px solid var(--color-rule);
-  }
-
-  .spec-list > li {
-    display: grid;
-    grid-template-columns: 28px 1fr;
-    font-size: 15px;
-    line-height: 1.5;
-  }
-
-  .spec-list > li::before,
-  .x-list > li::before {
-    content: "";
-    width: 20px;
-    height: 20px;
-    margin-top: 0.05em;
-    background: var(--color-cta);
-    -webkit-mask: var(--icon-check) no-repeat center / 20px;
-    mask: var(--icon-check) no-repeat center / 20px;
-  }
-
-  /* Det, der IKKE er med: dæmpet minus i stedet for flueben. */
-  .x-list {
-    display: grid;
-    align-content: start;
-    gap: 10px;
-  }
-
-  .x-list > li {
-    display: grid;
-    grid-template-columns: 28px 1fr;
-    font-size: 15px;
-    line-height: 1.5;
-    color: var(--color-muted);
-  }
-
-  .x-list > li::before {
-    background: var(--color-muted);
-    -webkit-mask-image: var(--icon-minus);
-    mask-image: var(--icon-minus);
-  }
-
-  :root {
-    --icon-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12.5 4.5 4.5L19 7.5'/%3E%3C/svg%3E");
-    --icon-minus: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12h12'/%3E%3C/svg%3E");
-  }
-}
-
-@layer components {
-  /* ---- Navigation: aktiv side ------------------------------------------- */
-  .nav-label {
-    padding-bottom: 3px;
-    border-bottom: 2px solid transparent;
-    transition: border-color var(--dur-hover) var(--ease-entrance);
-  }
-
-  .nav-link[aria-current] .nav-label,
-  .nav-trigger[data-here] .nav-label {
-    border-bottom-color: var(--color-cta);
-  }
-
-  .nav-trigger[data-here] {
-    color: var(--color-ink);
-  }
-
-  .nav-chevron {
-    transition: transform var(--dur-hover) var(--ease-entrance);
-  }
-
-  .nav-trigger[aria-expanded='true'] .nav-chevron {
-    transform: rotate(180deg);
-  }
-
-  /* ---- Løsninger: panelet under knappen (desktop) -------------------------
-     Altid i HTML'en; visibility skjuler det for øjne, tastatur og skærmlæsere,
-     mens det er lukket. Ind: opacity og 6px løft, ud: hurtigt. */
-  .solutions-panel {
-    position: absolute;
-    top: calc(100% + 10px);
-    left: -16px;
-    z-index: 60;
-    width: 340px;
-    padding: 8px;
-    border: 1px solid var(--color-rule-strong);
-    border-radius: var(--radius-card);
-    background: var(--color-surface);
-    box-shadow: var(--shadow-pop);
-    visibility: hidden;
-    opacity: 0;
-    transform: translate3d(0, 6px, 0);
-    transition:
-      opacity 140ms var(--ease-exit),
-      transform 140ms var(--ease-exit),
-      visibility 0s linear 140ms;
-  }
-
-  .solutions-panel[data-open='true'] {
-    visibility: visible;
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-    transition:
-      opacity var(--dur-hover) var(--ease-entrance),
-      transform var(--dur-hover) var(--ease-entrance),
-      visibility 0s;
-  }
-
-  .solutions-link {
-    display: flex;
-    min-height: 56px;
-    align-items: center;
-    gap: 14px;
-    padding: 8px 12px;
-    border-radius: 10px;
-    touch-action: manipulation;
-    transition: background-color var(--dur-hover) var(--ease-entrance);
-  }
-
-  .solutions-link[aria-current] {
-    background: var(--color-paper);
-  }
-
-  .solutions-link:focus-visible {
-    outline-offset: -3px;
-  }
-
-  @media (hover: hover) {
-    .solutions-link:hover {
-      background: var(--color-paper-2);
-    }
-  }
-
-  .solutions-link:active {
-    background: var(--color-paper-2);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .solutions-panel,
-    .solutions-panel[data-open='true'] {
-      transform: none;
-      transition-duration: 1ms;
-    }
-    .nav-chevron {
-      transition-duration: 1ms;
-    }
-  }
-
-  .icon {
-    flex: none;
-  }
-}
-
-@layer components {
-  /* ---- Forsidens hero ---------------------------------------------------- */
-  .hero {
-    padding-top: calc(var(--nav-h) + 28px);
-    padding-bottom: 52px;
-  }
-
-  @media (min-width: 768px) {
-    .hero {
-      padding-top: calc(var(--nav-h) + 72px);
-      padding-bottom: 92px;
-    }
-  }
-
-  /* Hovedtilbuddet i heroen: én linje med prisen og under den minimumsbetalingen.
-     Aldrig under en "gratis"-overskrift; tallene kommer fra pricing.js/offer.js. */
-  .offer {
-    max-width: 36rem;
-    margin-top: 28px;
-    padding-top: 20px;
-    border-top: 1px solid var(--color-rule-strong);
-  }
-
-  .offer-main {
-    font-size: clamp(1.1875rem, 1rem + 0.9vw, 1.5rem);
-    font-weight: 500;
-    line-height: 1.3;
-    letter-spacing: -0.015em;
-  }
-
-  .offer-sub {
-    margin-top: 4px;
-    font-size: 16px;
-    color: var(--color-muted);
-  }
-
-  /* Kort med fremhævet indhold (hero-kortet, købsmåder, eksempler). */
-  .card {
-    border: 1px solid var(--color-rule-strong);
-    border-radius: var(--radius-card);
-    background: var(--color-surface);
-  }
-
-  .card-panel {
-    border-radius: var(--radius-panel);
-    box-shadow: var(--shadow-card);
-  }
-
-  /* Ikon i en blød accentcirkel. */
-  .icon-tile {
-    display: grid;
-    flex: none;
-    width: 44px;
-    height: 44px;
-    place-items: center;
-    border-radius: 999px;
-    background: var(--color-cta-soft);
-    color: var(--color-cta);
-  }
-
-  /* Et kort, hvor hele fladen er trykbar via ét link (ét tabstop). */
-  .card-link::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    border-radius: inherit;
-  }
-
-  .card-link:focus-visible {
-    outline: none;
-  }
-
-  .card:has(.card-link:focus-visible),
-  .example:has(.card-link:focus-visible) {
-    outline: 3px solid var(--color-cta);
-    outline-offset: 3px;
-  }
-
-  .card-hover {
-    position: relative;
-    transition:
-      border-color var(--dur-hover) var(--ease-entrance),
-      transform var(--dur-hover) var(--ease-entrance),
-      box-shadow var(--dur-hover) var(--ease-entrance);
-  }
-
-  @media (hover: hover) {
-    .card-hover:hover {
-      border-color: var(--color-cta);
-    }
-  }
-
-  .card-hover:active {
-    transform: scale(0.992);
-  }
-
-  /* ---- Beregnerens sektion: lyst bånd, så det hvide kort står frem -------- */
-  .calc-section {
-    padding-block: var(--space-section);
-    background: var(--color-paper-2);
-  }
-
-  /* Hårstreg-liste: rækker adskilt af hårstreger (vilkår, spørg først, sikkerhed). */
-  .rows > li {
-    padding-block: 16px;
-    border-top: 1px solid var(--color-rule-strong);
-  }
-
-  .rows > li:last-child {
-    border-bottom: 1px solid var(--color-rule-strong);
-  }
-
-  /* Statuschip (arbejdsgangsdemoens mini-visning og modulets status). */
-  .chip {
-    display: inline-flex;
-    align-items: center;
-    min-height: 24px;
-    padding: 1px 10px;
-    border-radius: 999px;
-    background: var(--color-paper-2);
-    font-size: 13px;
-    font-weight: 600;
-    line-height: 1.4;
-    color: var(--color-ink);
-  }
-
-  .chip-accent {
-    background: var(--color-cta-soft);
-    color: var(--color-cta);
-  }
-
-  /* "fra" og "kr." i sidens skrift, selve tallet i logoets skrift og større. */
-  .service-price.amount-lg {
-    --amount-scale: 1.75;
-    font-size: 16px;
-    line-height: 1.2;
-    color: var(--color-muted);
-  }
-
-  .service-price .amount-num {
-    color: var(--color-ink);
-  }
-
-  /* ---- Forløb: lodret tidslinje (fem trin) --------------------------------- */
-  .step {
-    position: relative;
-    display: grid;
-    grid-template-columns: 44px 1fr;
-    gap: 0 18px;
-    padding-bottom: 32px;
-  }
-
-  .step:last-child {
-    padding-bottom: 0;
-  }
-
-  /* Linjen mellem prikkerne. */
-  .step:not(:last-child)::before {
-    content: "";
-    position: absolute;
-    top: 52px;
-    bottom: 8px;
-    left: 21.5px;
-    width: 1px;
-    background: var(--color-rule-strong);
-  }
-
-  .step-dot {
-    display: grid;
-    width: 44px;
-    height: 44px;
-    place-items: center;
-    border-radius: 999px;
-    background: var(--color-cta-soft);
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--color-cta);
-  }
-
-  /* ---- Fast Ring/Mail-bjælke på mobil ----------------------------------- */
-  .callbar {
-    position: fixed;
-    inset: auto 0 0;
-    z-index: 30;
-    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
-    border-top: 1px solid var(--color-rule-strong);
-    background: var(--color-surface);
-    transform: translate3d(0, 110%, 0);
-    transition: transform 240ms var(--ease-entrance);
-  }
-
-  .callbar[data-show='true'] {
-    transform: translate3d(0, 0, 0);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .callbar,
-    .card-hover {
-      transition-duration: 1ms;
-    }
-    .card-hover:active {
-      transform: none;
-    }
-  }
-}
-
-@layer components {
-  /* ---- Pakker ------------------------------------------------------------ */
-  /* Luft over kortene til mærkerne, der sidder på overkanten. Fra md: seks
-     faste rækker, som hvert kort deler (subgrid): titel, tekst, pris,
-     driftlinje, liste, note. Så står pris og liste på samme linje i alle tre. */
-  .package-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 28px;
-    padding-top: 14px;
-  }
-
-  .package {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    padding: 30px 24px 26px;
-    border: 1px solid var(--color-rule-strong);
-    border-radius: var(--radius-card);
-    background: var(--color-surface);
-  }
-
-  /* Anbefalet: 2px kant i accenten. 1px mindre polstring, så indholdet står
-     præcis som i nabokortene. */
-  .package[data-recommended='true'] {
-    border: 2px solid var(--color-cta);
-    padding: 29px 23px 25px;
-  }
-
-  @media (min-width: 768px) {
-    .package-grid {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 0 20px;
-    }
-
-    .package {
-      display: grid;
-      grid-row: span 6;
-      grid-template-rows: subgrid;
-      row-gap: 0;
-      padding: 34px 28px 28px;
-    }
-
-    .package[data-recommended='true'] {
-      padding: 33px 27px 27px;
-    }
-  }
-
-  /* Mærkerne ("Anbefalet", "Højst 1 kunde ad gangen") sidder på overkanten. */
-  .package-flags {
-    position: absolute;
-    top: 0;
-    left: 20px;
-    right: 20px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    transform: translateY(-50%);
-  }
-
-  .package[data-recommended='true'] .package-flags {
-    top: -1px;
-    left: 19px;
-  }
-
-  .package-summary {
-    margin-top: 6px;
-  }
-
-  .package-price {
-    display: flex;
-    align-items: baseline;
-    gap: 4px;
-    margin-top: 24px;
-    font-size: 48px;
-    line-height: 1;
-  }
-
-  .package-per {
-    font-size: 15px;
-    color: var(--color-muted);
-  }
-
-  .package-drift {
-    text-wrap: pretty;
-  }
-
-  .package-drift:not(:empty) {
-    padding-top: 10px;
-  }
-
-  .package-list {
-    margin-top: 22px;
-  }
-
-  .package-note:not(:empty) {
-    padding-top: 16px;
-  }
-
-  /* ---- Beløb i logoets skrift (components/Amount.jsx) -------------------- */
-  .amount {
-    white-space: nowrap;
-  }
-
-  /* Instrument Serif er smal og lav: 1,18 × omgivende tekst giver samme
-     visuelle størrelse som sidens skrift. Store beløb sætter --amount-scale: 1. */
-  .amount-num {
-    font-family: var(--font-amount);
-    font-size: calc(1em * var(--amount-scale, 1.18));
-    font-weight: 400;
-    font-synthesis: none;
-    font-variant-numeric: lining-nums tabular-nums;
-    letter-spacing: -0.005em;
-    line-height: 1;
-  }
-
-  /* Store beløb: "kr." i 60 % ink (4,1:1, kun stor tekst). */
-  .amount-lg {
-    --amount-scale: 1;
-  }
-
-  .amount-lg .amount-unit {
-    color: color-mix(in srgb, var(--color-ink) 62%, transparent);
-  }
-
-  .amount-per {
-    color: var(--color-muted);
-  }
-
-  /* Små beløb (pakkevælger, ydelseslinjer): sidens skrift med tabelcifre. */
-  .amount-num-plain {
-    font-variant-numeric: tabular-nums;
-  }
-
-  /* Resultatets total: etiket over hvert beløb. */
-  .calc-total .t-eyebrow {
-    margin-bottom: 6px;
-  }
-
-  .calc-total-part {
-    line-height: 1;
-  }
-
-  .calc-total-main {
-    font-size: clamp(1.75rem, 5vw, 2.5rem);
-  }
-
-  .calc-total-sub {
-    font-size: clamp(1.375rem, 3.5vw, 1.75rem);
-  }
-
-  .calc-total-main .amount-num,
-  .calc-total-sub .amount-num {
-    font-size: 1.3em;
-  }
-
-  /* Små mærker: "Anbefalet" og begrænsninger som "Højst 1 kunde ad gangen". */
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    min-height: 26px;
-    padding: 3px 10px;
-    border: 1px solid var(--color-rule-strong);
-    border-radius: 999px;
-    background: var(--color-surface);
-    font-size: 14px;
-    font-weight: 600;
-    line-height: 1.3;
-    color: var(--color-ink);
-  }
-
-  /* "Anbefalet": accentfyldt med en hvid prik. */
-  .badge-ink {
-    gap: 7px;
-    padding-left: 10px;
-    border-color: var(--color-cta);
-    background: var(--color-cta);
-    color: #fff;
-  }
-
-  .badge-ink::before {
-    content: "";
-    width: 6px;
-    height: 6px;
-    border-radius: 999px;
-    background: #fff;
-  }
-
-  /* ---- Koncepter: telefonramme på konceptets farve ---------------------- */
-  .concept-stage {
-    display: flex;
-    justify-content: center;
-    padding: 18px 18px 0;
-    overflow: hidden;
-    border-radius: var(--radius-card);
-    background: var(--panel, var(--color-paper-2));
-    aspect-ratio: 4 / 5;
-  }
-
-  .concept-phone {
-    display: block;
-    width: 78%;
-    overflow: hidden;
-    border: 4px solid var(--color-ink);
-    border-bottom: 0;
-    border-radius: 22px 22px 0 0;
-    background: var(--color-ink);
-    transition: transform var(--dur-hover) var(--ease-entrance);
-  }
-
-  .concept-phone img {
-    display: block;
-    width: 100%;
-    height: auto;
-    border-radius: 18px 18px 0 0;
-  }
-
-  @media (hover: hover) {
-    .concept:hover .concept-phone {
-      transform: translate3d(0, -4px, 0);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .concept-phone {
-      transition-duration: 1ms;
-    }
-  }
-}
-
-@layer components {
-  /* Gratis Google-tjek: fremhævet flade med accentkant. */
-  .free-check {
-    padding: 26px;
-    border: 1px solid var(--color-rule-strong);
-    border-radius: var(--radius-panel);
-    background: var(--color-surface);
-  }
-
-  @media (min-width: 768px) {
-    .free-check {
-      padding: 44px;
-    }
-  }
-}
-
-/* Direkte link til et senere trin (index.html sætter data-calc-pending):
-   alt efter beregneren i dokumentet er ude af layoutet, til beregneren har
-   skiftet til det rigtige trin. Det dukker så op som nyt indhold under den,
-   i stedet for at blive skubbet ned (layoutskift). Uden for lagene, så ingen
-   hjælpeklasse kan overstyre det. */
-html[data-calc-pending] :is([data-calc], :has([data-calc])) ~ * {
-  display: none !important;
-}
-
-@layer components {
-  /* ---- Prisberegner ------------------------------------------------------ */
-  .calc {
-    padding: 24px 18px 28px;
-    border: 1px solid var(--color-rule-strong);
-    border-radius: var(--radius-panel);
-    background: var(--color-surface);
-    box-shadow:
-      0 1px 2px rgb(28 26 23 / 0.05),
-      0 18px 40px -22px rgb(28 79 216 / 0.28);
-    scroll-margin-top: calc(var(--nav-h) + 12px);
-  }
-
-  @media (min-width: 768px) {
-    .calc {
-      padding: 40px 44px 44px;
-    }
-  }
-
-  .calc-progress {
-    height: 4px;
-    overflow: hidden;
-    border-radius: 999px;
-    background: var(--color-paper-2);
-  }
-
-  .calc-progress > span {
-    display: block;
-    width: 100%;
-    height: 100%;
-    border-radius: 999px;
-    background: var(--color-cta);
-    transform-origin: left center;
-    transition: transform 320ms var(--ease-entrance);
-  }
-
-  .calc-link {
-    min-height: 44px;
+  button {
+    font: inherit;
+    color: inherit;
     cursor: pointer;
-    touch-action: manipulation;
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--color-cta);
-    text-decoration: underline;
-    text-decoration-color: transparent;
+  }
+  button:disabled {
+    cursor: default;
+  }
+  a {
+    color: inherit;
     text-underline-offset: 4px;
-    transition: text-decoration-color var(--dur-hover) var(--ease-entrance);
+    text-decoration-thickness: 1px;
   }
-
-  @media (hover: hover) {
-    .calc-link:hover {
-      text-decoration-color: currentColor;
-    }
+  a:hover {
+    text-decoration-thickness: 2px;
   }
-
-  /* Valg: rigtige checkbokse/radioknapper, skjult bag en flade, så tastatur og
-     skærmlæsere virker uden ekstra kode. Hele fladen er trykbar. */
-  .choice {
-    position: relative;
+  img {
     display: block;
-    cursor: pointer;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
   }
+}
 
-  .choice-input {
-    position: absolute;
-    opacity: 0;
-    width: 1px;
-    height: 1px;
-  }
-
-  .choice-box {
-    display: flex;
-    min-height: 60px;
-    align-items: center;
-    gap: 14px;
-    padding: 12px 18px;
-    border: 1px solid var(--color-field);
-    border-radius: var(--radius-btn);
-    background: var(--color-surface);
+@layer components {
+  /* Tryk: spring med let overshoot. --press styrer, hvor langt fladen trykkes ind. */
+  .press {
     transition:
-      border-color var(--dur-hover) var(--ease-entrance),
-      background-color var(--dur-hover) var(--ease-entrance),
-      box-shadow var(--dur-hover) var(--ease-entrance);
+      background-color 180ms ease-out,
+      color 180ms ease-out,
+      transform 300ms var(--spring-press);
   }
-
-  /* Hover: kanten bliver accent, men uden fyld, så den ikke ligner et valg. */
+  .press:active {
+    transform: scale(var(--press, 0.97));
+  }
   @media (hover: hover) {
-    .choice:hover .choice-box {
-      border-color: var(--color-cta);
+    .hov-ink:hover {
+      background-color: var(--ink);
+      color: var(--paper);
+    }
+    .hov-ink-soft:hover {
+      background-color: var(--hairline-dark);
+      color: var(--paper);
+    }
+    .hov-surface:hover {
+      background-color: var(--surface);
+      color: var(--ink);
     }
   }
 
-  /* Valgt: accentkant (1px kant + 1px ring), svag accentflade, udfyldt markør
-     med flueben eller prik, og titlen bliver fed. Ikke kun farve: markørens
-     form og skriftvægten skifter også. */
-  .choice-input:checked + .choice-box {
-    border-color: var(--color-cta);
-    background: var(--color-cta-soft);
-    box-shadow: 0 0 0 1px var(--color-cta);
-    animation: box-settle 220ms var(--ease-entrance);
-  }
-
-  .choice-title {
-    font-weight: 600;
-  }
-
-  .choice-title-regular {
-    font-weight: 400;
-  }
-
-  .choice-input:checked + .choice-box .choice-title {
-    font-weight: 650;
-  }
-
-  .choice-input:focus-visible + .choice-box {
-    outline: 3px solid var(--color-cta);
-    outline-offset: 3px;
-  }
-
-  .choice-mark {
-    position: relative;
-    flex: none;
-    width: 22px;
-    height: 22px;
-    border: 1.5px solid var(--color-field);
-    border-radius: 6px;
-    background: var(--color-surface);
-    transition:
-      border-color var(--dur-hover) var(--ease-entrance),
-      background-color var(--dur-hover) var(--ease-entrance);
-  }
-
-  .choice-mark-radio {
-    border-radius: 999px;
-  }
-
-  .choice-input:checked + .choice-box .choice-mark {
-    border-color: var(--color-cta);
-    background: var(--color-cta);
-    animation: mark-pop 260ms var(--ease-entrance);
-  }
-
-  /* Flueben (checkboks) og prik (radio). */
-  .choice-input:checked + .choice-box .choice-mark::after {
-    content: "";
-    position: absolute;
-    left: 6.5px;
-    top: 2.5px;
-    width: 6px;
-    height: 11px;
-    border: solid #fff;
-    border-width: 0 2px 2px 0;
-    transform: rotate(45deg);
-  }
-
-  .choice-input:checked + .choice-box .choice-mark-radio::after {
-    left: 5.5px;
-    top: 5.5px;
-    width: 9px;
-    height: 9px;
-    border: 0;
-    border-radius: 999px;
-    background: #fff;
-    transform: none;
-  }
-
-  @keyframes mark-pop {
-    0% {
-      transform: scale(0.7);
-    }
-    60% {
-      transform: scale(1.14);
-    }
-    100% {
-      transform: scale(1);
-    }
-  }
-
-  @keyframes box-settle {
-    from {
-      transform: scale(0.988);
-    }
-    to {
-      transform: scale(1);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .calc-progress > span,
-    .choice-box,
-    .choice-mark {
-      transition-duration: 1ms;
-    }
-    .choice-input:checked + .choice-box,
-    .choice-input:checked + .choice-box .choice-mark {
-      animation: none;
-    }
-  }
-}
-
-@layer components {
-  /* "Ring" i toppen på mobil skjules, mens den faste bundbjælke er synlig
-     (MobileCallBar sætter data-callbar på <html>), så knappen ikke står to gange.
-     visibility bevarer pladsen, så "Menu" ikke flytter sig. */
-  .nav-call {
-    transition:
-      opacity 200ms var(--ease-entrance),
-      visibility 0s linear 0s;
-  }
-
-  @media (max-width: 767.98px) {
-    html[data-callbar='on'] .nav-call {
-      opacity: 0;
-      visibility: hidden;
-      transition:
-        opacity 200ms var(--ease-entrance),
-        visibility 0s linear 200ms;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .nav-call,
-    html[data-callbar='on'] .nav-call {
-      transition-duration: 1ms;
-      transition-delay: 0s;
-    }
-  }
-}
-
-@layer components {
-  /* Rulleliste i beregneren (antal sider). 16px, så iOS ikke zoomer ind. */
-  .calc-select {
-    display: block;
-    width: 100%;
-    max-width: 320px;
-    min-height: 54px;
-    padding: 12px 40px 12px 16px;
-    border: 1px solid var(--color-field);
-    border-radius: var(--radius-btn);
-    background:
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%231c1a17' stroke-width='1.5'/%3E%3C/svg%3E")
-        no-repeat right 16px center / 12px,
-      var(--color-surface);
-    font: inherit;
-    font-size: 16px;
-    color: var(--color-ink);
-    appearance: none;
-    cursor: pointer;
-    transition: border-color var(--dur-hover) var(--ease-entrance);
-  }
-
-  @media (hover: hover) {
-    .calc-select:hover {
-      border-color: var(--color-cta);
-    }
-  }
-
-  .calc-select:focus-visible {
-    outline: 3px solid var(--color-cta);
-    outline-offset: 3px;
-  }
-
-  /* Valg, der ikke kan vælges med pakken (fx egen konto til Fuld fart). */
-  .choice[data-disabled] {
-    cursor: not-allowed;
-  }
-
-  .choice[data-disabled] .choice-box {
-    border-color: var(--color-rule-strong);
-    border-style: dashed;
-    background: transparent;
-  }
-
-  .choice[data-disabled] .choice-mark {
-    opacity: 0.45;
-  }
-}
-
-@layer components {
-  /* Pakkevælgeren i beregnerens resultat: samme valg-flade, lidt lavere (stadig ≥ 44 px). */
-  .choice-sm .choice-box {
-    min-height: 52px;
-    gap: 12px;
-    padding: 8px 14px;
-  }
-}
-
-@layer components {
-  /* "Send din forespørgsel" under prisen i beregneren. */
-  .send {
-    padding: 24px 18px;
-    border: 1px solid var(--color-rule);
-    border-radius: var(--radius-card);
-    background: var(--color-paper);
-  }
-
-  @media (min-width: 768px) {
-    .send {
-      padding: 32px;
-    }
-  }
-
-  /* Tekstfelt: 16px, så iOS ikke zoomer ind. */
-  .field {
-    display: block;
-    width: 100%;
-    max-width: 420px;
-    min-height: 54px;
-    padding: 12px 16px;
-    border: 1px solid var(--color-field);
-    border-radius: var(--radius-btn);
-    background: var(--color-surface);
-    font: inherit;
-    font-size: 16px;
-    color: var(--color-ink);
-    transition: border-color var(--dur-hover) var(--ease-entrance);
-  }
-
-  @media (hover: hover) {
-    .field:hover {
-      border-color: var(--color-ink);
-    }
-  }
-
-  .field:focus-visible {
-    outline: 3px solid var(--color-cta);
-    outline-offset: 3px;
-  }
-
-  /* Fejl: 2px ink-kant (ikke kun farve) og en fejltekst med ikon under feltet. */
-  .field[aria-invalid] {
-    border-color: var(--color-ink);
-    box-shadow: inset 0 0 0 1px var(--color-ink);
-  }
-
-  /* Fejltekst: ikon foran (components/ErrorText.jsx), så fejlen ikke kun
-     adskiller sig med farve. */
-  .error-text {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    font-weight: 600;
-    color: var(--color-ink);
-  }
-
-  .error-text > svg {
-    flex: none;
-    margin-top: 0.2em;
-  }
-
-  .btn:disabled {
-    cursor: progress;
-    opacity: 0.7;
-  }
-
-  /* Honeypot: uden for skærmen, ikke display:none (nogle robotter springer skjulte felter over). */
-  .send-trap {
-    position: absolute;
-    left: -10000px;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-  }
-
-  /* Turnstile (usynlig) fylder intet. */
-  .send-turnstile:empty {
-    display: none;
-  }
-}
-
-@layer components {
-  /* Behovsguiden og forklaringer i beregneren. */
-  .calc-help {
-    padding: 18px 20px;
-    border: 1px solid var(--color-rule);
-    border-radius: var(--radius-card);
-    background: var(--color-paper);
-  }
-
-  .calc-details {
-    border-top: 1px solid var(--color-rule);
-    padding-top: 12px;
-  }
-
-  .calc-details > summary {
-    min-height: 44px;
-    cursor: pointer;
-    font-weight: 600;
-    touch-action: manipulation;
-  }
-}
-
-@layer components {
-  /* ---- Eksempler under beregneren ----------------------------------------
-     Kort med stor forhåndsvisning: et beskåret udsnit af demoens computer-
-     visning i en browserramme, og telefonvisningen foran. Hele kortet er ét
-     link (knappens ::after dækker kortet), så der kun er ét tabstop. */
-  .example {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    border: 1px solid var(--color-rule-strong);
-    border-radius: var(--radius-panel);
-    background: var(--color-surface);
-    transition: border-color var(--dur-hover) var(--ease-entrance);
-  }
-
-  /* Fra 768 til 1023 står hvert kort på hele bredden: forhåndsvisning til
-     venstre, tekst til højre. Fra 1024 er der to kort ved siden af hinanden. */
-  @media (min-width: 768px) and (max-width: 1023.98px) {
-    .example {
-      display: grid;
-      grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
-    }
-  }
-
-  @media (hover: hover) {
-    .example:hover {
-      border-color: var(--color-cta);
-    }
-  }
-
-  .example-preview {
-    position: relative;
-    overflow: hidden;
-    padding: 20px 20px 0;
-    background: var(--color-paper-2);
-  }
-
-  /* Rammen er skåret fladt i bunden: siden fortsætter "under" kortet. */
-  .example-browser {
-    border-bottom: 0;
-    border-radius: var(--radius-frame) var(--radius-frame) 0 0;
-    box-shadow: 0 -1px 0 rgb(28 26 23 / 0.04);
-    transition: transform var(--dur-hover) var(--ease-entrance);
-  }
-
-  .example-browser .browser-bar {
-    height: 30px;
-  }
-
-  .example-browser .tag {
-    margin-left: auto;
-    padding-block: 1px;
-    font-size: 13px;
-  }
-
-  .example-phone {
-    position: absolute;
-    right: 8%;
-    bottom: 0;
-    width: 24%;
-    min-width: 84px;
-    max-width: 150px;
-    overflow: hidden;
-    padding: 4px 4px 0;
-    border-radius: 18px 18px 0 0;
-    background: var(--color-ink);
-    outline: 0;
-    box-shadow: 0 10px 28px -8px rgb(28 26 23 / 0.35);
-    transition: transform var(--dur-hover) var(--ease-entrance);
-  }
-
-  .example-phone img {
-    border-radius: 14px 14px 0 0;
-  }
-
-  @media (hover: hover) {
-    .example:hover .example-browser {
-      transform: translate3d(0, -4px, 0);
-    }
-    .example:hover .example-phone {
-      transform: translate3d(0, -8px, 0);
-    }
-  }
-
-  .example-body {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 24px 24px 26px;
-  }
-
-  @media (min-width: 768px) {
-    .example-body {
-      padding: 28px 30px 30px;
-    }
-  }
-
-  /* Knappen strækker sig over hele kortet, så kortet er trykbart. */
-  .example-link::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-  }
-
-  .example-link:focus-visible {
-    outline: none;
-  }
-
-  .example:has(.example-link:focus-visible) {
-    outline: 3px solid var(--color-cta);
-    outline-offset: 3px;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .example,
-    .example-browser,
-    .example-phone {
-      transition-duration: 1ms;
-    }
-  }
-}
-
-@layer components {
-  /* ---- Arbejdsgangskortets skitse (HomeExamples) --------------------------- */
-  .sketch {
-    display: grid;
-    min-height: 216px;
-    align-content: center;
-    gap: 0;
-    padding: 6px 14px 14px;
-    background: var(--color-surface);
-  }
-
-  .sketch-row {
+  /* Knapper: flade i mørk (primær), lys eller hvid. Ingen kant, ingen skygge, ingen radius. */
+  .btn {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    min-height: 62px;
-    border-bottom: 1px solid var(--color-rule);
-  }
-
-  .sketch-row:last-child {
-    border-bottom: 0;
-  }
-
-  .sketch-lines {
-    display: grid;
-    flex: 1;
-    gap: 7px;
-  }
-
-  .sketch-lines > i {
-    display: block;
-    height: 8px;
-    border-radius: 999px;
-    background: var(--color-paper-2);
-  }
-
-  .sketch-lines > i:first-child {
-    height: 10px;
-    background: var(--color-rule-strong);
-  }
-
-  /* ---- Købsmåder (BuyModes) ------------------------------------------------ */
-  .mode {
-    display: flex;
-    flex-direction: column;
-    padding: 28px 22px 26px;
-    border: 1px solid var(--color-rule-strong);
-    border-radius: var(--radius-panel);
-    background: var(--color-surface);
-  }
-
-  @media (min-width: 768px) {
-    .mode {
-      padding: 36px 34px 34px;
-    }
-  }
-
-  .mode[data-primary='true'] {
-    border: 2px solid var(--color-cta);
-    padding: 27px 21px 25px;
-    box-shadow: var(--shadow-card);
-  }
-
-  @media (min-width: 768px) {
-    .mode[data-primary='true'] {
-      padding: 35px 33px 33px;
-    }
-  }
-
-  .mode-price {
-    margin-block: 22px 24px;
-    padding-block: 18px;
-    border-block: 1px solid var(--color-rule);
-  }
-
-  .mode-main {
-    font-size: clamp(1.25rem, 1rem + 1vw, 1.625rem);
-    font-weight: 500;
-    line-height: 1.3;
-    letter-spacing: -0.015em;
-    text-wrap: pretty;
-  }
-
-  .mode-label {
-    margin-top: 24px;
-    margin-bottom: 4px;
-    font-size: 14px;
-    font-weight: 600;
-    line-height: 1.4;
-    color: var(--color-muted);
-  }
-
-  /* ---- Problemkort ------------------------------------------------------- */
-  .problem {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    padding: 26px 24px 24px;
-  }
-
-  /* ---- Vilkår -------------------------------------------------------------- */
-  .term-block {
-    padding: 26px 22px 12px;
-    border: 1px solid var(--color-rule-strong);
-    border-radius: var(--radius-panel);
-    background: var(--color-surface);
-  }
-
-  @media (min-width: 768px) {
-    .term-block {
-      padding: 34px 34px 18px;
-    }
-  }
-
-  .term-block .rows {
-    margin-top: 18px;
-    font-size: 16px;
-    line-height: 1.6;
-  }
-
-  .term-block .rows > li:first-child {
-    border-top-color: var(--color-rule);
-  }
-
-  .term-block .rows > li {
-    border-top-color: var(--color-rule);
-  }
-
-  .term-block .rows > li:last-child {
-    border-bottom: 0;
-  }
-
-  .callout {
-    display: flex;
     gap: 14px;
-    align-items: flex-start;
-    padding: 18px 20px;
-    border: 1px solid color-mix(in srgb, var(--color-cta) 28%, transparent);
-    border-radius: var(--radius-card);
-    background: var(--color-cta-soft);
+    min-height: 56px;
+    padding: 0 24px;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.2;
+    text-decoration: none;
+    white-space: nowrap;
+    transition:
+      background-color 180ms ease-out,
+      color 180ms ease-out,
+      transform 300ms var(--spring-press);
   }
+  .btn:hover {
+    text-decoration: none;
+  }
+  .btn:active {
+    transform: scale(var(--press, 0.97));
+  }
+  .btn-ink {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .btn-surface {
+    background: var(--surface);
+    color: var(--ink);
+  }
+  .btn-white {
+    background: var(--paper);
+    color: var(--ink);
+  }
+  @media (hover: hover) {
+    .btn-ink:hover {
+      background: var(--hairline-dark);
+    }
+    .btn-surface:hover {
+      background: var(--ink);
+      color: var(--paper);
+    }
+    .btn-white:hover {
+      background: var(--surface);
+    }
+  }
+  .btn-disabled,
+  .btn:disabled {
+    background: var(--surface);
+    color: var(--muted-2);
+    cursor: default;
+  }
+  .btn:disabled:active {
+    transform: none;
+  }
+
+  /* Overskrifter: Archivo Expanded Bold (bredde-aksen) med stram sætning. */
+  .display {
+    font-family: var(--font-display);
+    font-stretch: 125%;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    line-height: 0.95;
+    text-wrap: balance;
+  }
+  .display-hero {
+    letter-spacing: -0.045em;
+    line-height: 0.92;
+  }
+  .t-h2 {
+    font-size: var(--h2-mobile);
+  }
+  .t-h2s {
+    font-size: var(--h2-small-mobile);
+    letter-spacing: -0.035em;
+    line-height: 1;
+  }
+  @media (min-width: 47.5rem) {
+    .t-h2 {
+      font-size: var(--h2-desktop);
+    }
+    .t-h2s {
+      font-size: var(--h2-small-desktop);
+    }
+  }
+
+  /* Priser og tal: Geist Mono med tabulartal. Aldrig til andet. */
+  .price {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .shell {
+    max-width: var(--max-w);
+    margin-inline: auto;
+    padding-inline: var(--page-pad-mobile);
+  }
+  @media (min-width: 47.5rem) {
+    .shell {
+      padding-inline: var(--page-pad-desktop);
+    }
+  }
+  .section-pad {
+    padding-block: 64px;
+  }
+  @media (min-width: 47.5rem) {
+    .section-pad {
+      padding-block: 144px;
+    }
+  }
+
+  /* På mørk baggrund er fokusrammen hvid. */
+  .dark-zone :focus-visible {
+    outline-color: var(--paper);
+  }
+
+  .skip-link {
+    position: absolute;
+    left: 8px;
+    top: -100px;
+    z-index: 100;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 14px 18px;
+    font-weight: 600;
+  }
+  .skip-link:focus {
+    top: 8px;
+  }
+}
+
+/* Animationer, der bruges som klasser. Nøgleframes ligger i styles/motion.css. */
+.anim-step {
+  animation: stepIn 520ms var(--spring-step) both;
+}
+.anim-line {
+  animation: lineIn 440ms var(--spring-line) both;
+}
+.anim-menu {
+  animation: menuIn 360ms var(--spring-menu) both;
+}
+.anim-link {
+  animation: linkIn 420ms var(--spring-line) both;
 }

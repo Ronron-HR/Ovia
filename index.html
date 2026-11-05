@@ -7,8 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <title>Hjemmesider og lokal SEO i Aarhus | OviaSpecs</title>
-    <meta name="description" content="Få hjælp til hjemmeside, lokal Google-synlighed og enklere henvendelser. Se priser og løsninger hos OviaSpecs. Direkte kontakt med Ronny." />
-    <meta name="theme-color" content="#f8f5ef" />
+    <meta name="description" content="Hjemmeside, Google-profil, booking og korte videoer til restauranter og caféer i Aarhus. Hjemmeside fra 5.000 kr. Alle priser er ekskl. moms." />
+    <meta name="theme-color" content="#ffffff" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
     <link rel="canonical" href="https://oviaspecs.com/" />
 
@@ -16,61 +16,26 @@
     <meta property="og:locale" content="da_DK" />
     <meta property="og:site_name" content="OviaSpecs" />
     <meta property="og:title" content="Hjemmesider og lokal SEO i Aarhus | OviaSpecs" />
-    <meta property="og:description" content="Få hjælp til hjemmeside, lokal Google-synlighed og enklere henvendelser. Se priser og løsninger hos OviaSpecs. Direkte kontakt med Ronny." />
+    <meta property="og:description" content="Hjemmeside, Google-profil, booking og korte videoer til restauranter og caféer i Aarhus. Hjemmeside fra 5.000 kr. Alle priser er ekskl. moms." />
     <meta property="og:url" content="https://oviaspecs.com/" />
     <meta property="og:image" content="https://oviaspecs.com/og.jpg" />
     <meta property="og:image:type" content="image/jpeg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="OviaSpecs. Hjemmesider og lokal Google-synlighed til mindre virksomheder." />
+    <meta property="og:image:alt" content="OviaSpecs. Hjemmeside, Google-profil, booking og korte videoer til restauranter og caféer." />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Hjemmesider og lokal SEO i Aarhus | OviaSpecs" />
-    <meta name="twitter:description" content="Få hjælp til hjemmeside, lokal Google-synlighed og enklere henvendelser. Se priser og løsninger hos OviaSpecs. Direkte kontakt med Ronny." />
+    <meta name="twitter:description" content="Hjemmeside, Google-profil, booking og korte videoer til restauranter og caféer i Aarhus. Hjemmeside fra 5.000 kr. Alle priser er ekskl. moms." />
     <meta name="twitter:image" content="https://oviaspecs.com/og.jpg" />
-    <meta name="twitter:image:alt" content="OviaSpecs. Hjemmesider og lokal Google-synlighed til mindre virksomheder." />
+    <meta name="twitter:image:alt" content="OviaSpecs. Hjemmeside, Google-profil, booking og korte videoer til restauranter og caféer." />
 
     <!-- Pladsholder: scripts/prerender.mjs indsætter forsidens strukturerede
-         data (organisationLd i src/entry-server.jsx, bygget fra pricing.js)
+         data (organisationLd i src/entry-server.jsx, bygget fra prices.json)
          og fjerner den på de øvrige sider. -->
     <script type="application/ld+json">{}</script>
 
-    <!-- Skrifterne ligger på egen server (public/fonts, @font-face i index.css).
-         Ingen kald til Google Fonts: så sendes besøgendes IP-adresse ikke til
-         tredjepart, og privatlivspolitikken kan med sandhed sige, at siden
-         ikke deler noget med andre. crossorigin er påkrævet ved font-preload. -->
-    <link rel="preload" as="font" type="font/woff2" href="/fonts/instrument-sans-latin.woff2" crossorigin />
-
-    <script>
-      // Sættes før første maling, så hero-koreografien ikke venter på
-      // React-hydrering — og så der ikke blinker noget indhold undervejs.
-      //
-      // Vagthund: svarer motion-koden ikke inden 2,5s, fjernes klassen igen,
-      // og alt indhold står synligt. Indhold må aldrig være permanent
-      // usynligt, fordi JS fejler eller er langsom.
-      ;(function () {
-        var root = document.documentElement
-        root.classList.add('js-motion')
-        window.__oviaSpecsReady = function () {
-          root.setAttribute('data-motion-ready', '1')
-        }
-
-        // Direkte link til et senere trin i beregneren (fx ?…&trin=4): siden
-        // er forudrenderet med trin 1, og ved hydrering skifter beregneren til
-        // det rigtige trin og bliver højere. Indtil da holdes alt EFTER
-        // beregneren ude af layoutet (index.css), så det ikke skubbes ned
-        // (layoutskift). PriceCalculator fjerner markeringen, når trinnet er
-        // vist; vagthunden herunder gør det senest efter 2,5s.
-        var trin = /[?&]trin=(\d+)/.exec(location.search)
-        if ((trin && Number(trin[1]) > 1) || /[?&]hjaelp=/.test(location.search)) root.setAttribute('data-calc-pending', '')
-
-        setTimeout(function () {
-          if (!root.hasAttribute('data-motion-ready')) {
-            root.classList.remove('js-motion')
-          }
-          root.removeAttribute('data-calc-pending')
-        }, 2500)
-      })()
-    </script>
+    <!-- Skrifterne (Archivo, Geist, Geist Mono) er selvhostede via @fontsource-variable og bundtes af Vite.
+         Ingen kald til Google Fonts: så sendes besøgendes IP-adresse ikke til tredjepart. -->
   </head>
   <body>
     <div id="root"></div>

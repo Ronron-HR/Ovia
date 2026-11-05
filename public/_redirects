@@ -1,7 +1,6 @@
 # Gamle adresser -> nuværende sider. 301 = permanent. Ét hop (ingen kæder):
-# målene nedenfor er de endelige adresser. Rebrand okt. 2026: /seo/ er flyttet
-# fra Marketing til Lokal synlighed (/booking-google/), /ai-automatisering/ til
-# Systemer. Se docs/rebrand/s-seo.md.
+# målene nedenfor er de endelige adresser. Redesign nov. 2026: prisberegneren bor på
+# forsiden (/#prisberegner), og /systemer/ er udgået (ingen side om små systemer mere).
 /hjemmesider/                  /hjemmeside/       301
 /hjemmesider                   /hjemmeside/       301
 /seo/                          /booking-google/   301
@@ -14,11 +13,13 @@
 /sociale-medier-annoncering    /marketing/        301
 /booking-integrationer/        /booking-google/   301
 /booking-integrationer         /booking-google/   301
-/prisberegner/                 /priser/           301
-/prisberegner                  /priser/           301
-/ai-automatisering/            /systemer/         301
-/ai-automatisering             /systemer/         301
+/prisberegner/                 /#prisberegner     301
+/prisberegner                  /#prisberegner     301
+/ai-automatisering/            /                  301
+/ai-automatisering             /                  301
 /om/                           /#om               301
 /om                            /#om               301
 /kontakt/                      /#kontakt          301
 /kontakt                       /#kontakt          301
+/systemer/                    /                  301
+/systemer                     /                  301

@@ -3,7 +3,7 @@
 
    Alt her er afgrænset af .dm og hører kun til demoerne. Hver demo sætter sine
    egne farver og sin egen skrift (.dm-cafe, .dm-restaurant, .dm-salon,
-   .dm-vinbar). Ingen webskrifter hentes: Instrument Sans ligger på siden, og
+   .dm-vinbar). Ingen webskrifter hentes udefra: Geist ligger på siden (@fontsource-variable), og
    de to serifskrifter er systemskrifter. Bevægelse er dæmpet og slås fra med
    prefers-reduced-motion.
    ========================================================================= */
@@ -19,11 +19,11 @@
   --dm-card: #fff;
   --dm-focus: #222;
   --dm-radius: 12px;
-  --dm-head: var(--font-sans);
+  --dm-head: var(--font-body);
   --nav-h: 72px;
   background: var(--dm-bg);
   color: var(--dm-fg);
-  font-family: var(--font-sans);
+  font-family: var(--font-body);
   line-height: 1.6;
 }
 
@@ -57,10 +57,10 @@
 }
 
 /* ---- OviaSpecs-stribe: mærkning af demoen --------------------------------- */
-/* Striben er OviaSpecs' og følger sidens tokens (index.css), ikke demoens. */
+/* Striben er OviaSpecs' og følger sidens tokens (styles/tokens.css), ikke demoens. */
 .dm-strip {
-  background: var(--color-ink);
-  color: var(--color-paper);
+  background: var(--ink);
+  color: var(--paper);
   font-size: 14px;
   line-height: 1.45;
 }
@@ -100,7 +100,7 @@
   display: inline-flex;
   min-height: 36px;
   align-items: center;
-  color: var(--color-paper);
+  color: var(--paper);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -110,21 +110,21 @@
   gap: 6px;
   min-height: 40px;
   padding: 0 14px;
-  border: 1.5px solid var(--color-paper);
-  border-radius: var(--radius-btn);
+  border: 1.5px solid var(--paper);
+  border-radius: 0;
   font-weight: 600;
   text-decoration: none;
 }
 
 @media (hover: hover) {
   .dm-strip a.dm-strip-back:hover {
-    background: var(--color-paper);
-    color: var(--color-ink);
+    background: var(--paper);
+    color: var(--ink);
   }
 }
 
 .dm-strip :focus-visible {
-  outline-color: var(--color-cta);
+  outline-color: #fff;
 }
 
 /* ---- Hoved og menu --------------------------------------------------------- */
@@ -716,7 +716,7 @@ textarea.dm-input {
   --dm-card: #fffdf5;
   --dm-focus: #1b2a41;
   --dm-radius: 16px;
-  --dm-head: var(--font-sans);
+  --dm-head: var(--font-body);
 }
 
 .dm-cafe .dm-h1,
@@ -869,7 +869,7 @@ textarea.dm-input {
   --dm-focus: #3d6a57;
   --dm-radius: 2px;
   --dm-green: #3d6a57;
-  --dm-head: var(--font-sans);
+  --dm-head: var(--font-body);
 }
 
 .dm-salon .dm-h1,

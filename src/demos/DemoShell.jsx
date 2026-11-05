@@ -1,6 +1,6 @@
 import { useEffect, useId, useState, useSyncExternalStore } from 'react'
 import { demos } from '../content.demos.js'
-import { paths } from '../data/texts.js'
+import { paths } from '../data/site.js'
 import { useEntrance } from './useEntrance.js'
 
 /**
@@ -19,10 +19,10 @@ import { useEntrance } from './useEntrance.js'
 const WITH_ANCHOR = ['/demoer/']
 
 /** Sider med prisberegneren: valgene i adresselinjen følger med tilbage. */
-const CALC_PAGES = [paths.home, paths.hjemmeside, paths.marketing, paths.bookingGoogle, paths.priser]
+const CALC_PAGES = [paths.home]
 
 /** Priserne på en hjemmeside i beregneren. */
-const PRICES = `${paths.priser}?ydelser=hjemmeside#beregner`
+const PRICES = paths.beregner
 const FROM = 'oviaspecs-demo-from'
 
 /** En af selve demoerne (/demoer/cafe/ …), ikke oversigten /demoer/. */

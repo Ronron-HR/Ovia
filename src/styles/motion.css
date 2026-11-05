@@ -1,0 +1,26 @@
+/* OviaSpecs bevægelse. Alle springs har let overshoot. Alt slås fra under prefers-reduced-motion. */
+:root{
+  --spring-press:cubic-bezier(.3,1.6,.5,1);     /* tryk: scale .96-.98 og tilbage, 300ms */
+  --spring-step:cubic-bezier(.2,1.2,.35,1);     /* nyt trin glider ind: 520ms */
+  --spring-line:cubic-bezier(.2,1.3,.4,1);      /* kvitteringslinje glider ind: 440ms */
+  --spring-slide:cubic-bezier(.3,1.35,.5,1);    /* valgmarkering/progress glider mellem valg: 420ms */
+  --spring-check:cubic-bezier(.3,1.7,.5,1);     /* flueben springer ind: 300ms (opacity 120ms) */
+  --spring-odo:cubic-bezier(.25,1.3,.45,1);     /* tælleværk: 340ms */
+  --spring-sheet:cubic-bezier(.2,1.12,.3,1);    /* bottom sheet: 460ms */
+  --spring-menu:cubic-bezier(.2,1.25,.4,1);     /* fuldskærmsmenu: 360ms, links 420ms med 35ms forskydning */
+  --ease-bar:cubic-bezier(.2,1,.3,1);           /* bundbar ind/ud (max-height): 420ms */
+  --ease-fly:cubic-bezier(.5,0,.25,1);          /* flyvende beløb: 640ms */
+  --ease-color:ease-out;                        /* farveskift 140-240ms */
+}
+@keyframes stepIn{from{transform:translateX(40px);opacity:.15}to{transform:none;opacity:1}}
+@keyframes lineIn{from{transform:translateX(28px);opacity:0}to{transform:none;opacity:1}}
+@keyframes menuIn{from{transform:translateY(-16px);opacity:0}to{transform:none;opacity:1}}
+@keyframes linkIn{from{transform:translateY(18px);opacity:0}to{transform:none;opacity:1}}
+/* Flyvende beløb: element placeres ved bundbarens midte; --dx/--dy = trykpunkt minus bundbar-midte */
+@keyframes flyTo{
+  0%{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(1);opacity:0}
+  12%{opacity:1}
+  72%{transform:translate(-50%,-50%) scale(1);opacity:1}
+  100%{transform:translate(-50%,-50%) scale(.7);opacity:0}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}

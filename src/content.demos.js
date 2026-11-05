@@ -1,6 +1,6 @@
 /* =========================================================================
    KONCEPTER — fire fiktive hjemmesider udviklet af OviaSpecs (siden /demoer/).
-   De mærkes overalt "Koncept – ikke en kundeopgave".
+   De mærkes overalt "Koncept. Opdigtet indhold".
 
    De er ikke kundearbejde og bygger ikke på rigtige virksomheder: ingen
    virksomhedsnavne, adresser, telefonnumre, logoer, anmeldelser, menukort
@@ -30,8 +30,8 @@ export const demos = {
   title: 'Fire eksempler, du kan prøve.',
   intro:
     'Fire små hjemmesider, jeg har lavet som eksempler: en café, en restaurant, en salon og en vinbar. De er ikke lavet for rigtige kunder, men de virker, så du kan prøve menuer, faner og bookingeksempler på din telefon.',
-  banner: 'Koncept – ikke en kundeopgave.',
-  tag: 'Koncept – ikke en kundeopgave',
+  banner: 'Koncept. Opdigtet indhold.',
+  tag: 'Koncept. Opdigtet indhold',
   /** Det korte mærke på hvert kort. Det fulde mærke (tag) står ved listen og på eksemplerne. */
   tagShort: 'Koncept',
   /** Linjen over listen af eksempler. */
@@ -39,14 +39,6 @@ export const demos = {
   note: 'Eksemplerne viser design og funktioner. Din hjemmeside tilpasses din virksomhed. Booking og bestilling er tilvalg, som vi aftaler, før jeg går i gang. Skærmbillederne er taget af eksemplerne selv.',
   localNote:
     'Alt i eksemplerne er lokalt: intet bliver sendt, bestilt eller booket, og ingen knap fører til en rigtig virksomhed.',
-  /** Arbejdsgangsdemoen på /systemer/ (tekstkortet på siden Eksempler). Ikke et koncept-website, men en lille frontenddemo. */
-  workflow: {
-    title: 'Prøv en arbejdsgang',
-    text: 'En lille demo af en forespørgsel om et selskab: formular, overblik og status.',
-    href: '/systemer/#demo',
-    label: 'Demo – ikke et færdigt system. Intet sendes eller gemmes.',
-    open: 'Åbn demoen',
-  },
   open: 'Åbn eksemplet',
   calcCta: 'Se din pris',
   backToSite: 'Tilbage til OviaSpecs',
@@ -75,7 +67,7 @@ export const demos = {
       mobile: { src: '/demoer/cafe-mobile.webp', ...MOBILE },
       metaTitle: 'Cafédemo | Koncept fra OviaSpecs',
       metaDescription:
-        'Koncept – ikke en kundeopgave: en café-hjemmeside med menu i kategorier, åbningstider og kontakt.',
+        'Koncept. Opdigtet indhold: en café-hjemmeside med menu i kategorier, åbningstider og kontakt.',
     },
     {
       id: 'restaurant',
@@ -98,7 +90,7 @@ export const demos = {
       mobile: { src: '/demoer/restaurant-mobile.webp', ...MOBILE },
       metaTitle: 'Restaurantdemo | Koncept fra OviaSpecs',
       metaDescription:
-        'Koncept – ikke en kundeopgave: en restaurant-hjemmeside med menukort i faner og et eksempel på bordbestilling.',
+        'Koncept. Opdigtet indhold: en restaurant-hjemmeside med menukort i faner og et eksempel på bordbestilling.',
     },
     {
       id: 'salon',
@@ -121,7 +113,7 @@ export const demos = {
       mobile: { src: '/demoer/salon-mobile.webp', ...MOBILE },
       metaTitle: 'Salondemo | Koncept fra OviaSpecs',
       metaDescription:
-        'Koncept – ikke en kundeopgave: en salon-hjemmeside med behandlinger, eksempelpriser og et lokalt bookingeksempel.',
+        'Koncept. Opdigtet indhold: en salon-hjemmeside med behandlinger, eksempelpriser og et lokalt bookingeksempel.',
     },
     {
       id: 'vinbar',
@@ -144,7 +136,7 @@ export const demos = {
       mobile: { src: '/demoer/vinbar-mobile.webp', ...MOBILE },
       metaTitle: 'Vinbardemo | Koncept fra OviaSpecs',
       metaDescription:
-        'Koncept – ikke en kundeopgave: en vinbar-hjemmeside med vinkort i kategorier og et eksempel på en gruppehenvendelse.',
+        'Koncept. Opdigtet indhold: en vinbar-hjemmeside med vinkort i kategorier og et eksempel på en gruppehenvendelse.',
     },
   ],
 }

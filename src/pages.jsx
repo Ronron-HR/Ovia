@@ -5,7 +5,6 @@ import Vinbar from './demos/Vinbar.jsx'
 import Demoer from './pages/Demoer.jsx'
 import Home from './pages/Home.jsx'
 import Priser from './pages/Priser.jsx'
-import Systemer from './pages/Systemer.jsx'
 import * as service from './pages/Service.jsx'
 
 /**
@@ -20,7 +19,6 @@ export const pages = {
   bookingGoogle: service.bookingGoogle,
   priser: Priser,
   demoer: Demoer,
-  systemer: Systemer,
   'demo-cafe': Cafe,
   'demo-restaurant': Restaurant,
   'demo-salon': Salon,
