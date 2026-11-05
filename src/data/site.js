@@ -39,6 +39,9 @@ export const navLinks = [
   { label: 'Eksempler', href: paths.demoer },
 ]
 
+/** Hvor længe en forespørgsel gemmes i D1, før workeren sletter den (også i privatlivspolitikken). */
+export const retentionMonths = 12
+
 export const flags = {
   /**
    * Palmy-casen er skjult (mangler adresse til "Besøg siden"). Komponenten

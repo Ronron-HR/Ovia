@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import prices from '../../data/prices.json'
 import { driftChoices, helpQuestions, serviceMeta, SERVICE_KEYS, shortPoints } from '../../data/calculator.js'
 import { formatKr } from '../../lib/calculate.js'
+import InquirySlot from './InquirySlot.jsx'
 import { Check, ReceiptLine, TERMS_SHORT, Total } from './parts.jsx'
 
 const NB = ' '
@@ -239,19 +240,10 @@ function Summary({ calc }) {
         </div>
         <p className="mt-3 text-[13px]">Alle priser er ekskl. moms</p>
       </div>
-      <div className="mt-4 flex flex-col gap-2">
-        <a href={hrefs.mail} className="btn btn-ink px-[18px] [--press:.98]">
-          <span className="whitespace-nowrap">Send mine valg</span>
-          <span aria-hidden="true">→</span>
-        </a>
-        <div className="grid grid-cols-2 gap-2">
-          <a href="tel:+4553613699" className="btn btn-surface min-h-[52px] justify-center text-[15px]">
-            Ring til Ronny
-          </a>
-          <a href={hrefs.sms} className="btn btn-surface min-h-[52px] justify-center text-[15px]">
-            Skriv en SMS
-          </a>
-        </div>
+      <div className="mt-5">
+        <InquirySlot receipt={receipt} hrefs={hrefs} />
+      </div>
+      <div className="mt-2 flex flex-col gap-2">
         <button type="button" onClick={copy} className="min-h-12 text-[15px] underline underline-offset-4">
           {copied ? 'Link kopieret' : 'Kopiér link til min pris'}
         </button>
@@ -485,10 +477,10 @@ function BarAndSheet({ calc, barRef, barVisible }) {
           <p className="mt-3 text-[13px] text-on-ink-2">Alle priser er ekskl. moms</p>
           {any && (
             <div className="mt-5 flex flex-col gap-2">
-              <a href={hrefs.mail} className="btn btn-white px-4 [--press:.98]">
-                <span className="whitespace-nowrap">Send mine valg</span>
+              <button type="button" onClick={() => dispatch({ type: 'go', step: 4 })} className="btn btn-white px-4 [--press:.98]">
+                <span className="whitespace-nowrap">Gå til opsummering</span>
                 <span aria-hidden="true">→</span>
-              </a>
+              </button>
               <div className="grid grid-cols-2 gap-2">
                 <a href="tel:+4553613699" className="btn btn-surface min-h-[52px] justify-center text-[15px]">
                   Ring til Ronny

@@ -1,10 +1,12 @@
-import { contact, links } from '../data/site.js'
+import { contact, links, retentionMonths } from '../data/site.js'
 import Logo from './ui/Logo.jsx'
 
 /**
  * PRIVATLIVSPOLITIK. Beskriver præcis det, siden gør:
  * - ingen cookies, og ingen sporing ud over Cloudflare Web Analytics
- * - ingen formular: kontakt sker via telefon, SMS eller mail
+ * - forespørgselsformularen under prisberegneren (components/calculator/InquiryForm.jsx, worker/index.js): sendes som mail via
+ *   Cloudflare Email Routing og gemmes først i D1 (slettes efter retentionMonths); spamværn er honeypot og rate limit, ikke Turnstile
+ *   (slås Turnstile til, skal politikken nævne det)
  * - skrifterne er selvhostede (@fontsource-variable, ingen Google Fonts)
  * - prisberegnerens valg står i adresselinjen og forlader kun browseren, hvis du selv sender dem
  * - koncepterne husker i sessionStorage, hvilken side man kom fra (DemoShell)
@@ -14,10 +16,10 @@ import Logo from './ui/Logo.jsx'
  */
 
 const UPDATED = '5. november 2026'
-const RETENTION_MONTHS = 12
+const RETENTION_MONTHS = retentionMonths
 const PROVIDERS = [
-  ['Cloudflare', 'hosting af siden, serverlogs, besøgsstatistik (Web Analytics) og videresendelse af mail sendt til kontakt@oviaspecs.com (Email Routing).'],
-  ['Google (Gmail)', 'den mailboks, mailen bliver modtaget i.'],
+  ['Cloudflare', 'hosting af siden, serverlogs, besøgsstatistik (Web Analytics), modtagelse af formularen (Workers), databasen med forespørgsler (D1) og afsendelse og videresendelse af mail (Email Routing).'],
+  ['Google (Gmail)', 'den mailboks, forespørgsler og mails bliver modtaget i.'],
 ]
 
 function Section({ title, children }) {
@@ -50,7 +52,7 @@ export default function Privatlivspolitik() {
         <h1 className="display display-hero text-[clamp(40px,7vw,72px)]">Privatlivspolitik</h1>
         <p className="mt-6 max-w-[56ch] text-base leading-normal">
           Kort version: Siden bruger ingen cookies. Besøg tælles med Cloudflare Web Analytics, som ifølge Cloudflare ikke indsamler
-          personoplysninger. Jeg får kun de oplysninger, du selv giver mig, når du ringer, sender en SMS eller skriver en mail. Dem bruger
+          personoplysninger. Jeg får kun de oplysninger, du selv giver mig: når du sender formularen under prisberegneren, ringer, sender en SMS eller skriver en mail. Dem bruger
           jeg kun til at svare dig.
         </p>
         <p className="mt-2 text-sm text-muted-2">Sidst opdateret: {UPDATED}</p>
@@ -70,9 +72,16 @@ export default function Privatlivspolitik() {
           <Section title="Hvilke oplysninger jeg behandler">
             <ul className={list}>
               <li>
+                <strong className={strong}>Når du sender formularen under prisberegneren (&quot;Send mine valg&quot;):</strong> dit navn, dit
+                telefonnummer og/eller din mailadresse, virksomhed og besked, hvis du skriver dem, og dine valg i beregneren (pakker, priser og et
+                link til dem). Valgene sendes med automatisk, og jeg regner priserne ud igen på serveren. Din IP-adresse bruges kun kortvarigt til
+                at begrænse, hvor mange forespørgsler der kan sendes fra samme sted (spambeskyttelse); den gemmes ikke sammen med forespørgslen.
+                Et skjult felt, som kun robotter udfylder, bruges til samme formål.
+              </li>
+              <li>
                 <strong className={strong}>Når du ringer, sender en SMS eller skriver:</strong> dit navn, dit telefonnummer eller din
-                mailadresse og det, du selv fortæller mig. Trykker du &quot;Send mine valg&quot; i prisberegneren, åbner din egen mail-app med en
-                færdigskrevet besked med dine valg og et link til dem. Du bestemmer selv, om du sender den.
+                mailadresse og det, du selv fortæller mig. Knapperne Ring og SMS åbner din egen telefon eller SMS-app med en færdigskrevet
+                besked med et link til dine valg. Du bestemmer selv, om du sender den.
               </li>
               <li>
                 <strong className={strong}>Hvis du bestiller en opgave:</strong> virksomhedens navn, kontaktperson og de oplysninger, der skal
@@ -89,8 +98,8 @@ export default function Privatlivspolitik() {
           <Section title="Hvad jeg bruger dem til, og på hvilket grundlag">
             <ul className={list}>
               <li>
-                <strong className={strong}>At svare dig</strong> og give dig et tilbud. Grundlaget er databeskyttelsesforordningens artikel 6,
-                stk. 1, litra b (skridt, du selv beder om, inden en aftale) og litra f (min legitime interesse i at kunne svare dig).
+                <strong className={strong}>At svare på din forespørgsel</strong> (formular, mail, SMS eller telefon) og give dig et tilbud. Formularen sender dine oplysninger til mig som mail og bruges kun til det; ikke til nyhedsbreve eller markedsføring. Grundlaget er databeskyttelsesforordningens artikel 6,
+                stk. 1, litra b (skridt, du selv beder om, inden en aftale) og litra f (min legitime interesse i at kunne svare dig og i at beskytte formularen mod spam).
               </li>
               <li>
                 <strong className={strong}>At levere arbejdet og sende faktura.</strong> Grundlaget er artikel 6, stk. 1, litra b (opfyldelse
@@ -126,8 +135,13 @@ export default function Privatlivspolitik() {
           </Section>
 
           <Section title="Hvor de gemmes, og hvor længe">
-            <p>Mails og SMS-beskeder gemmes i min indbakke hos Google (Gmail) og på min telefon.</p>
+            <p>
+              En forespørgsel fra formularen sendes som mail til min indbakke hos Google (Gmail). Den gemmes først i en database hos Cloudflare (D1),
+              så den ikke går tabt, hvis mailen fejler, og så den kan sendes igen. Mails og SMS-beskeder gemmes i min indbakke hos Google (Gmail) og
+              på min telefon.
+            </p>
             <ul className={list}>
+              <li>Forespørgsler fra formularen slettes automatisk fra databasen {RETENTION_MONTHS} måneder efter, de er sendt.</li>
               <li>Henvendelser, der ikke fører til en aftale, slettes senest {RETENTION_MONTHS} måneder efter sidste kontakt.</li>
               <li>Bilag og fakturaer gemmes i 5 år efter udgangen af regnskabsåret, som bogføringsloven kræver.</li>
               <li>Serverlogs gemmes kort af hostingudbyderen og slettes automatisk.</li>
@@ -151,7 +165,7 @@ export default function Privatlivspolitik() {
             </p>
             <p>
               Prisberegnerens valg står i adresselinjen, så du kan dele eller gemme linket. De forlader kun din browser, hvis du selv sender
-              dem med &quot;Send mine valg&quot; eller en SMS. Ring og SMS åbner din egen telefon eller SMS-app med en færdigskrevet besked, som du
+              formularen &quot;Send mine valg&quot; eller en SMS. Ring og SMS åbner din egen telefon eller SMS-app med en færdigskrevet besked, som du
               selv vælger, om du vil sende.
             </p>
             <p>

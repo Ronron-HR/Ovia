@@ -1,65 +1,37 @@
-import { calculator, formatKr, priceNote } from './data/pricing.js'
-import { privacy } from './data/texts.js'
-import { NONE, lokalOf, minimumText, parse, priceParts, quote, quoteNotes, resultStep, serialize, summaryLines } from './calculator.js'
+import prices from './data/prices.json' with { type: 'json' }
+import { fromQuery, formatKr, toQuery } from './lib/calculate.js'
+import { buildReceipt, specId } from './lib/receipt.js'
+import { retentionMonths } from './data/site.js'
 
 /**
- * HENVENDELSER FRA PRISBEREGNEREN — fælles for formularen (SendQuote.jsx) og
- * workeren (worker/index.js), så browser og server validerer ens. Serveren
- * stoler aldrig på browseren: den tjekker felterne igen og regner selv
- * opsummeringen ud fra linket (adresselinjen), så mailen altid passer med
- * beregneren.
+ * FORESPØRGSLER FRA BEREGNEREN — fælles for formularen (components/calculator/InquiryForm.jsx) og
+ * workeren (worker/index.js), så browser og server validerer ens.
  *
- * Kun sendInquiry() rører fetch, og kun når den kaldes.
+ * Serveren stoler aldrig på browseren: den tjekker felterne igen og regner selv kvitteringen ud af
+ * valgene i linket med calculate.js (lib/receipt.js). Tal fra browseren bruges ikke.
+ *
+ * Ren JavaScript uden React og uden adgang til window; kun sendInquiry() rører fetch.
  */
 
 export const inquiry = {
-  /** Hvor længe en henvendelse gemmes (D1), før workeren sletter den. Samme tal som i privatlivspolitikken. */
-  retentionMonths: privacy.retentionMonths,
+  /** Hvor længe en forespørgsel gemmes (D1), før workeren sletter den. Samme tal som i privatlivspolitikken. */
+  retentionMonths,
   endpoint: '/api/henvendelse',
-  title: 'Send din forespørgsel',
-  /** Hvad formularen faktisk gør: den sender en forespørgsel til Ronny, ikke en bestilling og ikke et tilbud til kunden. */
-  intro:
-    'Det er en forespørgsel, ikke en bestilling. Jeg får dine valg og prisen og svarer inden for 24 timer, på mail eller telefon. Intet er bestilt, og der sendes ikke et tilbud automatisk: Jeg gennemgår valgene med dig og bekræfter prisen, og vi aftaler omfanget skriftligt, før noget starter.',
-  contactLabel: 'Din mail eller dit telefonnummer',
-  nameLabel: 'Navn / virksomhed',
-  optional: '(valgfrit)',
-  messageLabel: 'Besked',
-  /** Hvad beskeden bruges til. */
-  messageHint: 'Fortæl kort, hvad du har brug for, eller hvad du undrer dig over. Jeg bruger den kun til at forstå din forespørgsel og svare dig. Skriv ikke noget følsomt.',
-  /** Tæller under beskedfeltet: tegn tilbage. */
-  messageLeft: (n) => `${n} tegn tilbage`,
-  submit: 'Send til Ronny',
-  sending: 'Sender …',
-  thanks: 'Tak. Jeg svarer inden for 24 timer.',
-  /** Fejl: telefonnummeret sættes ind mellem de to dele (contact.phone). */
-  failed: 'Det blev ikke sendt. Dine valg og din besked står stadig her. Ring på',
-  failedAfter: ', så tager jeg den derfra.',
-  invalid: 'Skriv en gyldig mail eller et dansk telefonnummer (8 cifre).',
-  /** Linjen under knappen: hvad oplysningerne bruges til. */
-  privacy: 'Bruges kun til at svare dig.',
-  privacyLink: 'Privatlivspolitik',
-  mailSubject: (contact) => `Forespørgsel fra prisberegneren: ${contact}`,
 }
 
-/** Længstetegn pr. felt. message: valgfri besked (højst 1.000 tegn). MAX_BODY i worker/index.js skal kunne rumme dem alle. */
-export const LIMITS = { contact: 200, name: 160, link: 600, message: 1000 }
+/** Længste tegn pr. felt. Besked højst 1.000 tegn. MAX_BODY i worker/index.js skal kunne rumme dem alle. */
+export const LIMITS = { name: 160, phone: 40, email: 200, company: 160, link: 600, message: 1000 }
 
 const EMAIL = /^[^\s@<>"',;()]+@[^\s@<>"',;()]+\.[^\s@<>"',;()]{2,}$/
 
 /** Dansk nummer: 8 cifre, evt. med +45 eller 0045 foran. Mellemrum, punktum og bindestreg tillades. */
 export function danishPhone(value) {
-  const digits = String(value).replace(/[\s.-]/g, '')
+  const digits = String(value ?? '').replace(/[\s.-]/g, '')
   const m = /^(?:\+45|0045)?(\d{8})$/.exec(digits)
   return m ? m[1] : null
 }
 
-export const validEmail = (value) => EMAIL.test(value) && value.length <= LIMITS.contact
-
-/** Gyldig mail ELLER dansk telefonnummer. */
-export const validContact = (value) => {
-  const v = String(value ?? '').trim()
-  return Boolean(v) && (validEmail(v) || Boolean(danishPhone(v)))
-}
+export const validEmail = (value) => EMAIL.test(value) && value.length <= LIMITS.email
 
 /** Beskeden: linjeskift bevares (højst to i træk), øvrige styretegn fjernes, højst LIMITS.message tegn. */
 export function cleanMessage(value) {
@@ -74,25 +46,36 @@ export function cleanMessage(value) {
     .slice(0, LIMITS.message)
 }
 
-/** Felterne renset (samme på klient og server). */
+/** Felterne renset (samme på klient og server). `website` er honeypot'en, `turnstile` en valgfri token. */
 export function normalize(raw) {
   const s = (x, max) => String(x ?? '').replace(/[\r\n\t]+/g, ' ').trim().slice(0, max)
   return {
-    contact: s(raw?.contact, LIMITS.contact),
     name: s(raw?.name, LIMITS.name),
-    link: s(raw?.link, LIMITS.link),
+    phone: s(raw?.phone, LIMITS.phone),
+    email: s(raw?.email, LIMITS.email),
+    company: s(raw?.company, LIMITS.company),
     message: cleanMessage(raw?.message),
+    link: s(raw?.link, LIMITS.link),
     honeypot: s(raw?.website, 200),
     turnstile: s(raw?.turnstile, 4096),
   }
 }
 
-/** Sider med beregneren; et link til andre stier peger på /priser/. */
-const CALC_PATHS = ['/', '/hjemmeside/', '/marketing/', '/booking-google/', '/priser/']
+/**
+ * Tjekker felterne. Returnerer { field, message } for den første fejl, ellers null.
+ * Navn er påkrævet; telefon eller mail (mindst én) er påkrævet; udfyldte felter skal være gyldige.
+ */
+export function validate(p) {
+  if (!p.name) return { field: 'name', message: 'Skriv dit navn.' }
+  if (!p.phone && !p.email) return { field: 'phone', message: 'Skriv et telefonnummer eller en mail, så jeg kan svare.' }
+  if (p.phone && !danishPhone(p.phone)) return { field: 'phone', message: 'Skriv et dansk telefonnummer med 8 cifre.' }
+  if (p.email && !validEmail(p.email)) return { field: 'email', message: 'Skriv en gyldig mailadresse.' }
+  return null
+}
 
 /**
- * Linket til beregnerens resultat, bygget forfra ud fra det, kunden sendte:
- * kun kendte sider og kun gyldige svar. `null`, hvis der ikke er et resultat.
+ * Linket til valgene, bygget forfra ud fra det, kunden sendte: kun gyldige svar (fromQuery),
+ * altid på forsiden. `null`, hvis der ikke er valgt noget.
  */
 export function canonicalLink(link, origin) {
   let url
@@ -101,46 +84,49 @@ export function canonicalLink(link, origin) {
   } catch {
     return null
   }
-  const state = parse(url.search, NONE)
-  if (!state.selected.length) return null
-  const path = CALC_PATHS.includes(url.pathname) ? url.pathname : '/priser/'
-  const search = serialize({ ...state, step: resultStep(state.selected) }, NONE)
-  return { url: `${origin}${path}${search}#beregner`, state }
+  const { selection } = fromQuery(url.search)
+  if (!Object.values(selection.services).some((v) => v !== null)) return null
+  return { url: `${origin}/?${toQuery(selection, 4)}#prisberegner`, selection }
 }
 
-/** Mailen til Ronny: kontakt, navn, opsummering med pakker og drift, nu/pr. md, moms og linket. */
-export function composeMail({ contact, name, message = '', link, state }) {
-  const q = quote(state)
-  const { once, month } = priceParts(q.total)
-  const phone = danishPhone(contact)
-  const lokal = lokalOf(q)
+const plain = (s) => String(s).replace(/ /g, ' ')
+
+/**
+ * Mailen til Ronny. Emne: "Ny forespørgsel: [navn], [virksomhed] – [engang] + [md]".
+ * Indhold: kontakt, besked, alle valgte linjer med priser, totaler ekskl. moms og del-linket.
+ */
+export function composeMail({ name, company = '', phone = '', email = '', message = '', link, selection }) {
+  const rc = buildReceipt(selection)
+  const who = company ? `${name}, ${company}` : name
+  const subject = `Ny forespørgsel: ${who} – ${plain(formatKr(rc.o))} + ${plain(formatKr(rc.m, true))}`
+  const line = (l) => `- ${plain(l.label)} – ${plain(l.pkg)}: ${plain(l.price)}`
   return {
-    subject: inquiry.mailSubject(contact),
+    subject,
     text: [
-      'Ny forespørgsel fra prisberegneren på oviaspecs.com (en forespørgsel, ikke en bestilling)',
+      'Ny forespørgsel fra oviaspecs.com (en forespørgsel, ikke en bestilling)',
       '',
-      `Kontakt: ${phone ? `${phone} (telefon)` : `${contact} (mail)`}`,
-      `Navn / virksomhed: ${name || '(ikke udfyldt)'}`,
+      `Navn: ${name}`,
+      `Virksomhed: ${company || '(ikke udfyldt)'}`,
+      `Telefon: ${phone ? danishPhone(phone) : '(ikke udfyldt)'}`,
+      `Mail: ${email || '(ikke udfyldt)'}`,
+      ...(message ? ['', 'Besked (hver linje starter med >):', ...message.split('\n').map((l) => `> ${l}`)] : []),
       '',
-      'Opsummering:',
-      ...summaryLines(q).map((s) => `- ${s}`),
+      `Valg (${specId(selection)}):`,
+      ...rc.all.map(line),
       '',
-      `Nu: ${once || formatKr(0)}`,
-      `Pr. md: ${month || `${formatKr(0)}/md`}`,
-      ...(lokal ? [`Minimum (Lokal): ${minimumText(q.total)}`] : []),
-      ...(priceNote ? [priceNote] : []),
-      ...(quoteNotes(q).length ? ['', ...quoteNotes(q)] : []),
-      ...(calculator.finalNote ? ['', calculator.finalNote] : []),
-      ...(message ? ['', 'Besked fra kunden (hver linje starter med >):', ...message.split('\n').map((l) => `> ${l}`)] : []),
+      `Engang: ${plain(formatKr(rc.o))}`,
+      `Pr. måned: ${plain(formatKr(rc.m, true))}`,
+      'Alle priser er ekskl. moms.',
+      ...(rc.all.some((l) => l.key === 'book' || l.key === 'bookingAddon') ? [prices.addons.booking.note] : []),
       '',
-      `Link til beregningen: ${link}`,
+      `Se valgene: ${link}`,
     ].join('\n'),
   }
 }
 
 /**
- * Sender henvendelsen. `true` KUN når serveren har svaret 200 med { ok: true };
- * alt andet (netværk, 4xx, 5xx, ikke-JSON) er `false`.
+ * Sender forespørgslen. { ok: true } KUN når serveren har svaret 200 med { ok: true };
+ * alt andet (netværk, 4xx, 5xx, ikke-JSON) er { ok: false, status }.
  */
 export async function sendInquiry(payload) {
   try {
@@ -150,8 +136,8 @@ export async function sendInquiry(payload) {
       body: JSON.stringify(payload),
     })
     const data = await res.json().catch(() => null)
-    return res.ok && data?.ok === true
+    return res.ok && data?.ok === true ? { ok: true } : { ok: false, status: res.status }
   } catch {
-    return false
+    return { ok: false, status: 0 }
   }
 }

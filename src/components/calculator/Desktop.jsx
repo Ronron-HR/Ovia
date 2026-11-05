@@ -2,6 +2,7 @@ import { useState } from 'react'
 import prices from '../../data/prices.json'
 import { driftChoices, helpQuestions, serviceMeta, SERVICE_KEYS, stepLabels } from '../../data/calculator.js'
 import { formatKr } from '../../lib/calculate.js'
+import InquirySlot from './InquirySlot.jsx'
 import { Check, ReceiptLine, TERMS_SHORT, Total } from './parts.jsx'
 
 const NB = ' '
@@ -202,7 +203,7 @@ function StepDrift({ calc }) {
 }
 
 function StepSummary({ calc }) {
-  const { hrefs } = calc
+  const { hrefs, receipt } = calc
   const [copied, setCopied] = useState(false)
   const copy = () => {
     try {
@@ -213,22 +214,12 @@ function StepSummary({ calc }) {
     setCopied(true)
     setTimeout(() => setCopied(false), 1800)
   }
-  const tile = 'press flex items-end p-6 bg-surface text-ink hov-ink [--press:.98]'
   return (
-    <div className="anim-step">
+    <div className="anim-step max-w-[680px]">
       <h3 className="text-[clamp(36px,4.4vw,68px)] leading-[.95] tracking-[-0.035em]">Din pris er klar.</h3>
       <p className="mt-4 text-[17px] text-muted-2">Send valgene, så svarer jeg inden for 24 timer.</p>
-      <div className="mt-11 grid gap-2" style={{ gridTemplateColumns: '2fr 1fr 1fr' }}>
-        <a href={hrefs.mail} className="press hov-ink-soft flex min-h-[180px] flex-col justify-end gap-2 bg-ink p-6 text-paper no-underline [--press:.98]">
-          <span className={`${heading} text-[30px] leading-none tracking-[-0.03em]`}>Send mine valg →</span>
-          <span className="text-sm text-on-ink-2">Åbner din mail med alle valg og priser.</span>
-        </a>
-        <a href="tel:+4553613699" className={`${tile} no-underline`}>
-          <span className={`${heading} text-xl leading-[1.1] tracking-[-0.02em]`}>Ring til Ronny</span>
-        </a>
-        <a href={hrefs.sms} className={`${tile} no-underline`}>
-          <span className={`${heading} text-xl leading-[1.1] tracking-[-0.02em]`}>Skriv en SMS</span>
-        </a>
+      <div className="mt-10">
+        <InquirySlot receipt={receipt} hrefs={hrefs} />
       </div>
       <div className="mt-6 flex flex-wrap items-center gap-7">
         <button type="button" onClick={copy} className="min-h-12 text-[15px] font-medium underline underline-offset-4">

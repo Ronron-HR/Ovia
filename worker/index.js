@@ -1,7 +1,7 @@
-import { canonicalLink, composeMail, inquiry, normalize, validContact, validEmail } from '../src/inquiry.js'
+import { canonicalLink, composeMail, danishPhone, inquiry, normalize, validate, validEmail } from '../src/inquiry.js'
 
 /**
- * HENVENDELSER FRA PRISBEREGNEREN (Cloudflare Worker)
+ * FORESPØRGSLER FRA PRISBEREGNEREN (Cloudflare Worker)
  *
  * Siden er statiske filer (dist/). Kun /api/* rammer denne worker
  * (wrangler.jsonc: assets.run_worker_first); alt andet serveres direkte.
@@ -10,9 +10,9 @@ import { canonicalLink, composeMail, inquiry, normalize, validContact, validEmai
  *   1. kun POST fra siden selv (same origin), højst 10 kB JSON
  *   2. honeypot: et udfyldt skjult felt får et almindeligt OK, men intet gemmes eller sendes
  *   3. rate limit pr. IP med Workers Rate Limiting-bindingen (RATE_LIMITER, ikke
- *      hukommelse) — altid. Turnstile kun, når TURNSTILE_SECRET er sat: så er en
- *      gyldig token påkrævet (403 uden). Uden hemmeligheden springes den over.
- *   4. felterne tjekkes igen (src/inquiry.js); opsummeringen regnes ud fra linket
+ *      hukommelse) — altid. Turnstile er et fejlflag og IKKE påkrævet: kun når TURNSTILE_SECRET er
+ *      sat, kræves en gyldig token (403 uden). Uden hemmeligheden springes den over (se README).
+ *   4. felterne tjekkes igen (src/inquiry.js); kvitteringen regnes ud af valgene i linket med calculate.js
  *   5. henvendelsen GEMMES i D1 (DB) — først derefter sendes mailen
  *   6. mailen sendes med Cloudflare Email Routing (SEND_EMAIL, MAIL_FROM → MAIL_TO)
  *
@@ -81,7 +81,8 @@ async function sendMail(env, { subject, text, replyTo = '' }, deps) {
   await env.SEND_EMAIL.send(new EmailMessage(env.MAIL_FROM, env.MAIL_TO, mime))
 }
 
-const replyToFor = (contact) => (validEmail(contact) ? contact : '')
+/** Reply-To: kundens mail, hvis udfyldt. Kontaktfeltet i D1 er 'mail · telefon' (kun de udfyldte). */
+const replyToFor = (contact) => String(contact).split(' · ').find(validEmail) ?? ''
 const errorText = (e) => String(e?.message ?? e).slice(0, 300)
 
 async function verifyTurnstile(secret, token, ip) {
@@ -129,19 +130,23 @@ export async function handleInquiry(request, env, deps) {
     return json(403, { ok: false, error: 'turnstile' })
   }
 
-  if (!validContact(p.contact)) return json(400, { ok: false, error: 'invalid_contact' })
+  const bad = validate(p)
+  if (bad) return json(400, { ok: false, error: 'invalid_' + bad.field, message: bad.message })
   const link = canonicalLink(p.link, self.origin)
   if (!link) return json(400, { ok: false, error: 'invalid_link' })
 
   // 1. Gem. Uden database er der ingen garanti for, at henvendelsen ikke går tabt: fejl.
   if (!env.DB) return json(503, { ok: false, error: 'not_configured' })
-  const mail = composeMail({ contact: p.contact, name: p.name, message: p.message, link: link.url, state: link.state })
+  // Kvitteringen regnes ud her af valgene i linket (calculate.js): tal fra browseren bruges aldrig.
+  const mail = composeMail({ ...p, link: link.url, selection: link.selection })
+  const contact = [p.email, danishPhone(p.phone)].filter(Boolean).join(' · ')
+  const who = p.company ? `${p.name} (${p.company})` : p.name
   const id = crypto.randomUUID()
   try {
     await env.DB.prepare(
       'INSERT INTO henvendelser (id, created_at, contact, name, link, subject, summary, mail_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
     )
-      .bind(id, new Date().toISOString(), p.contact, p.name, link.url, mail.subject, mail.text, 'pending')
+      .bind(id, new Date().toISOString(), contact, who, link.url, mail.subject, mail.text, 'pending')
       .run()
   } catch (e) {
     console.error('henvendelse: kunne ikke gemmes', e)
@@ -152,7 +157,7 @@ export async function handleInquiry(request, env, deps) {
   let status = 'sent'
   let error = null
   try {
-    await sendMail(env, { subject: mail.subject, text: mail.text, replyTo: replyToFor(p.contact) }, deps)
+    await sendMail(env, { subject: mail.subject, text: mail.text, replyTo: p.email }, deps)
   } catch (e) {
     status = 'failed'
     error = errorText(e)

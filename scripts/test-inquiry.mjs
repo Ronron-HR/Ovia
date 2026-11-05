@@ -1,23 +1,19 @@
 /**
- * Test af henvendelser fra prisberegneren: worker/index.js (handleInquiry og
- * den daglige cron runDaily), kørt i Node mod en rigtig SQLite-database med
- * præcis worker/schema.sql (node:sqlite bag et lille D1-lignende lag) og en
- * falsk send_email-binding, hvor mailfejl kan slås til og fra.
- * Kører med `npm test` og som en del af `npm run build`.
+ * Test af forespørgsler fra beregneren: worker/index.js (handleInquiry og den daglige cron runDaily),
+ * kørt i Node mod en rigtig SQLite-database med præcis worker/schema.sql (node:sqlite bag et lille
+ * D1-lignende lag) og en falsk send_email-binding, hvor mailfejl kan slås til og fra.
+ * Kører med `npm test`.
  *
- * Tjekker: gyldig mail/dansk nummer (samme regler i browser og på server),
- * ugyldigt input, honeypot, at henvendelsen GEMMES før mailen sendes og stadig
- * er gemt, når mailen fejler, fejl uden database, rate limit (altid), Turnstile
- * (påkrævet med TURNSTILE_SECRET, sprunget over uden),
- * fremmed origin, ugyldigt link og mailens indhold. Den valgfri besked (højst 1.000 tegn)
- * sendes med, står i mailen og i D1 (summary), renses og kan ikke forfalske felter i mailen;
- * en henvendelse med Lokal viser "Løbende samarbejde: Lokal", opstart, månedspris og minimum. Cron: genforsøg → 'sent',
- * 3 fejlede genforsøg → 'gave_up' øverst i opsummeringen (kun én gang),
- * hængende 'pending', ingen mail uden nyt, og sletning efter retentionMonths.
+ * Tjekker: validering (navn påkrævet, telefon eller mail, samme funktion i browser og på server),
+ * ugyldigt input, honeypot, at forespørgslen GEMMES før mailen sendes og stadig er gemt, når mailen
+ * fejler (fejltilstand), fejl uden database, rate limit, Turnstile (valgfrit: kun påkrævet med
+ * TURNSTILE_SECRET), fremmed origin og mailens indhold: emne, kontakt, besked, alle valgte linjer med
+ * priser og totaler (genregnet på serveren med calculate.js, så et snydt tal fra browseren ikke bruges),
+ * Reply-To og del-link. Cron: genforsøg, gave_up efter 3, opsummering, hængende pending og sletning.
  */
 import { readFileSync } from 'node:fs'
 import { MAX_RETRIES, handleInquiry, runDaily } from '../worker/index.js'
-import { LIMITS, canonicalLink, cleanMessage, danishPhone, inquiry, validContact } from '../src/inquiry.js'
+import { LIMITS, canonicalLink, cleanMessage, composeMail, danishPhone, inquiry, normalize, validate } from '../src/inquiry.js'
 
 // SQLite i Node er stadig mærket eksperimentel; advarslen holdes ude af outputtet.
 process.removeAllListeners('warning')
@@ -33,9 +29,11 @@ const check = (ok, msg) => {
 }
 
 const ORIGIN = 'https://oviaspecs.com'
-const LINK = '/priser/?ydelser=hjemmeside%2Cmarketing&sider=2-5&bestilling=nej&drift=plus&videoer=8&poste=ja&annoncer=nej&trin=5'
+/** Hjemmeside Vækst + Marketing Vækst + drift Plus + booking-tilvalg: 9.000 kr. + 5.398 kr./md. (håndregnet). */
+const LINK = '/?w=1&m=1&d=p&bk=1&s=4'
 const SCHEMA = readFileSync('worker/schema.sql', 'utf8')
 const TOKEN_OK = 'gyldig-token'
+const GOOD = { name: 'Café Test', company: 'Café Test ApS', email: 'kunde@example.com', phone: '', message: '', link: LINK }
 
 /** D1-lignende lag over SQLite: prepare().bind().run()/all()/first(). */
 function d1({ failInsert = false } = {}) {
@@ -71,7 +69,7 @@ class EmailMessage {
   }
 }
 
-/** Miljø med falsk mail: `mail.down = true` simulerer en mailfejl. */
+/** Miljø med falsk mail: `mail.down = true` simulerer en mailfejl. Uden TURNSTILE_SECRET som i dag. */
 function env({ db = d1(), limited = false, ...rest } = {}) {
   const mail = { down: false, sent: [] }
   return {
@@ -79,7 +77,6 @@ function env({ db = d1(), limited = false, ...rest } = {}) {
     DB: db,
     MAIL_FROM: 'kontakt@oviaspecs.com',
     MAIL_TO: 'modtager@example.com',
-    TURNSTILE_SECRET: 'hemmelig',
     SEND_EMAIL: {
       async send(m) {
         if (mail.down) throw new Error('Email Routing: simuleret fejl')
@@ -104,7 +101,7 @@ const post = (body, { origin = ORIGIN } = {}) =>
   new Request(`${ORIGIN}/api/henvendelse`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Origin: origin, 'CF-Connecting-IP': '203.0.113.7' },
-    body: typeof body === 'string' ? body : JSON.stringify({ turnstile: TOKEN_OK, ...body }),
+    body: typeof body === 'string' ? body : JSON.stringify(body),
   })
 
 async function call(body, e = env(), opts) {
@@ -120,241 +117,227 @@ const decode = (raw) => {
 }
 
 /* ---- Validering (samme funktion i browseren og på serveren) ------------- */
-for (const ok of ['ronny@example.com', 'a.b+c@firma.dk', '53613699', '53 61 36 99', '+45 53 61 36 99', '+4553613699', '0045 5361 3699', '53-61-36-99']) {
-  check(validContact(ok), `afvist, men gyldig: "${ok}"`)
+for (const ok of ['53613699', '53 61 36 99', '+45 53 61 36 99', '+4553613699', '0045 5361 3699', '53-61-36-99']) {
+  check(Boolean(danishPhone(ok)) && !validate(normalize({ name: 'A', phone: ok })), `afvist, men gyldigt nummer: "${ok}"`)
 }
-for (const bad of ['', '  ', 'abc', 'ronny@', '@example.com', 'ronny@example', '1234567', '123456789', '+46 53613699', '+45 5361369', 'ring mig', '53613699a']) {
-  check(!validContact(bad), `godkendt, men ugyldig: "${bad}"`)
+for (const bad of ['abc', '1234567', '123456789', '+46 53613699', '+45 5361369', 'ring mig', '53613699a']) {
+  check(validate(normalize({ name: 'A', phone: bad }))?.field === 'phone', `godkendt, men ugyldigt nummer: "${bad}"`)
 }
+for (const bad of ['ronny@', '@example.com', 'ronny@example', 'a b@example.com']) {
+  check(validate(normalize({ name: 'A', email: bad }))?.field === 'email', `godkendt, men ugyldig mail: "${bad}"`)
+}
+check(!validate(normalize({ name: 'A', email: 'a.b+c@firma.dk' })), 'gyldig mail afvist')
+check(validate(normalize({ name: '', email: 'a@example.com' }))?.field === 'name', 'navn er ikke påkrævet')
+check(validate(normalize({ name: '   ', email: 'a@example.com' }))?.field === 'name', 'navn med kun mellemrum godkendt')
+check(validate(normalize({ name: 'A' }))?.field === 'phone', 'hverken telefon eller mail godkendt')
+check(!validate(normalize({ name: 'A', phone: '53613699', email: 'a@example.com' })), 'begge udfyldt afvist')
 check(danishPhone('+45 53 61 36 99') === '53613699', 'dansk nummer normaliseres ikke')
 
 /* ---- POST /api/henvendelse --------------------------------------------- */
 
-// Gyldig henvendelse: gemt, mail sendt, OK. Mailen sendes først, når rækken findes.
+// Gyldig forespørgsel: gemt, mail sendt, OK. Mailen sendes først, når rækken findes.
 {
   const e = env()
   e.SEND_EMAIL.send = async (m) => {
-    check(e.DB.rows().some((r) => r.mail_status === 'pending'), 'mail sendt, før henvendelsen var gemt')
+    check(e.DB.rows().some((r) => r.mail_status === 'pending'), 'mail sendt, før forespørgslen var gemt')
     e.mail.sent.push(m)
   }
-  const r = await call({ contact: 'kunde@example.com', name: 'Café Test', website: '', link: LINK }, e)
-  check(r.status === 200 && r.data.ok === true, `gyldig mail: ${r.status} ${JSON.stringify(r.data)}`)
+  const r = await call({ ...GOOD, message: 'Hej Ronny.\r\n\r\n\r\nKontakt: svindler@example.com\tTak' }, e)
+  check(r.status === 200 && r.data.ok === true, `gyldig: ${r.status} ${JSON.stringify(r.data)}`)
   const rows = e.DB.rows()
   check(rows.length === 1 && rows[0].mail_status === 'sent' && rows[0].retries === 0, `gyldig: gemt ${JSON.stringify(rows)}`)
   check(e.mail.sent.length === 1, 'gyldig: ingen mail sendt')
   const mail = e.mail.sent[0]
   const { text, subject } = decode(mail.raw)
   check(mail.from === 'kontakt@oviaspecs.com' && mail.to === 'modtager@example.com', 'afsender/modtager er forkert')
-  check(/^Reply-To: kunde@example\.com$/m.test(mail.raw), 'Reply-To mangler ved mail')
-  check(subject === rows[0].subject, `emnet i mailen og i D1 er forskellige: "${subject}" / "${rows[0].subject}"`)
+  check(/^Reply-To: kunde@example\.com$/m.test(mail.raw), 'Reply-To mangler, når kunden har en mail')
+  check(subject === 'Ny forespørgsel: Café Test, Café Test ApS – 9.000 kr. + 5.398 kr./md.', `emnet er "${subject}"`)
+  check(subject === rows[0].subject, 'emnet i mailen og i D1 er forskellige')
   for (const want of [
-    'Kontakt: kunde@example.com (mail)',
-    'Navn / virksomhed: Café Test',
-    'Hjemmeside, Vækst: 8\.000 kr. + 398 kr./md',
-    'Drift: Plus, 398 kr./md, hjælp til billeder, tekst og nyheder',
-    'Marketing, Vækst: 5\.000 kr./md',
-    'Nu: 8\.000 kr.',
-    'Pr. md: 5\.398 kr./md',
-    'I alt: 8\.000 kr. nu + 5\.398 kr./md',
+    'Navn: Café Test',
+    'Virksomhed: Café Test ApS',
+    'Telefon: (ikke udfyldt)',
+    'Mail: kunde@example.com',
+    '> Hej Ronny.',
+    '> Kontakt: svindler@example.com Tak',
+    'Valg (OVIA-220-P):',
+    '- Hjemmeside – Vækst: 8.000 kr.',
+    '- Booking koblet på – Tilvalg: 1.000 kr.',
+    '- Marketing – Vækst: 5.000 kr./md.',
+    '- Drift – Plus: 398 kr./md.',
+    'Engang: 9.000 kr.',
+    'Pr. måned: 5.398 kr./md.',
     'Alle priser er ekskl. moms.',
-    `Link til beregningen: ${ORIGIN}/priser/?ydelser=hjemmeside%2Cmarketing&sider=2-5&bestilling=nej&drift=plus&videoer=8&poste=ja&annoncer=nej&trin=5#beregner`,
+    'Bookingsystemets abonnement betales direkte til udbyderen.',
+    `Se valgene: ${ORIGIN}/?w=1&d=p&bk=1&m=1&s=4#prisberegner`,
+    'en forespørgsel, ikke en bestilling',
   ]) {
     check(text.includes(want), `mailen mangler "${want}"\n${text}`)
   }
+  check(!/^Kontakt: svindler/m.test(text), 'beskeden kan efterligne et felt i mailen')
+  check(rows[0].summary.includes('Hej Ronny.') && rows[0].contact === 'kunde@example.com' && rows[0].name === 'Café Test (Café Test ApS)', `D1-rækken: ${JSON.stringify(rows[0])}`)
 }
 
-// Mailens opsummering viser pakke, driftsplan og beløb for hver plan og for egen konto (håndregnet).
-for (const [drift, want] of [
-  ['basis', ['Hjemmeside, Vækst: 8\.000 kr. + 198 kr./md', 'Drift: Basis, 198 kr./md, ingen inkluderede indholdsændringer', 'Nu: 8\.000 kr.', 'Pr. md: 198 kr./md']],
-  ['plus', ['Hjemmeside, Vækst: 8\.000 kr. + 398 kr./md', 'Drift: Plus, 398 kr./md, hjælp til billeder, tekst og nyheder', 'Pr. md: 398 kr./md']],
-  ['ekstra', ['Hjemmeside, Vækst: 8\.000 kr. + 798 kr./md', 'Drift: Ekstra, 798 kr./md, flere rettelser og nyt indhold hver måned', 'Pr. md: 798 kr./md']],
-  ['egen', ['Hjemmeside, Vækst: 10\.000 kr. i alt, ingen månedlig drift', 'Drift: Egen konto/hosting (ingen månedlig betaling til OviaSpecs for drift)', 'Nu: 10\.000 kr.', 'Pr. md: 0 kr./md']],
-]) {
-  const e = env({ TURNSTILE_SECRET: undefined })
-  await call({ contact: 'kunde@example.com', link: `/priser/?ydelser=hjemmeside&sider=2-5&bestilling=nej&drift=${drift}&trin=3` }, e)
-  const { text } = decode(e.mail.sent[0]?.raw ?? '')
-  for (const w of want) check(text.includes(w), `mail med drift=${drift} mangler "${w}"\n${text}`)
-}
-
-// Booking tvinger ingen plan: Fuld fart + Basis + booking = 11\.000 kr. nu + 198 kr./md.
+// Priserne regnes på serveren: et snydt tal fra browseren bruges aldrig, og kvitteringen følger valgene.
 {
-  const e = env({ TURNSTILE_SECRET: undefined })
-  await call({ contact: 'kunde@example.com', link: '/priser/?ydelser=hjemmeside&sider=6-8&bestilling=ja&drift=basis&trin=3' }, e)
-  const { text } = decode(e.mail.sent[0]?.raw ?? '')
-  check(text.includes('I alt: 11\.000 kr. nu + 198 kr./md') && text.includes('Ikke med i priserne fra OviaSpecs'), `Fuld fart + Basis + booking:\n${text}`)
+  const e = env()
+  const r = await call({ ...GOOD, link: '/?w=2&x=2&d=e&s=4', total: 1, once: 1, monthly: 1, lines: [{ label: 'Gratis', price: '0 kr.' }] }, e)
+  check(r.status === 200, `snydt tal: ${r.status}`)
+  const { text, subject } = decode(e.mail.sent[0].raw)
+  check(subject.endsWith('– 11.600 kr. + 798 kr./md.'), `snydt tal i emnet: "${subject}"`)
+  check(text.includes('Engang: 11.600 kr.') && text.includes('Pr. måned: 798 kr./md.') && !text.includes('Gratis'), `snydt tal i mailen:\n${text}`)
+  check(text.includes('- Ekstra undersider – 2 × 800 kr.: 1.600 kr.'), `ekstra sider mangler:\n${text}`)
 }
 
-// Gammelt link (drift=drift) i en henvendelse: Plus for Vækst og Ekstra for Fuld fart, og linket i mailen er det nye.
-for (const [sider, plan, month] of [['2-5', 'plus', '398'], ['6-8', 'ekstra', '798']]) {
-  const e = env({ TURNSTILE_SECRET: undefined })
-  await call({ contact: 'kunde@example.com', link: `/priser/?ydelser=hjemmeside&sider=${sider}&bestilling=nej&drift=drift&trin=3` }, e)
-  const { text } = decode(e.mail.sent[0]?.raw ?? '')
-  check(text.includes(`Drift: ${plan === 'plus' ? 'Plus' : 'Ekstra'}, ${month} kr./md`) && text.includes(`drift=${plan}`) && !text.includes('drift=drift'), `gammelt link (${sider}):\n${text}`)
-}
-
-// Uden valgt drift gættes der ikke: mailen siger det, og der er ingen månedspris.
+// "Indgår"-reglen og egen hosting i mailen (håndregnet).
 {
-  const e = env({ TURNSTILE_SECRET: undefined })
-  await call({ contact: 'kunde@example.com', link: '/priser/?ydelser=hjemmeside&sider=2-5&bestilling=nej&trin=3' }, e)
-  const { text } = decode(e.mail.sent[0]?.raw ?? '')
-  check(text.includes('Drift: ikke valgt') && text.includes('Pr. md: 0 kr./md'), `uden drift:\n${text}`)
+  const e = env()
+  await call({ ...GOOD, link: '/?w=1&b=1&bk=1&d=p&s=4' }, e)
+  const t = decode(e.mail.sent[0].raw).text
+  check(!t.includes('Booking koblet på') && t.includes('Engang: 10.000 kr.'), `booking indgår, ingen dobbelt pris:\n${t}`)
+  const e2 = env()
+  await call({ ...GOOD, link: '/?w=0&d=h&s=4' }, e2)
+  const t2 = decode(e2.mail.sent[0].raw).text
+  check(t2.includes('Engang: 7.000 kr.') && t2.includes('Pr. måned: 0 kr./md.') && t2.includes('Egen konto/hosting'), `egen hosting:\n${t2}`)
+}
+
+// Uden virksomhed og med telefon: emnet uden komma, nummeret normaliseret, ingen Reply-To.
+{
+  const r = await call({ name: 'Mette', phone: '+45 53 61 36 99', link: '/?m=0&s=4' })
+  check(r.status === 200 && r.data.ok, `telefon: ${r.status}`)
+  const raw = r.env.mail.sent[0].raw
+  const { text, subject } = decode(raw)
+  check(subject === 'Ny forespørgsel: Mette – 0 kr. + 3.000 kr./md.', `emne uden virksomhed: "${subject}"`)
+  check(text.includes('Telefon: 53613699') && text.includes('Mail: (ikke udfyldt)') && text.includes('Virksomhed: (ikke udfyldt)'), `telefon i mailen:\n${text}`)
+  check(!/^Reply-To:/m.test(raw), 'Reply-To sat uden mail')
+  check(r.env.DB.rows()[0].contact === '53613699', `kontakt i D1: ${r.env.DB.rows()[0].contact}`)
+}
+
+// Både mail og telefon: Reply-To er mailen, D1 har begge.
+{
+  const e = env()
+  await call({ ...GOOD, phone: '53 61 36 99' }, e)
+  check(/^Reply-To: kunde@example\.com$/m.test(e.mail.sent[0].raw), 'Reply-To ved begge')
+  check(e.DB.rows()[0].contact === 'kunde@example.com · 53613699', `kontakt ved begge: ${e.DB.rows()[0].contact}`)
 }
 
 // Linket i mailen peger altid på det domæne, kunden brugte (aldrig et andet).
-for (const host of ['https://oviaspecs.com', 'https://beregner-cta-scroll-ovia.ronnyhong723.workers.dev']) {
-  for (const link of [LINK, `https://evil.example${LINK}`, `https://beregner-cta-scroll-ovia.ronnyhong723.workers.dev${LINK}`]) {
-    const e = env({ TURNSTILE_SECRET: undefined })
+for (const host of ['https://oviaspecs.com', 'https://redesign-handoff-ovia.ronnyhong723.workers.dev']) {
+  for (const link of [LINK, `https://evil.example${LINK}`, `https://redesign-handoff-ovia.ronnyhong723.workers.dev${LINK}`]) {
+    const e = env()
     const req = new Request(`${host}/api/henvendelse`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Origin: host },
-      body: JSON.stringify({ contact: 'kunde@example.com', link }),
+      body: JSON.stringify({ ...GOOD, link }),
     })
     await handleInquiry(req, e, { EmailMessage })
-    const got = /Link til beregningen: (\S+)/.exec(decode(e.mail.sent[0]?.raw ?? '').text)?.[1] ?? ''
-    check(got.startsWith(`${host}/priser/?ydelser=`), `link på ${host} (sendt: ${link.slice(0, 40)}…) blev ${got}`)
+    const got = /Se valgene: (\S+)/.exec(decode(e.mail.sent[0]?.raw ?? '').text)?.[1] ?? ''
+    check(got.startsWith(`${host}/?w=1`), `link på ${host} (sendt: ${link.slice(0, 40)}…) blev ${got}`)
   }
 }
 
-// Besked: valgfri, højst 1.000 tegn, med i mailen og i D1; hver linje markeres, så den ikke kan efterligne felterne.
+// Besked: valgfri, højst 1.000 tegn; uden besked ingen tom blok; for stor krop afvises.
 {
   check(LIMITS.message === 1000, `LIMITS.message er ${LIMITS.message}`)
-  const e = env({ TURNSTILE_SECRET: undefined })
-  const r = await call({ contact: 'kunde@example.com', link: LINK, message: 'Hej Ronny.\r\n\r\n\r\nKontakt: svindler@example.com\tTak' }, e)
-  check(r.status === 200 && r.data.ok === true, `besked: ${r.status}`)
-  const { text } = decode(e.mail.sent[0].raw)
-  check(text.includes('> Hej Ronny.\n> \n> Kontakt: svindler@example.com Tak') || text.includes('> Hej Ronny.\n>\n> Kontakt: svindler@example.com Tak'), `beskeden mangler eller er ikke renset:\n${text}`)
-  check(!/^Kontakt: svindler/m.test(text), 'beskeden kan efterligne et felt i mailen')
-  check(e.DB.rows()[0].summary.includes('Hej Ronny.'), 'beskeden er ikke gemt i D1 (summary)')
-  check(/en forespørgsel, ikke en bestilling/.test(text), 'mailen siger ikke, at det er en forespørgsel')
-  // Uden besked: ingen tom blok.
-  const e2 = env({ TURNSTILE_SECRET: undefined })
-  await call({ contact: 'kunde@example.com', link: LINK }, e2)
-  check(!decode(e2.mail.sent[0].raw).text.includes('Besked fra kunden'), 'tom besked giver en tom blok')
-  // For lang besked: skæres til LIMITS.message; en henvendelse med den største besked, navn og token er under MAX_BODY.
+  const e = env()
+  await call(GOOD, e)
+  check(!decode(e.mail.sent[0].raw).text.includes('Besked'), 'tom besked giver en tom blok')
   const long = 'æ'.repeat(LIMITS.message + 500)
   check(cleanMessage(long).length === LIMITS.message, `for lang besked: ${cleanMessage(long).length} tegn`)
-  const e3 = env()
-  const big = await call({ contact: 'k'.repeat(180) + '@example.com', name: 'n'.repeat(160), message: '"'.repeat(LIMITS.message), link: LINK, turnstile: TOKEN_OK }, e3)
-  check(big.status === 200, `største gyldige henvendelse: ${big.status} ${JSON.stringify(big.data)}`)
-  const body = JSON.stringify({ contact: 'k'.repeat(180) + '@example.com', name: 'n'.repeat(160), message: '"'.repeat(LIMITS.message), link: 'x'.repeat(LIMITS.link), turnstile: 't'.repeat(4096), website: '' })
-  check(new TextEncoder().encode(body).length < 10_000, `største henvendelse fylder ${new TextEncoder().encode(body).length} byte (MAX_BODY 10000)`)
-  // For stor krop afvises.
-  const huge = await call({ contact: 'kunde@example.com', link: LINK, message: 'x'.repeat(20_000) }, env({ TURNSTILE_SECRET: undefined }))
+  const big = { name: 'n'.repeat(160), company: 'c'.repeat(160), email: 'k'.repeat(180) + '@example.com', phone: '5'.repeat(8), message: '"'.repeat(LIMITS.message), link: LINK, website: '', turnstile: 't'.repeat(4096) }
+  const bigRes = await call(big)
+  check(bigRes.status === 200, `største gyldige forespørgsel: ${bigRes.status} ${JSON.stringify(bigRes.data)}`)
+  const size = new TextEncoder().encode(JSON.stringify({ ...big, link: 'x'.repeat(LIMITS.link) })).length
+  check(size < 10_000, `største forespørgsel fylder ${size} byte (MAX_BODY 10000)`)
+  const huge = await call({ ...GOOD, message: 'x'.repeat(20_000) })
   check(huge.status === 413, `for stor krop: ${huge.status}`)
-  // Besked og honeypot: robotten får stadig OK uden at noget gemmes.
-  const bot = env({ TURNSTILE_SECRET: undefined })
-  const rb = await call({ contact: 'kunde@example.com', link: LINK, message: 'spam', website: 'x' }, bot)
-  check(rb.status === 200 && bot.DB.rows().length === 0, 'honeypot med besked blev gemt')
 }
 
-// Lokal (løbende samarbejde): mailen siger det og viser opstart, månedspris og minimum (håndregnet: 6 × 995 = 5.970).
-{
-  const e = env({ TURNSTILE_SECRET: undefined })
-  await call({ contact: 'kunde@example.com', link: '/priser/?ydelser=lokal&system=nej&trin=3' }, e)
-  const { text } = decode(e.mail.sent[0]?.raw ?? '')
-  for (const want of [
-    'Løbende samarbejde: Lokal, 0 kr. i opstart + 1.990 kr./md, mindst 6 måneder (mindst 11\.940 kr. i alt)',
-    'Nu: 0 kr.',
-    'Pr. md: 1.990 kr./md',
-    'Minimum (Lokal): mindst 6 mdr. = mindst 11\.940 kr.',
-    'I alt: 0 kr. nu + 1.990 kr./md · mindst 6 mdr. = mindst 11\.940 kr.',
-    'ydelser=lokal',
-  ]) {
-    check(text.includes(want), `Lokal-mailen mangler "${want}"\n${text}`)
-  }
-  // Systemtilvalg uden færdigt modul: ingen pris, en note om et særskilt fast tilbud.
-  const e2 = env({ TURNSTILE_SECRET: undefined })
-  await call({ contact: 'kunde@example.com', link: '/priser/?ydelser=lokal,bookingGoogle&system=ja&booking=ja&anmeldelser=nej&trin=4' }, e2)
-  const t2 = decode(e2.mail.sent[0]?.raw ?? '').text
-  check(t2.includes('Pr. md: 1.990 kr./md') && /særskilt fast tilbud/.test(t2) && t2.includes('Trukket fra: Google-profil'), `Lokal + system + booking:\n${t2}`)
-  // Gamle links (Køb hjemmesiden) er uændrede, og begge købsmåder i ét link giver aldrig begge.
-  const link = canonicalLink('/priser/?ydelser=lokal,hjemmeside&sider=2-5&drift=plus&system=nej', ORIGIN)
-  check(link.state.selected.join() === 'lokal' && !link.url.includes('hjemmeside'), `begge købsmåder i ét link: ${link.url}`)
-}
-
-// Dansk telefonnummer: ingen Reply-To, nummeret står i mailen.
-{
-  const r = await call({ contact: '+45 53 61 36 99', name: '', link: LINK })
-  check(r.status === 200 && r.data.ok, `telefon: ${r.status}`)
-  const { text } = decode(r.env.mail.sent[0].raw)
-  check(text.includes('Kontakt: 53613699 (telefon)') && text.includes('Navn / virksomhed: (ikke udfyldt)'), `telefon i mailen:\n${text}`)
-  check(!/^Reply-To:/m.test(r.env.mail.sent[0].raw), 'Reply-To sat ved telefonnummer')
-}
-
-// Ugyldigt input: 400, intet gemt, intet sendt.
-for (const contact of ['abc', '1234567', '', 'ronny@example']) {
-  const r = await call({ contact, link: LINK })
-  check(r.status === 400 && r.data.ok === false, `ugyldig "${contact}": ${r.status}`)
-  check(r.env.DB.rows().length === 0 && r.env.mail.sent.length === 0, `ugyldig "${contact}": gemt eller sendt alligevel`)
+// Ugyldigt input: 400, intet gemt, intet sendt, og svaret siger, hvilket felt.
+for (const [label, body, field] of [
+  ['uden navn', { ...GOOD, name: '' }, 'invalid_name'],
+  ['uden kontakt', { ...GOOD, email: '', phone: '' }, 'invalid_phone'],
+  ['ugyldigt nummer', { ...GOOD, email: '', phone: '1234567' }, 'invalid_phone'],
+  ['ugyldig mail', { ...GOOD, email: 'ronny@example' }, 'invalid_email'],
+]) {
+  const r = await call(body)
+  check(r.status === 400 && r.data.ok === false && r.data.error === field, `${label}: ${r.status} ${JSON.stringify(r.data)}`)
+  check(r.env.DB.rows().length === 0 && r.env.mail.sent.length === 0, `${label}: gemt eller sendt alligevel`)
 }
 {
   const r = await call('{ikke json')
   check(r.status === 400 && r.env.DB.rows().length === 0, `ikke-JSON: ${r.status}`)
-  const noLink = await call({ contact: 'kunde@example.com', link: '/priser/' })
-  check(noLink.status === 400 && noLink.data.error === 'invalid_link', `link uden valg: ${noLink.status}`)
+  for (const link of ['/', '/?s=4', '/?d=p&bk=1', 'ikke et link']) {
+    const n = await call({ ...GOOD, link })
+    check(n.status === 400 && n.data.error === 'invalid_link', `link uden valg "${link}": ${n.status} ${n.data.error}`)
+  }
+  check(canonicalLink('/?w=9&m=-1&d=zzz', ORIGIN)?.url === `${ORIGIN}/?w=2&d=b&m=0&s=4#prisberegner`, 'canonicalLink renser ugyldige svar')
 }
 
 // Honeypot: OK til robotten, men intet gemt og intet sendt — med og uden Turnstile.
-for (const [label, e] of [['med Turnstile', env()], ['uden Turnstile', env({ TURNSTILE_SECRET: undefined })]]) {
-  const r = await call({ contact: 'kunde@example.com', link: LINK, website: 'http://spam.example' }, e)
+for (const [label, e] of [['uden Turnstile', env()], ['med Turnstile', env({ TURNSTILE_SECRET: 'hemmelig' })]]) {
+  const r = await call({ ...GOOD, website: 'http://spam.example' }, e)
   check(r.status === 200 && r.data.ok === true, `honeypot ${label}: ${r.status}`)
   check(e.DB.rows().length === 0 && e.mail.sent.length === 0, `honeypot ${label}: gemt eller sendt`)
 }
 
-// Mailen fejler: henvendelsen er gemt som 'failed' med fejlen, og kunden får OK.
+// Mailen fejler: forespørgslen er gemt som 'failed' med fejlen, og kunden får OK (intet er tabt).
 {
   const e = env()
   e.mail.down = true
-  const r = await call({ contact: 'kunde@example.com', link: LINK }, e)
+  const r = await call(GOOD, e)
   const rows = e.DB.rows()
   check(rows.length === 1 && rows[0].mail_status === 'failed', `mailfejl: ikke gemt som failed (${JSON.stringify(rows)})`)
-  check(rows[0]?.summary.includes('Hjemmeside, Vækst') && /simuleret/.test(rows[0]?.last_error), 'mailfejl: opsummering eller fejl ikke gemt')
+  check(rows[0]?.summary.includes('- Hjemmeside – Vækst') && /simuleret/.test(rows[0]?.last_error), 'mailfejl: opsummering eller fejl ikke gemt')
   check(r.status === 200 && r.data.ok === true, `mailfejl: ${r.status}`)
 }
 
-// Kan ikke gemmes: fejl, og mailen sendes ikke (kunden får nummeret i stedet).
+// Kan ikke gemmes: fejl, og mailen sendes ikke (kunden får Ring og SMS i stedet).
 {
   const e = env()
   delete e.DB
-  const r = await call({ contact: 'kunde@example.com', link: LINK }, e)
+  const r = await call(GOOD, e)
   check(r.status === 503 && r.data.ok === false && e.mail.sent.length === 0, `uden database: ${r.status}`)
-  const f = await call({ contact: 'kunde@example.com', link: LINK }, env({ db: d1({ failInsert: true }) }))
+  const f = await call(GOOD, env({ db: d1({ failInsert: true }) }))
   check(f.status === 500 && f.data.ok === false && f.env.mail.sent.length === 0, `D1-fejl: ${f.status}`)
 }
 
-// Turnstile, når TURNSTILE_SECRET er sat: uden eller med forkert token → 403, intet gemt.
-for (const [label, body] of [
-  ['uden token', { turnstile: '' }],
-  ['forkert token', { turnstile: 'falsk' }],
-]) {
-  const e = env()
-  const r = await call({ contact: 'kunde@example.com', link: LINK, ...body }, e)
-  check(r.status === 403 && r.data.ok === false, `Turnstile ${label}: ${r.status} (forventet 403)`)
-  check(e.DB.rows().length === 0 && e.mail.sent.length === 0, `Turnstile ${label}: gemt eller sendt`)
-}
-// Uden TURNSTILE_SECRET springes Turnstile over: gyldig henvendelse uden token gemmes og sendes.
+// Turnstile er et fejlflag: uden TURNSTILE_SECRET er den ikke påkrævet; med den kræves en gyldig token.
 {
-  const e = env({ TURNSTILE_SECRET: undefined })
-  const r = await call({ contact: 'kunde@example.com', link: LINK, turnstile: '' }, e)
-  check(r.status === 200 && r.data.ok === true, `uden TURNSTILE_SECRET: ${r.status} ${JSON.stringify(r.data)}`)
-  check(e.DB.rows().length === 1 && e.mail.sent.length === 1, 'uden TURNSTILE_SECRET: ikke gemt og sendt')
+  const e = env()
+  const r = await call({ ...GOOD, turnstile: '' }, e)
+  check(r.status === 200 && r.data.ok === true && e.DB.rows().length === 1, `uden TURNSTILE_SECRET: ${r.status} ${JSON.stringify(r.data)}`)
+  for (const [label, token] of [['uden token', ''], ['forkert token', 'falsk']]) {
+    const t = env({ TURNSTILE_SECRET: 'hemmelig' })
+    const x = await call({ ...GOOD, turnstile: token }, t)
+    check(x.status === 403 && x.data.ok === false, `Turnstile ${label}: ${x.status} (forventet 403)`)
+    check(t.DB.rows().length === 0 && t.mail.sent.length === 0, `Turnstile ${label}: gemt eller sendt`)
+  }
+  const ok = env({ TURNSTILE_SECRET: 'hemmelig' })
+  const g = await call({ ...GOOD, turnstile: TOKEN_OK }, ok)
+  check(g.status === 200 && ok.mail.sent.length === 1, `Turnstile med gyldig token: ${g.status}`)
 }
 
 // Rate limit (bindingen), fremmed origin og GET.
 {
-  for (const [label, e] of [['med Turnstile', env({ limited: true })], ['uden Turnstile', env({ limited: true, TURNSTILE_SECRET: undefined })]]) {
-    const r = await call({ contact: 'kunde@example.com', link: LINK }, e)
-    check(r.status === 429 && e.DB.rows().length === 0 && e.mail.sent.length === 0, `rate limit ${label}: ${r.status}`)
-  }
-  // Rate limit pr. IP: nøglen er klientens IP.
+  const e = env({ limited: true })
+  const r = await call(GOOD, e)
+  check(r.status === 429 && e.DB.rows().length === 0 && e.mail.sent.length === 0, `rate limit: ${r.status}`)
   const keys = []
-  const k = env({ TURNSTILE_SECRET: undefined, RATE_LIMITER: { limit: async ({ key }) => (keys.push(key), { success: true }) } })
-  await call({ contact: 'kunde@example.com', link: LINK }, k)
+  const k = env({ RATE_LIMITER: { limit: async ({ key }) => (keys.push(key), { success: true }) } })
+  await call(GOOD, k)
   check(keys[0] === '203.0.113.7', `rate limit-nøgle: ${keys[0]}`)
-  const o = await call({ contact: 'kunde@example.com', link: LINK }, env(), { origin: 'https://evil.example' })
+  const o = await call(GOOD, env(), { origin: 'https://evil.example' })
   check(o.status === 403 && o.env.DB.rows().length === 0, `fremmed origin: ${o.status}`)
   const g = await handleInquiry(new Request(`${ORIGIN}/api/henvendelse`), env(), { EmailMessage })
   check(g.status === 405, `GET: ${g.status}`)
+}
+
+// composeMail kan også bruges direkte (samme tekst som workeren sender).
+{
+  const l = canonicalLink(LINK, ORIGIN)
+  const m = composeMail({ name: 'X', link: l.url, selection: l.selection })
+  check(m.subject === 'Ny forespørgsel: X – 9.000 kr. + 5.398 kr./md.', `composeMail emne: ${m.subject}`)
 }
 
 /* ---- Daglig cron (runDaily) med simuleret mailfejl ---------------------- */
@@ -365,18 +348,20 @@ for (const [label, body] of [
 
   // A fejler ved indsendelse og bliver ved med at fejle; B fejler ved indsendelse, men lykkes ved første genforsøg.
   e.mail.down = true
-  await call({ contact: 'a@example.com', name: 'Opgivet ApS', link: LINK }, e)
-  await call({ contact: 'b@example.com', link: LINK }, e)
+  await call({ ...GOOD, name: 'Opgivet ApS', email: 'a@example.com' }, e)
+  await call({ ...GOOD, name: 'Bent', email: 'b@example.com' }, e)
   check(status('a@example.com').mail_status === 'failed' && status('b@example.com').mail_status === 'failed', 'cron: start er ikke failed')
 
-  // Dag 1: mailen virker igen, undtagen A's egen henvendelsesmail (simuleret pr. emne).
+  // Dag 1: mailen virker igen, undtagen A's egen forespørgselsmail (simuleret pr. emne).
   e.SEND_EMAIL.send = async (m) => {
-    if (e.mail.down && decode(m.raw).subject.endsWith('a@example.com')) throw new Error('Email Routing: simuleret fejl')
+    if (e.mail.down && decode(m.raw).subject.includes('Opgivet ApS')) throw new Error('Email Routing: simuleret fejl')
     e.mail.sent.push(m)
   }
   let res = await runDaily(e, { EmailMessage }, day(1))
   check(status('b@example.com').mail_status === 'sent' && status('b@example.com').retries === 1, `cron dag 1: B ikke sendt (${JSON.stringify(status('b@example.com'))})`)
   check(status('a@example.com').mail_status === 'failed' && status('a@example.com').retries === 1, `cron dag 1: A (${JSON.stringify(status('a@example.com'))})`)
+  const resent = e.mail.sent.map((m) => m.raw).find((raw) => decode(raw).subject.includes('Bent'))
+  check(/^Reply-To: b@example\.com$/m.test(resent ?? ''), 'cron: Reply-To mangler ved genforsøg')
 
   // Dag 2 og 3: A fejler igen → efter MAX_RETRIES genforsøg 'gave_up'.
   await runDaily(e, { EmailMessage }, day(2))
@@ -387,14 +372,14 @@ for (const [label, body] of [
   check(status('a@example.com').mail_status === 'gave_up' && status('a@example.com').retries === 3, `cron dag 3: A ikke gave_up (${JSON.stringify(status('a@example.com'))})`)
   check(res.gaveUp === 1 && res.digest === 'sent', `cron dag 3: ${JSON.stringify(res)}`)
 
-  // Opsummeringen: A står øverst med hele henvendelsen.
+  // Opsummeringen: A står øverst med hele forespørgslen.
   const digest = e.mail.sent.map((m) => decode(m.raw)).find((m) => m.subject.includes('Daglig opsummering'))
   check(digest?.subject.startsWith('OPGIVET (1)'), `opsummeringens emne: "${digest?.subject}"`)
   const first = digest?.text.split('\n').find((l) => l.trim())
   check(first?.startsWith('OPGIVET: 1 henvendelse'), `opsummeringen starter ikke med de opgivne: "${first}"`)
-  check(digest?.text.includes('a@example.com') && digest.text.includes('Navn / virksomhed: Opgivet ApS') && digest.text.includes('Hjemmeside, Vækst'), `opsummeringen mangler henvendelsen:\n${digest?.text}`)
+  check(digest?.text.includes('a@example.com') && digest.text.includes('Navn: Opgivet ApS') && digest.text.includes('- Hjemmeside – Vækst'), `opsummeringen mangler forespørgslen:\n${digest?.text}`)
   check(digest && digest.text.indexOf('OPGIVET') < digest.text.indexOf('Seneste døgn'), 'opgivne står ikke over døgnets liste')
-  check(Boolean(status('a@example.com').reported_at), 'opgivet henvendelse ikke markeret som rapporteret')
+  check(Boolean(status('a@example.com').reported_at), 'opgivet forespørgsel ikke markeret som rapporteret')
 
   // Dag 4: A sendes ikke igen og står ikke i opsummeringen igen; intet nyt = ingen mail.
   e.mail.sent.length = 0
@@ -403,11 +388,11 @@ for (const [label, body] of [
   check(status('a@example.com').mail_status === 'gave_up' && e.mail.sent.length === 0 && res.digest === 'none', `cron dag 4: ${JSON.stringify(res)}, ${e.mail.sent.length} mails`)
 }
 
-// Opgiven henvendelse, mens også opsummeringen fejler: den kommer med, når mailen virker igen.
+// Opgiven forespørgsel, mens også opsummeringen fejler: den kommer med, når mailen virker igen.
 {
   const e = env()
   e.mail.down = true
-  await call({ contact: 'c@example.com', link: LINK }, e)
+  await call({ ...GOOD, email: 'c@example.com' }, e)
   const at = (n) => new Date(Date.now() + n * 24 * 3600_000)
   for (let n = 1; n <= 3; n++) await runDaily(e, { EmailMessage }, at(n))
   const row = e.DB.rows()[0]
@@ -417,7 +402,7 @@ for (const [label, body] of [
   check(res.digest === 'sent' && e.DB.rows()[0].reported_at, `opgivet ikke rapporteret, da mailen virkede igen: ${JSON.stringify(res)}`)
 }
 
-// Hængende 'pending' (fx afbrudt efter gem) sendes af cron, og gamle henvendelser slettes.
+// Hængende 'pending' (fx afbrudt efter gem) sendes af cron, og gamle forespørgsler slettes.
 {
   const e = env()
   const now = new Date()
@@ -434,7 +419,7 @@ for (const [label, body] of [
   const rows = Object.fromEntries(e.DB.rows().map((r) => [r.id, r.mail_status]))
   check(rows.haenger === 'sent', `hængende pending ikke sendt: ${rows.haenger}`)
   check(rows.frisk === 'pending', `frisk pending rørt af cron: ${rows.frisk}`)
-  check(!('gammel' in rows), `henvendelse ældre end ${inquiry.retentionMonths} md ikke slettet`)
+  check(!('gammel' in rows), `forespørgsel ældre end ${inquiry.retentionMonths} md ikke slettet`)
 }
 
 // Uden database gør cron ingenting (og fejler ikke).
@@ -443,9 +428,9 @@ check((await runDaily({}, { EmailMessage })).skipped === 'no_db', 'cron uden dat
 console.error = logError
 globalThis.fetch = realFetch
 if (failures.length) {
-  console.error(`Henvendelsestest FEJLEDE (${failures.length}):\n- ${failures.join('\n- ')}`)
+  console.error(`Forespørgselstest FEJLEDE (${failures.length}):\n- ${failures.join('\n- ')}`)
   process.exit(1)
 }
 console.log(
-  'Henvendelsestest bestået: validering, honeypot, gem-før-mail, mailfejl, Turnstile (valgfri), honeypot og rate limit uden Turnstile, mailens indhold og daglig cron (genforsøg, gave_up efter 3, opsummering, oprydning).',
+  'Forespørgselstest bestået: validering, honeypot, gem-før-mail, fejltilstand ved mailfejl, Turnstile som valgfrit fejlflag, rate limit, mailens emne og indhold med priser genregnet på serveren, Reply-To og daglig cron (genforsøg, gave_up efter 3, opsummering, oprydning).',
 )
