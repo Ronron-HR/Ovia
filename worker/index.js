@@ -99,7 +99,23 @@ async function verifyTurnstile(secret, token, ip) {
   }
 }
 
+/** Tidtagning pr. forespørgsel (Server-Timing-headeren og loggen), så man kan se, hvor tiden går. */
+const timer = () => {
+  const t0 = Date.now()
+  let last = t0
+  const marks = []
+  return {
+    mark(name) {
+      const now = Date.now()
+      marks.push(`${name};dur=${now - last}`)
+      last = now
+    },
+    header: () => [...marks, `total;dur=${Date.now() - t0}`].join(', '),
+  }
+}
+
 export async function handleInquiry(request, env, deps) {
+  const tm = timer()
   if (request.method !== 'POST') return json(405, { ok: false, error: 'method' }, { Allow: 'POST' })
 
   const self = new URL(request.url)
@@ -117,6 +133,7 @@ export async function handleInquiry(request, env, deps) {
   }
   if (!raw || typeof raw !== 'object') return json(400, { ok: false, error: 'bad_json' })
   const p = normalize(raw)
+  tm.mark('parse')
 
   // Spam: en robot har udfyldt det skjulte felt. Den får OK, men intet gemmes eller sendes.
   if (p.honeypot) return json(200, { ok: true })
@@ -130,6 +147,7 @@ export async function handleInquiry(request, env, deps) {
     return json(403, { ok: false, error: 'turnstile' })
   }
 
+  tm.mark('ratelimit')
   const bad = validate(p)
   if (bad) return json(400, { ok: false, error: 'invalid_' + bad.field, message: bad.message })
   const link = canonicalLink(p.link, self.origin)
@@ -142,6 +160,7 @@ export async function handleInquiry(request, env, deps) {
   const contact = [p.email, danishPhone(p.phone)].filter(Boolean).join(' · ')
   const who = p.company ? `${p.name} (${p.company})` : p.name
   const id = crypto.randomUUID()
+  tm.mark('validate_compute')
   try {
     await env.DB.prepare(
       'INSERT INTO henvendelser (id, created_at, contact, name, link, subject, summary, mail_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
@@ -153,6 +172,7 @@ export async function handleInquiry(request, env, deps) {
     return json(500, { ok: false, error: 'store_failed' })
   }
 
+  tm.mark('d1_insert')
   // 2. Send. Fejler mailen, er henvendelsen gemt som 'failed', og den daglige cron prøver igen.
   let status = 'sent'
   let error = null
@@ -163,12 +183,15 @@ export async function handleInquiry(request, env, deps) {
     error = errorText(e)
     console.error('henvendelse: mail fejlede (henvendelsen er gemt)', id, e)
   }
+  tm.mark('send_email')
   try {
     await env.DB.prepare('UPDATE henvendelser SET mail_status = ?, last_error = ? WHERE id = ?').bind(status, error, id).run()
   } catch (e) {
     console.error('henvendelse: status kunne ikke skrives', id, e)
   }
-  return json(200, { ok: true })
+  tm.mark('d1_status')
+  console.log('henvendelse tid', tm.header())
+  return json(200, { ok: true }, { 'Server-Timing': tm.header() })
 }
 
 /* ---- Daglig cron --------------------------------------------------------- */
