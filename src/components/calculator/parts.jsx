@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import prices from '../../data/prices.json'
 import { formatKr } from '../../lib/calculate.js'
 
@@ -31,11 +32,11 @@ const dots = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 /**
  * Tælleværk: hvert ciffer er en søjle 0–9, der ruller (translateY) på 340 ms.
  * Søjlerne nøgles efter plads fra højre, så de samme elementer genbruges og
- * overgangen kan løbe. `delay` lader tallet vente på det flyvende beløb.
+ * overgangen kan løbe. Forsinkelsen (--odo-delay på beregnerens rod) lader tallet vente på det flyvende beløb.
  * Skærmlæsere får tallet som tekst. Med reduced motion fjerner motion.css
  * overgangen, og tallet skifter med det samme.
  */
-export function Odometer({ value, delay = 0 }) {
+export const Odometer = memo(function Odometer({ value }) {
   const text = dots(value)
   const chars = text.split('')
   const n = chars.length
@@ -61,7 +62,7 @@ export function Odometer({ value, delay = 0 }) {
               className="flex flex-col"
               style={{
                 transform: `translateY(${-Number(c)}em)`,
-                transition: `transform 340ms var(--spring-odo) ${delay}ms`,
+                transition: 'transform 340ms var(--spring-odo) var(--odo-delay, 0ms)',
               }}
             >
               {DIGITS.map((d) => (
@@ -75,10 +76,10 @@ export function Odometer({ value, delay = 0 }) {
       })}
     </span>
   )
-}
+})
 
 /** Stort beløb i kvitteringen: Archivo (normal bredde), tælleværk og enhed. */
-export function Total({ value, unit, delay, size, unitSize, gap = 8, unitPad = 4 }) {
+export const Total = memo(function Total({ value, unit, size, unitSize, gap = 8, unitPad = 4 }) {
   return (
     <span
       className="flex items-end font-bold"
@@ -92,16 +93,16 @@ export function Total({ value, unit, delay, size, unitSize, gap = 8, unitPad = 4
         whiteSpace: 'nowrap',
       }}
     >
-      <Odometer value={value} delay={delay} />
+      <Odometer value={value} />
       <span style={{ fontFamily: 'var(--font-body)', fontSize: unitSize, fontWeight: 500, letterSpacing: 0, paddingBottom: unitPad }}>
         {unit}
       </span>
     </span>
   )
-}
+})
 
 /** En kvitteringslinje: "Hjemmeside · Vækst ..... 8.000 kr." */
-export function ReceiptLine({ line, dark = true, animate = false, priceSize = 14, labelSmall = 13 }) {
+export const ReceiptLine = memo(function ReceiptLine({ line, dark = true, animate = false, priceSize = 14, labelSmall = 13 }) {
   return (
     <div
       className={`grid items-baseline gap-4 py-3 ${dark ? 'border-b border-hairline-dark' : 'border-b border-hairline'} ${animate ? 'anim-line' : ''}`}
@@ -118,6 +119,6 @@ export function ReceiptLine({ line, dark = true, animate = false, priceSize = 14
       </span>
     </div>
   )
-}
+})
 
 export const TERMS_SHORT = `Ingen binding. 1 md. opsigelse. Frikøb af siden ${formatKr(prices.addons.buyout.price)}`

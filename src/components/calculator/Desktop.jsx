@@ -346,7 +346,7 @@ function HelpResult({ calc }) {
 }
 
 function Aside({ calc }) {
-  const { state, dispatch, receipt, any, hrefs, odoDelay } = calc
+  const { state, dispatch, receipt, any, hrefs } = calc
   const [copied, setCopied] = useState(false)
   const web = state.selection.services.web !== null
   const showTerms = web && state.selection.drift !== 'egen'
@@ -389,11 +389,11 @@ function Aside({ calc }) {
       <div className="mt-5 flex flex-col gap-4 pt-6">
         <div className="flex items-end justify-between gap-3">
           <span className="pb-[6px] text-[13px] text-on-ink-2">Engang</span>
-          <Total value={receipt.o} unit="kr." size={48} unitSize={15} delay={odoDelay} />
+          <Total value={receipt.o} unit="kr." size={48} unitSize={15} />
         </div>
         <div className="flex items-end justify-between gap-3">
           <span className="pb-[6px] text-[13px] text-on-ink-2">Pr. måned</span>
-          <Total value={receipt.m} unit="kr./md." size={48} unitSize={15} delay={odoDelay} />
+          <Total value={receipt.m} unit="kr./md." size={48} unitSize={15} />
         </div>
         <span className="text-[13px] text-on-ink-2">Alle priser er ekskl. moms</span>
         {state.step !== 4 ? (

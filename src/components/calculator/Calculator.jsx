@@ -50,17 +50,18 @@ export default function Calculator() {
   const tap = useRef(null)
   const prev = useRef({ o: receipt.o, m: receipt.m })
   const [fly, setFly] = useState(null)
-  const [odoDelay, setOdoDelay] = useState(0)
+  const delayTimer = useRef(null)
 
-  // Trykpunktet noteres, så beløbet kan flyve derfra, og tælleværket venter 420 ms på det.
+  // Trykpunktet noteres, så beløbet kan flyve derfra. Ingen layoutmåling og ingen state her: et tryk må ikke koste en ekstra render.
   const onPointerDownCapture = (e) => {
-    const root = rootRef.current
-    if (!root || !isMobile) return
-    const r = root.getBoundingClientRect()
-    tap.current = { x: e.clientX - r.left, y: e.clientY - r.top, t: Date.now() }
-    setOdoDelay(420)
-    clearTimeout(tap.timer)
-    tap.timer = setTimeout(() => setOdoDelay(0), 800)
+    const bar = barRef.current
+    if (!bar || !isMobile) return
+    tap.current = { cx: e.clientX, cy: e.clientY, t: Date.now() }
+    // Bundbarens tælleværk venter 420 ms på det flyvende beløb (CSS-variabel, se Odometer i parts.jsx). Variablen sættes kun på
+    // bundbaren: på roden ville den gøre hele beregnerens stil ugyldig ved hvert tryk.
+    bar.style.setProperty('--odo-delay', '420ms')
+    clearTimeout(delayTimer.current)
+    delayTimer.current = setTimeout(() => bar.style.setProperty('--odo-delay', '0ms'), 800)
   }
 
   useEffect(() => {
@@ -68,26 +69,32 @@ export default function Calculator() {
     const dM = receipt.m - prev.current.m
     prev.current = { o: receipt.o, m: receipt.m }
     if (!isMobile || !tap.current || Date.now() - tap.current.t > 700 || (!dO && !dM) || reducedMotion()) return
-    const root = rootRef.current
-    const bar = barRef.current
-    if (!root || !bar) return
-    const rr = root.getBoundingClientRect()
-    const br = bar.getBoundingClientRect()
-    if (br.height < 40) return
-    const tx = br.left - rr.left + br.width / 2
-    const ty = br.top - rr.top + 52
-    const sign = (d) => (d > 0 ? '+' : '−')
-    const parts = []
-    if (dO) parts.push(sign(dO) + formatKr(Math.abs(dO)))
-    if (dM) parts.push(sign(dM) + formatKr(Math.abs(dM), true))
-    const next = { id: Date.now(), text: parts.join('   '), tx, ty, dx: tap.current.x - tx, dy: tap.current.y - ty }
+    const { cx, cy } = tap.current
     tap.current = { ...tap.current, t: 0 }
-    setFly(next)
-    const timer = setTimeout(() => setFly(null), 720)
-    return () => clearTimeout(timer)
+    let timer
+    // Målingen venter til efter billedet er malet, så den ikke forlænger selve trykket.
+    const frame = requestAnimationFrame(() => {
+      const root = rootRef.current
+      const bar = barRef.current
+      if (!root || !bar) return
+      const rr = root.getBoundingClientRect()
+      const br = bar.getBoundingClientRect()
+      if (br.height < 40) return
+      const tx = br.left - rr.left + br.width / 2
+      const ty = br.top - rr.top + 52
+      const sign = (d) => (d > 0 ? '+' : '−')
+      const parts = []
+      if (dO) parts.push(sign(dO) + formatKr(Math.abs(dO)))
+      if (dM) parts.push(sign(dM) + formatKr(Math.abs(dM), true))
+      setFly({ id: Date.now(), text: parts.join('   '), tx, ty, dx: cx - rr.left - tx, dy: cy - rr.top - ty })
+      timer = setTimeout(() => setFly(null), 720)
+    })
+    return () => {
+      cancelAnimationFrame(frame)
+      clearTimeout(timer)
+    }
   }, [receipt.o, receipt.m, isMobile])
 
-  const full = { ...calc, odoDelay }
   return (
     <section id="prisberegner" aria-label="Prisberegner" className="mx-auto max-w-[1440px] scroll-mt-[72px] md:scroll-mt-[84px]">
       <div
@@ -97,9 +104,9 @@ export default function Calculator() {
         style={isMobile ? { height: 'calc(100svh - 72px)', minHeight: 540 } : undefined}
       >
         {isMobile ? (
-          <Mobile calc={full} barRef={barRef} fly={fly ? <FlyingAmount fly={fly} /> : null} />
+          <Mobile calc={calc} barRef={barRef} fly={fly ? <FlyingAmount fly={fly} /> : null} />
         ) : (
-          <Desktop calc={full} />
+          <Desktop calc={calc} />
         )}
         <p className="sr-only" aria-live="polite" aria-atomic="true">
           {`Engang ${formatKr(receipt.o)}. Pr. måned ${formatKr(receipt.m, true)}. Alle priser er ekskl. moms.`}

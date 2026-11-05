@@ -1,5 +1,5 @@
 /* OviaSpecs design tokens. Ingen accentfarve, ingen gradients, ingen skygger. Radius 0.
-   Fontene hentes fra @fontsource-variable (se index.css), ikke fra @font-face her.
+   Fontene er selvhostede latin-undersæt med begrænsede akser (scripts/fonts.mjs); @font-face står i index.css.
    Clamp-størrelserne bruger vw i stedet for cqw: container-type på en forfader gør den til
    containing block for position:fixed (mobilmenuen). */
 
@@ -17,9 +17,9 @@
   --scrim:rgba(26,23,18,.45); /* bagtæppe bag bottom sheet */
 
   /* fonte */
-  --font-display:'Archivo Variable','Archivo',system-ui,sans-serif;  /* font-stretch:125%; font-weight:700 */
-  --font-body:'Geist Variable','Geist',system-ui,sans-serif;
-  --font-mono:'Geist Mono Variable','Geist Mono',ui-monospace,monospace;   /* KUN priser/tal. font-variant-numeric:tabular-nums */
+  --font-display:'Archivo Variable','Archivo Fallback',system-ui,sans-serif;  /* font-stretch:125%; font-weight:700 */
+  --font-body:'Geist Variable','Geist Fallback',system-ui,sans-serif;
+  --font-mono:'Geist Mono Variable','Geist Mono Fallback',ui-monospace,monospace;   /* KUN priser/tal. font-variant-numeric:tabular-nums */
 
   /* typografi (clamp-værdier brugt i designet) */
   --h1-hero-mobile:clamp(38px,11.6vw,52px);

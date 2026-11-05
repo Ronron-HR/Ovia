@@ -18,14 +18,11 @@
   Strict-Transport-Security: max-age=31536000; includeSubDomains
 
 # Filer i /assets (inkl. skrifterne fra @fontsource) har hash i navnet og kan gemmes i et år.
-# Logo og portræt har faste navne og gemmes en uge.
+# Logo har fast navn og gemmes en uge.
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
 
 /oviaspecs-logo.svg
-  Cache-Control: public, max-age=604800
-
-/ronny.*
   Cache-Control: public, max-age=604800
 
 /demoer/*.webp

@@ -326,7 +326,7 @@ function HelpResult({ calc }) {
  * Enter/Space åbner arket, som lukkes med træk ned, bagtæppe, Luk eller Escape.
  */
 function BarAndSheet({ calc, barRef, barVisible }) {
-  const { state, dispatch, receipt, any, hrefs, odoDelay } = calc
+  const { state, dispatch, receipt, any, hrefs } = calc
   const { sheet } = state
   const [drag, setDrag] = useState({ dy: 0, active: false, from: false })
   const ds = useRef(null)
@@ -410,11 +410,11 @@ function BarAndSheet({ calc, barRef, barVisible }) {
           <div className="mt-[6px] grid items-end gap-[10px]" style={{ gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) auto' }}>
             <div className="flex flex-col gap-[3px]">
               <span className="text-xs text-on-ink-2">Engang</span>
-              <Total value={receipt.o} unit="kr." size={22} unitSize={12} delay={odoDelay} gap={4} unitPad={1} />
+              <Total value={receipt.o} unit="kr." size={22} unitSize={12} gap={4} unitPad={1} />
             </div>
             <div className="flex flex-col gap-[3px]">
               <span className="text-xs text-on-ink-2">Pr. måned</span>
-              <Total value={receipt.m} unit="kr./md." size={22} unitSize={12} delay={odoDelay} gap={4} unitPad={1} />
+              <Total value={receipt.m} unit="kr./md." size={22} unitSize={12} gap={4} unitPad={1} />
             </div>
             <span className="text-right text-[11px] leading-tight text-on-ink-2">
               ekskl.
@@ -437,7 +437,13 @@ function BarAndSheet({ calc, barRef, barVisible }) {
         aria-modal="true"
         inert={!sheet}
         className="absolute right-0 bottom-0 left-0 z-[41] flex flex-col bg-ink text-paper"
-        style={{ maxHeight: '86%', transform, transition: dragging ? 'none' : 'transform 460ms var(--spring-sheet)' }}
+        style={{
+          maxHeight: '86%',
+          transform,
+          // Lukket ark tegnes ikke: visibility skifter først, når lukkeanimationen er færdig.
+          visibility: sheet || dragging ? 'visible' : 'hidden',
+          transition: dragging ? 'none' : `transform 460ms var(--spring-sheet), visibility 0s linear ${sheet ? '0s' : '460ms'}`,
+        }}
       >
         <div className="flex flex-none items-center">
           <div

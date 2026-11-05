@@ -1,14 +1,58 @@
 @import "tailwindcss";
 
-/* Skrifter: selvhostet via npm (@fontsource-variable), ingen kald til Google Fonts.
-   Archivo med bredde-aksen (wdth 62–125) giver Archivo Expanded ved font-stretch:125%. */
-@import "@fontsource-variable/archivo/wdth.css";
-@import "@fontsource-variable/geist/index.css";
-@import "@fontsource-variable/geist-mono/index.css";
+/* Skrifter: selvhostet, kun latin, kun de akser og vægte siden bruger (scripts/fonts.mjs;
+   kilden er @fontsource-variable). Ingen kald til Google Fonts.
+   Archivo har kun vægt 700 og bredde-aksen (100–125 %): Archivo Expanded = font-stretch:125%. */
+@font-face {
+  font-family: 'Archivo Variable';
+  src: url('./assets/fonts/archivo-latin.woff2') format('woff2');
+  font-weight: 700;
+  font-stretch: 100% 125%;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Geist Variable';
+  src: url('./assets/fonts/geist-latin.woff2') format('woff2');
+  font-weight: 400 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Geist Mono Variable';
+  src: url('./assets/fonts/geist-mono-latin.woff2') format('woff2');
+  font-weight: 400 500;
+  font-display: swap;
+}
+
+/* Reserveskrifter med samme mål som webskrifterne (size-adjust og linjeoverskrifter målt mod Arial og
+   Courier New), så teksten ikke hopper, når skriften er hentet. */
+@font-face {
+  font-family: 'Archivo Fallback';
+  src: local('Arial Bold'), local('Arial-BoldMT'), local('Arial');
+  font-weight: 700;
+  size-adjust: 124.78%;
+  ascent-override: 70.36%;
+  descent-override: 16.83%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'Geist Fallback';
+  src: local('Arial'), local('ArialMT');
+  size-adjust: 102.31%;
+  ascent-override: 98.23%;
+  descent-override: 28.83%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'Geist Mono Fallback';
+  src: local('Courier New'), local('CourierNewPSMT');
+  size-adjust: 99.98%;
+  ascent-override: 100.52%;
+  descent-override: 29.5%;
+  line-gap-override: 0%;
+}
 
 @import "./styles/tokens.css";
 @import "./styles/motion.css";
-@import "./demos/demos.css";
 
 /* Breakpoints fra designet: under 760 px er mobillayout, under 1120 px foldes menuen. */
 @theme {

@@ -17,7 +17,11 @@ export default defineConfig({
     rollupOptions: {
       output: {
         // React ligger i sin egen, cache-venlige fil frem for i en fil opkaldt efter en komponent.
-        manualChunks: (id) => (id.includes('node_modules') ? 'vendor' : undefined),
+        manualChunks: (id) => {
+          if (id.includes('node_modules')) return 'vendor'
+          // Fælles kode (navigation, kontakt, priser, beregnerlogik) i én lille fil i stedet for fem: færre forespørgsler i kæden.
+          if (/\/src\/(lib\/|data\/|components\/(layout|ui)\/|content\.demos|pageKeys|routes|Site)/.test(id.replace(/\\/g, '/'))) return 'app'
+        },
       },
       input: {
         main: 'index.html',

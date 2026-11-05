@@ -56,7 +56,7 @@ export function About() {
       aria-labelledby="om-titel"
       className="mx-auto grid max-w-[1440px] items-end gap-7 px-5 py-16 md:grid-cols-[5fr_6fr] md:gap-14 md:px-14 md:pt-40 md:pb-36"
     >
-      <ImageSlot name="portraet-ronny" ratio="4 / 5" alt="Ronny Hong" gray fill="bg-surface" className="max-w-[72%] md:max-w-none" />
+      <ImageSlot name="portraet-ronny" ratio="4 / 5" width={500} height={625} alt="Ronny Hong" gray fill="bg-surface" className="max-w-[72%] md:max-w-none" />
       <div className="flex flex-col gap-5 md:pb-8">
         <h2 id="om-titel" className="display t-h2 max-w-[14ch]" style={{ lineHeight: 0.98 }}>
           Jeg er én person. Det er mig, du taler med.

@@ -139,16 +139,26 @@ export function useCalculator() {
     ready.current = true
   }, [])
 
-  // Skriv valget til adresselinjen. Først når den er læst, så et link aldrig overskrives.
+  // Skriv valget til adresselinjen. Først når den er læst, så et link aldrig overskrives. Skrivningen
+  // venter til efter billedet er malet, så et tryk ikke betaler for den (historiknavigation ugyldiggør link-stilen).
   useEffect(() => {
     if (!ready.current) return
-    const q = new URLSearchParams(window.location.search)
-    QUERY_KEYS.forEach((k) => q.delete(k))
-    new URLSearchParams(toQuery(state.selection, state.step)).forEach((v, k) => q.set(k, v))
-    const search = q.toString()
-    const next = window.location.pathname + (search ? '?' + search : '') + window.location.hash
-    if (next !== window.location.pathname + window.location.search + window.location.hash) {
-      window.history.replaceState(window.history.state, '', next)
+    let timer
+    const frame = requestAnimationFrame(() => {
+      timer = setTimeout(() => {
+        const q = new URLSearchParams(window.location.search)
+        QUERY_KEYS.forEach((k) => q.delete(k))
+        new URLSearchParams(toQuery(state.selection, state.step)).forEach((v, k) => q.set(k, v))
+        const search = q.toString()
+        const next = window.location.pathname + (search ? '?' + search : '') + window.location.hash
+        if (next !== window.location.pathname + window.location.search + window.location.hash) {
+          window.history.replaceState(window.history.state, '', next)
+        }
+      }, 0)
+    })
+    return () => {
+      cancelAnimationFrame(frame)
+      clearTimeout(timer)
     }
   }, [state.selection, state.step])
 

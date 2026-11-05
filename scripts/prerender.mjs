@@ -75,6 +75,22 @@ function chunksFor(file) {
 }
 const entryChunks = new Set(chunksFor('index.html'))
 
+/** CSS-filer hørende til en kildefil og dens importer (Vite lægger dem på chunken, fx demoernes stilark). */
+function cssFor(file) {
+  const seen = new Set()
+  const out = new Set()
+  const walk = (key) => {
+    const c = manifest[key]
+    if (!c || seen.has(key)) return
+    seen.add(key)
+    for (const f of c.css ?? []) out.add(f)
+    for (const i of c.imports ?? []) walk(i)
+  }
+  walk(file)
+  return [...out]
+}
+const entryCss = new Set(cssFor('index.html'))
+
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
 
 /** Skifter content-værdien i en <meta>, og fejler højt, hvis meta'en ikke findes. */
@@ -93,9 +109,23 @@ const linkMatch = template.match(/<link rel="stylesheet"[^>]*href="(\/assets\/[^
 if (!linkMatch) throw new Error('dist/index.html: fandt intet stylesheet at indlejre')
 const css = readFileSync(`dist${linkMatch[1]}`, 'utf8')
 
+/**
+ * Overskriftsfonten (Archivo) og brødtekstens (Geist) forhåndshentes, så de ikke venter på stilarket
+ * (som er indlejret, men peger på dem). Geist Mono (priser og tal) forhåndshentes også: den er kun 14 kB, og uden hint opdager browseren den først, når stilarket er bygget (målt: simuleret LCP 1,9 s mod 0,9 s).
+ */
+const fontPreloads = [...css.matchAll(/url\(["']?(\/assets\/(?:archivo|geist|geist-mono)-latin-[^)"']+\.woff2)/g)]
+  .map((m) => `<link rel="preload" as="font" type="font/woff2" crossorigin href="${m[1]}">`)
+  .join('')
+if (!fontPreloads.includes('archivo-latin')) throw new Error('fandt ikke Archivo i det indlejrede stilark (preload)')
+
 function build(route) {
   const url = ORIGIN + route.path
-  let html = template.replace(linkMatch[0], () => `<style>${css}</style>`)
+  // Sidens egne stilark (ud over forsidens) lægges også ind, så fx demoerne ikke blinker uden stil.
+  const extraCss = cssFor(pageFiles[route.page])
+    .filter((f) => !entryCss.has(f))
+    .map((f) => readFileSync(`dist/${f}`, 'utf8'))
+    .join('')
+  let html = template.replace(linkMatch[0], () => `${fontPreloads}<style>${css}${extraCss}</style>`)
 
   html = html.replace(/<title>[\s\S]*?<\/title>/, `<title>${esc(route.title)}</title>`)
   html = setMeta(html, 'name', 'description', route.description)

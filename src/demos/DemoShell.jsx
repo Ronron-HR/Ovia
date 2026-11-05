@@ -1,4 +1,5 @@
 import { useEffect, useId, useState, useSyncExternalStore } from 'react'
+import './demos.css'
 import { demos } from '../content.demos.js'
 import { paths } from '../data/site.js'
 import { useEntrance } from './useEntrance.js'
