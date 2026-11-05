@@ -266,7 +266,7 @@ export function composeDigest({ gaveUp, recent, now = new Date() }) {
  * ALDRIG igen og kommer ikke med i opsummeringen, selv om de står som 'failed' eller 'pending'. De slettes stadig efter
  * retentionMonths (trin 3 nedenfor). Rækker fra før denne dato kan ikke genopbygges til den nye mail.
  */
-export const CRON_FROM = '2026-11-05T18:30:00.000Z'
+export const CRON_FROM = '2026-11-05T21:36:00.000Z'
 
 export async function runDaily(env, deps, now = new Date()) {
   if (!env.DB) return { skipped: 'no_db' }
