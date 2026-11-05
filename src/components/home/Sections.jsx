@@ -15,7 +15,7 @@ export function Hero() {
       </h1>
       <div className="mt-5 flex flex-wrap items-end justify-between gap-6 md:mt-14 md:ml-[33%] md:gap-7">
         <p className="m-0 max-w-[34ch] text-[17px] leading-[1.45] text-pretty md:text-[clamp(17px,1.5vw,21px)]">
-          Hjemmeside, Google-profil, booking og korte videoer til restauranter og caféer i Aarhus.
+          Hjemmeside, Google-profil, lokal SEO og systemer til restauranter og caféer i Aarhus. Faste priser.
         </p>
         <a href="#prisberegner" className="btn btn-ink hov-ink-soft w-full text-[17px] md:w-auto">
           <span>Se din pris</span>
@@ -59,10 +59,10 @@ export function About() {
       <ImageSlot name="portraet-ronny" ratio="4 / 5" width={500} height={625} alt="Ronny Hong" gray fill="bg-surface" className="max-w-[72%] md:max-w-none" />
       <div className="flex flex-col gap-5 md:pb-8">
         <h2 id="om-titel" className="display t-h2 max-w-[14ch]" style={{ lineHeight: 0.98 }}>
-          Jeg er én person. Det er mig, du taler med.
+          Du taler direkte med den, der bygger din side.
         </h2>
         <p className="m-0 max-w-[44ch] text-[17px] leading-normal text-pretty">
-          Jeg hedder Ronny Hong og bor lige uden for Aarhus. Jeg bygger siden, sætter Google op og filmer videoerne selv.
+          Vi bygger hjemmesiden, sætter Google-profilen op og kobler de systemer på, I vælger. Svar inden for 24 timer.
         </p>
       </div>
     </section>

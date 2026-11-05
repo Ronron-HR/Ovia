@@ -52,14 +52,14 @@ export default function Privatlivspolitik() {
         <h1 className="display display-hero text-[clamp(40px,7vw,72px)]">Privatlivspolitik</h1>
         <p className="mt-6 max-w-[56ch] text-base leading-normal">
           Kort version: Siden bruger ingen cookies. Besøg tælles med Cloudflare Web Analytics, som ifølge Cloudflare ikke indsamler
-          personoplysninger. Jeg får kun de oplysninger, du selv giver mig: når du sender formularen under prisberegneren, ringer, sender en SMS eller skriver en mail. Dem bruger
-          jeg kun til at svare dig.
+          personoplysninger. Vi får kun de oplysninger, du selv giver os: når du sender formularen under prisberegneren, ringer, sender en SMS eller skriver en mail. Dem bruger
+          vi kun til at svare dig.
         </p>
         <p className="mt-2 text-sm text-muted-2">Sidst opdateret: {UPDATED}</p>
 
         <div className="mt-16">
           <Section title="Hvem er ansvarlig">
-            <p>OviaSpecs er dataansvarlig for de oplysninger, du giver mig.</p>
+            <p>OviaSpecs er dataansvarlig for de oplysninger, du giver os.</p>
             <p>
               OviaSpecs v/ {contact.name}
               <br />
@@ -69,18 +69,18 @@ export default function Privatlivspolitik() {
             </p>
           </Section>
 
-          <Section title="Hvilke oplysninger jeg behandler">
+          <Section title="Hvilke oplysninger vi behandler">
             <ul className={list}>
               <li>
                 <strong className={strong}>Når du sender formularen under prisberegneren (&quot;Send mine valg&quot;):</strong> dit navn, dit
-                telefonnummer og/eller din mailadresse, virksomhed og besked, hvis du skriver dem, og dine valg i beregneren (pakker, priser og et
-                link til dem). Valgene sendes med automatisk, og jeg regner priserne ud igen på serveren. Din IP-adresse bruges kun kortvarigt til
+                telefonnummer og/eller din mailadresse, virksomhed og besked, hvis du skriver dem, og dine valg i beregneren (pakke, systemer, tilvalg, om du har valgt introduktionsprisen, priser og et
+                link til dem). Valgene sendes med automatisk, og vi regner priserne ud igen på serveren. Din IP-adresse bruges kun kortvarigt til
                 at begrænse, hvor mange forespørgsler der kan sendes fra samme sted (spambeskyttelse); den gemmes ikke sammen med forespørgslen.
                 Et skjult felt, som kun robotter udfylder, bruges til samme formål.
               </li>
               <li>
                 <strong className={strong}>Når du ringer, sender en SMS eller skriver:</strong> dit navn, dit telefonnummer eller din
-                mailadresse og det, du selv fortæller mig. Knapperne Ring og SMS åbner din egen telefon eller SMS-app med en færdigskrevet
+                mailadresse og det, du selv fortæller os. Knapperne Ring og SMS åbner din egen telefon eller SMS-app med en færdigskrevet
                 besked med et link til dine valg. Du bestemmer selv, om du sender den.
               </li>
               <li>
@@ -92,14 +92,14 @@ export default function Privatlivspolitik() {
                 browsertype i serverlogs. Det er nødvendigt for, at siden kan leveres og holdes sikker.
               </li>
             </ul>
-            <p>Jeg beder ikke om følsomme oplysninger. Skriv dem ikke til mig.</p>
+            <p>Vi beder ikke om følsomme oplysninger. Skriv dem ikke til os.</p>
           </Section>
 
-          <Section title="Hvad jeg bruger dem til, og på hvilket grundlag">
+          <Section title="Hvad vi bruger dem til, og på hvilket grundlag">
             <ul className={list}>
               <li>
-                <strong className={strong}>At svare på din forespørgsel</strong> (formular, mail, SMS eller telefon) og give dig et tilbud. Formularen sender dine oplysninger til mig som mail og bruges kun til det; ikke til nyhedsbreve eller markedsføring. Grundlaget er databeskyttelsesforordningens artikel 6,
-                stk. 1, litra b (skridt, du selv beder om, inden en aftale) og litra f (min legitime interesse i at kunne svare dig og i at beskytte formularen mod spam).
+                <strong className={strong}>At svare på din forespørgsel</strong> (formular, mail, SMS eller telefon) og give dig et tilbud. Formularen sender dine oplysninger til os som mail og bruges kun til det; ikke til nyhedsbreve eller markedsføring. Grundlaget er databeskyttelsesforordningens artikel 6,
+                stk. 1, litra b (skridt, du selv beder om, inden en aftale) og litra f (vores legitime interesse i at kunne svare dig og i at beskytte formularen mod spam).
               </li>
               <li>
                 <strong className={strong}>At levere arbejdet og sende faktura.</strong> Grundlaget er artikel 6, stk. 1, litra b (opfyldelse
@@ -109,12 +109,12 @@ export default function Privatlivspolitik() {
                 <strong className={strong}>At holde siden sikker og kørende.</strong> Grundlaget er artikel 6, stk. 1, litra f.
               </li>
             </ul>
-            <p>Jeg bruger ikke dine oplysninger til markedsføring og sælger dem aldrig.</p>
+            <p>Vi bruger ikke dine oplysninger til markedsføring og sælger dem aldrig.</p>
           </Section>
 
-          <Section title="Hvem jeg deler dem med">
+          <Section title="Hvem vi deler dem med">
             <p>
-              Kun med de udbydere, der skal til for at drive siden og modtage mail. De behandler oplysningerne på mine vegne og må ikke bruge
+              Kun med de udbydere, der skal til for at drive siden og modtage mail. De behandler oplysningerne på vores vegne og må ikke bruge
               dem til andet.
             </p>
             <ul className={list}>
@@ -124,7 +124,7 @@ export default function Privatlivspolitik() {
                 </li>
               ))}
             </ul>
-            <p>Derudover videregiver jeg kun oplysninger, hvis jeg er retligt forpligtet til det, fx til Skattestyrelsen.</p>
+            <p>Derudover videregiver vi kun oplysninger, hvis vi er retligt forpligtet til det, fx til Skattestyrelsen.</p>
           </Section>
 
           <Section title="Overførsel til lande uden for EU/EØS">
@@ -136,9 +136,9 @@ export default function Privatlivspolitik() {
 
           <Section title="Hvor de gemmes, og hvor længe">
             <p>
-              En forespørgsel fra formularen sendes som mail til min indbakke hos Google (Gmail). Den gemmes først i en database hos Cloudflare (D1),
-              så den ikke går tabt, hvis mailen fejler, og så den kan sendes igen. Mails og SMS-beskeder gemmes i min indbakke hos Google (Gmail) og
-              på min telefon.
+              En forespørgsel fra formularen sendes som mail til vores indbakke hos Google (Gmail). Den gemmes først i en database hos Cloudflare (D1),
+              så den ikke går tabt, hvis mailen fejler, og så den kan sendes igen. Mails og SMS-beskeder gemmes i vores indbakke hos Google (Gmail) og
+              på vores telefon.
             </p>
             <ul className={list}>
               <li>Forespørgsler fra formularen slettes automatisk fra databasen {RETENTION_MONTHS} måneder efter, de er sendt.</li>
@@ -178,17 +178,17 @@ export default function Privatlivspolitik() {
           <Section title="Dine rettigheder">
             <p>Du har ret til at:</p>
             <ul className={list}>
-              <li>få indsigt i, hvad jeg har om dig,</li>
+              <li>få indsigt i, hvad vi har om dig,</li>
               <li>få forkerte oplysninger rettet,</li>
-              <li>få oplysninger slettet, medmindre jeg skal gemme dem ved lov,</li>
+              <li>få oplysninger slettet, medmindre vi skal gemme dem ved lov,</li>
               <li>få behandlingen begrænset eller gøre indsigelse mod den,</li>
               <li>få dine oplysninger udleveret i et almindeligt format (dataportabilitet).</li>
             </ul>
             <p>
-              Skriv til <a href={links.mail}>{contact.email}</a>, så svarer jeg senest inden for en måned.
+              Skriv til <a href={links.mail}>{contact.email}</a>, så svarer vi senest inden for en måned.
             </p>
             <p>
-              Er du utilfreds med, hvordan jeg behandler dine oplysninger, kan du klage til Datatilsynet på{' '}
+              Er du utilfreds med, hvordan vi behandler dine oplysninger, kan du klage til Datatilsynet på{' '}
               <a href="https://www.datatilsynet.dk" rel="noopener noreferrer">
                 datatilsynet.dk
               </a>
@@ -197,7 +197,7 @@ export default function Privatlivspolitik() {
           </Section>
 
           <Section title="Ændringer">
-            <p>Ændrer jeg, hvordan siden behandler oplysninger, opdaterer jeg denne side og datoen øverst.</p>
+            <p>Ændrer vi, hvordan siden behandler oplysninger, opdaterer vi denne side og datoen øverst.</p>
           </Section>
         </div>
       </main>

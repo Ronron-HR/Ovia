@@ -17,8 +17,6 @@ import { paths } from './data/site.js'
 export const routes = [
   { path: paths.home, page: 'home', ...seo.home },
   { path: paths.hjemmeside, page: 'hjemmeside', ...seo.hjemmeside },
-  { path: paths.bookingGoogle, page: 'bookingGoogle', ...seo.bookingGoogle },
-  { path: paths.marketing, page: 'marketing', ...seo.marketing },
   { path: paths.priser, page: 'priser', ...seo.priser },
   { path: paths.demoer, page: 'demoer', ...seo.demoer },
   ...demos.projects.map((p) => ({ path: p.path, page: `demo-${p.id}`, ...demoSeo[`demo-${p.id}`] })),

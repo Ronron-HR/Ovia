@@ -41,6 +41,7 @@ export default function InquiryForm({ receipt, hrefs }) {
   const [values, setValues] = useState({ name: '', phone: '', email: '', company: '', message: '', website: '' })
   const [errors, setErrors] = useState({})
   const [status, setStatus] = useState('idle') // idle | sending | sent | error
+  const [oldLink, setOldLink] = useState(false) // serveren siger, at siden er en gammel version (før pakkerne)
   const [typing, setTyping] = useState(false)
   const [sentName, setSentName] = useState('')
   const formRef = useRef(null)
@@ -72,6 +73,7 @@ export default function InquiryForm({ receipt, hrefs }) {
       setSentName(p.name)
       setStatus('sent')
     } else {
+      setOldLink(res.error === 'old_selection')
       setStatus('error')
     }
   }
@@ -94,7 +96,7 @@ export default function InquiryForm({ receipt, hrefs }) {
       <div className="flex flex-col gap-4">
         <div role="status" className="bg-surface p-5 md:p-7">
           <h3 className="text-[clamp(24px,7vw,36px)] leading-none tracking-[-0.03em]">Tak, {sentName}.</h3>
-          <p className="mt-3 mb-0 text-base leading-normal">Jeg vender tilbage inden for 24 timer.</p>
+          <p className="mt-3 mb-0 text-base leading-normal">Vi vender tilbage inden for 24 timer.</p>
           <div className="mt-5">
             {receipt.all.map((l) => (
               <ReceiptLine key={l.key + l.pkg} line={l} dark={false} priceSize={13} />
@@ -120,7 +122,7 @@ export default function InquiryForm({ receipt, hrefs }) {
     <div className={typing ? 'pb-[50svh] md:pb-0' : undefined}>
       <form ref={formRef} onSubmit={submit} onFocus={onFocus} onBlur={onBlur} noValidate className="flex flex-col gap-5" aria-describedby="inq-intro">
         <p id="inq-intro" className="m-0 text-[15px] leading-normal text-muted-2">
-          Dine valg og priser sendes med. Skriv, hvordan jeg når dig.
+          Dine valg og priser sendes med. Skriv, hvordan vi når jer.
         </p>
 
         <Field label="Navn" error={errors.name}>
@@ -180,7 +182,7 @@ export default function InquiryForm({ receipt, hrefs }) {
               </>
             )}
           </button>
-          <p className="m-0 text-[15px]">Jeg svarer inden for 24 timer.</p>
+          <p className="m-0 text-[15px]">Svar inden for 24 timer.</p>
           <p className="m-0 text-[13px] leading-normal text-muted-2">
             Dine oplysninger bruges kun til at svare dig. <a href={paths.privatliv}>Læs privatlivspolitikken</a>.
           </p>
@@ -190,10 +192,16 @@ export default function InquiryForm({ receipt, hrefs }) {
           {status === 'error' && (
             <div role="alert" className="dark-zone bg-ink p-5 text-paper">
               <p className="m-0 text-base font-semibold">Det blev ikke sendt.</p>
-              <p className="mt-2 mb-0 text-[15px] leading-normal">
-                Dine valg og din besked står stadig her. Prøv igen, eller brug Ring eller SMS herunder. Du kan også sende valgene fra din egen mailapp:{' '}
-                <a href={hrefs.mail}>åbn mail</a>.
-              </p>
+              {oldLink ? (
+                <p className="mt-2 mb-0 text-[15px] leading-normal">
+                  Beregneren er opdateret med nye pakker. <a href="/">Åbn siden igen</a> og vælg dit tilbud på ny, eller brug Ring eller SMS herunder.
+                </p>
+              ) : (
+                <p className="mt-2 mb-0 text-[15px] leading-normal">
+                  Dine valg og din besked står stadig her. Prøv igen, eller brug Ring eller SMS herunder. Du kan også sende valgene fra din egen mailapp:{' '}
+                  <a href={hrefs.mail}>åbn mail</a>.
+                </p>
+              )}
             </div>
           )}
         </div>

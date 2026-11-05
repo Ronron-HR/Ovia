@@ -9,8 +9,6 @@ import { demos } from './content.demos.js'
 export const pageKeyByPath = {
   '/': 'home',
   '/hjemmeside/': 'hjemmeside',
-  '/marketing/': 'marketing',
-  '/booking-google/': 'bookingGoogle',
   '/priser/': 'priser',
   '/demoer/': 'demoer',
   ...Object.fromEntries(demos.projects.map((p) => [p.path, `demo-${p.id}`])),
@@ -19,9 +17,7 @@ export const pageKeyByPath = {
 /** Sidens kildefil: prerender.mjs finder dens JS-filer i byggets manifest og forhåndshenter dem. */
 export const pageFiles = {
   home: 'src/pages/Home.jsx',
-  hjemmeside: 'src/pages/Service.jsx',
-  marketing: 'src/pages/Service.jsx',
-  bookingGoogle: 'src/pages/Service.jsx',
+  hjemmeside: 'src/pages/Hjemmeside.jsx',
   priser: 'src/pages/Priser.jsx',
   demoer: 'src/pages/Demoer.jsx',
   'demo-cafe': 'src/demos/Cafe.jsx',

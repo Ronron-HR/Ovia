@@ -1,211 +1,126 @@
 {
-  "_note": "Alle priser i kr., ekskl. moms. Eneste kilde til priser: beregner, /priser og ydelsessider læser herfra.",
+  "_note": "Eneste kilde til priser, pakker, systemer og intro. Beregneren, /priser/, /hjemmeside/, formularen og workeren læser herfra. Alle priser i kr., ekskl. moms. introSlotsLeft (antal intropladser tilbage) styres med `npm run intro:status` og `npm run intro:brugt`.",
   "currency": "DKK",
   "vatIncluded": false,
-  "services": {
-    "web": {
-      "key": "web",
-      "no": "01",
-      "name": "Hjemmeside",
-      "slug": "/hjemmeside",
-      "period": "once",
-      "packages": [
-        {
-          "key": "start",
-          "name": "Start",
-          "price": 5000,
-          "recommended": false,
-          "points": [
-            "Én side med det vigtigste",
-            "1 rettelserunde"
-          ],
-          "pages": 1,
-          "revisions": 1
-        },
-        {
-          "key": "vaekst",
-          "name": "Vækst",
-          "price": 8000,
-          "recommended": true,
-          "points": [
-            "Op til 5 sider",
-            "Google-profil sat op",
-            "Sat op til at blive fundet på Google",
-            "2 rettelserunder"
-          ],
-          "pages": 5,
-          "revisions": 2
-        },
-        {
-          "key": "fuldfart",
-          "name": "Fuld fart",
-          "price": 10000,
-          "recommended": false,
-          "points": [
-            "Op til 8 sider",
-            "Google-profil",
-            "Lokal SEO",
-            "3 rettelserunder"
-          ],
-          "pages": 8,
-          "revisions": 3
-        }
-      ]
-    },
-    "mkt": {
-      "key": "mkt",
-      "no": "02",
-      "name": "Marketing",
-      "slug": "/marketing",
-      "period": "month",
-      "packages": [
-        {
-          "key": "start",
-          "name": "Start",
-          "price": 3000,
-          "recommended": false,
-          "points": [
-            "3 korte videoer om måneden",
-            "Du poster selv"
-          ]
-        },
-        {
-          "key": "vaekst",
-          "name": "Vækst",
-          "price": 5000,
-          "recommended": true,
-          "points": [
-            "6 korte videoer om måneden",
-            "4 opslag",
-            "Jeg poster på 2 kanaler",
-            "Månedsrapport"
-          ]
-        },
-        {
-          "key": "fuldfart",
-          "name": "Fuld fart",
-          "price": 8000,
-          "recommended": false,
-          "points": [
-            "9 korte videoer om måneden",
-            "8 opslag",
-            "3 kanaler",
-            "Styring af Meta-annoncer (annoncebudget betales direkte til Meta)",
-            "Månedsrapport"
-          ]
-        }
-      ]
-    },
-    "book": {
-      "key": "book",
-      "no": "03",
-      "name": "Booking & Google",
-      "slug": "/booking-google",
-      "period": "once",
-      "packages": [
-        {
-          "key": "start",
-          "name": "Start",
-          "price": 1000,
-          "recommended": false,
-          "points": [
-            "Google-profil sat op eller rettet"
-          ],
-          "includesBooking": false
-        },
-        {
-          "key": "vaekst",
-          "name": "Vækst",
-          "price": 2000,
-          "recommended": true,
-          "points": [
-            "Google-profil",
-            "Booking koblet på hjemmeside eller Instagram"
-          ],
-          "includesBooking": true
-        },
-        {
-          "key": "fuldfart",
-          "name": "Fuld fart",
-          "price": 3000,
-          "recommended": false,
-          "points": [
-            "Alt i Vækst",
-            "QR-skilt til anmeldelser",
-            "Opfølgning efter 30 dage med tal"
-          ],
-          "includesBooking": true
-        }
-      ]
-    }
+  "introSlotsLeft": 3,
+  "intro": {
+    "total": 3,
+    "discount": 0.3
   },
-  "drift": {
-    "appliesTo": "web",
-    "period": "month",
-    "plans": [
+  "packages": [
+    {
+      "key": "start",
+      "name": "Start",
+      "once": 5000,
+      "monthly": 299,
+      "recommended": false,
+      "slots": 0,
+      "customSlots": 0,
+      "english": "addon",
+      "points": [
+        "1–3 sider (menu, åbningstider, kontakt)",
+        "Google-profil opsat og udfyldt",
+        "Grundlæggende lokal SEO: titler, LocalBusiness-schema og hastighed",
+        "Link til jeres eksisterende booking eller bestilling",
+        "Hosting, domæne og backup",
+        "Små tekst- og billedrettelser"
+      ],
+      "short": ["1–3 sider", "Google-profil opsat", "Grundlæggende lokal SEO", "Hosting, domæne og backup"]
+    },
+    {
+      "key": "anbefalet",
+      "name": "Anbefalet",
+      "once": 9500,
+      "monthly": 549,
+      "recommended": true,
+      "slots": 1,
+      "customSlots": 0,
+      "english": "addon",
+      "points": [
+        "Op til 6 sider",
+        "1 standardsystem efter eget valg, sat op eller integreret",
+        "Google-profil og 1 opslag pr. måned",
+        "Lokal SEO med lokale søgeord",
+        "Hosting, domæne og backup",
+        "1 time rettelser pr. måned"
+      ],
+      "short": ["Op til 6 sider", "1 standardsystem", "Google-profil og 1 opslag/md.", "1 time rettelser/md."]
+    },
+    {
+      "key": "max",
+      "name": "Max",
+      "once": 15000,
+      "monthly": 895,
+      "recommended": false,
+      "slots": 2,
+      "customSlots": 1,
+      "english": "included",
+      "points": [
+        "Sider efter behov og engelsk version",
+        "2 standardsystemer, eller 1 standard og 1 skræddersyet",
+        "Google-profil, 2 opslag pr. måned og svar på anmeldelser",
+        "Lokal SEO med kvartalsvis gennemgang",
+        "Hosting, domæne og backup",
+        "2 timer rettelser pr. måned og kort månedlig status"
+      ],
+      "short": ["Sider efter behov, engelsk version", "2 systemer (1 må være skræddersyet)", "2 opslag/md. og svar på anmeldelser", "2 timer rettelser/md."]
+    }
+  ],
+  "systems": {
+    "standard": [
       {
-        "key": "basis",
-        "name": "Basis",
-        "price": 198,
-        "description": "Drift og sikkerhed. Ingen indholdsændringer."
+        "key": "booking",
+        "code": "b",
+        "name": "Bordbooking",
+        "desc": "Gæsterne booker bord på siden. Vi sætter det op eller kobler jeres udbyder på, fx DinnerBooking eller easyTable."
       },
       {
-        "key": "plus",
-        "name": "Plus",
-        "price": 398,
-        "description": "Hjælp til billeder, tekst og nyheder."
+        "key": "bestilling",
+        "code": "o",
+        "name": "Online bestilling og takeaway",
+        "desc": "Menu og bestilling på siden, koblet på jeres bestillingsløsning."
       },
       {
-        "key": "ekstra",
-        "name": "Ekstra",
-        "price": 798,
-        "description": "Fast webmaster. Flere rettelser hver måned."
+        "key": "gavekort",
+        "code": "g",
+        "name": "Gavekort",
+        "desc": "Gavekort, der kan købes online og bruges hos jer."
+      },
+      {
+        "key": "nyhedsbrev",
+        "code": "n",
+        "name": "Nyhedsbrev-tilmelding",
+        "desc": "Tilmelding på siden, koblet til jeres nyhedsbrevsplatform."
+      },
+      {
+        "key": "anmeldelser",
+        "code": "a",
+        "name": "Indsamling af anmeldelser",
+        "desc": "QR-skilt og link, som gæsterne får efter besøget, så det er nemt at skrive en anmeldelse."
       }
     ],
-    "defaultPlan": "basis",
-    "includedInAll": [
-      "Online",
-      "Sikker",
-      "Domæne",
-      "Backup"
-    ]
+    "custom": {
+      "key": "custom",
+      "name": "Skræddersyet system",
+      "desc": "Ét afgrænset arbejdsflow bygget til jer. Eksempler: automatisk bekræftelse og overblik over catering- og selskabsforespørgsler, intern oversigt over bestillinger, eller en simpel assistent, der svarer på åbningstider, menu og allergener ud fra jeres egne oplysninger.",
+      "max": 5
+    },
+    "excluded": "Vi bygger ikke store kassesystemer eller vagtplaner.",
+    "thirdParty": "Abonnementer hos tredjepartsudbydere (booking-, betalings- eller nyhedsbrevsplatform) er ikke inkluderet."
   },
   "addons": {
-    "booking": {
-      "name": "Booking koblet på",
-      "price": 1000,
-      "period": "once",
-      "note": "Bookingsystemets abonnement betales direkte til udbyderen.",
-      "includedWhen": "book.includesBooking"
-    },
-    "ownHosting": {
-      "name": "Egen konto/hosting",
-      "price": 2000,
-      "period": "once",
-      "note": "Erstatter driftsplanen. Månedspris 0.",
-      "replaces": "drift"
-    },
-    "extraPage": {
-      "name": "Ekstra underside",
-      "price": 800,
-      "period": "once",
-      "unit": "pr. side",
-      "note": "Ud over 8 sider. Kun Fuld fart.",
-      "onlyPackage": "fuldfart",
-      "max": 20
-    },
-    "buyout": {
-      "name": "Frikøb af siden",
-      "price": 2000,
-      "period": "once",
-      "note": "Ved stop af drift. Vises som vilkår, ikke som valg i beregneren."
-    }
+    "extraStandard": { "name": "Ekstra standardsystem", "once": 2000, "monthly": 99 },
+    "custom": { "name": "Skræddersyet system (ét flow)", "once": 5000, "monthly": 199 },
+    "english": { "name": "Engelsk version", "once": 1500 },
+    "buyout": { "name": "Frikøb af siden", "once": 2000 }
   },
   "terms": [
     "Ingen binding.",
     "1 måneds opsigelse.",
     "Domænet registreres i kundens navn.",
+    "Hosting og domæne er inkluderet i månedsprisen.",
     "Frikøb af siden: 2.000 kr.",
+    "Abonnementer hos tredjepartsudbydere er ikke inkluderet.",
     "Alle priser er ekskl. moms."
   ]
 }

@@ -10,10 +10,13 @@
     "preview": "vite preview",
     "images": "node scripts/images.mjs",
     "demo-shots": "node scripts/demo-shots.mjs",
-    "test": "node --test src/lib/calculate.test.js src/lib/receipt.test.js src/components/calculator/useCalculator.test.js && node scripts/test-inquiry.mjs",
+    "test": "node --test src/lib/calculate.test.js src/lib/receipt.test.js src/components/calculator/useCalculator.test.js && node scripts/test-inquiry.mjs && node scripts/test-intro.mjs",
     "test:e2e": "node scripts/test-redesign-e2e.mjs && node scripts/test-form-e2e.mjs && node scripts/test-demos-e2e.mjs",
     "fonts": "node scripts/fonts.mjs",
-    "brand": "node scripts/brand-assets.mjs"
+    "brand": "node scripts/brand-assets.mjs",
+    "intro:status": "node scripts/intro.mjs status",
+    "intro:brugt": "node scripts/intro.mjs brugt",
+    "test:content": "node scripts/test-content.mjs"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",

@@ -3,9 +3,9 @@ import Restaurant from './demos/Restaurant.jsx'
 import Salon from './demos/Salon.jsx'
 import Vinbar from './demos/Vinbar.jsx'
 import Demoer from './pages/Demoer.jsx'
+import Hjemmeside from './pages/Hjemmeside.jsx'
 import Home from './pages/Home.jsx'
 import Priser from './pages/Priser.jsx'
-import * as service from './pages/Service.jsx'
 
 /**
  * SIDERNE, alle samlet. Bruges kun af forudrenderingen (entry-server.jsx).
@@ -14,9 +14,7 @@ import * as service from './pages/Service.jsx'
  */
 export const pages = {
   home: Home,
-  hjemmeside: service.hjemmeside,
-  marketing: service.marketing,
-  bookingGoogle: service.bookingGoogle,
+  hjemmeside: Hjemmeside,
   priser: Priser,
   demoer: Demoer,
   'demo-cafe': Cafe,

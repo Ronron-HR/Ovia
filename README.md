@@ -1,92 +1,85 @@
 # OviaSpecs — hjemmeside
 
-> **Redesign (nov. 2026, grenen `redesign-handoff`).** Siden følger Claude Design-pakken. Den gamle beskrivelse længere nede (Lokal, guide, rundvisning, gammel formular og pristabeller) gælder ikke mere.
->
-> - **Priser og pakker** bor i `src/data/prices.json`, regnet af `src/lib/calculate.js` og `src/lib/receipt.js`. Tekst omkring dem: `src/data/calculator.js` og `src/data/pages.js`. Kontakt og adresser: `src/data/site.js`.
-> - **Design:** tokens og bevægelse i `src/styles/`, resten i `src/index.css` (Tailwind v4). Beregneren: `src/components/calculator/`. Palmy-casen er skjult (`flags.showPalmy` i `site.js`).
-> - **Skrifter:** Archivo (kun vægt 700, bredde 100–125 %), Geist (400–700) og Geist Mono (400–500), kun latin, woff2, i `src/assets/fonts/` (141 kB → 55 kB). Genereres af `npm run fonts` fra @fontsource-variable. Reserveskrifter med samme mål (size-adjust) står i `index.css`, og prerender forhåndshenter fontene.
-> - **Billeder:** `src/assets/billeder/README.md` (filnavn pr. plads; AVIF, WebP og JPEG bruges som `<picture>`). Mærkefilerne (`og.jpg`, favicon, touch-ikon) laves af logoet med `npm run brand`.
-> - **Forespørgselsformularen** (opsummeringen i beregneren; `InquiryForm.jsx`, lazy-loadet): navn, telefon og/eller mail, virksomhed og besked. Valgene sendes som link; `worker/index.js` regner priserne ud igen med `calculate.js` (`src/inquiry.js`), gemmer forespørgslen i D1, sender mailen til `MAIL_TO` med Reply-To = kundens mail og lader en daglig cron sende igen, hvis mailen fejler. Spamværn: honeypot, rate limit og server-side validering. **Turnstile er et fejlflag og ikke påkrævet:** sæt BÅDE byggevariablen `VITE_TURNSTILE_SITE_KEY` og hemmeligheden `TURNSTILE_SECRET` for at slå det til (kun hemmeligheden = alle forespørgsler afvises), og ret privatlivspolitikken. Preview-versioner bruger de samme bindinger (D1, mail) som produktion.
-> - **Test:** `npm test` (priser, kvittering, worker med simuleret D1 og mail). Med `npm run preview` kørende: `npm run test:e2e` (beregner, formular med lokal worker og `EML=<mappe>` til .eml-filer, undersider, demoer) og `node scripts/test-inp.mjs` (INP med 4× CPU-throttling).
-> - **Hastighed:** Lighthouse mobil 99–100 på forside, /priser/ og /hjemmeside/. Filer i `/assets/` har hash og `immutable` i `public/_headers`. Demoernes CSS ligger i demo-chunken og lægges ind i HTML'en på demosiderne ved build (`scripts/prerender.mjs`).
-
-Hjemmesiden for OviaSpecs (oviaspecs.com): hjemmesider, lokal synlighed, små systemer og marketing til mindre virksomheder. Hovedtilbuddet (rebrand okt. 2026, `docs/rebrand/`) er Lokal: hjemmeside uden opstartspris med fast månedspris og minimumsperiode; hjemmesiden kan også købes som engangsprojekt. React 19, Vite og Tailwind 4, forudrenderet til statiske filer og hostet på Cloudflare (Workers Static Assets). Én lille worker modtager formularen "Send din forespørgsel" under prisberegneren (se "Henvendelser"); resten er statiske filer. Ingen cookies. Besøg tælles med Cloudflare Web Analytics, som ifølge Cloudflare ikke bruger cookies eller lokal lagring ([cloudflare.com/web-analytics](https://www.cloudflare.com/web-analytics/), [dokumentation](https://developers.cloudflare.com/web-analytics/about/)).
+oviaspecs.com er ét tilbud: **hjemmeside, Google-profil, lokal SEO og systemer til restauranter og caféer**, i tre pakker til faste priser (Start, Anbefalet, Max). React 19, Vite 8 og Tailwind 4, forudrenderet til statiske filer og hostet på Cloudflare (Workers Static Assets). Én lille worker (`worker/index.js`) modtager formularen under prisberegneren. Ingen cookies; besøg tælles med Cloudflare Web Analytics.
 
 ## Her retter du
 
 | Fil | Indhold |
 | --- | --- |
-| `src/data/pricing.js` | **Alle priser og pakker**, Lokal (`lokal`, `lokalMinimum`), systemtilvalget (`systemModule`, `ready: false` = sælges ikke med pris), domæneloftet (`domain`), drift, tilvalg, beregnerens spørgsmål, pilotvilkår, gratis Google-tjek, momstekst (`priceNote`), `paidStartText`, `flags.hasMarketingCases`, telefon, mail og CVR (`company.cvr`, vises i footeren, når det er udfyldt). |
-| `src/data/texts.js` | Forsiden, navigation, kontakt, footer, privatlivspolitikkens udbydere og metadata for forsiden. |
-| `src/data/services.js` | Ydelsessiderne (/hjemmeside/, /marketing/, /booking-google/ = "Lokal synlighed") og /priser/: problem, "det får du" og FAQ. |
-| `src/data/offer.js` | De to købsmåder, tre problemer, forløbet, forsidens FAQ, vilkår (Lokal vs. engangskøb), /systemer/ og lokal SEO-leverancen. |
-| `src/data/seo.js` | Titler, metabeskrivelser, `updated` (sitemap-lastmod; ret ved væsentlige ændringer) og JSON-LD (`organisationLd`). |
-| `src/content.demos.js` | De fire koncepter under /demoer/. |
+| `src/data/prices.json` | **Eneste kilde til priser**: pakker (engang + pr. måned, sider, systemer med), standardsystemer, skræddersyet system, tilvalg, vilkår og introduktionsprisen. Beregneren, /priser/, /hjemmeside/, formularen og workeren læser herfra. Alle priser er faste og ekskl. moms. |
+| `src/data/pages.js` | Tabellen på /priser/ og teksterne på /hjemmeside/ (systemeksempler, hvad vi gør for Google og lokal SEO). |
+| `src/data/calculator.js` | Beregnerens tekster (trin, guidet hjælp, besked ved gammelt link). |
+| `src/data/site.js` | Kontakt, adresser (`paths`), menu og flag. |
+| `src/data/seo.js` | Titler, metabeskrivelser, `updated` (sitemap-lastmod) og JSON-LD. Priser i metatekster hentes fra prices.json. |
+| `src/content.demos.js` | De fire koncepter under /demoer/ (mærket "Koncept – ikke en kundeopgave"). |
 
-Regler for teksten: jeg-form (OviaSpecs er én person). Ingen udtalelser, kundetal, logoer eller resultater, der ikke kan dokumenteres. Koncepterne mærkes "Koncept – ikke en kundeopgave". Ingen rabatkoder, nedtællinger eller popularitetsmærker.
+Regler for teksten: vi-form, ingen "bureau", ingen oplysninger om alder, antal ansatte eller "ny virksomhed", ingen løfter om placeringer, gæster eller resultater, ingen opdigtede udtalelser, kundetal eller logoer. Intet "fra"-pris og intet "pris efter en snak": alt er faste priser. `npm run test:content` leder det byggede site igennem efter gamle ord.
+
+## Pakker og regler (prices.json)
+
+- **Start** 5.000 kr. + 299 kr./md.: 1–3 sider, Google-profil, grundlæggende lokal SEO, link til kundens eget booking/bestilling. Ingen systemer med.
+- **Anbefalet** 9.500 + 549/md.: op til 6 sider, 1 standardsystem, Google-profil + 1 opslag/md., lokal SEO med lokale søgeord, 1 times rettelser/md.
+- **Max** 15.000 + 895/md.: sider efter behov og engelsk version, 2 systemer (højst 1 skræddersyet), 2 opslag/md. og svar på anmeldelser, kvartalsvis SEO-gennemgang, 2 timers rettelser/md., kort månedlig status.
+- **Tilvalg:** ekstra standardsystem 2.000 + 99/md., skræddersyet system (ét flow) 5.000 + 199/md., engelsk version 1.500 (Start/Anbefalet), frikøb 2.000. Systemer, pakken har med, koster ikke ekstra; flere end det giver tilvalgsprisen automatisk. Skræddersyede systemer bruger de inkluderede pladser først.
+- **Vilkår:** ingen binding, 1 måneds opsigelse, domænet står i kundens navn, hosting og domæne er med.
+
+Beregningen står i `src/lib/calculate.js` (`calculate`), kvitteringen i `src/lib/receipt.js`. Valget i adresselinjen: `p` (pakke 0–2), `y` (systemkoder: b bordbooking, o bestilling, g gavekort, n nyhedsbrev, a anmeldelser), `c` (skræddersyede), `e` (engelsk), `i` (intropris), `t` (trin). Links fra før pakkerne (`w`, `m`, `b`, `d`, `bk`, `x`) kan ikke regnes om: beregneren viser en venlig besked, og workeren svarer 400 `old_selection`.
+
+## Introduktionspris og pladser
+
+30 % på pakkens **engangspris** (ikke måned, ikke tilvalg) til de første 3 kunder, der lader siden vise som case. Beregneren har det som et valgfrit felt ("Ja, I må vise siden som case"), slået fra som standard. Pladserne styres af ét tal: `introSlotsLeft` i `src/data/prices.json`. Er det 0, findes introprisen ikke på siden, i beregneren, i mailen eller i workeren (et gammelt link med `i=1` ignoreres).
+
+```
+npm run intro:status   viser kun antal pladser tilbage
+npm run intro:brugt    trækker 1 fra (aldrig under 0), kører npm test, committer
+                       "Intro-plads brugt – X tilbage" og pusher til main
+```
+
+`intro:brugt` nægter at køre, hvis arbejdsmappen ikke er ren, du ikke står på main, eller main ikke er ajour med origin. Fejler testene, sker der hverken commit eller push, og tallet rulles tilbage. Mailen til dig har nederst, når kunden har valgt intro: "Intropris valgt. Lander du kunden, så kør: npm run intro:brugt (X pladser tilbage nu)." Pusher du, bygger Cloudflare siden igen, og tallet på siden følger med. `scripts/test-intro.mjs` tester kommandoerne i en midlertidig git-kopi med lokal origin (3→2→1→0→0, afvisninger, testfejl).
 
 ## Sider
 
-`/` · `/hjemmeside/` · `/booking-google/` (Lokal synlighed) · `/systemer/` · `/marketing/` · `/priser/` · `/demoer/` (+ `/demoer/cafe|restaurant|salon|vinbar/`) · `/privatlivspolitik/`
+`/` · `/hjemmeside/` (hovedside med systemer og lokal SEO) · `/priser/` · `/demoer/` (+ `/demoer/cafe|restaurant|salon|vinbar/`) · `/privatlivspolitik/`
 
-Adresser: `src/routes.js` (metadata fra `src/data/seo.js`). Nøglerne skal passe med `src/pageKeys.js`, `src/pages.jsx` og `src/pageLoaders.js` (bygget fejler ellers). Gamle adresser (/hjemmesider/, /seo/ og /lokal-synlighed/ → /booking-google/, /ai-automatisering/ → /systemer/, /google-ads/, /sociale-medier-annoncering/, /booking-integrationer/, /prisberegner/, /ai-automatisering/, /om/, /kontakt/) viderestilles med 301 i `public/_redirects`.
-
-## Prisberegneren
-
-`src/components/PriceCalculator.jsx` + `src/calculator.js`. Trin 1 skelner først mellem Løbende samarbejde (`ydelser=lokal`), Køb hjemmesiden (`ydelser=hjemmeside`) og ingen hjemmeside, derefter tilvalg (Lokal synlighed, Marketing). Lokal-resultatet viser opstart, månedspris, minimumsperiode, minimumsbetaling, eksterne udgifter og overdragelse før formularen. Google-profilen trækkes fra Booking & Google, når den er med i Lokal eller Vækst/Fuld fart; QR-skiltet kan vælges uden booking. Engangskøb: derefter ét trin pr. valgt ydelse og så resultatet (højst 5 trin). Hvert svar peger på en pakke, og den højeste vinder. Under hver ydelse i resultatet kan kunden skifte pakke (Start / Vækst / Fuld fart); skiftet sætter pakkens svar (`calculator.tierSwitch` i pricing.js), så svar, resultat og adresselinje altid passer sammen. Prisen er fast: pakkeprisen plus eventuelle tilvalg (fx egen konto). Alle ydelser har `buffer: 0`, og `npm test` fejler, hvis et interval sniger sig ind. Valgene står i adresselinjen. Under prisen står formularen "Send din forespørgsel" (`src/components/SendQuote.jsx`) med Ring og SMS som sekundære links.
+Adresser: `src/routes.js` (metadata fra `src/data/seo.js`). Nøglerne skal passe med `src/pageKeys.js`, `src/pages.jsx` og `src/pageLoaders.js` (bygget fejler ellers). Udgåede adresser (/marketing/, /booking-google/, /seo/, /lokal-synlighed/, /google-ads/ m.fl.) viderestilles med 301 i `public/_redirects`, altid direkte til den endelige adresse (ingen kæder). Tilføjer du en omdirigering, så peg på målet, ikke på en anden omdirigering; `npm run test:content` tjekker det.
 
 ## Kommandoer
 
 | Kommando | Hvad den gør |
 | --- | --- |
 | `npm run dev` | Udviklingsserver |
-| `npm run build` | Bygger til `dist/`, forudrenderer HTML, skriver sitemap og JSON-LD (fra pricing.js) |
+| `npm run build` | Kører enhedstest og henvendelsestest, bygger til `dist/`, forudrenderer HTML, sitemap og JSON-LD |
 | `npm run preview` | Serverer `dist/` på http://localhost:4173 |
-| `npm test` | Pristest (håndregnede priser for alle pakker × driftsplaner, egen hosting, pakkeskift, gamle links) og henvendelsestest (workeren med falsk D1 og mail) |
-| `npm run test:e2e` | Browsertests mod `npm run preview`: forvalg, pakkeskift og formularen (390 px, touch) og koncepternes indgang (390/1440 px, CLS, reduceret bevægelse, uden JS) |
+| `npm test` | Enhedstest (priser, kvittering, beregnerens tilstand), henvendelsestest (worker med simuleret D1 og mail, genberegnede priser for hver pakke, tilvalg og intro 3/0) og intro-scriptets test |
+| `npm run test:content` | Indholdstjek af det byggede site (kræver build): gamle ord, links til udgåede sider, omdirigeringer, sitemap, metatekster |
+| `npm run test:e2e` | Browsertests mod `npm run preview` (beregner, formular med lokal worker, undersider, demoer) |
+| `npm run intro:status` / `intro:brugt` | Se ovenfor |
 | `npm run lint` | oxlint |
-| `npm run demo-shots` | Skærmbilleder af koncepterne til `public/demoer/` (kræver kørende preview og puppeteer-core) |
-| `npm run og` | Tegner delingsbilledet `public/og.jpg` |
-| `npm run brand` | Tegner favicon og logo-filer ud fra farverne i `src/index.css` |
+| `npm run fonts` / `brand` / `images` / `demo-shots` | Skrifter, mærkefiler, billeder og demoskærmbilleder |
 
 ## Opbygning
 
 ```
 src/data/            Konfiguration og tekster (se ovenfor)
-src/pages/           Home, Service (de tre ydelsessider), Priser, Demoer
-src/components/      Nav (Løsninger-menu), Footer, MobileCallBar, ContactButtons, ContactSection,
-                     HomeHero, Problems, BuyModes, Terms, Icon, WorkflowDemo, Steps, About, ServicePage, Packages,
-                     ConceptGrid, PilotSection, FreeCheck, Faq, PriceCalculator, …
-src/demos/           De fire koncepter (egne små sider); indgang ved scroll i useEntrance.js
-worker/index.js      /api/henvendelse: gemmer henvendelser (D1) og sender mail
-src/index.css        Farver, skrifter, knapper og komponenter (Tailwind @theme)
-scripts/prerender.mjs  Forudrendering, sitemap, JSON-LD og CSP-hash
+src/lib/             calculate.js (priser), receipt.js (kvittering, mail- og SMS-link)
+src/pages/           Home, Hjemmeside, Priser, Demoer
+src/components/      calculator/ (Mobile, Desktop, InquiryForm, useCalculator), home/, layout/, ui/
+src/demos/           De fire koncepter
+src/inquiry.js       Validering, mailtekst og canonicalLink: fælles for formularen og workeren
+worker/index.js      /api/henvendelse: gemmer (D1) og sender mail; daglig cron
+scripts/             prerender, tests, intro.mjs
 public/_headers      Sikkerhedsheaders og cache
-public/_redirects    Viderestillinger fra gamle adresser
-privatlivspolitik/   Egen indgang, så politikken kan deles som link
+public/_redirects    301 fra gamle adresser
 ```
 
-Skrifterne (Instrument Sans og JetBrains Mono, SIL OFL) er selvhostede i `public/fonts`. Ingen eksterne stylesheets; det eneste eksterne script er Cloudflare Web Analytics (tilladt i CSP i `public/_headers`). Privatlivspolitikken (`src/components/Privatlivspolitik.jsx`) beskriver præcis dette; ændres noget, skal den ændres samtidig.
+Design: tokens og bevægelse i `src/styles/`, resten i `src/index.css` (Tailwind v4). Skrifter: Archivo, Geist og Geist Mono (kun latin, woff2, selvhostede; `npm run fonts`). Billeder: `src/assets/billeder/README.md`. Palmy-casen er skjult (`flags.showPalmy`). Privatlivspolitikken (`src/components/Privatlivspolitik.jsx`) beskriver præcis, hvad siden gør; ændres noget, skal den ændres samtidig.
 
 ## Henvendelser
 
-Formularen sender mail/telefon, evt. navn, en valgfri besked (højst 1.000 tegn; står i mailen/`summary`, intet eget D1-felt) og linket med valgene til `POST /api/henvendelse` (`worker/index.js`, regler i `src/inquiry.js`). Workeren tjekker felterne igen (gyldig mail eller dansk nummer), honeypot, rate limit pr. IP (Workers Rate Limiting-bindingen `RATE_LIMITER`) og Turnstile, når `TURNSTILE_SECRET` er sat (så afvises henvendelser uden gyldig token; uden hemmeligheden springes Turnstile over), regner opsummeringen ud fra linket, **gemmer henvendelsen i D1** og sender derefter mailen med Cloudflare Email Routing. Fejler mailen, er henvendelsen stadig gemt (`mail_status = 'failed'`), og en daglig cron (05:00 UTC, `runDaily`) sender den igen; efter 3 fejlede genforsøg bliver den `gave_up` og står øverst i en daglig opsummeringsmail. Cron kører kun på den udgivne version. Kunden ser kun "Tak", når serveren har svaret OK. Henvendelser slettes efter `privacy.retentionMonths` måneder (`src/data/texts.js`).
+Formularen sender navn, mail og/eller telefon, valgfri virksomhed og besked (højst 1.000 tegn) og linket med valgene til `POST /api/henvendelse`. Workeren tjekker felterne igen, honeypot, rate limit pr. IP (`RATE_LIMITER`) og Turnstile, hvis `TURNSTILE_SECRET` er sat (valgfrit; sæt både `VITE_TURNSTILE_SITE_KEY` og hemmeligheden, og ret privatlivspolitikken). Priserne regnes **altid om på serveren** ud fra linket (aldrig browserens tal), inkl. om introprisen gælder. Så **gemmes forespørgslen i D1**, og mailen sendes i baggrunden (`ctx.waitUntil`, ét genforsøg efter 2 s), så kunden får svar med det samme. Fejler mailen, står rækken som `failed`, og en daglig cron (05:00 UTC) sender den igen; efter 3 genforsøg bliver den `gave_up` og står i en daglig opsummering. Cronen sender kun den lagrede tekst, så ældre rækker kan ikke fejle på nye priser; `CRON_FROM` i worker/index.js sætter, hvor langt tilbage cronen rører. Forespørgsler slettes efter 12 måneder.
 
-Opsætning i Cloudflare-dashboardet (én gang):
-
-1. **D1**: `ovia-henvendelser` er oprettet i weur (3. okt. 2026), ID står i `wrangler.jsonc`, og `worker/schema.sql` er kørt (`npx wrangler d1 execute ovia-henvendelser --remote --file worker/schema.sql`).
-2. **Email Routing**: oviaspecs.com → Email → Email Routing. Er den slået til, så tjek under *Destination addresses*, at modtageradressen i `wrangler.jsonc` (`MAIL_TO`) står som *Verified*; ellers tilføj den og klik på linket i bekræftelsesmailen. Afsenderen (`MAIL_FROM`) skal være en adresse på oviaspecs.com.
-3. **Turnstile (valgfri, udskudt)**: Turnstile → Add widget → domæner `oviaspecs.com` (og preview-domænet) → *Widget Mode: Invisible*. Sæt *Site Key* som byggevariabel `VITE_TURNSTILE_SITE_KEY` (Workers & Pages → ovia → Settings → Build → Variables and secrets) og *Secret Key* som hemmelighed `TURNSTILE_SECRET` (Settings → Variables and Secrets → Add → type Secret). Uden dem kører formularen uden Turnstile; honeypot og rate limit er altid aktive. Sæt begge på én gang: er kun hemmeligheden sat, afvises alle henvendelser.
-
-Henvendelserne kan ses i D1 → ovia-henvendelser → Console: `SELECT created_at, contact, name, mail_status FROM henvendelser ORDER BY created_at DESC;`
+Opsætning i Cloudflare (én gang): D1 `ovia-henvendelser` (ID i `wrangler.jsonc`, `worker/schema.sql`), Email Routing på oviaspecs.com (modtageren i `MAIL_TO` skal være verificeret; afsender `MAIL_FROM` på oviaspecs.com). Henvendelser kan ses i D1-konsollen: `SELECT created_at, contact, name, mail_status FROM henvendelser ORDER BY created_at DESC;`
 
 ## Udgivelse
 
-`git push origin main` udgiver (Cloudflare bygger med `npm run build`). Brug en anden gren til et preview først.
-
-## Drift, guide og rundvisning
-
-- **Drift er et eget valg** (ikke en del af hjemmesidepakken): `driftPlans` i `src/data/pricing.js` (Basis 198, Plus 398, Ekstra 798 kr./md; minutter indholdsarbejde pr. måned: 0/15/30) eller egen konto/hosting (tillæg `ownAccount`, ingen månedlig betaling til OviaSpecs). Adresselinjen: `drift=basis|plus|ekstra|egen`. Gamle links med `drift=drift` bliver til den plan, der havde samme indhold (Start/Vækst → Plus, Fuld fart → Ekstra); mangler `drift`, vælger kunden selv.
-- **Behovsguiden** ("Hjælp mig med at vælge"): højst tre spørgsmål (behov, eksisterende løsning, betalingsmodel) og "Spring over". Mindste dækkende løsning; Google + QR giver aldrig booking; system kun ved en relevant arbejdsgang og aldrig med pris, mens `systemModule.ready` er false. `src/guide.js` (regler), tekster i `calculator.guide`, UI i `NeedsGuide.jsx`. Tilstand: `hjaelp=<trin>&g-<spørgsmål>=<svar>`.
-- **Rundvisningen** ("Vis mig rundt"): starter kun ved klik (ingen automatisk invitation, intet gemt i browseren). `TourLauncher.jsx`, `Tour.jsx` (indlæses først ved brug), `src/data/tour.js`, mål via `data-tour="calc|guide|drift|price|examples|contact"`.
-- Tests: `scripts/test-guide.mjs`, `test-guide-e2e.mjs`, `test-tour-e2e.mjs` (kræver dev-server: `SITE=http://localhost:5176`), `test-rebrand-e2e.mjs` (acceptkriterierne i `docs/rebrand/qa-kriterier.md`), `test-a11y-e2e.mjs` (kræver kørende preview; `ONLY=tastatur,priser,… ` for dele). Skærmbilleder: `node scripts/ovia-shots.mjs <mappe>` og `ovia-shots-flow.mjs <mappe>`.
+`git push origin main` udgiver (Cloudflare bygger med `npm run build`). Brug en anden gren til preview først (`https://<gren>-ovia.ronnyhong723.workers.dev`; preview deler produktionens D1 og mail).

@@ -1,4 +1,4 @@
-import { canonicalLink, composeMail, danishPhone, inquiry, normalize, validate, validEmail } from '../src/inquiry.js'
+import { OLD_LINK_MESSAGE, canonicalLink, composeMail, danishPhone, inquiry, normalize, validate, validEmail } from '../src/inquiry.js'
 
 /**
  * FORESPØRGSLER FRA PRISBEREGNEREN (Cloudflare Worker)
@@ -171,13 +171,15 @@ export async function handleInquiry(request, env, deps, ctx) {
   tm.mark('ratelimit')
   const bad = validate(p)
   if (bad) return json(400, { ok: false, error: 'invalid_' + bad.field, message: bad.message })
-  const link = canonicalLink(p.link, self.origin)
+  const link = canonicalLink(p.link, self.origin, deps?.prices)
+  // En cachet side fra før pakkerne sender gamle ydelses-id'er (w, m, b …): en venlig 400, ingen crash, intet gemt.
+  if (link?.old) return json(400, { ok: false, error: 'old_selection', message: OLD_LINK_MESSAGE })
   if (!link) return json(400, { ok: false, error: 'invalid_link' })
 
   // 1. Gem. Uden database er der ingen garanti for, at henvendelsen ikke går tabt: fejl.
   if (!env.DB) return json(503, { ok: false, error: 'not_configured' })
   // Kvitteringen regnes ud her af valgene i linket (calculate.js): tal fra browseren bruges aldrig.
-  const mail = composeMail({ ...p, link: link.url, selection: link.selection })
+  const mail = composeMail({ ...p, link: link.url, selection: link.selection }, deps?.prices)
   const contact = [p.email, danishPhone(p.phone)].filter(Boolean).join(' · ')
   const who = p.company ? `${p.name} (${p.company})` : p.name
   const id = crypto.randomUUID()
@@ -260,21 +262,22 @@ export function composeDigest({ gaveUp, recent, now = new Date() }) {
 
 /** Den daglige cron: genforsøg, opgivelse, opsummering og oprydning. */
 /**
- * Cronen rører kun forespørgsler fra redesignet og frem. Ældre rækker i D1 (fra den gamle formular og det gamle priskort) sendes
+ * Cronen rører kun forespørgsler fra pakke-lanceringen og frem (nye pakker, systemer og intropris). Ældre rækker i D1 (fra den gamle formular og det gamle priskort) sendes
  * ALDRIG igen og kommer ikke med i opsummeringen, selv om de står som 'failed' eller 'pending'. De slettes stadig efter
  * retentionMonths (trin 3 nedenfor). Rækker fra før denne dato kan ikke genopbygges til den nye mail.
  */
-export const CRON_FROM = '2026-11-05T00:00:00.000Z'
+export const CRON_FROM = '2026-11-05T18:30:00.000Z'
 
 export async function runDaily(env, deps, now = new Date()) {
   if (!env.DB) return { skipped: 'no_db' }
   const db = env.DB
   const ago = (ms) => new Date(now.getTime() - ms).toISOString()
+  const from = deps?.cronFrom ?? CRON_FROM // kun tests overstyrer datoen
 
   // 1. Genforsøg: fejlede og hængende (pending i over en time).
   const { results: due } = await db
     .prepare("SELECT * FROM henvendelser WHERE created_at >= ? AND (mail_status = 'failed' OR (mail_status = 'pending' AND created_at < ?)) ORDER BY created_at")
-    .bind(CRON_FROM, ago(3600_000))
+    .bind(from, ago(3600_000))
     .all()
   let resent = 0
   for (const r of due) {
@@ -295,11 +298,11 @@ export async function runDaily(env, deps, now = new Date()) {
   // 2. Opsummering. Opgivne kommer med, indtil en opsummering faktisk er sendt.
   const { results: gaveUp } = await db
     .prepare("SELECT * FROM henvendelser WHERE created_at >= ? AND mail_status = 'gave_up' AND reported_at IS NULL ORDER BY created_at")
-    .bind(CRON_FROM)
+    .bind(from)
     .all()
   const { results: recent } = await db
     .prepare('SELECT created_at, contact, name, mail_status FROM henvendelser WHERE created_at >= ? ORDER BY created_at DESC')
-    .bind(ago(24 * 3600_000) > CRON_FROM ? ago(24 * 3600_000) : CRON_FROM)
+    .bind(ago(24 * 3600_000) > from ? ago(24 * 3600_000) : from)
     .all()
   let digest = 'none'
   if (gaveUp.length || recent.length) {

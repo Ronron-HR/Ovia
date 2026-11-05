@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { contact, isCurrent, links, navLinks, paths } from '../../data/site.js'
+import { calcPages, contact, isCurrent, links, navLinks, paths } from '../../data/site.js'
 import Logo from '../ui/Logo.jsx'
 
 const heading = 'font-[family-name:var(--font-display)] font-bold [font-stretch:125%]'
@@ -11,7 +11,7 @@ const heading = 'font-[family-name:var(--font-display)] font-bold [font-stretch:
 export default function Nav({ path }) {
   const [open, setOpen] = useState(false)
   const close = () => setOpen(false)
-  const priceHref = isCurrent(path, paths.home) ? '#prisberegner' : paths.beregner
+  const priceHref = calcPages.some((p) => isCurrent(path, p)) ? '#prisberegner' : paths.beregner
 
   useEffect(() => {
     if (!open) return

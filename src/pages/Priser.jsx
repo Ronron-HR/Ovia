@@ -1,16 +1,15 @@
 import Contact from '../components/layout/Contact.jsx'
 import prices from '../data/prices.json'
-import { addonRows, includedText, priceTables } from '../data/pages.js'
-import { formatKr } from '../lib/calculate.js'
+import { addonRows, compareRows } from '../data/pages.js'
+import { NBSP, formatKr, introActive } from '../lib/calculate.js'
+import { slotsText } from '../components/calculator/parts.jsx'
+import { priceText } from '../lib/receipt.js'
 
 const heading = 'font-[family-name:var(--font-display)] font-bold [font-stretch:125%]'
-const keys = ['web', 'mkt', 'book']
 
 const jump = [
-  ['Hjemmeside', '#p-hjemmeside'],
-  ['Marketing', '#p-marketing'],
-  ['Booking & Google', '#p-booking'],
-  ['Drift', '#drift'],
+  ['Pakker', '#pakker'],
+  ['Tilvalg', '#tilvalg'],
   ['Vilkår', '#vilkaar'],
 ]
 
@@ -26,64 +25,15 @@ function Cell({ value, tint }) {
           –
         </span>
       ) : (
-        <span>{value}</span>
+        <span className="text-[13px] leading-[1.35] md:text-[15px]">{value}</span>
       )}
     </span>
   )
 }
 
-/** Én ydelse: tre pakker side om side. */
-function PriceTable({ k }) {
-  const service = prices.services[k]
-  const table = priceTables[k]
-  const month = service.period === 'month'
-  return (
-    <section id={table.id} aria-labelledby={`${table.id}-t`} className="mx-auto max-w-[1440px] scroll-mt-20 px-5 pt-10 pb-12 md:scroll-mt-[152px] md:px-14 md:pt-[88px] md:pb-16">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-        <h2 id={`${table.id}-t`} className="display t-h2s">
-          {service.name}
-        </h2>
-        <div className="flex items-baseline gap-5">
-          <span className="text-sm whitespace-nowrap text-muted-2">{month ? 'Pr. måned' : 'Engang'}</span>
-          <a href={service.slug + '/'} className="flex min-h-12 items-center text-[15px] whitespace-nowrap">
-            Læs mere
-          </a>
-        </div>
-      </div>
-      <div role="table" aria-label={service.name} className="mt-5 grid grid-cols-3 md:grid-cols-[3fr_2fr_2fr_2fr]">
-        <div role="row" className="contents">
-          <span role="columnheader" className="hidden md:block">
-            <span className="sr-only">Pakke</span>
-          </span>
-          {service.packages.map((p) => (
-            <div key={p.key} role="columnheader" className={`flex flex-col gap-[6px] px-[10px] py-[14px] md:px-4 md:py-5 ${p.recommended ? 'bg-surface' : ''}`}>
-              <span className={`${heading} text-[15px] tracking-[-0.02em] whitespace-nowrap md:text-xl`}>{p.name}</span>
-              <span className="min-h-4 text-xs">{p.recommended ? 'Anbefalet' : ''}</span>
-              <span className="price mt-1 text-[13px] md:text-[17px]">
-                <span className="md:hidden">{formatKr(p.price)}</span>
-                <span className="hidden md:inline">{formatKr(p.price, month)}</span>
-              </span>
-            </div>
-          ))}
-        </div>
-        {table.rows.map(([label, ...cells]) => (
-          <div key={label} role="row" className="contents">
-            <span role="rowheader" className="col-span-full border-t border-hairline pt-[14px] pb-[2px] text-sm leading-[1.35] md:col-auto md:py-3 md:pr-4">
-              {label}
-            </span>
-            {cells.map((c, i) => (
-              <Cell key={i} value={c} tint={service.packages[i].recommended} />
-            ))}
-          </div>
-        ))}
-      </div>
-      {table.note && <p className="mt-[14px] text-sm text-muted-2">{table.note}</p>}
-    </section>
-  )
-}
-
-/** /priser: alle pakker side om side, drift, tilvalg og vilkår. */
+/** /priser: de tre pakker side om side, tilvalg og vilkår. Faste priser, ekskl. moms. */
 export default function Priser() {
+  const intro = introActive()
   return (
     <>
       <section aria-labelledby="priser-titel" className="mx-auto max-w-[1440px] px-5 pt-7 pb-8 md:px-14 md:pt-28 md:pb-24">
@@ -91,7 +41,7 @@ export default function Priser() {
           Priser
         </h1>
         <div className="mt-5 flex flex-wrap items-end justify-between gap-6 md:mt-14 md:ml-[33%]">
-          <p className="m-0 max-w-[36ch] text-[17px] leading-[1.45] text-pretty md:text-[clamp(17px,1.5vw,21px)]">Alle pakker side om side. Alle priser er ekskl. moms.</p>
+          <p className="m-0 max-w-[36ch] text-[17px] leading-[1.45] text-pretty md:text-[clamp(17px,1.5vw,21px)]">Tre pakker side om side. Faste priser, ekskl. moms.</p>
           <a href="/#prisberegner" className="btn btn-ink hov-ink-soft w-full text-[17px] md:w-auto">
             <span>Beregn din samlede pris</span>
             <span aria-hidden="true">→</span>
@@ -109,31 +59,56 @@ export default function Priser() {
         </div>
       </nav>
 
-      {keys.map((k) => (
-        <PriceTable key={k} k={k} />
-      ))}
-
-      <section id="drift" aria-labelledby="drift-t" className="scroll-mt-20 bg-surface md:scroll-mt-[152px]">
-        <div className="mx-auto grid max-w-[1440px] gap-7 section-pad px-5 md:grid-cols-[5fr_7fr] md:gap-14 md:px-14">
-          <div className="flex flex-col gap-[14px]">
-            <h2 id="drift-t" className="display t-h2s">
-              Drift af hjemmesiden
-            </h2>
-            <p className="m-0 max-w-[34ch] text-base leading-normal">Alle planer: {includedText.toLowerCase()}.</p>
-          </div>
-          <div className="flex flex-col gap-2">
-            {prices.drift.plans.map((d) => (
-              <div key={d.key} className="grid items-baseline gap-x-4 gap-y-[6px] bg-paper px-5 py-[18px]" style={{ gridTemplateColumns: 'minmax(0,1fr) auto' }}>
-                <span className={`${heading} text-[19px] tracking-[-0.02em]`}>{d.name}</span>
-                <span className="price text-[15px]">{formatKr(d.price, true)}</span>
-                <span className="col-span-full text-sm leading-[1.4]">{d.description}</span>
+      <section id="pakker" aria-labelledby="pakker-t" className="mx-auto max-w-[1440px] scroll-mt-20 px-5 pt-10 pb-12 md:scroll-mt-[152px] md:px-14 md:pt-[88px] md:pb-16">
+        <h2 id="pakker-t" className="display t-h2s">
+          Pakker
+        </h2>
+        <div role="table" aria-label="Pakker" className="mt-5 grid grid-cols-3 md:grid-cols-[3fr_2fr_2fr_2fr]">
+          <div role="row" className="contents">
+            <span role="columnheader" className="hidden md:block">
+              <span className="sr-only">Pakke</span>
+            </span>
+            {prices.packages.map((p) => (
+              <div key={p.key} role="columnheader" className={`flex flex-col gap-[6px] px-[10px] py-[14px] md:px-4 md:py-5 ${p.recommended ? 'bg-surface' : ''}`}>
+                <span className={`${heading} text-[15px] tracking-[-0.02em] whitespace-nowrap md:text-xl`}>{p.name}</span>
+                <span className="price mt-1 text-[13px] md:text-[17px]">{formatKr(p.once)}</span>
+                <span className="price text-xs md:text-sm">+ {formatKr(p.monthly, true)}</span>
               </div>
             ))}
           </div>
+          {compareRows.map(([label, ...cells]) => (
+            <div key={label} role="row" className="contents">
+              <span role="rowheader" className="col-span-full border-t border-hairline pt-[14px] pb-[2px] text-sm leading-[1.35] md:col-auto md:py-3 md:pr-4">
+                {label}
+              </span>
+              {cells.map((c, i) => (
+                <Cell key={i} value={c} tint={prices.packages[i].recommended} />
+              ))}
+            </div>
+          ))}
         </div>
+        <p className="mt-[14px] mb-0 text-sm text-muted-2">Engangsprisen betales for opsætning og opbygning, månedsprisen dækker hosting, domæne, backup og det, pakken ellers indeholder.</p>
+        {intro && (
+          <div className="mt-6 bg-surface p-5 md:p-6">
+            <h3 className="text-xl tracking-[-0.02em]">
+              Introduktionspris: {Math.round(prices.intro.discount * 100)}
+              {NBSP}% på engangsprisen
+            </h3>
+            <p className="mt-2 mb-0 max-w-[60ch] text-[15px] leading-normal">
+              De første {prices.intro.total} kunder, mod at vi må vise siden som case. {slotsText()}. Månedsprisen og tilvalg er uden rabat. Intropriserne:{' '}
+              {prices.packages.map((p, i) => (
+                <span key={p.key}>
+                  {i ? ', ' : ''}
+                  {p.name} {formatKr(Math.round(p.once * (1 - prices.intro.discount)))}
+                </span>
+              ))}
+              .
+            </p>
+          </div>
+        )}
       </section>
 
-      <section aria-label="Tilvalg og vilkår" className="mx-auto grid max-w-[1440px] gap-7 section-pad px-5 md:grid-cols-2 md:gap-14 md:px-14">
+      <section id="tilvalg" aria-label="Tilvalg og vilkår" className="mx-auto grid max-w-[1440px] scroll-mt-20 gap-7 section-pad px-5 md:scroll-mt-[152px] md:grid-cols-2 md:gap-14 md:px-14">
         <div>
           <h2 className="display t-h2s mb-4">Tilvalg</h2>
           {addonRows.map((r) => {
@@ -142,8 +117,8 @@ export default function Priser() {
               <div key={r.key} className="grid items-baseline gap-x-4 gap-y-1 border-t border-hairline py-4" style={{ gridTemplateColumns: 'minmax(0,1fr) auto' }}>
                 <span className="text-base font-medium">{a.name}</span>
                 <span className="price text-sm">
-                  {r.plus ? '+' : ''}
-                  {formatKr(a.price)}
+                  {r.key === 'buyout' ? '' : '+'}
+                  {priceText({ once: a.once, monthly: a.monthly ?? 0 })}
                 </span>
                 <span className="col-span-full text-sm text-muted-2">{r.note}</span>
               </div>

@@ -18,7 +18,7 @@
     "slide": {
       "css": "cubic-bezier(.3,1.35,.5,1)",
       "ms": 420,
-      "use": "mørk valgmarkering glider mellem Start/Vækst/Fuld fart og driftsplaner; progress-bar bredde"
+      "use": "mørk valgmarkering glider mellem Start/Anbefalet/Max; progress-bar bredde"
     },
     "check": {
       "css": "cubic-bezier(.3,1.7,.5,1)",

@@ -1,204 +1,217 @@
 import { useState } from 'react'
 import prices from '../../data/prices.json'
-import { driftChoices, helpQuestions, serviceMeta, SERVICE_KEYS, stepLabels } from '../../data/calculator.js'
-import { formatKr } from '../../lib/calculate.js'
+import { helpQuestions, stepLabels } from '../../data/calculator.js'
+import { formatKr, introActive, nextSystemCost } from '../../lib/calculate.js'
+import { priceText } from '../../lib/receipt.js'
 import InquirySlot from './InquirySlot.jsx'
-import { Check, DeltaChip, ReceiptLine, TERMS_SHORT, Total } from './parts.jsx'
+import { Check, DeltaChip, ReceiptLine, TERMS_SHORT, Total, slotsText } from './parts.jsx'
 import { useExitList } from './useExitList.js'
-
-const NB = ' '
-const drift = (key) => prices.drift.plans.find((p) => p.key === key)
-const driftPrice = (c) => (c.key === 'egen' ? `+${formatKr(prices.addons.ownHosting.price)} engang` : formatKr(drift(c.key).price, true))
-const driftName = (c) => c.name ?? drift(c.key).name
 
 const heading = 'font-[family-name:var(--font-display)] font-bold [font-stretch:125%]'
 
-/** Glidende mørk markering bag den valgte mulighed (Start/Vækst/Fuld fart, driftsplaner). */
+/** Hvad et ekstra system koster oven i valget nu: "Indgår" (der er plads i pakken) eller "+2.000 kr. + 99 kr./md.". */
+const extraText = (c) => (!c ? '' : c.once === 0 && c.monthly === 0 ? 'Indgår' : '+' + priceText({ once: c.once, monthly: c.monthly }))
+
+/** Glidende mørk markering bag den valgte mulighed. index < 0 = intet valgt (markeringen skjules). */
 function Segmented({ cols, index, children }) {
   return (
     <div className="relative grid bg-surface" style={{ gridTemplateColumns: `repeat(${cols},minmax(0,1fr))` }}>
       <div
         aria-hidden="true"
         className="absolute top-0 bottom-0 bg-ink"
-        style={{ left: `${(index * 100) / cols}%`, width: `${100 / cols}%`, transition: 'left 420ms var(--spring-slide)' }}
+        style={{ left: `${(Math.max(index, 0) * 100) / cols}%`, width: `${100 / cols}%`, opacity: index < 0 ? 0 : 1, transition: 'left 420ms var(--spring-slide), opacity 200ms ease-out' }}
       />
       {children}
     </div>
   )
 }
 
-function StepServices({ calc }) {
-  const { state, dispatch } = calc
-  const svc = state.selection.services
+/** Pakkens pris på to linjer: engang og pr. måned (kolonnerne er smalle). Intro: normalprisen overstreget. */
+function PackagePrice({ pkg, intro }) {
+  const saving = intro && introActive() ? Math.round(pkg.once * prices.intro.discount) : 0
   return (
-    <div className="anim-step flex flex-col gap-2">
-      {SERVICE_KEYS.map((key) => {
-        const s = prices.services[key]
-        const meta = serviceMeta[key]
-        const sel = svc[key] !== null
-        return (
-          <div
-            key={key}
-            className={`press relative grid items-center gap-8 px-7 py-7 has-[button.row:active]:scale-[.985] ${sel ? 'bg-ink text-paper' : 'bg-surface text-ink'}`}
-            style={{ gridTemplateColumns: 'minmax(0,1fr) 180px 28px', '--press': 1 }}
-          >
-            <button
-              type="button"
-              className="row absolute inset-0 z-0"
-              aria-pressed={sel}
-              aria-label={`${s.name}. ${meta.desc} Fra ${formatKr(s.packages[0].price, meta.month)}`}
-              onClick={() => dispatch({ type: 'toggleService', key })}
-            />
-            <div className="pointer-events-none z-10 flex min-w-0 flex-col gap-2">
-              <span className={`${heading} text-[clamp(26px,2.6vw,40px)] leading-none tracking-[-0.03em]`}>{s.name}</span>
-              <div className="flex flex-wrap items-baseline gap-x-[18px]">
-                <span className="text-[15px]">{meta.desc}</span>
-                <a href={meta.href} className="pointer-events-auto relative z-20 inline-flex min-h-6 items-center whitespace-nowrap text-sm">
-                  Se ydelsen →
-                </a>
-              </div>
-            </div>
-            <span className="price pointer-events-none z-10 text-sm">fra {formatKr(s.packages[0].price, meta.month)}</span>
-            <span className="pointer-events-none z-10">
-              <Check on={sel} />
-            </span>
-          </div>
-        )
-      })}
-    </div>
+    <span className="flex flex-col gap-1">
+      <span className="price text-lg">
+        {saving > 0 ? (
+          <>
+            <s className="text-sm opacity-70">{formatKr(pkg.once)}</s> {formatKr(pkg.once - saving)}
+          </>
+        ) : (
+          formatKr(pkg.once)
+        )}
+      </span>
+      <span className="price text-sm">+ {formatKr(pkg.monthly, true)}</span>
+    </span>
   )
 }
 
 function StepPackages({ calc }) {
-  const { state, dispatch, chosenKeys } = calc
-  const svc = state.selection.services
+  const { state, dispatch } = calc
+  const sel = state.selection
   return (
-    <div className="anim-step flex flex-col gap-10">
-      {chosenKeys.map((key) => {
-        const s = prices.services[key]
-        const month = serviceMeta[key].month
-        const cur = svc[key]
-        return (
-          <div key={key} role="group" aria-label={`${s.name}, vælg pakke`}>
-            <div className="mb-3 flex items-baseline justify-between gap-4">
-              <span className={`${heading} text-[22px] tracking-[-0.02em]`}>{s.name}</span>
-              <span className="text-sm text-muted-2">{month ? 'Pr. måned' : 'Engang'}</span>
-            </div>
-            <Segmented cols={3} index={cur}>
-              {s.packages.map((p, i) => (
-                <button
-                  key={p.key}
-                  type="button"
-                  aria-pressed={cur === i}
-                  onClick={() => dispatch({ type: 'setService', key, value: i })}
-                  className={`press relative flex min-h-[136px] flex-col gap-[10px] bg-transparent px-[22px] pt-5 pb-[22px] text-left [--press:.97] ${cur === i ? 'text-paper' : 'text-ink'}`}
-                  style={{ transition: 'transform 260ms var(--spring-press), color 180ms ease-out 60ms' }}
-                >
-                  <span className="flex w-full items-baseline justify-between gap-2">
-                    <span className={`${heading} text-[19px] tracking-[-0.015em]`}>{p.name}</span>
-                    <span className="text-xs">{p.recommended ? 'Anbefalet' : ''}</span>
-                  </span>
-                  <span className="price text-lg">{formatKr(p.price, month)}</span>
-                  <span className="text-[13px] leading-[1.45]">{p.points.join(' · ')}</span>
-                </button>
-              ))}
-            </Segmented>
-          </div>
-        )
-      })}
+    <div className="anim-step">
+      <div role="group" aria-label="Vælg pakke">
+        <Segmented cols={3} index={sel.pkg ?? -1}>
+          {prices.packages.map((p, i) => {
+            const on = sel.pkg === i
+            return (
+              <button
+                key={p.key}
+                type="button"
+                aria-pressed={on}
+                onClick={() => dispatch({ type: 'togglePkg', pkg: i })}
+                className={`press relative flex min-h-[340px] flex-col gap-4 bg-transparent px-6 pt-6 pb-6 text-left [--press:.97] ${on ? 'text-paper' : 'text-ink'}`}
+                style={{ transition: 'transform 260ms var(--spring-press), color 180ms ease-out 60ms' }}
+              >
+                <span className="flex w-full items-baseline justify-between gap-2">
+                  <span className={`${heading} text-[22px] tracking-[-0.02em]`}>{p.name}</span>
+                </span>
+                <PackagePrice pkg={p} intro={sel.intro} />
+                <ul className="m-0 flex list-none flex-col gap-[6px] p-0">
+                  {p.points.map((pt) => (
+                    <li key={pt} className="text-[13px] leading-[1.45]">
+                      – {pt}
+                    </li>
+                  ))}
+                </ul>
+              </button>
+            )
+          })}
+        </Segmented>
+      </div>
+      <p className="mt-3 mb-0 text-sm text-muted-2">Faste priser. Hosting, domæne og backup er med i månedsprisen.</p>
     </div>
   )
 }
 
-function StepDrift({ calc }) {
+function StepSystems({ calc }) {
   const { state, dispatch, receipt } = calc
   const sel = state.selection
-  const idx = Math.max(0, driftChoices.findIndex((c) => c.key === sel.drift))
-  const included = receipt.bookingIncluded
-  const addonOn = sel.bookingAddon && !included
-  const full = sel.services.web === 2
+  const pkg = prices.packages[sel.pkg]
+  const byKey = Object.fromEntries(receipt.all.map((l) => [l.key, l]))
+  const nextStd = nextSystemCost(sel, 'standard')
+  const nextCustom = nextSystemCost(sel, 'custom')
+  const intro =
+    pkg.slots === 0
+      ? `${pkg.name} har ingen systemer med. Hvert system lægges til som tilvalg.`
+      : pkg.customSlots
+        ? `${pkg.name} har ${pkg.slots} systemer med, og ét af dem kan være skræddersyet. Flere lægges til som tilvalg.`
+        : `${pkg.name} har ${pkg.slots} standardsystem med, efter eget valg. Flere lægges til som tilvalg.`
   return (
-    <div className="anim-step flex flex-col gap-11">
-      <div role="group" aria-label="Driftsplan">
-        <div className="mb-3 flex items-baseline justify-between gap-4">
-          <span className={`${heading} text-[22px] tracking-[-0.02em]`}>Driftsplan</span>
-          <span className="text-sm text-muted-2">Ingen binding. 1{NB}md. opsigelse.</span>
-        </div>
-        <Segmented cols={4} index={idx}>
-          {driftChoices.map((c) => (
+    <div className="anim-step flex flex-col gap-2">
+      <p className="m-0 mb-2 text-[15px] leading-normal text-muted-2">{intro}</p>
+      <div className="flex flex-col gap-2" role="group" aria-label="Standardsystemer">
+        {prices.systems.standard.map((s) => {
+          const on = sel.systems.includes(s.key)
+          const line = byKey['sys-' + s.key]
+          const tag = on ? (line.included ? line.price : '+' + line.price) : extraText(nextStd)
+          return (
             <button
-              key={c.key}
+              key={s.key}
               type="button"
-              aria-pressed={sel.drift === c.key}
-              onClick={() => dispatch({ type: 'setDrift', drift: c.key })}
-              className={`press relative flex min-h-[140px] flex-col gap-[10px] bg-transparent px-[18px] pt-5 pb-[22px] text-left [--press:.97] ${sel.drift === c.key ? 'text-paper' : 'text-ink'}`}
-              style={{ transition: 'transform 260ms var(--spring-press), color 180ms ease-out 60ms' }}
+              aria-pressed={on}
+              onClick={() => dispatch({ type: 'toggleSystem', key: s.key })}
+              className={`press grid items-center gap-8 px-6 py-5 text-left [--press:.99] ${on ? 'bg-ink text-paper' : 'bg-surface text-ink'}`}
+              style={{ gridTemplateColumns: 'minmax(0,1fr) 230px 28px' }}
             >
-              <span className={`${heading} text-lg tracking-[-0.015em]`}>{driftName(c)}</span>
-              <span className="price text-sm">{driftPrice(c)}</span>
-              <span className="text-[13px] leading-[1.45]">{c.desc}</span>
+              <span className="flex flex-col gap-1">
+                <span className="text-[17px] font-semibold">{s.name}</span>
+                <span className="text-sm leading-normal">{s.desc}</span>
+              </span>
+              <span className="price text-sm">{tag}</span>
+              <Check on={on} />
             </button>
-          ))}
-        </Segmented>
-        <p className="mt-3 text-sm text-muted-2">Alle planer: online, sikker, domæne og backup. Domænet står i dit navn.</p>
+          )
+        })}
+        <div className="grid items-center gap-8 bg-surface px-6 py-5" style={{ gridTemplateColumns: 'minmax(0,1fr) 230px auto' }}>
+          <div className="flex flex-col gap-1">
+            <span className="text-[17px] font-semibold">{prices.systems.custom.name}</span>
+            <span className="text-sm leading-normal">{prices.systems.custom.desc}</span>
+          </div>
+          <span className="price text-sm">{sel.custom < prices.systems.custom.max ? `Næste flow: ${extraText(nextCustom)}` : 'Højeste antal nået'}</span>
+          <div className="grid h-12 bg-paper" style={{ gridTemplateColumns: '48px 52px 48px' }}>
+            <button
+              type="button"
+              aria-label="Færre skræddersyede systemer"
+              disabled={sel.custom <= 0}
+              onClick={() => dispatch({ type: 'setCustom', value: sel.custom - 1 })}
+              className="press text-lg [--press:.88] disabled:opacity-40"
+            >
+              −
+            </button>
+            <span className="price flex items-center justify-center text-[15px]" aria-live="polite">
+              {sel.custom}
+            </span>
+            <button
+              type="button"
+              aria-label="Flere skræddersyede systemer"
+              disabled={sel.custom >= prices.systems.custom.max}
+              onClick={() => dispatch({ type: 'setCustom', value: sel.custom + 1 })}
+              className="press text-lg [--press:.88] disabled:opacity-40"
+            >
+              +
+            </button>
+          </div>
+        </div>
       </div>
+      <p className="mt-2 mb-0 text-sm leading-normal text-muted-2">
+        {prices.systems.thirdParty} {prices.systems.excluded}
+      </p>
+    </div>
+  )
+}
 
-      <div className="flex flex-col gap-2">
-        <span className={`${heading} mb-1 text-[22px] tracking-[-0.02em]`}>Tilvalg</span>
+function StepAddons({ calc }) {
+  const { state, dispatch } = calc
+  const sel = state.selection
+  const pkg = prices.packages[sel.pkg]
+  const englishIncluded = pkg.english === 'included'
+  const saving = Math.round(pkg.once * prices.intro.discount)
+  return (
+    <div className="anim-step flex flex-col gap-2">
+      <span className={`${heading} mb-1 text-[22px] tracking-[-0.02em]`}>Tilvalg</span>
+      {englishIncluded ? (
+        <div className="grid items-center gap-8 bg-surface px-6 py-5" style={{ gridTemplateColumns: 'minmax(0,1fr) auto' }}>
+          <span className="flex flex-col gap-1">
+            <span className="text-[17px] font-semibold">{prices.addons.english.name}</span>
+            <span className="text-sm">Indgår i {pkg.name}.</span>
+          </span>
+          <span className="bg-paper px-[10px] py-[6px] text-[13px] font-medium text-ink">Indgår</span>
+        </div>
+      ) : (
         <button
           type="button"
-          aria-pressed={addonOn}
-          disabled={included}
-          onClick={() => dispatch({ type: 'toggleBooking' })}
-          className={`press grid items-center gap-8 px-6 py-5 text-left [--press:.99] ${addonOn ? 'bg-ink text-paper' : 'bg-surface text-ink'}`}
-          style={{ gridTemplateColumns: 'minmax(0,1fr) 160px auto' }}
+          aria-pressed={sel.english}
+          onClick={() => dispatch({ type: 'toggleEnglish' })}
+          className={`press grid items-center gap-8 px-6 py-5 text-left [--press:.99] ${sel.english ? 'bg-ink text-paper' : 'bg-surface text-ink'}`}
+          style={{ gridTemplateColumns: 'minmax(0,1fr) 230px 28px' }}
         >
           <span className="flex flex-col gap-1">
-            <span className="text-[17px] font-semibold">{prices.addons.booking.name}</span>
-            <span className="text-sm">{included ? `Indgår i Booking & Google · ${prices.services.book.packages[sel.services.book].name}` : 'Abonnementet betales til udbyderen.'}</span>
+            <span className="text-[17px] font-semibold">{prices.addons.english.name}</span>
+            <span className="text-sm">Hele siden på engelsk.</span>
           </span>
-          <span className="price text-sm">+{formatKr(prices.addons.booking.price)}</span>
-          {included ? <span className="bg-paper px-[10px] py-[6px] text-[13px] font-medium text-ink">Indgår</span> : <Check on={addonOn} />}
+          <span className="price text-sm">+{formatKr(prices.addons.english.once)}</span>
+          <Check on={sel.english} />
         </button>
-
-        <div className="grid items-center gap-8 bg-surface px-6 py-5" style={{ gridTemplateColumns: 'minmax(0,1fr) 160px auto' }}>
-          <div className="flex flex-col gap-1">
-            <span className="text-[17px] font-semibold">{prices.addons.extraPage.name}</span>
-            <span className="text-sm">{full ? 'Ud over de 8 sider i Fuld fart.' : 'Kun med Fuld fart.'}</span>
-          </div>
-          <span className="price text-sm">
-            +{formatKr(prices.addons.extraPage.price).replace('kr.', 'kr./side')}
+      )}
+      {introActive() && (
+        <button
+          type="button"
+          aria-pressed={sel.intro}
+          onClick={() => dispatch({ type: 'toggleIntro' })}
+          className={`press grid items-center gap-8 px-6 py-5 text-left [--press:.99] ${sel.intro ? 'bg-ink text-paper' : 'bg-surface text-ink'}`}
+          style={{ gridTemplateColumns: 'minmax(0,1fr) 28px' }}
+        >
+          <span className="flex flex-col gap-1">
+            <span className="text-[17px] font-semibold">Introduktionspris: {Math.round(prices.intro.discount * 100)}&nbsp;% på engangsprisen</span>
+            <span className="text-sm leading-normal">
+              De første {prices.intro.total} kunder, mod at vi må vise siden som case. {slotsText()}. Månedsprisen og tilvalg er uden rabat.
+            </span>
+            <span className="text-sm font-semibold">Ja, I må vise siden som case{sel.intro ? ` · du sparer ${formatKr(saving)} på engangsprisen` : ''}</span>
           </span>
-          {full ? (
-            <div className="grid h-12 bg-paper" style={{ gridTemplateColumns: "48px 52px 48px" }}>
-              <button
-                type="button"
-                aria-label="Færre undersider"
-                disabled={sel.extraPages <= 0}
-                onClick={() => dispatch({ type: 'setExtra', value: sel.extraPages - 1 })}
-                className="press text-lg [--press:.88] disabled:opacity-40"
-              >
-                −
-              </button>
-              <span className="price flex items-center justify-center text-[15px]" aria-live="polite">
-                {sel.extraPages}
-              </span>
-              <button
-                type="button"
-                aria-label="Flere undersider"
-                onClick={() => dispatch({ type: 'setExtra', value: sel.extraPages + 1 })}
-                className="press text-lg [--press:.88]"
-              >
-                +
-              </button>
-            </div>
-          ) : (
-            <button type="button" onClick={() => dispatch({ type: 'upgradeFull' })} className="btn btn-white hov-ink min-h-12 px-4 text-sm [--press:.96]">
-              Skift til Fuld fart
-            </button>
-          )}
-        </div>
-      </div>
+          <Check on={sel.intro} />
+        </button>
+      )}
     </div>
   )
 }
@@ -218,7 +231,7 @@ function StepSummary({ calc }) {
   return (
     <div className="anim-step max-w-[680px]">
       <h3 className="text-[clamp(36px,4.4vw,68px)] leading-[.95] tracking-[-0.035em]">Din pris er klar.</h3>
-      <p className="mt-4 text-[17px] text-muted-2">Send valgene, så svarer jeg inden for 24 timer.</p>
+      <p className="mt-4 text-[17px] text-muted-2">Send valgene. Svar inden for 24 timer.</p>
       <div className="mt-10">
         <InquirySlot receipt={receipt} hrefs={hrefs} />
       </div>
@@ -294,17 +307,7 @@ function Help({ calc }) {
 }
 
 function HelpResult({ calc }) {
-  const { dispatch, state } = calc
-  const svc = state.selection.services
-  const rows = SERVICE_KEYS.filter((k) => svc[k] !== null).map((k) => ({
-    name: prices.services[k].name,
-    pkg: prices.services[k].packages[svc[k]].name,
-    price: formatKr(prices.services[k].packages[svc[k]].price, serviceMeta[k].month),
-  }))
-  if (svc.web !== null) {
-    const c = driftChoices.find((x) => x.key === state.selection.drift)
-    rows.push({ name: 'Drift', pkg: driftName(c), price: driftPrice(c).replace(' engang', '') })
-  }
+  const { dispatch, receipt } = calc
   return (
     <div className="anim-step max-w-[760px]">
       <div className="flex items-center justify-between gap-6">
@@ -313,15 +316,15 @@ function HelpResult({ calc }) {
           Start forfra
         </button>
       </div>
-      <h3 className="mt-14 mb-7 text-[clamp(32px,3.6vw,56px)] leading-none tracking-[-0.035em]">Det her ville jeg starte med.</h3>
+      <h3 className="mt-14 mb-7 text-[clamp(32px,3.6vw,56px)] leading-none tracking-[-0.035em]">Det her ville vi starte med.</h3>
       <div className="flex flex-col gap-2">
-        {rows.map((r) => (
-          <div key={r.name} className="anim-line grid items-baseline gap-5 bg-surface px-6 py-5" style={{ gridTemplateColumns: 'minmax(0,1fr) auto' }}>
+        {receipt.all.map((l) => (
+          <div key={l.key} className="anim-line grid items-baseline gap-5 bg-surface px-6 py-5" style={{ gridTemplateColumns: 'minmax(0,1fr) auto' }}>
             <span className="flex flex-wrap items-baseline gap-3">
-              <span className={`${heading} text-[22px] tracking-[-0.02em]`}>{r.name}</span>
-              <span className="text-base">{r.pkg}</span>
+              <span className={`${heading} text-[22px] tracking-[-0.02em]`}>{l.label}</span>
+              <span className="text-base">{l.pkg}</span>
             </span>
-            <span className="price text-sm">{r.price}</span>
+            <span className="price text-sm">{l.price}</span>
           </div>
         ))}
       </div>
@@ -337,16 +340,16 @@ function HelpResult({ calc }) {
   )
 }
 
-/** En sektion i kvitteringen (Engang / Pr. måned): linjerne folder sig sammen, når de fjernes, og sektionen med dem. */
-function ReceiptSection({ title, lines, terms }) {
-  const rows = useExitList(lines, (l) => l.key + l.pkg)
+/** Kvitteringens linjer: de folder sig sammen, når de fjernes, og sektionen med dem. */
+function ReceiptSection({ lines, terms }) {
+  const rows = useExitList(lines, (l) => l.key)
   return (
     <div className="fold" data-exiting={lines.length === 0 ? '' : undefined}>
       <div>
-        <div className="pb-7">
-          <span className="text-[13px] text-on-ink-2">{title}</span>
+        <div className="pb-5">
+          <span className="text-[13px] text-on-ink-2">Dine valg</span>
           {rows.map(({ item: l, exiting }) => (
-            <div key={l.key + l.pkg} className="fold" data-exiting={exiting ? '' : undefined}>
+            <div key={l.key} className="fold" data-exiting={exiting ? '' : undefined}>
               <ReceiptLine line={l} animate />
             </div>
           ))}
@@ -360,8 +363,6 @@ function ReceiptSection({ title, lines, terms }) {
 function Aside({ calc }) {
   const { state, dispatch, receipt, any, hrefs, delta } = calc
   const [copied, setCopied] = useState(false)
-  const web = state.selection.services.web !== null
-  const showTerms = web && state.selection.drift !== 'egen'
   const copy = () => {
     try {
       navigator.clipboard?.writeText(hrefs.url)
@@ -380,14 +381,12 @@ function Aside({ calc }) {
       <span className="text-[15px] font-semibold">Din kvittering</span>
       <div className="relative mt-5 min-h-0 flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
         <p className="swap-in absolute top-0 left-0 m-0 text-[15px] leading-normal text-on-ink-2" data-on={!any ? '' : undefined}>
-          Vælg en ydelse for at se prisen.
+          Vælg en pakke for at se prisen.
         </p>
-        <ReceiptSection title="Engang" lines={receipt.once} />
         <ReceiptSection
-          title="Pr. måned"
-          lines={receipt.month}
+          lines={receipt.all}
           terms={
-            <div className="fold -mt-0" data-exiting={showTerms ? undefined : ''}>
+            <div className="fold" data-exiting={any ? undefined : ''}>
               <p className="m-0 pt-3 text-[13px] leading-normal text-on-ink-2">{TERMS_SHORT}</p>
             </div>
           }
@@ -399,6 +398,11 @@ function Aside({ calc }) {
             <span className="pb-[6px] text-[13px] text-on-ink-2">Engang</span>
             {delta?.o < 0 && <DeltaChip key={delta.id} amount={delta.o} className="-top-[18px] right-0" />}
             <Total value={receipt.o} unit="kr." size={48} unitSize={15} />
+          </div>
+          <div className="fold" data-exiting={receipt.introApplied ? undefined : ''}>
+            <span className="-mt-2 block text-[13px] text-on-ink-2">
+              Normalpris <s>{formatKr(receipt.onceNormal)}</s>, intropris valgt
+            </span>
           </div>
           <div className="relative flex items-end justify-between gap-3">
             <span className="pb-[6px] text-[13px] text-on-ink-2">Pr. måned</span>
@@ -430,10 +434,9 @@ function Aside({ calc }) {
 export default function Desktop({ calc }) {
   const { state, dispatch, any } = calc
   const { step, help } = state
-  const web = state.selection.services.web !== null
   const inHelp = !!help
   const next =
-    step === 1 ? (any ? 'Næste: Vælg pakker' : 'Vælg mindst én ydelse') : step === 2 ? (web ? 'Næste: Drift og tilvalg' : 'Næste: Se opsummering') : 'Næste: Se opsummering'
+    step === 1 ? (any ? 'Næste: Vælg systemer' : 'Vælg en pakke') : step === 2 ? 'Næste: Tilvalg' : 'Næste: Se opsummering'
   const nextDisabled = step === 1 && !any
   return (
     <div className="grid items-start" style={{ gridTemplateColumns: 'minmax(0,1fr) 440px', minHeight: '100svh' }}>
@@ -451,6 +454,11 @@ export default function Desktop({ calc }) {
             </button>
           </div>
         )}
+        {step === 1 && !inHelp && state.notice && (
+          <p role="status" className="mt-0 mb-6 bg-surface p-4 text-[15px] leading-normal">
+            {state.notice}
+          </p>
+        )}
         {!inHelp && step !== 4 && (
           <nav aria-label="Trin i beregneren" className="relative">
             <div className="absolute top-0 right-0 left-0 h-[3px] bg-hairline" />
@@ -458,7 +466,7 @@ export default function Desktop({ calc }) {
             <ol className="m-0 grid list-none p-0" style={{ gridTemplateColumns: 'repeat(4,minmax(0,1fr))' }}>
               {stepLabels.map((label, i) => {
                 const n = i + 1
-                const enabled = n === 1 || (any && (n !== 3 || web))
+                const enabled = n === 1 || any
                 return (
                   <li key={label}>
                     <button
@@ -472,7 +480,6 @@ export default function Desktop({ calc }) {
                       <span className="text-[15px]" style={{ fontWeight: n === step ? 600 : 400 }}>
                         {label}
                       </span>
-                      {n === 3 && !web && <span className="text-xs text-muted-2">Kun hjemmeside</span>}
                     </button>
                   </li>
                 )
@@ -484,11 +491,11 @@ export default function Desktop({ calc }) {
           {inHelp ? (
             <Help calc={calc} />
           ) : step === 1 ? (
-            <StepServices calc={calc} />
-          ) : step === 2 ? (
             <StepPackages calc={calc} />
+          ) : step === 2 ? (
+            <StepSystems calc={calc} />
           ) : step === 3 ? (
-            <StepDrift calc={calc} />
+            <StepAddons calc={calc} />
           ) : (
             <StepSummary calc={calc} />
           )}

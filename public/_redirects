@@ -1,25 +1,29 @@
 # Gamle adresser -> nuværende sider. 301 = permanent. Ét hop (ingen kæder):
-# målene nedenfor er de endelige adresser. Redesign nov. 2026: prisberegneren bor på
-# forsiden (/#prisberegner), og /systemer/ er udgået (ingen side om små systemer mere).
+# målene nedenfor er altid de endelige adresser. Redesign nov. 2026: OviaSpecs er ét tilbud
+# (hjemmeside + Google + lokal SEO + systemer); /marketing/ og /booking-google/ er udgået.
 /hjemmesider/                  /hjemmeside/       301
 /hjemmesider                   /hjemmeside/       301
-/seo/                          /booking-google/   301
-/seo                           /booking-google/   301
-/lokal-synlighed/              /booking-google/   301
-/lokal-synlighed               /booking-google/   301
-/google-ads/                   /marketing/        301
-/google-ads                    /marketing/        301
-/sociale-medier-annoncering/   /marketing/        301
-/sociale-medier-annoncering    /marketing/        301
-/booking-integrationer/        /booking-google/   301
-/booking-integrationer         /booking-google/   301
+/marketing/                    /hjemmeside/       301
+/marketing                     /hjemmeside/       301
+/booking-google/               /hjemmeside/       301
+/booking-google                /hjemmeside/       301
+/seo/                          /hjemmeside/       301
+/seo                           /hjemmeside/       301
+/lokal-synlighed/              /hjemmeside/       301
+/lokal-synlighed               /hjemmeside/       301
+/google-ads/                   /hjemmeside/       301
+/google-ads                    /hjemmeside/       301
+/sociale-medier-annoncering/   /hjemmeside/       301
+/sociale-medier-annoncering    /hjemmeside/       301
+/booking-integrationer/        /hjemmeside/       301
+/booking-integrationer         /hjemmeside/       301
+/systemer/                     /hjemmeside/#systemer 301
+/systemer                      /hjemmeside/#systemer 301
 /prisberegner/                 /#prisberegner     301
 /prisberegner                  /#prisberegner     301
-/ai-automatisering/            /                  301
-/ai-automatisering             /                  301
+/ai-automatisering/            /hjemmeside/#systemer 301
+/ai-automatisering             /hjemmeside/#systemer 301
 /om/                           /#om               301
 /om                            /#om               301
 /kontakt/                      /#kontakt          301
 /kontakt                       /#kontakt          301
-/systemer/                    /                  301
-/systemer                     /                  301

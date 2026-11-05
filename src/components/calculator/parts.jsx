@@ -1,6 +1,6 @@
 import { memo, useEffect, useState } from 'react'
 import prices from '../../data/prices.json'
-import { formatKr } from '../../lib/calculate.js'
+import { NBSP, formatKr, introActive } from '../../lib/calculate.js'
 
 /**
  * Flueben i en hvid firkant. Ind: scale .4 → 1 med et lille spring. Ud: kort og roligt (ingen overshoot).
@@ -132,7 +132,7 @@ export const Total = memo(function Total({ value, unit, size, unitSize, gap = 8,
   )
 })
 
-/** En kvitteringslinje: "Hjemmeside · Vækst ..... 8.000 kr." */
+/** En kvitteringslinje: "Pakke · Anbefalet ..... 9.500 kr. + 549 kr./md." */
 export const ReceiptLine = memo(function ReceiptLine({ line, dark = true, animate = false, priceSize = 14, labelSmall = 13 }) {
   return (
     <div
@@ -152,4 +152,30 @@ export const ReceiptLine = memo(function ReceiptLine({ line, dark = true, animat
   )
 })
 
-export const TERMS_SHORT = `Ingen binding. 1 md. opsigelse. Frikøb af siden ${formatKr(prices.addons.buyout.price)}`
+export const TERMS_SHORT = `Ingen binding. 1 md. opsigelse. Frikøb af siden ${formatKr(prices.addons.buyout.once)}`
+
+/** Pakkens pris: engang + pr. måned. Med intro valgt står normalprisen overstreget foran intropris. */
+export function PkgPrice({ pkg, intro }) {
+  const saving = intro && introActive() ? Math.round(pkg.once * prices.intro.discount) : 0
+  return (
+    <span className="price">
+      {saving > 0 ? (
+        <>
+          <s>{formatKr(pkg.once)}</s>
+          {NBSP}
+          {formatKr(pkg.once - saving)}
+        </>
+      ) : (
+        formatKr(pkg.once)
+      )}
+      {' + '}
+      {formatKr(pkg.monthly, true)}
+    </span>
+  )
+}
+
+/** "2 pladser tilbage" ud fra prices.introSlotsLeft (kun mens introprisen er i gang). */
+export const slotsText = () => {
+  const n = prices.introSlotsLeft
+  return `${n} ${n === 1 ? 'plads' : 'pladser'} tilbage`
+}

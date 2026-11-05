@@ -4,7 +4,7 @@ import Logo from '../ui/Logo.jsx'
 const row = 'flex min-h-12 items-center no-underline'
 
 // Rækkefølgen i designet: to kolonner, læst række for række.
-const order = ['Hjemmeside', 'Priser', 'Marketing', 'Eksempler', 'Booking & Google']
+const order = ['Hjemmeside', 'Priser', 'Eksempler']
 
 /** Footer uden skyline: logo, kontakt, links og ophavsret. */
 export default function Footer() {

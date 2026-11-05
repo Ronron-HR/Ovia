@@ -125,9 +125,9 @@ async function run(label, width, height, mobile) {
   const text = (sel) => page.$eval(sel, (e) => e.textContent.replace(/\s+/g, ' '))
 
   // Formularen hentes først, når opsummeringen vises.
-  await page.goto(`${SITE}/?w=1&m=1&d=p&bk=1`, { waitUntil: 'networkidle0' })
+  await page.goto(`${SITE}/?p=1&y=bg&e=1`, { waitUntil: 'networkidle0' })
   check(!requested.some((u) => u.includes('InquiryForm')), 'formularens kode hentes ikke på forsiden (lazy)')
-  await page.goto(`${SITE}/?w=1&m=1&d=p&bk=1&s=4`, { waitUntil: 'networkidle0' })
+  await page.goto(`${SITE}/?p=1&y=bg&e=1&t=4`, { waitUntil: 'networkidle0' })
   await page.evaluate(() => document.querySelector('#prisberegner').scrollIntoView({ behavior: 'instant' }))
   await page.waitForSelector('form[aria-describedby="inq-intro"]')
   check(requested.some((u) => u.includes('InquiryForm')), 'formularens kode hentes på opsummeringen')
@@ -146,7 +146,7 @@ async function run(label, width, height, mobile) {
   const btn = await page.$eval('#prisberegner form button[type="submit"]', (e) => Math.round(e.getBoundingClientRect().height))
   check(btn >= 48, `Send-knappen er ≥ 48 px (${btn})`)
   const formText = await text('#prisberegner form')
-  check(formText.includes('Send mine valg') && formText.includes('Jeg svarer inden for 24 timer.') && formText.includes('Dine oplysninger bruges kun til at svare dig. Læs privatlivspolitikken.'), 'knaptekst og de to små linjer under knappen')
+  check(formText.includes('Send mine valg') && formText.includes('Svar inden for 24 timer.') && formText.includes('Dine oplysninger bruges kun til at svare dig. Læs privatlivspolitikken.'), 'knaptekst og de to små linjer under knappen')
   check(await page.$eval('#prisberegner form a[href="/privatlivspolitik/"]', () => true), 'link til privatlivspolitikken')
   const links = await page.$$eval('#prisberegner a[href^="tel:"], #prisberegner a[href^="sms:"]', (a) => a.map((x) => x.getAttribute('href').slice(0, 20)))
   check(links.some((l) => l.startsWith('tel:')) && links.some((l) => l.startsWith('sms:')), 'Ring og SMS står under formularen')
@@ -220,18 +220,18 @@ async function run(label, width, height, mobile) {
   await Promise.all(sim.background)
   sim.mailDelay = 0
   const thanks = await text('#prisberegner [role="status"]')
-  check(thanks.includes('Tak, Mette Hansen.') && thanks.includes('Jeg vender tilbage inden for 24 timer.'), `sendt: "${thanks.slice(0, 70)}"`)
+  check(thanks.includes('Tak, Mette Hansen.') && thanks.includes('Vi vender tilbage inden for 24 timer.'), `sendt: "${thanks.slice(0, 70)}"`)
   const sums = await page.$$eval('#prisberegner [role="status"] [role="img"][aria-label]', (els) => els.map((e) => e.getAttribute('aria-label')))
-  check(thanks.includes('Hjemmeside') && sums.includes('9.000') && sums.includes('5.398') && thanks.includes('ekskl. moms'), `sendt: kvitteringen vises (${sums})`)
+  check(thanks.includes('Anbefalet') && sums.includes('13.000') && sums.includes('648') && thanks.includes('ekskl. moms'), `sendt: kvitteringen vises (${sums})`)
   await shot('form-sendt')
 
   // Mailen og D1.
   check(sim.mails.length === base.mails + 1, `præcis én mail sendt (${sim.mails.length - base.mails})`)
   const m = decodeMail(sim.mails.at(-1).raw)
   check(sim.mails.at(-1).to === 'ronnyhong723@gmail.com' && sim.mails.at(-1).from === 'kontakt@oviaspecs.com', 'afsender og modtager')
-  check(m.subject === 'Ny forespørgsel: Mette Hansen, Café Mette – 9.000 kr. + 5.398 kr./md.', `emne: "${m.subject}"`)
+  check(m.subject === 'Ny forespørgsel: Mette Hansen, Café Mette – 13.000 kr. + 648 kr./md.', `emne: "${m.subject}"`)
   check(m.replyTo === 'mette@cafe.example', `Reply-To = kundens mail (${m.replyTo})`)
-  for (const want of ['Navn: Mette Hansen', 'Virksomhed: Café Mette', 'Telefon: 53613699', 'Mail: mette@cafe.example', '> Hej Ronny.', '> Vi åbner i foråret.', '- Hjemmeside – Vækst: 8.000 kr.', '- Booking koblet på – Tilvalg: 1.000 kr.', '- Marketing – Vækst: 5.000 kr./md.', '- Drift – Plus: 398 kr./md.', 'Engang: 9.000 kr.', 'Pr. måned: 5.398 kr./md.', 'Alle priser er ekskl. moms.', `Se valgene: ${SITE}/?w=1&d=p&bk=1&m=1&s=4#prisberegner`]) {
+  for (const want of ['Navn: Mette Hansen', 'Virksomhed: Café Mette', 'Telefon: 53613699', 'Mail: mette@cafe.example', '> Hej Ronny.', '> Vi åbner i foråret.', '- Pakke – Anbefalet: 9.500 kr. + 549 kr./md.', '- Bordbooking – Indgår: Indgår', '- Gavekort – Tilvalg: 2.000 kr. + 99 kr./md.', '- Engelsk version – Tilvalg: 1.500 kr.', 'Engang: 13.000 kr.', 'Pr. måned: 648 kr./md.', 'Alle priser er ekskl. moms.', `Se valgene: ${SITE}/?p=1&y=bg&e=1&t=4#prisberegner`]) {
     check(m.text.includes(want), `mailen indeholder "${want}"`)
   }
   const row = db.prepare('SELECT * FROM henvendelser ORDER BY created_at DESC').get()
@@ -246,7 +246,7 @@ await run('Desktop 1440×900', 1440, 900, false)
 // Honeypot: en robot, der udfylder det skjulte felt, får OK, men intet sendes.
 {
   const before = sim.mails.length
-  const res = await fetch(`${SITE}/api/henvendelse`, { method: 'POST', headers: { 'Content-Type': 'application/json', Origin: SITE }, body: JSON.stringify({ name: 'Bot', email: 'bot@example.com', link: '/?w=1&s=4', website: 'http://spam.example' }) })
+  const res = await fetch(`${SITE}/api/henvendelse`, { method: 'POST', headers: { 'Content-Type': 'application/json', Origin: SITE }, body: JSON.stringify({ name: 'Bot', email: 'bot@example.com', link: '/?p=0&t=4', website: 'http://spam.example' }) })
   check(res.ok && sim.mails.length === before, `honeypot: OK uden mail (${res.status})`)
 }
 

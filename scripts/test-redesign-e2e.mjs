@@ -1,5 +1,5 @@
 /**
- * Browsertest af redesignet: forside, beregneren (mobil og desktop), /priser og /hjemmeside.
+ * Browsertest af siden og beregneren (pakker, systemer, tilvalg, intropris): forside, /hjemmeside/, /priser/.
  *
  * Kræver en kørende `npm run preview` (http://localhost:4173, eller SITE=…) og Chrome
  * (CHROME=… hvis den ikke ligger på standardstien). Skærmbilleder af hvert trin gemmes,
@@ -7,9 +7,11 @@
  *
  * Tjekker: fejl i konsollen, vandret scroll, trykflader ≥ 48 px, at Næste-knappen ikke ligger bag
  * bundbaren, tælleværk og kvittering, flyvende beløb, bottom sheet, adresselinje og del-link, guidet
- * hjælp, reduceret bevægelse og tastaturets første stop.
+ * hjælp, intropris (tændt og slukket), fjernelse, reduceret bevægelse og tastaturets første stop.
+ * Er der ingen intro-pladser tilbage i prices.json, springes intro-trinene over, og testen tjekker i stedet,
+ * at introprisen ikke findes nogen steder.
  */
-import { mkdirSync } from 'node:fs'
+import { mkdirSync, readFileSync } from 'node:fs'
 import puppeteer from 'puppeteer-core'
 
 const CHROME = process.env.CHROME ?? 'C:/Program Files/Google/Chrome/Application/chrome.exe'
@@ -17,9 +19,12 @@ const SITE = process.env.SITE ?? 'http://localhost:4173'
 const SHOTS = process.env.SHOTS
 if (SHOTS) mkdirSync(SHOTS, { recursive: true })
 const wait = (ms) => new Promise((r) => setTimeout(r, ms))
+const INTRO = JSON.parse(readFileSync('src/data/prices.json', 'utf8')).introSlotsLeft > 0
 
 let failed = 0
+let total = 0
 const check = (ok, msg) => {
+  total++
   if (!ok) failed++
   console.log(`${ok ? '  ok ' : '  FEJL'} ${msg}`)
 }
@@ -43,7 +48,7 @@ const shot = async (page, name) => SHOTS && page.screenshot({ path: `${SHOTS}/${
 /** Klikker den første knap/link i `root`, hvis tekst indeholder `text` (rigtigt tryk i midten). */
 async function press(page, text, root = '#prisberegner') {
   const el = await page.evaluateHandle(
-    (text, root) => [...document.querySelectorAll(`${root} button, ${root} a`)].find((b) => ((b.getAttribute('aria-label') ?? '') + ' ' + b.textContent.replace(/\s+/g, ' ')).includes(text) && b.offsetParent !== null),
+    (text, root) => [...document.querySelectorAll(`${root} button, ${root} a`)].find((b) => ((b.getAttribute('aria-label') ?? '') + ' ' + b.textContent.replace(/\s+/g, ' ')).includes(text) && b.offsetParent !== null && !b.disabled),
     text,
     root,
   )
@@ -68,8 +73,10 @@ async function press(page, text, root = '#prisberegner') {
 const totals = (page, scope) => page.$$eval(`${scope} [role="img"][aria-label]`, (els) => els.map((e) => e.getAttribute('aria-label')).filter((l) => /^[\d.]+$/.test(l)))
 
 const overflow = (page) => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+const text = (page, sel = '#prisberegner') => page.$eval(sel, (e) => e.textContent.replace(/\s+/g, ' '))
+const scrollCalc = (page) => page.evaluate(() => document.querySelector('#prisberegner').scrollIntoView({ behavior: 'instant' }))
 
-/** Alle synlige knapper og links i et område skal være mindst 48 px høje (trykflader). */
+/** Alle synlige knapper i et område skal være mindst 48 px høje (trykflader). */
 async function smallTargets(page, scope) {
   return page.evaluate((scope) => {
     const root = document.querySelector(scope)
@@ -80,7 +87,6 @@ async function smallTargets(page, scope) {
       const cs = getComputedStyle(e)
       if (r.width === 0 || r.height === 0 || cs.visibility === 'hidden') continue
       if (e.closest('[inert]')) continue
-      // Links inde i løbende tekst og skjulte kort tæller ikke; knapper og rækker gør.
       if (r.height < 47.5 && e.tagName !== 'A') out.push(`${(e.textContent || e.getAttribute('aria-label') || '').trim().slice(0, 30)} (${Math.round(r.height)} px)`)
     }
     return out
@@ -112,22 +118,17 @@ for (const [w, h] of [
   await shot(page, `${tag}-02-trin1`)
   const small1 = await smallTargets(page, '#prisberegner')
   check(small1.length === 0, `trin 1: trykflader ≥ 48 px ${small1.join(', ')}`)
+  const t1 = await text(page)
+  check(['Start', 'Anbefalet', 'Max'].every((n) => t1.includes(n)) && t1.includes('5.000') && t1.includes('9.500') && t1.includes('15.000'), 'trin 1 viser de tre pakker med faste priser')
+  check(!/\bfra\s+\d/.test(t1), 'trin 1: ingen "fra"-priser')
+  check((await page.$eval('#prisberegner button:disabled', (b) => b.textContent)).includes('Vælg en pakke'), 'Næste er slukket med "Vælg en pakke", til der er valgt en pakke')
 
-  // Trin 1: vælg Hjemmeside og Marketing.
-  await press(page, 'Hjemmeside')
-  await press(page, 'Marketing')
-  const bar = await page.$eval('[aria-label*="kvittering"][role="button"]', (e) => e.textContent.replace(/\s+/g, ' '))
-  check(bar.includes('3 valg'), `bundbaren viser "3 valg" (Hjemmeside, Marketing og Drift) (${bar.slice(0, 60)})`)
+  // Trin 1: vælg Anbefalet.
+  await press(page, 'Anbefalet')
   await wait(900)
   let t = await totals(page, '#prisberegner')
-  check(t[0] === '8.000' && t[1] === '5.198', `tælleværk: 8.000 engang og 5.198 pr. måned (Marketing 5.000 + Drift Basis 198) (${t.slice(0, 2)})`)
-  await shot(page, `${tag}-03-valgt`)
-
-  // Flyvende beløb ved tryk (udløses af et ægte tryk, når bundbaren er synlig).
-  await press(page, 'Booking & Google')
-  const flyOk = await page.evaluate(() => !!document.querySelector('#prisberegner [style*="flyTo"]'))
-  check(flyOk, 'flyvende beløb vises ved tryk')
-  await press(page, 'Booking & Google') // fjern igen
+  check(t[0] === '9.500' && t[1] === '549', `tælleværk: Anbefalet = 9.500 engang og 549 pr. måned (${t.slice(0, 2)})`)
+  await shot(page, `${tag}-03-pakke`)
 
   // Næste-knappen ligger over bundbaren, ikke bag den.
   const rects = await page.evaluate(() => {
@@ -136,74 +137,75 @@ for (const [w, h] of [
     return { nextBottom: next.bottom, barTop: bar.top }
   })
   check(rects.nextBottom <= rects.barTop + 0.5, `Næste ligger over bundbaren (${Math.round(rects.nextBottom)} ≤ ${Math.round(rects.barTop)})`)
-  // Stram rytme på trin 1: Næste sidder ca. 24 px under sidste valg (når indholdet er kortere end skærmen), kort med ca. 16 px luft og 8 px imellem,
-  // afkrydsningen flugter med titlen, og bundbaren viser kun totaler med et beløb og "ekskl. moms" på én linje.
-  const lay = await page.evaluate(() => {
-    const btns = [...document.querySelectorAll('#prisberegner button')]
-    const cards = btns.filter((b) => b.hasAttribute('aria-pressed') && /Hjemmeside|Marketing|Booking/.test(b.textContent) && b.textContent.includes('fra '))
-    const next = btns.find((b) => b.textContent.startsWith('Næste'))
-    const last = cards.at(-1).getBoundingClientRect()
-    const first = cards[0].getBoundingClientRect()
-    const second = cards[1].getBoundingClientRect()
-    const title = cards[0].querySelector('span > span').getBoundingClientRect()
-    const check = cards[0].querySelector('[aria-hidden="true"]').getBoundingClientRect()
-    const moms = [...document.querySelectorAll('#prisberegner [role="button"] span')].find((e) => e.textContent === 'ekskl. moms')
-    return {
-      gapNext: Math.round(next.getBoundingClientRect().top - last.bottom),
-      cardGap: Math.round(second.top - first.bottom),
-      pad: Math.round(cards[0].querySelector('span').getBoundingClientRect().top - first.top),
-      alignDy: Math.abs(title.top + title.height / 2 - (check.top + check.height / 2)),
-      momsLines: moms ? Math.round(moms.getBoundingClientRect().height / parseFloat(getComputedStyle(moms).lineHeight)) : null,
-      fits: cards.at(-1).getBoundingClientRect().bottom + 24 + 56 < document.querySelector('#prisberegner [role="button"][aria-label*="kvittering"]').getBoundingClientRect().top,
-    }
-  })
-  if (lay.fits) check(Math.abs(lay.gapNext - 24) <= 2, `Næste sidder ca. 24 px under sidste valg (${lay.gapNext} px)`)
-  check(lay.cardGap === 8, `8 px mellem ydelseskortene (${lay.cardGap} px)`)
-  check(lay.pad >= 14 && lay.pad <= 18, `ca. 16 px padding i ydelseskortene (${lay.pad} px)`)
-  check(lay.alignDy <= 1.5, `afkrydsningsboksen flugter med titlen (${lay.alignDy.toFixed(1)} px forskel)`)
-  check(lay.momsLines === 1, `"ekskl. moms" står på én linje (${lay.momsLines} linje)`)
 
-  // Trin 2: én ydelse ad gangen.
-  await press(page, 'Næste: Vælg pakke')
+  // Trin 2: systemer. Anbefalet har ét med.
+  await press(page, 'Næste: Vælg systemer')
   await wait(600)
-  check((await page.$eval('#prisberegner', (e) => e.textContent)).includes('Trin 2 af 4 · Hjemmeside 1/2'), 'trin 2: Hjemmeside 1/2')
-  await shot(page, `${tag}-04-trin2`)
-  await press(page, 'Start')
-  await wait(900)
-  t = await totals(page, '#prisberegner')
-  check(t[0] === '5.000', `pakke Start: 5.000 engang (${t[0]})`)
+  check((await text(page)).includes('Trin 2 af 4 · Systemer'), 'trin 2: Systemer')
+  await shot(page, `${tag}-04-systemer`)
   const small2 = await smallTargets(page, '#prisberegner')
   check(small2.length === 0, `trin 2: trykflader ≥ 48 px ${small2.join(', ')}`)
+  await press(page, 'Bordbooking')
+  await wait(700)
+  t = await totals(page, '#prisberegner')
+  check(t[0] === '9.500' && t[1] === '549', `Bordbooking indgår i Anbefalet: uændret pris (${t.slice(0, 2)})`)
+  check((await text(page)).includes('Indgår'), 'Bordbooking viser "Indgår"')
+  await press(page, 'Gavekort')
+  const flyOk = await page.evaluate(() => !!document.querySelector('#prisberegner [style*="flyTo"]'))
+  check(flyOk, 'flyvende beløb vises, når et tilvalg lægges til')
+  await wait(900)
+  t = await totals(page, '#prisberegner')
+  check(t[0] === '11.500' && t[1] === '648', `Gavekort som ekstra system: 11.500 og 648 pr. måned (${t.slice(0, 2)})`)
+  check((await text(page)).includes('+2.000'), 'Gavekort viser tilvalgsprisen')
 
-  // Åbn kvitteringsarket.
+  // Kvitteringsarket.
   await page.click('#prisberegner [role="button"][aria-label="Se kvittering"]')
   await wait(700)
   check(await page.$eval('#prisberegner [role="dialog"]', (e) => !e.hasAttribute('inert')), 'kvitteringsarket åbner')
-  check((await page.$eval('#prisberegner [role="dialog"]', (e) => e.textContent)).includes('Alle priser er ekskl. moms'), 'arket viser "Alle priser er ekskl. moms"')
+  const sheet = await page.$eval('#prisberegner [role="dialog"]', (e) => e.textContent)
+  check(sheet.includes('Alle priser er ekskl. moms') && sheet.includes('Anbefalet') && sheet.includes('Gavekort'), 'arket viser pakke, system og "Alle priser er ekskl. moms"')
   await shot(page, `${tag}-05-kvittering`)
   await page.keyboard.press('Escape')
   await wait(600)
   check(await page.$eval('#prisberegner [role="dialog"]', (e) => e.hasAttribute('inert')), 'Escape lukker arket')
 
-  await press(page, 'Næste: Marketing')
-  await press(page, 'Vækst')
-  await press(page, 'Næste: Driftsplan')
-  await shot(page, `${tag}-06-drift`)
-  await press(page, 'Plus')
+  // Trin 3: tilvalg.
   await press(page, 'Næste: Tilvalg')
-  await shot(page, `${tag}-07-tilvalg`)
-  await press(page, 'Booking koblet på')
+  await wait(500)
+  await shot(page, `${tag}-06-tilvalg`)
+  await press(page, 'Engelsk version')
+  await wait(500)
+  t = await totals(page, '#prisberegner')
+  check(t[0] === '13.000' && t[1] === '648', `engelsk version: 13.000 (${t.slice(0, 2)})`)
+  const hasIntro = await page.evaluate(() => [...document.querySelectorAll('#prisberegner button')].some((b) => b.textContent.includes('Introduktionspris')))
+  check(hasIntro === INTRO, `introprisen vises kun, når der er pladser (${hasIntro}, pladser: ${INTRO})`)
+  const t3 = await text(page)
+  check(!/Introduktionspris/.test(t3) || INTRO, 'ingen intropris uden pladser')
+  if (INTRO) {
+    check(t3.includes('Ja, I må vise siden som case') && /pladser? tilbage/.test(t3), 'intro-feltet har den aftalte tekst og viser pladser tilbage')
+    check(await page.$eval('#prisberegner button[aria-pressed]:not([aria-pressed="true"])', () => true), 'intro er slået fra som standard')
+    const off = await page.evaluate(() => [...document.querySelectorAll('#prisberegner button')].find((b) => b.textContent.includes('Introduktionspris')).getAttribute('aria-pressed'))
+    check(off === 'false', `intro er slået fra som standard (${off})`)
+    await press(page, 'Introduktionspris')
+    await wait(900)
+    t = await totals(page, '#prisberegner')
+    check(t[0] === '10.150' && t[1] === '648', `intro valgt: 10.150 engang (normalpris 13.000 − 2.850) og 648 pr. måned (${t.slice(0, 2)})`)
+    const struck = await page.$$eval('#prisberegner s, #prisberegner del, #prisberegner .line-through', (e) => e.map((x) => x.textContent.replace(/\s+/g, ' ')))
+    check(struck.some((x) => x.includes('13.000')), `normalprisen vises overstreget (${struck.join(' | ')})`)
+    await shot(page, `${tag}-07-intro`)
+  }
+
   await press(page, 'Se opsummering')
   await wait(900)
-  const sum = await page.$eval('#prisberegner', (e) => e.textContent)
-  check(sum.includes('Din pris er klar.'), 'opsummering vises')
+  check((await text(page)).includes('Din pris er klar.'), 'opsummering vises')
   t = await totals(page, '#prisberegner')
-  check(t[0] === '6.000' && t[1] === '5.398', `opsummering: 6.000 engang og 5.398 pr. måned (${t.slice(0, 2)})`)
+  const wantOnce = INTRO ? '10.150' : '13.000'
+  check(t[0] === wantOnce && t[1] === '648', `opsummering: ${wantOnce} engang og 648 pr. måned (${t.slice(0, 2)})`)
   await page.waitForSelector('#prisberegner form')
   check(await page.$eval('#prisberegner form button[type="submit"]', (e) => e.textContent.includes('Send mine valg')), 'opsummeringen har formularen med "Send mine valg"')
   check((await page.$eval('#prisberegner a[href^="sms:"]', (e) => e.getAttribute('href'))).startsWith('sms:+4553613699?body='), 'SMS-link står under formularen')
   const url = page.url()
-  check(/[?&]w=0/.test(url) && /[?&]m=1/.test(url) && /[?&]d=p/.test(url) && /[?&]bk=1/.test(url) && /[?&]s=4/.test(url), `adresselinjen følger valgene (${url.replace(SITE, '')})`)
+  check(/[?&]p=1/.test(url) && /[?&]y=bg/.test(url) && /[?&]e=1/.test(url) && (INTRO ? /[?&]i=1/.test(url) : !/[?&]i=/.test(url)) && /[?&]t=4/.test(url), `adresselinjen følger valgene (${url.replace(SITE, '')})`)
   await shot(page, `${tag}-08-opsummering`)
   check((await overflow(page)) <= 0, 'ingen vandret scroll efter beregneren')
   check(errors.length === 0, `ingen konsolfejl ${errors.join(' | ')}`)
@@ -213,25 +215,32 @@ for (const [w, h] of [
   const re = await open(w, h, true, new URL(url).pathname + new URL(url).search)
   await re.page.evaluate(() => document.querySelector('#prisberegner').scrollIntoView())
   await wait(400)
-  check((await re.page.$eval('#prisberegner', (e) => e.textContent)).includes('Din pris er klar.'), 'del-linket åbner opsummeringen igen')
+  check((await text(re.page)).includes('Din pris er klar.'), 'del-linket åbner opsummeringen igen')
   t = await totals(re.page, '#prisberegner')
-  check(t[0] === '6.000' && t[1] === '5.398', 'del-linket giver samme priser')
+  check(t[0] === wantOnce && t[1] === '648', 'del-linket giver samme priser')
   await re.page.close()
 
-  // Guidet hjælp (testcase 6): Q1 A, Q2 A+C, Q3 B = Hjemmeside Vækst + Booking & Google Vækst + Plus.
+  // Et gammelt link (fra før pakkerne) giver en venlig besked og vælger intet.
+  const old = await open(w, h, true, '/?w=1&m=1&d=p&bk=1&s=4')
+  await old.page.evaluate(() => document.querySelector('#prisberegner').scrollIntoView())
+  await wait(300)
+  check((await text(old.page)).includes('Beregneren er opdateret med nye pakker'), 'gammelt link: venlig besked')
+  check((await totals(old.page, '#prisberegner')).length === 0 || (await totals(old.page, '#prisberegner'))[0] === '0', 'gammelt link: intet er valgt')
+  await old.page.close()
+
+  // Guidet hjælp: op til 6 sider + Bordbooking + ingen special = Anbefalet med Bordbooking (9.500 + 549/md.).
   const g = await open(w, h, true)
   await g.page.evaluate(() => document.querySelector('#prisberegner').scrollIntoView())
   await press(g.page, 'Hjælp mig med at vælge')
   await shot(g.page, `${tag}-09-hjaelp`)
-  await press(g.page, 'Nej')
-  await press(g.page, 'Bordbestillinger')
-  await press(g.page, 'Bliv fundet på Google')
+  await press(g.page, 'Op til 6 sider')
+  await press(g.page, 'Bordbooking')
   await press(g.page, 'Næste spørgsmål')
-  await press(g.page, 'Lidt')
+  await press(g.page, 'Nej')
   await wait(900)
-  check((await g.page.$eval('#prisberegner', (e) => e.textContent)).includes('Det her ville jeg starte med.'), 'guidet hjælp viser forslaget')
+  check((await text(g.page)).includes('Det her ville vi starte med.'), 'guidet hjælp viser forslaget')
   t = await totals(g.page, '#prisberegner')
-  check(t[0] === '10.000' && t[1] === '398', `forslaget ligger i beregneren: 10.000 + 398/md. (${t.slice(0, 2)})`)
+  check(t[0] === '9.500' && t[1] === '549', `forslaget ligger i beregneren: 9.500 + 549/md. (${t.slice(0, 2)})`)
   await shot(g.page, `${tag}-10-forslag`)
   await g.page.close()
 }
@@ -248,26 +257,28 @@ for (const [w, h] of [
   check(aside.pos === 'sticky' && aside.w === 440, `spec-arket er sticky og 440 px bredt (${aside.pos}, ${aside.w})`)
   await shot(page, '1440-02-trin1')
 
-  await press(page, 'Hjemmeside')
-  await press(page, 'Booking & Google')
+  await press(page, 'Max')
   await wait(900)
   let t = await totals(page, '#prisberegner aside')
-  check(t[0] === '10.000' && t[1] === '198', `kvittering: 10.000 (8.000 + 2.000) og 198 pr. måned (${t.slice(0, 2)})`)
-  await press(page, 'Næste: Vælg pakker')
-  await shot(page, '1440-03-trin2')
-  await press(page, 'Fuld fart')
-  await press(page, 'Næste: Drift og tilvalg')
-  await shot(page, '1440-04-trin3')
-  const addon = await page.$eval('#prisberegner', (e) => e.textContent)
-  check(addon.includes('Indgår i Booking & Google'), '"Indgår"-reglen: booking indgår, når Booking & Google Vækst er valgt')
-  await press(page, 'Egen hosting')
+  check(t[0] === '15.000' && t[1] === '895', `kvittering: Max = 15.000 og 895 pr. måned (${t.slice(0, 2)})`)
+  await press(page, 'Næste: Vælg systemer')
+  await shot(page, '1440-03-systemer')
+  await press(page, 'Bordbooking')
+  await press(page, 'Flere skræddersyede systemer')
   await wait(900)
   t = await totals(page, '#prisberegner aside')
-  check(t[1] === '0', `egen hosting: 0 kr./md. (${t[1]})`)
+  check(t[0] === '15.000' && t[1] === '895', `Max: standard + skræddersyet indgår begge (${t.slice(0, 2)})`)
+  await press(page, 'Flere skræddersyede systemer')
+  await wait(900)
+  t = await totals(page, '#prisberegner aside')
+  check(t[0] === '20.000' && t[1] === '1.094', `Max: 2. skræddersyet er et tilvalg, 5.000 + 199/md. (${t.slice(0, 2)})`)
+  await press(page, 'Næste: Tilvalg')
+  await shot(page, '1440-04-tilvalg')
+  check((await text(page)).includes('Indgår i Max'), 'engelsk version indgår i Max')
   await press(page, 'Næste: Se opsummering')
   await wait(700)
   await shot(page, '1440-05-opsummering')
-  check((await page.$eval('#prisberegner', (e) => e.textContent)).includes('Send mine valg'), 'opsummering med "Send mine valg"')
+  check((await text(page)).includes('Send mine valg'), 'opsummering med "Send mine valg"')
   const small = await smallTargets(page, '#prisberegner')
   check(small.length === 0, `desktop: trykflader ≥ 48 px ${small.join(', ')}`)
   check(errors.length === 0, `ingen konsolfejl ${errors.join(' | ')}`)
@@ -292,47 +303,52 @@ for (const [w, h, mobile] of [
   [390, 844, true],
   [1440, 900, false],
 ]) {
-  for (const path of ['/priser/', '/hjemmeside/', '/marketing/', '/booking-google/', '/demoer/', '/privatlivspolitik/']) {
+  for (const path of ['/priser/', '/hjemmeside/', '/demoer/', '/privatlivspolitik/']) {
     const { page, errors } = await open(w, h, mobile, path)
     const name = `${w}x${h}${path.replaceAll('/', '-')}`
     await shot(page, name)
     check((await overflow(page)) <= 0 && errors.length === 0, `${path} ${w}×${h}: ingen vandret scroll og ingen konsolfejl ${errors.join(' | ')}`)
     if (path === '/priser/') {
       const cells = await page.$$eval('[role="table"] [role="cell"]', (c) => c.length)
-      check(cells === 42, `/priser/: tabelceller (${cells})`)
+      check(cells === 30, `/priser/: tabelceller (${cells})`)
+      const body = await page.evaluate(() => document.body.textContent.replace(/\s+/g, ' '))
+      check(body.includes('5.000') && body.includes('9.500') && body.includes('15.000') && body.includes('299') && body.includes('549') && body.includes('895'), '/priser/: alle tre pakkepriser')
+      check(INTRO ? body.includes('Introduktionspris') : !/ntro/.test(body), INTRO ? '/priser/: intropris vises' : '/priser/: ingen spor af intropris ved 0 pladser')
+    }
+    if (path === '/hjemmeside/') {
+      check(await page.$('#prisberegner') !== null && (await page.$('#systemer')) !== null, '/hjemmeside/: beregner og systemsektion')
+      const body = await page.evaluate(() => document.body.textContent.replace(/\s+/g, ' '))
+      check(body.includes('Bordbooking') && body.includes('Skræddersyet system') && body.includes('catering'), '/hjemmeside/: standardsystemer og skræddersyede eksempler')
     }
     await page.close()
   }
 }
 
 /* ------------------------------------------------------------- fjernelse */
-// Fjernelse skal være roligt: intet flyvende beløb, "−5.000 kr./md." kort i #7A766F, totalen tæller ned, linjen folder sammen,
-// knappen går tilbage, og når alt er fjernet står der en rolig tom tilstand i stedet for "0 kr.".
+// Fjernelse skal være roligt: intet flyvende beløb, "−99 kr./md."-chip i #7A766F, totalen tæller ned, linjen folder sammen,
+// og når alt er fjernet, står der en rolig tom tilstand i stedet for "0 kr.".
 for (const [label, w, h, mobile] of [
   ['Mobil 390×844', 390, 844, true],
   ['Desktop 1440×900', 1440, 900, false],
 ]) {
   console.log(`\nFjernelse, ${label}`)
-  const { page, errors } = await open(w, h, mobile)
-  await page.evaluate(() => document.querySelector('#prisberegner').scrollIntoView({ behavior: 'instant' }))
-  await press(page, 'Hjemmeside')
-  await press(page, 'Marketing')
+  const { page, errors } = await open(w, h, mobile, '/?p=1&y=bg&t=2')
+  await scrollCalc(page)
   await wait(900)
   const scope = mobile ? '#prisberegner [role="button"][aria-label*="kvittering"]' : '#prisberegner aside'
   let t = await totals(page, '#prisberegner')
-  check(t[0] === '8.000' && t[1] === '5.198', `før: 8.000 og 5.198 (${t.slice(0, 2)})`)
-  const widthOf = () => page.$$eval(`${scope} [role="img"][aria-label]`, (els) => els.filter((e) => e.getAttribute('aria-label') === '198' || e.getAttribute('aria-label') === '5.198').map((e) => Math.round(e.getBoundingClientRect().width)).at(-1))
+  check(t[0] === '11.500' && t[1] === '648', `før: 11.500 og 648 (${t.slice(0, 2)})`)
+  const widthOf = () => page.$$eval(`${scope} [role="img"][aria-label]`, (els) => els.filter((e) => ['648', '549'].includes(e.getAttribute('aria-label'))).map((e) => Math.round(e.getBoundingClientRect().width)).at(-1))
   const wBefore = await widthOf()
-  // Sampler totalens bredde og antallet af linjer, der er ved at folde sig sammen, hvert 20. ms, så vi ser forløbet og ikke kun slutningen.
   await page.evaluate((scope) => {
     window.__samples = []
     const id = setInterval(() => {
-      const els = [...document.querySelectorAll(scope + ' [role="img"][aria-label]')].filter((e) => ['198', '5.198'].includes(e.getAttribute('aria-label')))
+      const els = [...document.querySelectorAll(scope + ' [role="img"][aria-label]')].filter((e) => ['648', '549'].includes(e.getAttribute('aria-label')))
       window.__samples.push({ w: Math.round(els.at(-1)?.getBoundingClientRect().width ?? 0), ghosts: document.querySelectorAll('#prisberegner [data-exiting]').length })
     }, 20)
     setTimeout(() => clearInterval(id), 1400)
   }, scope)
-  await press(page, 'Marketing')
+  await press(page, 'Gavekort')
   const mid = {
     fly: await page.evaluate(() => !!document.querySelector('#prisberegner [style*="flyTo"]')),
     chip: await page.$$eval('#prisberegner .delta-chip', (c) => c.map((x) => x.textContent)),
@@ -340,80 +356,64 @@ for (const [label, w, h, mobile] of [
   }
   await wait(1300)
   const samples = await page.evaluate(() => window.__samples)
-  const widths = [...new Set(samples.map((x) => x.w))]
-  const after = { width: await widthOf(), ghost: await page.$$eval('#prisberegner [data-exiting]', (g) => g.length) }
   check(!mid.fly, 'ingen flyvende beløb ved fjernelse')
-  check(mid.chip.some((c) => c.includes('−5.000') && c.includes('kr./md.')), `"−5.000 kr./md." vises kort (${mid.chip})`)
+  check(mid.chip.some((c) => c.includes('−99') && c.includes('kr./md.')), `"−99 kr./md." vises kort (${mid.chip})`)
   check(/rgb\(122, 118, 111\)/.test(mid.color), `chippen er #7A766F (${mid.color})`)
-  check(widths.length >= 3 && widths[0] > after.width && after.width < wBefore, `totalen tæller ned og folder sammen i flere trin (${wBefore} → ${widths.join(', ')} px)`)
+  t = await totals(page, '#prisberegner')
+  check(t[0] === '9.500' && t[1] === '549', `efter: 9.500 og 549 (${t.slice(0, 2)})`)
+  const widths = [...new Set(samples.map((x) => x.w))]
+  const afterW = await widthOf()
+  check(afterW <= wBefore, `totalen er ikke blevet bredere ved fjernelse (${wBefore} → ${widths.join(', ')} px)`)
   if (!mobile) check(Math.max(...samples.map((x) => x.ghosts)) > 0, 'linjen er stadig i kvitteringen, mens den folder sammen (exit)')
-  check(after.ghost === 0 || mobile, 'den fjernede linje er væk, når animationen er færdig')
-  t = await totals(page, '#prisberegner')
-  check(t[0] === '8.000' && t[1] === '198', `efter: 8.000 og 198 (${t.slice(0, 2)})`)
-  check(!/[?&]m=/.test(page.url()) && /[?&]w=1/.test(page.url()), `del-linket har ikke længere m (${page.url().replace(SITE, '')})`)
-  check(await page.$eval('#prisberegner [aria-pressed]', () => true), 'knapperne har aria-pressed')
-  const pressed = await page.$$eval('#prisberegner button[aria-pressed]', (b) => b.map((x) => x.getAttribute('aria-pressed')))
-  check(pressed.filter((p) => p === 'true').length === 1, `kun Hjemmeside er stadig valgt (${pressed})`)
-  // Sænk pakken og fjern et tilvalg: også her intet flyvende beløb, og totalen falder.
-  await press(page, mobile ? 'Næste: Vælg pakke' : 'Næste: Vælg pakker')
-  await press(page, 'Start')
+  check(/[?&]y=b(&|$)/.test(page.url()) && !/y=bg/.test(page.url()), `del-linket har ikke længere Gavekort (${page.url().replace(SITE, '')})`)
+  // Sænk pakken: også her intet flyvende beløb, og totalen falder.
+  await press(page, 'Næste: Tilvalg').catch(() => {})
+  await page.goto(`${SITE}/?p=2&t=1`, { waitUntil: 'networkidle0' })
+  await scrollCalc(page)
   await wait(500)
+  await press(page, 'Start')
+  await wait(700)
   t = await totals(page, '#prisberegner')
-  check(t[0] === '5.000', `pakken sænket til Start: 5.000 (${t[0]})`)
+  check(t[0] === '5.000' && t[1] === '299', `pakken sænket til Start: 5.000 og 299 (${t.slice(0, 2)})`)
   check(!(await page.evaluate(() => !!document.querySelector('#prisberegner [style*="flyTo"]'))), 'ingen flyvende beløb, når en pakke sænkes')
-  // Fjern alt: den rolige tomme tilstand.
-  await page.goto(`${SITE}/?w=1`, { waitUntil: 'networkidle0' })
-  await page.evaluate(() => document.querySelector('#prisberegner').scrollIntoView({ behavior: 'instant' }))
-  await wait(400)
-  await press(page, 'Hjemmeside')
+  // Fjern alt: tryk på den valgte pakke igen giver den rolige tomme tilstand.
+  await press(page, 'Start')
   await wait(1300)
   const empty = await page.evaluate(() => {
     const root = document.querySelector('#prisberegner')
     const vis = (el) => el && getComputedStyle(el).visibility === 'visible' && Number(getComputedStyle(el).opacity) > 0.9
-    const msg = [...root.querySelectorAll('.swap-in')].find((e) => e.textContent.includes('Vælg en ydelse for at se prisen'))
+    const msg = [...root.querySelectorAll('.swap-in')].find((e) => /Vælg en (ydelse|pakke) for at se prisen/.test(e.textContent))
     const off = [...root.querySelectorAll('.swap-out')].filter((e) => e.querySelector('[role="img"]'))
-    return { msg: vis(msg), totalsHidden: off.length > 0 && off.every((e) => !vis(e)), step: root.textContent.includes('Trin 1 af 4') || root.textContent.includes('Prisberegner'), url: location.search }
+    return { msg: vis(msg), totalsHidden: off.length > 0 && off.every((e) => !vis(e)), url: location.search }
   })
-  check(empty.msg, '"Vælg en ydelse for at se prisen" vises, når alt er fjernet')
+  check(empty.msg, 'tom tilstand med "Vælg en … for at se prisen", når alt er fjernet')
   check(empty.totalsHidden, 'totalerne ("0 kr.") er skjult i den tomme tilstand')
-  check(empty.step && empty.url === '', `tilbage på trin 1 med tomt del-link (${empty.url})`)
+  check(empty.url === '', `tomt del-link (${empty.url})`)
   check(errors.length === 0, `ingen konsolfejl ${errors.join(' | ')}`)
   await page.close()
 }
 
-// Fjernelse midt i flowet (mobil): fjern Hjemmeside fra trin 1 efter at have været på trin 3. Trinene hopper ikke forkert, og pakkerne nulstilles.
+// Fjernelse midt i flowet (mobil): skift pakke på trin 1 efter at have været på trin 3. Trinene hopper ikke forkert.
 {
   console.log('\nFjernelse midt i flowet (mobil)')
   const { page } = await open(390, 844, true)
-  await page.evaluate(() => document.querySelector('#prisberegner').scrollIntoView({ behavior: 'instant' }))
-  await press(page, 'Hjemmeside')
-  await press(page, 'Marketing')
-  await press(page, 'Næste: Vælg pakke')
-  await press(page, 'Fuld fart')
-  await press(page, 'Næste: Marketing')
-  await press(page, 'Fuld fart')
-  await press(page, 'Næste: Driftsplan')
-  await press(page, 'Ekstra')
-  await wait(600)
-  check(/d=e/.test(page.url()) && /w=2/.test(page.url()) && /m=2/.test(page.url()), `valg: Fuld fart, Fuld fart, Ekstra (${page.url().replace(SITE, '')})`)
-  // Tilbage til trin 1 og fjern Hjemmeside.
-  for (let i = 0; i < 6; i++) {
+  await scrollCalc(page)
+  await press(page, 'Max')
+  await press(page, 'Næste: Vælg systemer')
+  await press(page, 'Bordbooking')
+  await press(page, 'Næste: Tilvalg')
+  await wait(500)
+  for (let i = 0; i < 4; i++) {
     const back = await page.$('#prisberegner button[aria-label="Tilbage"]')
     if (!back) break
     await back.click()
     await wait(350)
   }
-  check((await page.$eval('#prisberegner', (e) => e.textContent)).includes('Trin 1 af 4'), 'tilbage på trin 1')
-  await press(page, 'Hjemmeside')
+  check((await text(page)).includes('Trin 1 af 4'), 'tilbage på trin 1')
+  await press(page, 'Max') // fjern pakken
   await wait(900)
-  check(!/[?&](w|d|bk|x)=/.test(page.url()) && /m=2/.test(page.url()), `Hjemmeside og alt, der hører til den, er nulstillet i del-linket (${page.url().replace(SITE, '')})`)
-  const nxt = await page.$$eval('#prisberegner button', (b) => b.map((x) => x.textContent).find((x) => x.startsWith('Næste')))
-  check(nxt === 'Næste: Vælg pakke', `næste skridt er Marketings pakke (${nxt})`)
-  await press(page, 'Næste: Vælg pakke')
-  const head = await page.$eval('#prisberegner', (e) => e.textContent)
-  check(head.includes('Trin 2 af 4 · Marketing') && !head.includes('1/'), 'trin 2 viser kun Marketing (ikke den fjernede ydelse)')
-  await press(page, 'Se opsummering')
-  check((await page.$eval('#prisberegner', (e) => e.textContent)).includes('Din pris er klar.'), 'uden Hjemmeside går man direkte til opsummeringen (ingen drift)')
+  check(!/[?&](p|y|c|e|i)=/.test(page.url()), `alt er nulstillet i del-linket (${page.url().replace(SITE, '')})`)
+  check(await page.$eval('#prisberegner button:disabled', (b) => b.textContent.includes('Vælg en pakke')), 'uden pakke kan man ikke gå videre')
   await page.close()
 }
 
@@ -421,13 +421,15 @@ for (const [label, w, h, mobile] of [
 {
   console.log('\nReduceret bevægelse')
   const { page } = await open(390, 844, true, '/', { reduced: true })
-  await page.evaluate(() => document.querySelector('#prisberegner').scrollIntoView())
-  await press(page, 'Hjemmeside')
-  await press(page, 'Marketing')
+  await scrollCalc(page)
+  await press(page, 'Anbefalet')
+  await press(page, 'Næste: Vælg systemer')
+  await press(page, 'Bordbooking')
+  await press(page, 'Gavekort')
   check(!(await page.evaluate(() => !!document.querySelector('#prisberegner [style*="flyTo"]'))), 'ingen flyvende beløb')
-  await press(page, 'Marketing')
+  await press(page, 'Gavekort')
   await wait(150)
-  check((await page.$$eval('#prisberegner .delta-chip', (c) => c.length)) === 0, 'reduceret bevægelse: ingen "−5.000 kr./md."-chip ved fjernelse')
+  check((await page.$$eval('#prisberegner .delta-chip', (c) => c.length)) === 0, 'reduceret bevægelse: ingen "−99 kr./md."-chip ved fjernelse')
   const dur = await page.evaluate(() => {
     const col = document.querySelector('#prisberegner [role="img"][aria-label] span span')
     return getComputedStyle(col).transitionDuration
@@ -437,5 +439,5 @@ for (const [label, w, h, mobile] of [
 }
 
 await browser.close()
-console.log(failed ? `\n${failed} fejl` : '\nAlt ok')
+console.log(failed ? `\n${failed} fejl af ${total} kontroller` : `\nAlt ok (${total} kontroller)`)
 process.exit(failed ? 1 : 0)

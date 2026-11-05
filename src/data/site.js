@@ -22,19 +22,16 @@ export const links = {
 export const paths = {
   home: '/',
   hjemmeside: '/hjemmeside/',
-  marketing: '/marketing/',
-  bookingGoogle: '/booking-google/',
   priser: '/priser/',
   demoer: '/demoer/',
   privatliv: '/privatlivspolitik/',
   /** Beregneren bor på forsiden. */
   beregner: '/#prisberegner',
+  systemer: '/hjemmeside/#systemer',
 }
 
 export const navLinks = [
   { label: 'Hjemmeside', href: paths.hjemmeside },
-  { label: 'Marketing', href: paths.marketing },
-  { label: 'Booking & Google', href: paths.bookingGoogle },
   { label: 'Priser', href: paths.priser },
   { label: 'Eksempler', href: paths.demoer },
 ]
@@ -49,6 +46,9 @@ export const flags = {
    */
   showPalmy: false,
 }
+
+/** Sider med prisberegneren: "Se din pris" hopper til den på siden, ellers til forsiden. */
+export const calcPages = [paths.home, paths.hjemmeside]
 
 /** Er adressen den aktuelle side? Sammenlignes uden efterstillet skråstreg. */
 export const isCurrent = (path, href) => {

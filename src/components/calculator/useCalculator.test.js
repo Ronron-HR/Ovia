@@ -1,7 +1,7 @@
-// Beregnerens tilstand: tilføjelse og især FJERNELSE (totaler, del-link og trin). Kør: node --test src/components/calculator/useCalculator.test.js
+// Beregnerens tilstand: valg, fjernelse (totaler, del-link og trin) og guidet hjælp. Kør: node --test src/components/calculator/useCalculator.test.js
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { toQuery } from '../../lib/calculate.js';
+import { introActive, toQuery } from '../../lib/calculate.js';
 import { buildReceipt } from '../../lib/receipt.js';
 import { initialState, reducer } from './useCalculator.js';
 
@@ -10,82 +10,63 @@ const totals = (s) => {
   const r = buildReceipt(s.selection);
   return [r.o, r.m];
 };
-const toggle = (key) => ({ type: 'toggleService', key });
+const pkg = (n) => ({ type: 'togglePkg', pkg: n });
+const sys = (key) => ({ type: 'toggleSystem', key });
 
-test('Tilføj Hjemmeside + Marketing, fjern Marketing: totaler og del-link følger med', () => {
-  let s = run(toggle('web'), toggle('mkt'));
-  assert.deepEqual(totals(s), [8000, 5198]);
-  s = reducer(s, toggle('mkt'));
-  assert.deepEqual(totals(s), [8000, 198]);
-  assert.equal(s.selection.services.mkt, null);
-  assert.equal(toQuery(s.selection, s.step), 'w=1&d=b');
+test('Vælg Anbefalet, tilføj to systemer, fjern det ene: totaler og del-link følger med', () => {
+  let s = run(pkg(1), sys('booking'), sys('gavekort'));
+  assert.deepEqual(totals(s), [11500, 648]);
+  s = reducer(s, sys('gavekort'));
+  assert.deepEqual(totals(s), [9500, 549]);
+  assert.equal(toQuery(s.selection, s.step), 'p=1&y=b');
 });
 
-test('Fjern alt: tom tilstand, trin 1, tomt del-link og 0/0', () => {
-  let s = run(toggle('web'), toggle('book'), { type: 'go', step: 2 });
-  s = reducer(s, toggle('web'));
-  s = reducer(s, toggle('book'));
+test('Tryk på den valgte pakke igen fjerner alt: tom tilstand, trin 1, tomt del-link og 0/0', () => {
+  let s = run(pkg(2), sys('booking'), { type: 'setCustom', value: 1 }, { type: 'go', step: 3 });
+  assert.equal(s.step, 3);
+  s = reducer(s, pkg(2));
   assert.deepEqual(totals(s), [0, 0]);
   assert.equal(s.step, 1);
   assert.equal(toQuery(s.selection, s.step), '');
   assert.equal(buildReceipt(s.selection).all.length, 0);
 });
 
-test('Fjernes Hjemmeside på trin 3, falder trinnet til 2, og alt der hører til den nulstilles', () => {
-  let s = run(toggle('web'), toggle('mkt'), { type: 'setService', key: 'web', value: 2 }, { type: 'setDrift', drift: 'ekstra' }, { type: 'toggleBooking' }, { type: 'setExtra', value: 3 }, { type: 'go', step: 3 });
-  assert.equal(s.step, 3);
-  s = reducer(s, toggle('web'));
-  assert.equal(s.step, 2, 'trin 3 findes ikke uden Hjemmeside');
-  assert.equal(s.selection.drift, 'basis');
-  assert.equal(s.selection.bookingAddon, false);
-  assert.equal(s.selection.extraPages, 0);
-  assert.deepEqual(totals(s), [0, 5000]);
-  // Vælges Hjemmeside igen, starter den forfra (Vækst, Basis, ingen tilvalg), ikke med de gamle valg.
-  s = reducer(s, toggle('web'));
-  assert.equal(s.selection.services.web, 1);
-  assert.deepEqual(totals(s), [8000, 5198]);
-  assert.equal(s.selection.bookingAddon, false);
+test('Skift af pakke bevarer systemer; engelsk nulstilles, når Max har den med', () => {
+  let s = run(pkg(1), sys('booking'), { type: 'toggleEnglish' });
+  assert.equal(s.selection.english, true);
+  s = reducer(s, pkg(2));
+  assert.equal(s.selection.english, false);
+  assert.deepEqual(s.selection.systems, ['booking']);
 });
 
-test('En fjernet ydelses pakke nulstilles: Marketing Fuld fart fjernet og valgt igen er Vækst', () => {
-  let s = run(toggle('mkt'), { type: 'setService', key: 'mkt', value: 2 });
-  assert.deepEqual(totals(s), [0, 8000]);
-  s = reducer(reducer(s, toggle('mkt')), toggle('mkt'));
-  assert.equal(s.selection.services.mkt, 1);
-  assert.deepEqual(totals(s), [0, 5000]);
+test('Uden pakke findes kun trin 1', () => {
+  assert.equal(run({ type: 'go', step: 3 }).step, 1);
+  assert.equal(run({ type: 'next' }).step, 1);
+  assert.equal(run(pkg(0), { type: 'next' }).step, 2);
 });
 
-test('Mobil: fjernes en ydelse, mens delskridtet peger på den sidste, holdes delskridtet inden for de valgte', () => {
-  let s = run(toggle('web'), toggle('mkt'), toggle('book'), { type: 'go', step: 2 });
-  s = reducer(reducer(s, { type: 'mNext' }), { type: 'mNext' });
-  assert.equal(s.sub, 2);
-  s = reducer(s, toggle('book'));
-  assert.equal(s.step, 2);
-  assert.equal(s.sub, 1, 'delskridtet klemmes til den sidste valgte ydelse');
-  s = reducer(s, toggle('mkt'));
-  assert.equal(s.sub, 0);
+// Kun når der er intro-pladser tilbage i prices.json (ved 0 findes introprisen ikke; det dækker de øvrige tests).
+test('Intro slås til og fra (så længe der er pladser)', { skip: !introActive() }, () => {
+  let s = run(pkg(1), { type: 'toggleIntro' });
+  assert.equal(s.selection.intro, true);
+  assert.deepEqual(totals(s), [6650, 549]);
+  s = reducer(s, { type: 'toggleIntro' });
+  assert.deepEqual(totals(s), [9500, 549]);
 });
 
-test('Booking-tilvalg og "Indgår": fjernes Booking & Google, kan tilvalget tælle igen', () => {
-  let s = run(toggle('web'), toggle('book'), { type: 'toggleBooking' });
-  assert.equal(s.selection.bookingAddon, false, 'tilvalget kan ikke slås til, når booking indgår');
-  assert.deepEqual(totals(s), [10000, 198]);
-  s = reducer(reducer(s, toggle('book')), { type: 'toggleBooking' });
-  assert.deepEqual(totals(s), [9000, 198]);
+test('Guidet hjælp lægger forslaget i beregneren', () => {
+  let s = run({ type: 'helpStart' }, { type: 'helpAnswer', i: 1 }, { type: 'helpAnswer', i: 0 }, { type: 'helpNextQ' }, { type: 'helpAnswer', i: 0 });
+  assert.equal(s.help.q, 3);
+  assert.equal(s.selection.pkg, 1);
+  assert.deepEqual(s.selection.systems, ['booking']);
+  assert.equal(s.selection.intro, false);
+  s = reducer(s, { type: 'helpToSummary' });
+  assert.equal(s.step, 4);
+  assert.equal(s.help, null);
 });
 
-test('Sænkes en pakke eller driftsplan, falder totalen, og del-linket følger', () => {
-  let s = run(toggle('web'), { type: 'setService', key: 'web', value: 2 }, { type: 'setDrift', drift: 'ekstra' });
-  assert.deepEqual(totals(s), [10000, 798]);
-  s = reducer(reducer(s, { type: 'setService', key: 'web', value: 0 }), { type: 'setDrift', drift: 'basis' });
-  assert.deepEqual(totals(s), [5000, 198]);
-  assert.equal(toQuery(s.selection, s.step), 'w=0&d=b');
-});
-
-test('Ekstra sider nulstilles, når pakken sænkes fra Fuld fart', () => {
-  let s = run(toggle('web'), { type: 'setService', key: 'web', value: 2 }, { type: 'setExtra', value: 2 });
-  assert.deepEqual(totals(s), [11600, 198]);
-  s = reducer(s, { type: 'setService', key: 'web', value: 1 });
-  assert.equal(s.selection.extraPages, 0);
-  assert.deepEqual(totals(s), [8000, 198]);
+test('Gammelt link viser en besked og vælger intet', () => {
+  const s = reducer(initialState, { type: 'oldLink' });
+  assert.ok(s.notice.length > 10);
+  assert.equal(s.selection.pkg, null);
 });

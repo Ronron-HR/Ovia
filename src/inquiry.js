@@ -1,5 +1,5 @@
 import prices from './data/prices.json' with { type: 'json' }
-import { fromQuery, formatKr, toQuery } from './lib/calculate.js'
+import { NBSP, formatKr, fromQuery, isOldLink, toQuery } from './lib/calculate.js'
 import { buildReceipt, specId } from './lib/receipt.js'
 import { retentionMonths } from './data/site.js'
 
@@ -7,8 +7,9 @@ import { retentionMonths } from './data/site.js'
  * FORESPØRGSLER FRA BEREGNEREN — fælles for formularen (components/calculator/InquiryForm.jsx) og
  * workeren (worker/index.js), så browser og server validerer ens.
  *
- * Serveren stoler aldrig på browseren: den tjekker felterne igen og regner selv kvitteringen ud af
- * valgene i linket med calculate.js (lib/receipt.js). Tal fra browseren bruges ikke.
+ * Serveren stoler aldrig på browseren: den tjekker felterne igen og regner selv kvitteringen ud af valgene i linket
+ * med calculate.js (lib/receipt.js), inkl. om introprisen gælder (kun mens prices.introSlotsLeft > 0). Tal fra
+ * browseren bruges ikke.
  *
  * Ren JavaScript uden React og uden adgang til window; kun sendInquiry() rører fetch.
  */
@@ -18,6 +19,9 @@ export const inquiry = {
   retentionMonths,
   endpoint: '/api/henvendelse',
 }
+
+/** Svar til en klient, der sender et link fra før pakkerne (en cachet side): en venlig besked, ikke en fejl. */
+export const OLD_LINK_MESSAGE = 'Beregneren er opdateret med nye pakker. Åbn siden igen og vælg dit tilbud på ny.'
 
 /** Længste tegn pr. felt. Besked højst 1.000 tegn. MAX_BODY i worker/index.js skal kunne rumme dem alle. */
 export const LIMITS = { name: 160, phone: 40, email: 200, company: 160, link: 600, message: 1000 }
@@ -67,25 +71,26 @@ export function normalize(raw) {
  */
 export function validate(p) {
   if (!p.name) return { field: 'name', message: 'Skriv dit navn.' }
-  if (!p.phone && !p.email) return { field: 'phone', message: 'Skriv et telefonnummer eller en mail, så jeg kan svare.' }
+  if (!p.phone && !p.email) return { field: 'phone', message: 'Skriv et telefonnummer eller en mail, så vi kan svare.' }
   if (p.phone && !danishPhone(p.phone)) return { field: 'phone', message: 'Skriv et dansk telefonnummer med 8 cifre.' }
   if (p.email && !validEmail(p.email)) return { field: 'email', message: 'Skriv en gyldig mailadresse.' }
   return null
 }
 
 /**
- * Linket til valgene, bygget forfra ud fra det, kunden sendte: kun gyldige svar (fromQuery),
- * altid på forsiden. `null`, hvis der ikke er valgt noget.
+ * Linket til valgene, bygget forfra ud fra det, kunden sendte: kun gyldige svar (fromQuery), altid på forsiden.
+ * `{ old: true }` for et gammelt link (fra før pakkerne), `null` hvis der ikke er valgt en pakke.
  */
-export function canonicalLink(link, origin) {
+export function canonicalLink(link, origin, cfg = prices) {
   let url
   try {
     url = new URL(link, origin)
   } catch {
     return null
   }
-  const { selection } = fromQuery(url.search)
-  if (!Object.values(selection.services).some((v) => v !== null)) return null
+  if (isOldLink(url.search)) return { old: true }
+  const { selection } = fromQuery(url.search, cfg)
+  if (selection.pkg === null) return null
   return { url: `${origin}/?${toQuery(selection, 4)}#prisberegner`, selection }
 }
 
@@ -93,13 +98,16 @@ const plain = (s) => String(s).replace(/ /g, ' ')
 
 /**
  * Mailen til Ronny. Emne: "Ny forespørgsel: [navn], [virksomhed] – [engang] + [md]".
- * Indhold: kontakt, besked, alle valgte linjer med priser, totaler ekskl. moms og del-linket.
+ * Indhold: kontakt, besked, pakke, systemer og tilvalg med priser, om introprisen er valgt, totaler ekskl. moms og
+ * del-linket. Er introprisen valgt (og der er pladser), står nederst, hvordan en plads tælles ned (npm run intro:brugt).
  */
-export function composeMail({ name, company = '', phone = '', email = '', message = '', link, selection }) {
-  const rc = buildReceipt(selection)
+export function composeMail({ name, company = '', phone = '', email = '', message = '', link, selection }, cfg = prices) {
+  const rc = buildReceipt(selection, cfg)
   const who = company ? `${name}, ${company}` : name
   const subject = `Ny forespørgsel: ${who} – ${plain(formatKr(rc.o))} + ${plain(formatKr(rc.m, true))}`
   const line = (l) => `- ${plain(l.label)} – ${plain(l.pkg)}: ${plain(l.price)}`
+  const hasSystem = rc.all.some((l) => l.key.startsWith('sys-') || l.key.startsWith('custom-'))
+  const left = cfg.introSlotsLeft
   return {
     subject,
     text: [
@@ -111,22 +119,24 @@ export function composeMail({ name, company = '', phone = '', email = '', messag
       `Mail: ${email || '(ikke udfyldt)'}`,
       ...(message ? ['', 'Besked (hver linje starter med >):', ...message.split('\n').map((l) => `> ${l}`)] : []),
       '',
-      `Valg (${specId(selection)}):`,
+      `Valg (${specId(selection, cfg)}):`,
       ...rc.all.map(line),
       '',
-      `Engang: ${plain(formatKr(rc.o))}`,
+      `Engang: ${plain(formatKr(rc.o))}${rc.introApplied ? ` (normalpris ${plain(formatKr(rc.onceNormal))})` : ''}`,
       `Pr. måned: ${plain(formatKr(rc.m, true))}`,
       'Alle priser er ekskl. moms.',
-      ...(rc.all.some((l) => l.key === 'book' || l.key === 'bookingAddon') ? [prices.addons.booking.note] : []),
+      ...(rc.introApplied ? [`Introduktionspris: valgt (${Math.round(cfg.intro.discount * 100)} % på engangsprisen, mod at siden må vises som case).`] : []),
+      ...(hasSystem ? [cfg.systems.thirdParty] : []),
       '',
       `Se valgene: ${link}`,
+      ...(rc.introApplied ? ['', `Intropris valgt. Lander du kunden, så kør: npm run intro:brugt (${left} ${left === 1 ? 'plads' : 'pladser'} tilbage nu).`] : []),
     ].join('\n'),
   }
 }
 
 /**
  * Sender forespørgslen. { ok: true } KUN når serveren har svaret 200 med { ok: true };
- * alt andet (netværk, 4xx, 5xx, ikke-JSON) er { ok: false, status }.
+ * alt andet (netværk, 4xx, 5xx, ikke-JSON) er { ok: false, status, error }.
  */
 export async function sendInquiry(payload) {
   try {
@@ -136,8 +146,10 @@ export async function sendInquiry(payload) {
       body: JSON.stringify(payload),
     })
     const data = await res.json().catch(() => null)
-    return res.ok && data?.ok === true ? { ok: true } : { ok: false, status: res.status }
+    return res.ok && data?.ok === true ? { ok: true } : { ok: false, status: res.status, error: data?.error }
   } catch {
     return { ok: false, status: 0 }
   }
 }
+
+export { NBSP }

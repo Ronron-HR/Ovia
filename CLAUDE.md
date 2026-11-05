@@ -1,6 +1,6 @@
 # OviaSpecs — instruktioner til Claude Code
 
-Projektets opbygning, kommandoer og regler for tekst står i `README.md`. Priser og vilkår har én kilde: `src/data/prices.json` (redesign nov. 2026; `pricing.js` er forældet). Rebrand-briefet (okt. 2026) står i `docs/rebrand/brief.md`.
+Projektets opbygning, kommandoer og regler for tekst står i `README.md`. Priser og vilkår har én kilde: `src/data/prices.json` (inkl. `introSlotsLeft`; styres med `npm run intro:status` / `intro:brugt`, se README). Rebrand-briefet (okt. 2026) står i `docs/rebrand/brief.md`.
 
 ## Skills til OviaSpecs (installeret okt. 2026, projekt-scope)
 

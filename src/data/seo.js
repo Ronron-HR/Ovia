@@ -17,7 +17,9 @@ import { contact, paths } from './site.js'
 
 /** Hårdt mellemrum → almindeligt, så metatekster ikke indeholder U+00A0. */
 const plain = (s) => s.replace(/ /g, ' ')
-const from = (key) => plain(formatKr(prices.services[key].packages[0].price, prices.services[key].period === 'month'))
+const pkg = (key) => prices.packages.find((p) => p.key === key)
+/** "5.000 kr. + 299 kr./md." for en pakke (alle priser er faste). */
+const priceOf = (key) => plain(`${formatKr(pkg(key).once)} + ${formatKr(pkg(key).monthly, true)}`)
 
 /**
  * `updated`: dato for seneste væsentlige ændring af sidens indhold (ÅÅÅÅ-MM-DD),
@@ -29,27 +31,17 @@ const VAT = 'Alle priser er ekskl. moms.'
 export const seo = {
   home: {
     title: 'Hjemmeside til restauranter og caféer i Aarhus | OviaSpecs',
-    description: `Hjemmeside, Google-profil, booking og korte videoer til restauranter og caféer i Aarhus. Hjemmeside fra ${from('web')} ${VAT}`,
+    description: `Hjemmeside, Google-profil og lokal SEO til restauranter og caféer i Aarhus. Start: ${priceOf('start')} ${VAT}`,
     updated: UPDATED,
   },
   hjemmeside: {
-    title: 'Hjemmeside til små virksomheder | OviaSpecs',
-    description: `En hurtig hjemmeside, der virker på telefonen og bliver fundet på Google. Tre pakker fra ${from('web')} og drift fra ${plain(formatKr(prices.drift.plans[0].price, true))} ${VAT}`,
-    updated: UPDATED,
-  },
-  bookingGoogle: {
-    title: 'Google-profil og booking i Aarhus | OviaSpecs',
-    description: `Hjælp til din Google-profil, booking på hjemmeside eller Instagram og et QR-skilt til anmeldelser. Fra ${from('book')} ${VAT}`,
-    updated: UPDATED,
-  },
-  marketing: {
-    title: 'Korte videoer og opslag til sociale medier | OviaSpecs',
-    description: `Korte videoer og opslag til dine sociale medier hver måned, fra ${from('mkt')} Annoncebudget betales direkte til Meta. ${VAT}`,
+    title: 'Hjemmeside, Google og systemer til restauranter | OviaSpecs',
+    description: `Hjemmeside, Google-profil, lokal SEO og systemer til din restaurant eller café. Tre pakker til faste priser: Start ${priceOf('start')} ${VAT}`,
     updated: UPDATED,
   },
   priser: {
-    title: 'Priser på hjemmeside, marketing og booking | OviaSpecs',
-    description: `Alle pakker side om side: hjemmeside fra ${from('web')}, marketing fra ${from('mkt')} og Booking & Google fra ${from('book')} ${VAT}`,
+    title: 'Priser: Start, Anbefalet og Max | OviaSpecs',
+    description: `Tre pakker side om side: Start ${priceOf('start')}, Anbefalet ${priceOf('anbefalet')} og Max ${priceOf('max')} ${VAT}`,
     updated: UPDATED,
   },
   demoer: {
@@ -70,7 +62,7 @@ export const privacySeo = { path: paths.privatliv, updated: UPDATED }
 
 /* ---- Strukturerede data (JSON-LD) ----------------------------------------
    Kun det, der står på siden og er verificeret: navn, mail, telefon,
-   grundlægger, sprog og priserne i prices.json. Bevidst ikke med: adresse
+   sprog og pakkepriserne i prices.json (uden introprisen, som er midlertidig). Bevidst ikke med: adresse
    (der er ingen offentlig), anmeldelser (der er ingen) og FAQ.
 ------------------------------------------------------------------------- */
 const ORIGIN = 'https://oviaspecs.com'
@@ -86,23 +78,12 @@ const spec = (price, { monthly = false, name } = {}) => ({
 })
 
 const packageOffers = () =>
-  Object.values(prices.services).flatMap((service) =>
-    service.packages.map((pkg) => ({
-      '@type': 'Offer',
-      name: `${service.name}: ${pkg.name}`,
-      description: pkg.points.join(', '),
-      priceSpecification: spec(pkg.price, { monthly: service.period === 'month' }),
-      itemOffered: { '@type': 'Service', name: service.name },
-    })),
-  )
-
-const driftOffers = () =>
-  prices.drift.plans.map((plan) => ({
+  prices.packages.map((p) => ({
     '@type': 'Offer',
-    name: `Hjemmeside, drift: ${plan.name}`,
-    description: [...prices.drift.includedInAll, plan.description].join(', '),
-    priceSpecification: spec(plan.price, { monthly: true }),
-    itemOffered: { '@type': 'Service', name: 'Hjemmeside, drift' },
+    name: `Hjemmeside: ${p.name}`,
+    description: p.points.join(', '),
+    priceSpecification: [spec(p.once, { name: 'Engangspris' }), spec(p.monthly, { monthly: true, name: 'Pr. måned' })],
+    itemOffered: { '@type': 'Service', name: 'Hjemmeside, Google-profil og lokal SEO' },
   }))
 
 /** Forsidens JSON-LD: organisationen, websitet og tilbuddene. Kun forsiden. */
@@ -118,8 +99,7 @@ export const organisationLd = () => ({
       image: `${ORIGIN}/og.jpg`,
       email: contact.email,
       telephone: contact.phoneHref,
-      description: 'Hjemmeside, Google-profil, booking og korte videoer til restauranter og caféer. Base i Aarhusområdet.',
-      founder: { '@type': 'Person', name: contact.name },
+      description: 'Hjemmeside, Google-profil, lokal SEO og systemer til restauranter og caféer. Base i Aarhusområdet.',
       areaServed: [
         { '@type': 'City', name: 'Aarhus' },
         { '@type': 'Country', name: 'Danmark' },
@@ -132,7 +112,7 @@ export const organisationLd = () => ({
         telephone: contact.phoneHref,
         availableLanguage: 'da',
       },
-      makesOffer: [...packageOffers(), ...driftOffers()],
+      makesOffer: packageOffers(),
     },
     {
       '@type': 'WebSite',

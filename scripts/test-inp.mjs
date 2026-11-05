@@ -19,6 +19,7 @@ await page.emulateCPUThrottling(4)
 await page.goto(SITE + '/', { waitUntil: 'networkidle0' })
 await wait(600)
 
+async function arm() {
 await page.evaluate(() => {
   window.__inp = []
   new PerformanceObserver((list) => {
@@ -34,6 +35,9 @@ await page.evaluate(() => {
   document.querySelector('#prisberegner').scrollIntoView({ behavior: 'instant' })
 })
 await wait(500)
+}
+await arm()
+const all = []
 
 async function tap(text) {
   const box = await page.evaluate((text) => {
@@ -41,7 +45,7 @@ async function tap(text) {
       (b) => ((b.getAttribute('aria-label') ?? '') + ' ' + b.textContent.replace(/\s+/g, ' ')).includes(text) && b.offsetParent !== null && !b.closest('[inert]'),
     )
     if (!el) return null
-    el.scrollIntoView({ block: 'nearest', behavior: 'instant' })
+    el.scrollIntoView({ block: 'center', behavior: 'instant' })
     const r = el.getBoundingClientRect()
     return { x: r.left + r.width / 2, y: r.top + r.height / 2 }
   }, text)
@@ -50,8 +54,8 @@ async function tap(text) {
   await wait(700)
 }
 
-// Et realistisk forløb: vælg ydelser, pakker, drift, tilvalg, åbn og luk kvitteringen, guidet hjælp.
-for (const t of ['Hjemmeside', 'Marketing', 'Booking & Google', 'Booking & Google', 'Næste: Vælg pakke', 'Start', 'Fuld fart', 'Næste: Marketing', 'Fuld fart', 'Næste: Driftsplan', 'Ekstra', 'Egen hosting', 'Næste: Tilvalg', 'Skift til Fuld fart', 'Se kvittering', 'Luk', 'Se opsummering', 'Ret mine valg']) {
+// Et realistisk forløb: vælg pakke, systemer, tilvalg og intropris, åbn og luk kvitteringen, guidet hjælp.
+for (const t of ['Start', 'Max', 'Anbefalet', 'Næste: Vælg systemer', 'Bordbooking', 'Gavekort', 'Gavekort', 'Flere skræddersyede systemer', 'Færre skræddersyede systemer', 'Næste: Tilvalg', 'Engelsk version', 'Introduktionspris', 'Se kvittering', 'Luk', 'Se opsummering']) {
   try {
     await tap(t)
   } catch (e) {
@@ -59,7 +63,12 @@ for (const t of ['Hjemmeside', 'Marketing', 'Booking & Google', 'Booking & Googl
   }
 }
 await page.evaluate(() => document.querySelector('#prisberegner').scrollIntoView({ behavior: 'instant' }))
-for (const t of ['Tilbage', 'Tilbage', 'Tilbage', 'Tilbage', 'Hjælp mig med at vælge', 'Nej', 'Bordbestillinger', 'Bliv fundet på Google', 'Næste spørgsmål', 'Lidt', 'Se opsummering']) {
+// Guidet hjælp på en frisk side.
+all.push(...(await page.evaluate(() => window.__inp)))
+await page.goto(SITE + '/', { waitUntil: 'networkidle0' })
+await wait(600)
+await arm()
+for (const t of ['Hjælp mig med at vælge', 'Op til 6 sider', 'Bordbooking', 'Gavekort', 'Næste spørgsmål', 'Nej', 'Se opsummering']) {
   try {
     await tap(t)
   } catch (e) {
@@ -67,7 +76,7 @@ for (const t of ['Tilbage', 'Tilbage', 'Tilbage', 'Tilbage', 'Hjælp mig med at 
   }
 }
 
-const entries = await page.evaluate(() => window.__inp)
+const entries = all.concat(await page.evaluate(() => window.__inp))
 // Pr. interaktion: den længste hændelse (pointerdown/up/click hører til samme tryk).
 const worst = entries.sort((a, b) => b.duration - a.duration)
 const inp = worst.length > 1 ? worst[Math.min(worst.length - 1, Math.floor(worst.length * 0.02))].duration : (worst[0]?.duration ?? 0)
