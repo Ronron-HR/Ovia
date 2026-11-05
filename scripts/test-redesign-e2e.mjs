@@ -279,6 +279,118 @@ for (const [w, h, mobile] of [
   }
 }
 
+/* ------------------------------------------------------------- fjernelse */
+// Fjernelse skal være roligt: intet flyvende beløb, "−5.000 kr./md." kort i #7A766F, totalen tæller ned, linjen folder sammen,
+// knappen går tilbage, og når alt er fjernet står der en rolig tom tilstand i stedet for "0 kr.".
+for (const [label, w, h, mobile] of [
+  ['Mobil 390×844', 390, 844, true],
+  ['Desktop 1440×900', 1440, 900, false],
+]) {
+  console.log(`\nFjernelse, ${label}`)
+  const { page, errors } = await open(w, h, mobile)
+  await page.evaluate(() => document.querySelector('#prisberegner').scrollIntoView({ behavior: 'instant' }))
+  await press(page, 'Hjemmeside')
+  await press(page, 'Marketing')
+  await wait(900)
+  const scope = mobile ? '#prisberegner [role="button"][aria-label*="kvittering"]' : '#prisberegner aside'
+  let t = await totals(page, '#prisberegner')
+  check(t[0] === '8.000' && t[1] === '5.198', `før: 8.000 og 5.198 (${t.slice(0, 2)})`)
+  const widthOf = () => page.$$eval(`${scope} [role="img"][aria-label]`, (els) => els.filter((e) => e.getAttribute('aria-label') === '198' || e.getAttribute('aria-label') === '5.198').map((e) => Math.round(e.getBoundingClientRect().width)).at(-1))
+  const wBefore = await widthOf()
+  // Sampler totalens bredde og antallet af linjer, der er ved at folde sig sammen, hvert 20. ms, så vi ser forløbet og ikke kun slutningen.
+  await page.evaluate((scope) => {
+    window.__samples = []
+    const id = setInterval(() => {
+      const els = [...document.querySelectorAll(scope + ' [role="img"][aria-label]')].filter((e) => ['198', '5.198'].includes(e.getAttribute('aria-label')))
+      window.__samples.push({ w: Math.round(els.at(-1)?.getBoundingClientRect().width ?? 0), ghosts: document.querySelectorAll('#prisberegner [data-exiting]').length })
+    }, 20)
+    setTimeout(() => clearInterval(id), 1400)
+  }, scope)
+  await press(page, 'Marketing')
+  const mid = {
+    fly: await page.evaluate(() => !!document.querySelector('#prisberegner [style*="flyTo"]')),
+    chip: await page.$$eval('#prisberegner .delta-chip', (c) => c.map((x) => x.textContent)),
+    color: await page.$eval('#prisberegner .delta-chip', (c) => getComputedStyle(c).color).catch(() => ''),
+  }
+  await wait(1300)
+  const samples = await page.evaluate(() => window.__samples)
+  const widths = [...new Set(samples.map((x) => x.w))]
+  const after = { width: await widthOf(), ghost: await page.$$eval('#prisberegner [data-exiting]', (g) => g.length) }
+  check(!mid.fly, 'ingen flyvende beløb ved fjernelse')
+  check(mid.chip.some((c) => c.includes('−5.000') && c.includes('kr./md.')), `"−5.000 kr./md." vises kort (${mid.chip})`)
+  check(/rgb\(122, 118, 111\)/.test(mid.color), `chippen er #7A766F (${mid.color})`)
+  check(widths.length >= 3 && widths[0] > after.width && after.width < wBefore, `totalen tæller ned og folder sammen i flere trin (${wBefore} → ${widths.join(', ')} px)`)
+  if (!mobile) check(Math.max(...samples.map((x) => x.ghosts)) > 0, 'linjen er stadig i kvitteringen, mens den folder sammen (exit)')
+  check(after.ghost === 0 || mobile, 'den fjernede linje er væk, når animationen er færdig')
+  t = await totals(page, '#prisberegner')
+  check(t[0] === '8.000' && t[1] === '198', `efter: 8.000 og 198 (${t.slice(0, 2)})`)
+  check(!/[?&]m=/.test(page.url()) && /[?&]w=1/.test(page.url()), `del-linket har ikke længere m (${page.url().replace(SITE, '')})`)
+  check(await page.$eval('#prisberegner [aria-pressed]', () => true), 'knapperne har aria-pressed')
+  const pressed = await page.$$eval('#prisberegner button[aria-pressed]', (b) => b.map((x) => x.getAttribute('aria-pressed')))
+  check(pressed.filter((p) => p === 'true').length === 1, `kun Hjemmeside er stadig valgt (${pressed})`)
+  // Sænk pakken og fjern et tilvalg: også her intet flyvende beløb, og totalen falder.
+  await press(page, mobile ? 'Næste: Vælg pakke' : 'Næste: Vælg pakker')
+  await press(page, 'Start')
+  await wait(500)
+  t = await totals(page, '#prisberegner')
+  check(t[0] === '5.000', `pakken sænket til Start: 5.000 (${t[0]})`)
+  check(!(await page.evaluate(() => !!document.querySelector('#prisberegner [style*="flyTo"]'))), 'ingen flyvende beløb, når en pakke sænkes')
+  // Fjern alt: den rolige tomme tilstand.
+  await page.goto(`${SITE}/?w=1`, { waitUntil: 'networkidle0' })
+  await page.evaluate(() => document.querySelector('#prisberegner').scrollIntoView({ behavior: 'instant' }))
+  await wait(400)
+  await press(page, 'Hjemmeside')
+  await wait(1300)
+  const empty = await page.evaluate(() => {
+    const root = document.querySelector('#prisberegner')
+    const vis = (el) => el && getComputedStyle(el).visibility === 'visible' && Number(getComputedStyle(el).opacity) > 0.9
+    const msg = [...root.querySelectorAll('.swap-in')].find((e) => e.textContent.includes('Vælg en ydelse for at se prisen'))
+    const off = [...root.querySelectorAll('.swap-out')].filter((e) => e.querySelector('[role="img"]'))
+    return { msg: vis(msg), totalsHidden: off.length > 0 && off.every((e) => !vis(e)), step: root.textContent.includes('Trin 1 af 4') || root.textContent.includes('Prisberegner'), url: location.search }
+  })
+  check(empty.msg, '"Vælg en ydelse for at se prisen" vises, når alt er fjernet')
+  check(empty.totalsHidden, 'totalerne ("0 kr.") er skjult i den tomme tilstand')
+  check(empty.step && empty.url === '', `tilbage på trin 1 med tomt del-link (${empty.url})`)
+  check(errors.length === 0, `ingen konsolfejl ${errors.join(' | ')}`)
+  await page.close()
+}
+
+// Fjernelse midt i flowet (mobil): fjern Hjemmeside fra trin 1 efter at have været på trin 3. Trinene hopper ikke forkert, og pakkerne nulstilles.
+{
+  console.log('\nFjernelse midt i flowet (mobil)')
+  const { page } = await open(390, 844, true)
+  await page.evaluate(() => document.querySelector('#prisberegner').scrollIntoView({ behavior: 'instant' }))
+  await press(page, 'Hjemmeside')
+  await press(page, 'Marketing')
+  await press(page, 'Næste: Vælg pakke')
+  await press(page, 'Fuld fart')
+  await press(page, 'Næste: Marketing')
+  await press(page, 'Fuld fart')
+  await press(page, 'Næste: Driftsplan')
+  await press(page, 'Ekstra')
+  await wait(600)
+  check(/d=e/.test(page.url()) && /w=2/.test(page.url()) && /m=2/.test(page.url()), `valg: Fuld fart, Fuld fart, Ekstra (${page.url().replace(SITE, '')})`)
+  // Tilbage til trin 1 og fjern Hjemmeside.
+  for (let i = 0; i < 6; i++) {
+    const back = await page.$('#prisberegner button[aria-label="Tilbage"]')
+    if (!back) break
+    await back.click()
+    await wait(350)
+  }
+  check((await page.$eval('#prisberegner', (e) => e.textContent)).includes('Trin 1 af 4'), 'tilbage på trin 1')
+  await press(page, 'Hjemmeside')
+  await wait(900)
+  check(!/[?&](w|d|bk|x)=/.test(page.url()) && /m=2/.test(page.url()), `Hjemmeside og alt, der hører til den, er nulstillet i del-linket (${page.url().replace(SITE, '')})`)
+  const nxt = await page.$$eval('#prisberegner button', (b) => b.map((x) => x.textContent).find((x) => x.startsWith('Næste')))
+  check(nxt === 'Næste: Vælg pakke', `næste skridt er Marketings pakke (${nxt})`)
+  await press(page, 'Næste: Vælg pakke')
+  const head = await page.$eval('#prisberegner', (e) => e.textContent)
+  check(head.includes('Trin 2 af 4 · Marketing') && !head.includes('1/'), 'trin 2 viser kun Marketing (ikke den fjernede ydelse)')
+  await press(page, 'Se opsummering')
+  check((await page.$eval('#prisberegner', (e) => e.textContent)).includes('Din pris er klar.'), 'uden Hjemmeside går man direkte til opsummeringen (ingen drift)')
+  await page.close()
+}
+
 /* ------------------------------------------------------ reduceret bevægelse */
 {
   console.log('\nReduceret bevægelse')
@@ -287,6 +399,9 @@ for (const [w, h, mobile] of [
   await press(page, 'Hjemmeside')
   await press(page, 'Marketing')
   check(!(await page.evaluate(() => !!document.querySelector('#prisberegner [style*="flyTo"]'))), 'ingen flyvende beløb')
+  await press(page, 'Marketing')
+  await wait(150)
+  check((await page.$$eval('#prisberegner .delta-chip', (c) => c.length)) === 0, 'reduceret bevægelse: ingen "−5.000 kr./md."-chip ved fjernelse')
   const dur = await page.evaluate(() => {
     const col = document.querySelector('#prisberegner [role="img"][aria-label] span span')
     return getComputedStyle(col).transitionDuration

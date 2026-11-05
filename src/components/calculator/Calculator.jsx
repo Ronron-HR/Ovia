@@ -50,6 +50,7 @@ export default function Calculator() {
   const tap = useRef(null)
   const prev = useRef({ o: receipt.o, m: receipt.m })
   const [fly, setFly] = useState(null)
+  const [delta, setDelta] = useState(null)
   const delayTimer = useRef(null)
 
   // Trykpunktet noteres, så beløbet kan flyve derfra. Ingen layoutmåling og ingen state her: et tryk må ikke koste en ekstra render.
@@ -59,7 +60,8 @@ export default function Calculator() {
     tap.current = { cx: e.clientX, cy: e.clientY, t: Date.now() }
     // Bundbarens tælleværk venter 420 ms på det flyvende beløb (CSS-variabel, se Odometer i parts.jsx). Variablen sættes kun på
     // bundbaren: på roden ville den gøre hele beregnerens stil ugyldig ved hvert tryk.
-    bar.style.setProperty('--odo-delay', '420ms')
+    // Ved fjernelse (knapper med data-removal) er der intet flyvende beløb at vente på: tælleværket går i gang med det samme.
+    bar.style.setProperty('--odo-delay', e.target.closest?.('[data-removal]') ? '0ms' : '420ms')
     clearTimeout(delayTimer.current)
     delayTimer.current = setTimeout(() => bar.style.setProperty('--odo-delay', '0ms'), 800)
   }
@@ -68,12 +70,28 @@ export default function Calculator() {
     const dO = receipt.o - prev.current.o
     const dM = receipt.m - prev.current.m
     prev.current = { o: receipt.o, m: receipt.m }
-    if (!isMobile || !tap.current || Date.now() - tap.current.t > 700 || (!dO && !dM) || reducedMotion()) return
+    if (!dO && !dM) return
+    let timer
+    let frame
+
+    // Fjernelse (intet stiger): ingen flyvende beløb. I stedet står "−5.000 kr./md." kort ved totalen i #7A766F. Intet ved reduced motion.
+    if (dO <= 0 && dM <= 0) {
+      if (reducedMotion()) return
+      frame = requestAnimationFrame(() => {
+        setDelta({ id: Date.now(), o: dO, m: dM })
+        timer = setTimeout(() => setDelta(null), 1500)
+      })
+      return () => {
+        cancelAnimationFrame(frame)
+        clearTimeout(timer)
+      }
+    }
+
+    if (!isMobile || !tap.current || Date.now() - tap.current.t > 700 || reducedMotion()) return
     const { cx, cy } = tap.current
     tap.current = { ...tap.current, t: 0 }
-    let timer
     // Målingen venter til efter billedet er malet, så den ikke forlænger selve trykket.
-    const frame = requestAnimationFrame(() => {
+    frame = requestAnimationFrame(() => {
       const root = rootRef.current
       const bar = barRef.current
       if (!root || !bar) return
@@ -104,12 +122,12 @@ export default function Calculator() {
         style={isMobile ? { height: 'calc(100svh - 72px)', minHeight: 540 } : undefined}
       >
         {isMobile ? (
-          <Mobile calc={calc} barRef={barRef} fly={fly ? <FlyingAmount fly={fly} /> : null} />
+          <Mobile calc={{ ...calc, delta }} barRef={barRef} fly={fly ? <FlyingAmount fly={fly} /> : null} />
         ) : (
-          <Desktop calc={calc} />
+          <Desktop calc={{ ...calc, delta }} />
         )}
         <p className="sr-only" aria-live="polite" aria-atomic="true">
-          {`Engang ${formatKr(receipt.o)}. Pr. måned ${formatKr(receipt.m, true)}. Alle priser er ekskl. moms.`}
+          {calc.any ? `Engang ${formatKr(receipt.o)}. Pr. måned ${formatKr(receipt.m, true)}. Alle priser er ekskl. moms.` : 'Ingen valg endnu. Vælg en ydelse for at se prisen.'}
         </p>
       </div>
       <noscript>

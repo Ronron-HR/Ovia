@@ -32,27 +32,30 @@ const MIME = { avif: 'image/avif', webp: 'image/webp' }
  * gray    sort/hvid via filter:grayscale(1) (portræt)
  * eager   hentes med det samme (kun hvis billedet er sidens LCP-element)
  * width / height   billedets egne mål, så browseren kender formatet, før filen er hentet
+ * fallback  sti i public/ (fx /demoer/…webp), der vises, indtil pladsens egen fil findes
  */
-export default function ImageSlot({ name, ratio, alt = '', gray = false, eager = false, width, height, className = '', fill = 'bg-paper' }) {
+export default function ImageSlot({ name, ratio, alt = '', gray = false, eager = false, width, height, fallback, className = '', fill = 'bg-paper' }) {
   const formats = formatsFor(name)
-  const fallback = formats.jpg ?? formats.png ?? formats.webp ?? formats.avif
+  const original = formats.jpg ?? formats.png ?? formats.webp ?? formats.avif
+  const src = original ?? fallback
   const style = gray ? { filter: 'grayscale(1)' } : undefined
   return (
     <div className={`relative overflow-hidden ${fill} ${className}`} style={{ aspectRatio: ratio }} data-image-slot={name}>
-      {fallback ? (
+      {src ? (
         <picture>
-          {['avif', 'webp'].filter((f) => formats[f] && formats[f] !== fallback).map((f) => (
-            <source key={f} type={MIME[f]} srcSet={formats[f]} />
-          ))}
+          {original &&
+            ['avif', 'webp']
+              .filter((f) => formats[f] && formats[f] !== original)
+              .map((f) => <source key={f} type={MIME[f]} srcSet={formats[f]} />)}
           <img
-            src={fallback}
+            src={src}
             alt={alt}
             width={width}
             height={height}
             loading={eager ? 'eager' : 'lazy'}
             fetchPriority={eager ? 'high' : undefined}
             decoding="async"
-            className="absolute inset-0 h-full w-full object-cover"
+            className="absolute inset-0 h-full w-full object-cover object-top"
             style={style}
           />
         </picture>

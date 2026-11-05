@@ -3,7 +3,8 @@ import prices from '../../data/prices.json'
 import { driftChoices, helpQuestions, serviceMeta, SERVICE_KEYS, stepLabels } from '../../data/calculator.js'
 import { formatKr } from '../../lib/calculate.js'
 import InquirySlot from './InquirySlot.jsx'
-import { Check, ReceiptLine, TERMS_SHORT, Total } from './parts.jsx'
+import { Check, DeltaChip, ReceiptLine, TERMS_SHORT, Total } from './parts.jsx'
+import { useExitList } from './useExitList.js'
 
 const NB = ' '
 const drift = (key) => prices.drift.plans.find((p) => p.key === key)
@@ -336,8 +337,28 @@ function HelpResult({ calc }) {
   )
 }
 
+/** En sektion i kvitteringen (Engang / Pr. måned): linjerne folder sig sammen, når de fjernes, og sektionen med dem. */
+function ReceiptSection({ title, lines, terms }) {
+  const rows = useExitList(lines, (l) => l.key + l.pkg)
+  return (
+    <div className="fold" data-exiting={lines.length === 0 ? '' : undefined}>
+      <div>
+        <div className="pb-7">
+          <span className="text-[13px] text-on-ink-2">{title}</span>
+          {rows.map(({ item: l, exiting }) => (
+            <div key={l.key + l.pkg} className="fold" data-exiting={exiting ? '' : undefined}>
+              <ReceiptLine line={l} animate />
+            </div>
+          ))}
+          {terms}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function Aside({ calc }) {
-  const { state, dispatch, receipt, any, hrefs } = calc
+  const { state, dispatch, receipt, any, hrefs, delta } = calc
   const [copied, setCopied] = useState(false)
   const web = state.selection.services.web !== null
   const showTerms = web && state.selection.drift !== 'egen'
@@ -357,36 +378,35 @@ function Aside({ calc }) {
       style={{ height: 'calc(100svh - 84px)', minHeight: 560 }}
     >
       <span className="text-[15px] font-semibold">Din kvittering</span>
-      <div className="mt-5 min-h-0 flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
-        {!any && <p className="m-0 text-[15px] leading-normal text-on-ink-2">Vælg en ydelse, så står prisen her.</p>}
-        {receipt.once.length > 0 && (
-          <div className="mb-7">
-            <span className="text-[13px] text-on-ink-2">Engang</span>
-            {receipt.once.map((l) => (
-              <ReceiptLine key={l.key + l.pkg} line={l} animate />
-            ))}
-          </div>
-        )}
-        {receipt.month.length > 0 && (
-          <div>
-            <span className="text-[13px] text-on-ink-2">Pr. måned</span>
-            {receipt.month.map((l) => (
-              <ReceiptLine key={l.key + l.pkg} line={l} animate />
-            ))}
-            {showTerms && <p className="mt-3 text-[13px] leading-normal text-on-ink-2">{TERMS_SHORT}</p>}
-          </div>
-        )}
+      <div className="relative mt-5 min-h-0 flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+        <p className="swap-in absolute top-0 left-0 m-0 text-[15px] leading-normal text-on-ink-2" data-on={!any ? '' : undefined}>
+          Vælg en ydelse for at se prisen.
+        </p>
+        <ReceiptSection title="Engang" lines={receipt.once} />
+        <ReceiptSection
+          title="Pr. måned"
+          lines={receipt.month}
+          terms={
+            <div className="fold -mt-0" data-exiting={showTerms ? undefined : ''}>
+              <p className="m-0 pt-3 text-[13px] leading-normal text-on-ink-2">{TERMS_SHORT}</p>
+            </div>
+          }
+        />
       </div>
       <div className="mt-5 flex flex-col gap-4 pt-6">
-        <div className="flex items-end justify-between gap-3">
-          <span className="pb-[6px] text-[13px] text-on-ink-2">Engang</span>
-          <Total value={receipt.o} unit="kr." size={48} unitSize={15} />
+        <div className="swap-out flex flex-col gap-4" data-off={!any ? '' : undefined} aria-hidden={!any}>
+          <div className="relative flex items-end justify-between gap-3">
+            <span className="pb-[6px] text-[13px] text-on-ink-2">Engang</span>
+            {delta?.o < 0 && <DeltaChip key={delta.id} amount={delta.o} className="-top-[18px] right-0" />}
+            <Total value={receipt.o} unit="kr." size={48} unitSize={15} />
+          </div>
+          <div className="relative flex items-end justify-between gap-3">
+            <span className="pb-[6px] text-[13px] text-on-ink-2">Pr. måned</span>
+            {delta?.m < 0 && <DeltaChip key={delta.id} amount={delta.m} monthly className="-top-[18px] right-0" />}
+            <Total value={receipt.m} unit="kr./md." size={48} unitSize={15} />
+          </div>
+          <span className="text-[13px] text-on-ink-2">Alle priser er ekskl. moms</span>
         </div>
-        <div className="flex items-end justify-between gap-3">
-          <span className="pb-[6px] text-[13px] text-on-ink-2">Pr. måned</span>
-          <Total value={receipt.m} unit="kr./md." size={48} unitSize={15} />
-        </div>
-        <span className="text-[13px] text-on-ink-2">Alle priser er ekskl. moms</span>
         {state.step !== 4 ? (
           <button
             type="button"

@@ -46,7 +46,9 @@ export function reducer(state, action) {
     case 'setService': {
       const services = { ...sel.services, [action.key]: action.value }
       const extraPages = action.key === 'web' && action.value !== 2 ? 0 : sel.extraPages
-      return sane({ ...state, selection: { ...sel, services, extraPages } })
+      // Fjernes Hjemmeside, nulstilles det, der hører til den (drift, booking-tilvalg, ekstra sider), så et nyt valg starter forfra.
+      const reset = action.key === 'web' && action.value === null ? { drift: 'basis', bookingAddon: false } : {}
+      return sane({ ...state, selection: { ...sel, services, extraPages, ...reset } })
     }
     case 'toggleService':
       return reducer(state, { type: 'setService', key: action.key, value: sel.services[action.key] === null ? 1 : null })

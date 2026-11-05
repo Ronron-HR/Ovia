@@ -261,6 +261,91 @@
 }
 
 /* Animationer, der bruges som klasser. Nøgleframes ligger i styles/motion.css. */
+/* Fjernelse: elementet folder sig sammen (grid 1fr → 0fr), glider lidt til siden og toner ud. Ingen overshoot. */
+.fold {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition:
+    grid-template-rows 320ms var(--ease-bar),
+    opacity 220ms ease-out,
+    transform 320ms var(--ease-bar);
+}
+.fold > * {
+  min-height: 0;
+  overflow: hidden;
+}
+.fold[data-exiting] {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transform: translateX(24px);
+  pointer-events: none;
+}
+/* Samme, men i bredden (bundbarens korte linjer). */
+.fold-x {
+  display: inline-grid;
+  grid-template-columns: 1fr;
+  transition:
+    grid-template-columns 320ms var(--ease-bar),
+    opacity 220ms ease-out;
+}
+.fold-x > * {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.fold-x[data-exiting] {
+  grid-template-columns: 0fr;
+  opacity: 0;
+}
+
+/* Tom tilstand: totalerne tæller ned og toner så ud (swap-out), og beskeden toner ind bagefter (swap-in). */
+.swap-out {
+  transition: opacity 220ms ease-out;
+}
+.swap-out[data-off] {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 200ms ease-out 360ms,
+    visibility 0s linear 560ms;
+}
+.swap-in {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 120ms ease-out,
+    visibility 0s linear 120ms;
+}
+.swap-in[data-on] {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 240ms ease-out 520ms,
+    visibility 0s linear 520ms;
+}
+
+/* "−5.000 kr./md." ved fjernelse: ind, stå, ud. */
+@keyframes deltaChip {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  14% {
+    opacity: 1;
+    transform: none;
+  }
+  72% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+}
+.delta-chip {
+  animation: deltaChip 1400ms ease-out both;
+}
+
 .anim-step {
   animation: stepIn 520ms var(--spring-step) both;
 }

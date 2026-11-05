@@ -3,10 +3,14 @@ import prices from '../../data/prices.json'
 import { driftChoices, helpQuestions, serviceMeta, SERVICE_KEYS, shortPoints } from '../../data/calculator.js'
 import { formatKr } from '../../lib/calculate.js'
 import InquirySlot from './InquirySlot.jsx'
-import { Check, ReceiptLine, TERMS_SHORT, Total } from './parts.jsx'
+import { Check, DeltaChip, ReceiptLine, TERMS_SHORT, Total } from './parts.jsx'
+import { useExitList } from './useExitList.js'
 
 const NB = ' '
 const heading = 'font-[family-name:var(--font-display)] font-bold [font-stretch:125%]'
+/** Billigere månedsplan end den valgte (egen hosting er et engangsbeløb og tæller ikke som billigere). */
+const DRIFT_ORDER = ['basis', 'plus', 'ekstra']
+const cheaper = (key, cur) => DRIFT_ORDER.includes(key) && DRIFT_ORDER.includes(cur) && DRIFT_ORDER.indexOf(key) < DRIFT_ORDER.indexOf(cur)
 const drift = (key) => prices.drift.plans.find((p) => p.key === key)
 const driftName = (c) => c.name ?? drift(c.key).name
 const driftPrice = (c) => (c.key === 'egen' ? `+${formatKr(prices.addons.ownHosting.price)} engang` : formatKr(drift(c.key).price, true))
@@ -47,6 +51,7 @@ function Services({ calc }) {
               key={key}
               type="button"
               aria-pressed={sel}
+              data-removal={sel ? '' : undefined}
               onClick={() => dispatch({ type: 'toggleService', key })}
               className={`${choice(sel)} flex items-start gap-[14px] px-4 py-[14px] [--press:.98]`}
             >
@@ -88,6 +93,7 @@ function Packages({ calc }) {
             key={p.key}
             type="button"
             aria-pressed={cur === i}
+            data-removal={i < cur ? '' : undefined}
             onClick={() => dispatch({ type: 'setService', key, value: i })}
             className={`${choice(cur === i)} flex flex-col gap-2 px-4 py-[14px] [--press:.98]`}
           >
@@ -123,6 +129,7 @@ function Drift({ calc }) {
             key={c.key}
             type="button"
             aria-pressed={cur === c.key}
+            data-removal={cheaper(c.key, cur) ? '' : undefined}
             onClick={() => dispatch({ type: 'setDrift', drift: c.key })}
             className={`${choice(cur === c.key)} flex flex-col gap-1 px-4 py-[13px] [--press:.98]`}
           >
@@ -153,6 +160,7 @@ function Addons({ calc }) {
         <button
           type="button"
           aria-pressed={on}
+          data-removal={on ? '' : undefined}
           disabled={included}
           onClick={() => dispatch({ type: 'toggleBooking' })}
           className={`${choice(on)} flex items-center gap-[14px] p-4 [--press:.98]`}
@@ -179,6 +187,7 @@ function Addons({ calc }) {
               <button
                 type="button"
                 aria-label="Færre undersider"
+                data-removal=""
                 disabled={sel.extraPages <= 0}
                 onClick={() => dispatch({ type: 'setExtra', value: sel.extraPages - 1 })}
                 className="press text-xl [--press:.88] disabled:opacity-40"
@@ -318,7 +327,7 @@ function HelpResult({ calc }) {
  * Enter/Space åbner arket, som lukkes med træk ned, bagtæppe, Luk eller Escape.
  */
 function BarAndSheet({ calc, barRef, barVisible }) {
-  const { state, dispatch, receipt, any, hrefs } = calc
+  const { state, dispatch, receipt, any, hrefs, delta } = calc
   const { sheet } = state
   const [drag, setDrag] = useState({ dy: 0, active: false, from: false })
   const ds = useRef(null)
@@ -369,6 +378,7 @@ function BarAndSheet({ calc, barRef, barVisible }) {
       ? `translateY(calc(100% + ${Math.min(0, drag.dy)}px))`
       : 'translateY(100%)'
   const all = receipt.all
+  const shortRows = useExitList(all, (l) => l.key + l.pkg)
   const barKey = (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault()
@@ -396,16 +406,33 @@ function BarAndSheet({ calc, barRef, barVisible }) {
           <span aria-hidden="true" className="mx-auto mb-2 block h-1 w-9 bg-muted" />
           <div className="flex items-baseline gap-3">
             {all.length > 0 && <span className="flex-none text-[13px] font-semibold whitespace-nowrap">{all.length} valg</span>}
-            <span className="min-w-0 flex-1 truncate text-[13px] text-on-ink-2">{all.map((l) => l.short).join(' · ') || 'Ingen valg endnu'}</span>
+            <span className="relative block min-w-0 flex-1 overflow-hidden text-[13px] leading-[1.35] text-ellipsis whitespace-nowrap text-on-ink-2">
+              <span className="swap-in absolute top-0 left-0" data-on={any ? undefined : ''}>
+                Vælg en ydelse for at se prisen
+              </span>
+              <span className="swap-out block overflow-hidden text-ellipsis" data-off={any ? undefined : ''}>
+                {shortRows.map(({ item: l, exiting }, i) => (
+                  <span key={l.key + l.pkg} className="fold-x align-top" data-exiting={exiting ? '' : undefined}>
+                    <span>
+                      {i > 0 ? ' · ' : ''}
+                      {l.short}
+                    </span>
+                  </span>
+                ))}
+                {!any && ' '}
+              </span>
+            </span>
             <span className="flex-none text-[13px] font-semibold whitespace-nowrap">{sheet ? 'Luk kvittering ↓' : 'Se kvittering ↑'}</span>
           </div>
-          <div className="mt-[6px] grid items-end gap-[10px]" style={{ gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) auto' }}>
-            <div className="flex flex-col gap-[3px]">
+          <div className="swap-out mt-[6px] grid items-end gap-[10px]" data-off={any ? undefined : ''} style={{ gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) auto' }}>
+            <div className="relative flex flex-col gap-[3px]">
               <span className="text-xs text-on-ink-2">Engang</span>
+              {delta?.o < 0 && <DeltaChip key={delta.id} amount={delta.o} className="top-0 right-0" />}
               <Total value={receipt.o} unit="kr." size={22} unitSize={12} gap={4} unitPad={1} />
             </div>
-            <div className="flex flex-col gap-[3px]">
+            <div className="relative flex flex-col gap-[3px]">
               <span className="text-xs text-on-ink-2">Pr. måned</span>
+              {delta?.m < 0 && <DeltaChip key={delta.id} amount={delta.m} monthly className="top-0 right-0" />}
               <Total value={receipt.m} unit="kr./md." size={22} unitSize={12} gap={4} unitPad={1} />
             </div>
             <span className="text-right text-[11px] leading-tight text-on-ink-2">
@@ -459,7 +486,7 @@ function BarAndSheet({ calc, barRef, barVisible }) {
           </button>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-5" style={{ scrollbarWidth: 'none' }}>
-          {!any && <p className="mt-2 text-[15px] text-on-ink-2">Ingen valg endnu.</p>}
+          {!any && <p className="mt-2 text-[15px] text-on-ink-2">Vælg en ydelse for at se prisen.</p>}
           {all.map((l) => (
             <ReceiptLine key={l.key + l.pkg} line={l} priceSize={13} />
           ))}
