@@ -9,7 +9,7 @@ const heading = 'font-[family-name:var(--font-display)] font-bold [font-stretch:
 
 const jump = [
   ['Pakker', '#pakker'],
-  ['Tilvalg', '#tilvalg'],
+  ['Ekstra ting', '#ekstra'],
   ['Vilkår', '#vilkaar'],
 ]
 
@@ -87,15 +87,15 @@ export default function Priser() {
             </div>
           ))}
         </div>
-        <p className="mt-[14px] mb-0 text-sm text-muted-2">Engangsprisen betales for opsætning og opbygning, månedsprisen dækker hosting, domæne, backup og det, pakken ellers indeholder.</p>
+        <p className="mt-[14px] mb-0 text-sm text-muted-2">Engangsbeløbet betales én gang for at bygge siden. Den månedlige pris dækker drift, domæne, sikkerhedskopi og det, pakken ellers indeholder.</p>
         {intro && (
           <div className="mt-6 bg-surface p-5 md:p-6">
             <h3 className="text-xl tracking-[-0.02em]">
               Introduktionspris: {Math.round(prices.intro.discount * 100)}
-              {NBSP}% på engangsprisen
+              {NBSP}% rabat på engangsprisen
             </h3>
             <p className="mt-2 mb-0 max-w-[60ch] text-[15px] leading-normal">
-              De første {prices.intro.total} kunder, mod at vi må vise siden som case. {slotsText()}. Månedsprisen og tilvalg er uden rabat. Intropriserne:{' '}
+              De første {prices.intro.total} kunder, hvis vi må vise jeres side som eksempel. {slotsText()}. Rabatten gælder ikke den månedlige pris eller ekstra ting. Intropriserne:{' '}
               {prices.packages.map((p, i) => (
                 <span key={p.key}>
                   {i ? ', ' : ''}
@@ -108,9 +108,9 @@ export default function Priser() {
         )}
       </section>
 
-      <section id="tilvalg" aria-label="Tilvalg og vilkår" className="mx-auto grid max-w-[1440px] scroll-mt-20 gap-7 section-pad px-5 md:scroll-mt-[152px] md:grid-cols-2 md:gap-14 md:px-14">
+      <section id="ekstra" aria-label="Ekstra ting og vilkår" className="mx-auto grid max-w-[1440px] scroll-mt-20 gap-7 section-pad px-5 md:scroll-mt-[152px] md:grid-cols-2 md:gap-14 md:px-14">
         <div>
-          <h2 className="display t-h2s mb-4">Tilvalg</h2>
+          <h2 className="display t-h2s mb-4">Ekstra ting</h2>
           {addonRows.map((r) => {
             const a = prices.addons[r.key]
             return (

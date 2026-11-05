@@ -9,8 +9,8 @@ import { useExitList } from './useExitList.js'
 
 const heading = 'font-[family-name:var(--font-display)] font-bold [font-stretch:125%]'
 
-/** Valgflade: mørk når valgt, lys ellers. Hele fladen er en knap (≥ 48 px). */
-const choice = (on) => `press w-full text-left min-h-12 ${on ? 'bg-ink text-paper' : 'bg-surface text-ink'}`
+/** Valgflade: mørk når valgt, lys med tydelig ramme ellers (så den ser trykbar ud). Hele fladen er en knap (≥ 48 px). */
+const choice = (on) => `press w-full text-left min-h-12 border-2 border-ink ${on ? 'bg-ink text-paper' : 'bg-paper text-ink'}`
 
 /** Hvad et ekstra system koster oven i valget nu: "Indgår" (der er plads i pakken) eller "+2.000 kr. + 99 kr./md.". */
 const extraText = (c) => (!c ? '' : c.once === 0 && c.monthly === 0 ? 'Indgår' : '+' + priceText({ once: c.once, monthly: c.monthly }))
@@ -43,7 +43,8 @@ function Packages({ calc }) {
           {state.notice}
         </p>
       )}
-      <div className="mt-3 flex flex-col gap-2" role="group" aria-label="Vælg pakke">
+      <p className="mt-3 mb-0 text-[15px] leading-normal">Tryk på den pakke, der passer bedst. I kan altid gå tilbage og ændre.</p>
+      <div className="mt-3 flex flex-col gap-3" role="group" aria-label="Vælg pakke">
         {prices.packages.map((p, i) => {
           const on = sel.pkg === i
           return (
@@ -88,15 +89,16 @@ function Systems({ calc }) {
   const nextCustom = nextSystemCost(sel, 'custom')
   const intro =
     pkg.slots === 0
-      ? `${pkg.name} har ingen systemer med. Hvert system lægges til som tilvalg.`
+      ? `${pkg.name} har ingen funktioner med. Hver funktion, I vælger, lægges til som ekstra.`
       : pkg.customSlots
-        ? `${pkg.name} har ${pkg.slots} systemer med, og ét af dem kan være skræddersyet. Flere lægges til som tilvalg.`
-        : `${pkg.name} har ${pkg.slots} standardsystem med, efter eget valg. Flere lægges til som tilvalg.`
+        ? `${pkg.name} har ${pkg.slots} funktioner med. Én af dem kan være bygget specielt til jer. Flere lægges til som ekstra.`
+        : `${pkg.name} har ${pkg.slots} funktion med, efter eget valg. Flere lægges til som ekstra.`
   return (
     <div>
-      <StepHead>Systemer</StepHead>
-      <p className="m-0 mb-3 text-[13px] leading-normal text-muted-2">{intro}</p>
-      <div className="flex flex-col gap-2" role="group" aria-label="Standardsystemer">
+      <StepHead>Funktioner</StepHead>
+      <p className="m-0 mb-1 text-[15px] leading-normal">{intro}</p>
+      <p className="m-0 mb-3 text-[15px] leading-normal">Tryk på en funktion for at vælge den. Tryk igen for at fjerne den.</p>
+      <div className="flex flex-col gap-3" role="group" aria-label="Funktioner">
         {prices.systems.standard.map((s) => {
           const on = sel.systems.includes(s.key)
           const line = byKey['sys-' + s.key]
@@ -123,16 +125,16 @@ function Systems({ calc }) {
           <div className="flex flex-col gap-[2px]">
             <span className={`${heading} text-[17px] leading-[1.1] tracking-[-0.015em]`}>{prices.systems.custom.name}</span>
             <span className="text-sm leading-[1.3]">{prices.systems.custom.desc}</span>
-            <span className="price text-[13px] leading-4">{sel.custom < prices.systems.custom.max ? `Næste flow: ${extraText(nextCustom)}` : 'Højeste antal nået'}</span>
+            <span className="price text-[13px] leading-4">{sel.custom < prices.systems.custom.max ? `Næste opgave: ${extraText(nextCustom)}` : 'Højeste antal nået'}</span>
           </div>
-          <div className="grid h-12 self-start bg-paper" style={{ gridTemplateColumns: '48px 56px 48px' }}>
+          <div className="grid h-12 self-start" style={{ gridTemplateColumns: '48px 56px 48px' }}>
             <button
               type="button"
-              aria-label="Færre skræddersyede systemer"
+              aria-label="Fjern én bygget til jer"
               data-removal=""
               disabled={sel.custom <= 0}
               onClick={() => dispatch({ type: 'setCustom', value: sel.custom - 1 })}
-              className="press text-xl [--press:.88] disabled:opacity-40"
+              className="press border-2 border-ink bg-paper text-xl [--press:.88] disabled:opacity-40"
             >
               −
             </button>
@@ -141,10 +143,10 @@ function Systems({ calc }) {
             </span>
             <button
               type="button"
-              aria-label="Flere skræddersyede systemer"
+              aria-label="Tilføj én bygget til jer"
               disabled={sel.custom >= prices.systems.custom.max}
               onClick={() => dispatch({ type: 'setCustom', value: sel.custom + 1 })}
-              className="press text-xl [--press:.88] disabled:opacity-40"
+              className="press border-2 border-ink bg-paper text-xl [--press:.88] disabled:opacity-40"
             >
               +
             </button>
@@ -166,8 +168,9 @@ function Addons({ calc }) {
   const saving = Math.round(pkg.once * prices.intro.discount)
   return (
     <div>
-      <StepHead>Tilvalg</StepHead>
-      <div className="flex flex-col gap-2">
+      <StepHead>Sprog og rabat</StepHead>
+      <p className="m-0 mb-3 text-[15px] leading-normal">Begge dele er valgfrie. Tryk for at vælge, tryk igen for at fjerne.</p>
+      <div className="flex flex-col gap-3">
         {englishIncluded ? (
           <div className="flex items-center gap-3 bg-surface p-4">
             <span className="flex flex-1 flex-col gap-1">
@@ -202,11 +205,11 @@ function Addons({ calc }) {
             className={`${choice(sel.intro)} flex items-start gap-3 p-4 [--press:.98]`}
           >
             <span className="flex flex-1 flex-col gap-1">
-              <span className="text-base font-semibold">Introduktionspris: {Math.round(prices.intro.discount * 100)}&nbsp;% på engangsprisen</span>
+              <span className="text-base font-semibold">Introduktionspris: {Math.round(prices.intro.discount * 100)}&nbsp;% rabat på engangsprisen</span>
               <span className="text-[13px] leading-normal">
-                De første {prices.intro.total} kunder, mod at vi må vise siden som case. {slotsText()}. Månedsprisen og tilvalg er uden rabat.
+                De første {prices.intro.total} kunder får rabat, hvis vi må vise jeres side som eksempel på vores hjemmeside. {slotsText()}. Rabatten gælder ikke den månedlige pris.
               </span>
-              <span className="text-[13px] font-semibold">Ja, I må vise siden som case{sel.intro ? ` · du sparer ${formatKr(saving)}` : ''}</span>
+              <span className="text-[13px] font-semibold">Ja, I må vise siden som case (eksempel){sel.intro ? ` · du sparer ${formatKr(saving)}` : ''}</span>
             </span>
             <Check on={sel.intro} size={24} />
           </button>
@@ -217,7 +220,7 @@ function Addons({ calc }) {
 }
 
 function Summary({ calc }) {
-  const { receipt, hrefs } = calc
+  const { receipt, hrefs, dispatch } = calc
   const [copied, setCopied] = useState(false)
   const copy = () => {
     try {
@@ -239,12 +242,12 @@ function Summary({ calc }) {
         <div className="mt-4 grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-[6px]">
             <span className="text-[13px]">
-              Engang{receipt.introApplied && <s className="ml-2 opacity-70">{formatKr(receipt.onceNormal)}</s>}
+              Én gang{receipt.introApplied && <s className="ml-2 opacity-70">{formatKr(receipt.onceNormal)}</s>}
             </span>
             <Total value={receipt.o} unit="kr." size={28} unitSize={12} gap={5} unitPad={2} />
           </div>
           <div className="flex flex-col gap-[6px]">
-            <span className="text-[13px]">Pr. måned</span>
+            <span className="text-[13px]">Hver måned</span>
             <Total value={receipt.m} unit="kr./md." size={28} unitSize={12} gap={5} unitPad={2} />
           </div>
         </div>
@@ -254,6 +257,9 @@ function Summary({ calc }) {
         <InquirySlot receipt={receipt} hrefs={hrefs} />
       </div>
       <div className="mt-2 flex flex-col gap-2">
+        <button type="button" onClick={() => dispatch({ type: 'mBack' })} className="press min-h-12 w-full border-2 border-ink bg-paper px-4 text-[15px] font-medium [--press:.98]">
+          ← Tilbage og ret mine valg
+        </button>
         <button type="button" onClick={copy} className="min-h-12 text-[15px] underline underline-offset-4">
           {copied ? 'Link kopieret' : 'Kopiér link til min pris'}
         </button>
@@ -271,7 +277,7 @@ function HelpQuestion({ calc }) {
   return (
     <div>
       <h3 className="mt-2 mb-5 text-[clamp(24px,7.2vw,32px)] leading-[1.05] tracking-[-0.03em]">{helpQuestions[q].title}</h3>
-      <div className="flex flex-col gap-2" role="group" aria-label={helpQuestions[q].title}>
+      <div className="flex flex-col gap-3" role="group" aria-label={helpQuestions[q].title}>
         {helpQuestions[q].options.map((label, i) => {
           const on = multi ? answers.includes(i) : help.a[q] === i
           return (
@@ -420,7 +426,7 @@ function BarAndSheet({ calc, barRef, barVisible }) {
             <div className="fold-x after-count" data-exiting={receipt.o > 0 ? undefined : ''}>
               <div className="relative flex flex-col gap-[3px] pr-5">
                 <span className="text-xs text-on-ink-2">
-                  Engang
+                  Én gang
                   {receipt.introApplied && <s className="ml-2 opacity-70">{formatKr(receipt.onceNormal)}</s>}
                 </span>
                 {delta?.o < 0 && <DeltaChip key={delta.id} amount={delta.o} className="top-0 right-0" />}
@@ -429,7 +435,7 @@ function BarAndSheet({ calc, barRef, barVisible }) {
             </div>
             <div className="fold-x after-count" data-exiting={receipt.m > 0 ? undefined : ''}>
               <div className="relative flex flex-col gap-[3px] pr-5">
-                <span className="text-xs text-on-ink-2">Pr. måned</span>
+                <span className="text-xs text-on-ink-2">Hver måned</span>
                 {delta?.m < 0 && <DeltaChip key={delta.id} amount={delta.m} monthly className="top-0 right-0" />}
                 <Total value={receipt.m} unit="kr./md." size={22} unitSize={12} gap={4} unitPad={1} />
               </div>
@@ -488,11 +494,11 @@ function BarAndSheet({ calc, barRef, barVisible }) {
           {showTerms && <p className="mt-3 text-[13px] leading-normal text-on-ink-2">{TERMS_SHORT}</p>}
           <div className="mt-5 grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-[6px]">
-              <span className="text-[13px] text-on-ink-2">Engang</span>
+              <span className="text-[13px] text-on-ink-2">Én gang</span>
               <Total value={receipt.o} unit="kr." size={30} unitSize={13} gap={5} unitPad={2} />
             </div>
             <div className="flex flex-col gap-[6px]">
-              <span className="text-[13px] text-on-ink-2">Pr. måned</span>
+              <span className="text-[13px] text-on-ink-2">Hver måned</span>
               <Total value={receipt.m} unit="kr./md." size={30} unitSize={13} gap={5} unitPad={2} />
             </div>
           </div>
@@ -525,9 +531,10 @@ export default function Mobile({ calc, barRef, fly }) {
   const inHelp = !!help
   const hq = help ? help.q : 0
   const stepName = stepLabels[step - 1]
-  const nextLabel = step === 1 ? (any ? 'Næste: Vælg systemer' : 'Vælg en pakke') : step === 2 ? 'Næste: Tilvalg' : 'Se opsummering'
+  const nextLabel = step === 1 ? (any ? 'Næste: Vælg funktioner' : 'Vælg en pakke') : step === 2 ? 'Næste: Sprog og rabat' : 'Se samlet pris'
   const nextDisabled = step === 1 && !any
-  const canBack = inHelp ? hq > 0 : step > 1 && step < 4
+  const canBack = inHelp && hq > 0
+  const canBackStep = !inHelp && step > 1 && step < 4
   const barVisible = (!inHelp && step < 4) || (inHelp && hq === 3)
   const multiNextOk = inHelp && hq === 1 && (help.a[1] || []).length > 0
 
@@ -548,14 +555,26 @@ export default function Mobile({ calc, barRef, fly }) {
   // Handlingsknapperne ligger i rullefeltet: lige under sidste valg (16 px margen + 8 px polstring = 24 px), og klæbet til bunden over bundbaren, hvis indholdet er højere.
   const actions =
     !inHelp && step < 4 ? (
-      <button
-        type="button"
-        disabled={nextDisabled}
-        onClick={() => dispatch({ type: 'mNext' })}
-        className={`btn w-full justify-center ${nextDisabled ? '' : 'btn-ink'}`}
-      >
-        {nextLabel}
-      </button>
+      <div className={canBackStep ? 'grid gap-2' : ''} style={canBackStep ? { gridTemplateColumns: 'auto minmax(0,1fr)' } : undefined}>
+        {canBackStep && (
+          <button
+            type="button"
+            aria-label="Tilbage"
+            onClick={() => dispatch({ type: 'mBack' })}
+            className="press min-h-14 border-2 border-ink bg-paper px-5 text-[15px] font-medium [--press:.96]"
+          >
+            <span aria-hidden="true">← </span>Tilbage
+          </button>
+        )}
+        <button
+          type="button"
+          disabled={nextDisabled}
+          onClick={() => dispatch({ type: 'mNext' })}
+          className={`btn w-full justify-center ${nextDisabled ? '' : 'btn-ink'}`}
+        >
+          {nextLabel}
+        </button>
+      </div>
     ) : inHelp && hq === 1 ? (
       <button
         type="button"
@@ -571,7 +590,7 @@ export default function Mobile({ calc, barRef, fly }) {
           Tilpas selv
         </button>
         <button type="button" onClick={() => dispatch({ type: 'helpToSummary' })} className="btn btn-ink min-h-14 justify-center px-4 text-[15px]">
-          Se opsummering
+          Se samlet pris
         </button>
       </div>
     ) : null
@@ -580,8 +599,8 @@ export default function Mobile({ calc, barRef, fly }) {
     <div className="relative flex h-full flex-col overflow-clip">
       <div className="flex min-h-[52px] flex-none items-center gap-3 px-4 pt-[10px] pb-[2px]">
         {canBack && (
-          <button type="button" aria-label="Tilbage" onClick={() => dispatch({ type: 'mBack' })} className="press h-12 w-12 flex-none bg-surface text-lg [--press:.92]">
-            ←
+          <button type="button" aria-label="Tilbage" onClick={() => dispatch({ type: 'mBack' })} className="press min-h-12 flex-none border-2 border-ink bg-paper px-4 text-[15px] font-medium [--press:.96]">
+            <span aria-hidden="true">← </span>Tilbage
           </button>
         )}
         {!inHelp && step < 4 && (
@@ -620,8 +639,8 @@ export default function Mobile({ calc, barRef, fly }) {
           </>
         )}
         {!inHelp && step === 4 && (
-          <button type="button" onClick={() => dispatch({ type: 'mBack' })} className="btn btn-surface min-h-12 px-4 text-[15px] [--press:.96]">
-            ← Ret mine valg
+          <button type="button" onClick={() => dispatch({ type: 'mBack' })} className="press min-h-12 border-2 border-ink bg-paper px-4 text-[15px] font-medium [--press:.96]">
+            ← Tilbage og ret mine valg
           </button>
         )}
       </div>

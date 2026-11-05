@@ -29,6 +29,8 @@ const text = new Map(pages.map((p) => [p, readFileSync(p, 'utf8')]))
 const forbidden = [
   'bureau', 'marketing', 'tiktok', 'meta ads', 'vores team', 'vores udviklere', 'erfaring', 'én person', 'ny virksomhed', 'vi er små',
   'mange års', 'ansatte', 'mest valgt', 'booking-google', '/marketing/', 'vækst', 'fuld fart', 'filmer videoerne', 'bor lige uden for',
+  // fagsprog, som en café- eller restaurantejer ikke bruger
+  'standardsystem', 'skræddersy', 'arbejdsflow', 'localbusiness', 'tilvalg',
 ]
 const report = []
 for (const w of forbidden) {

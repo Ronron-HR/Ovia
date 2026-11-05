@@ -15,7 +15,7 @@ export function Hero() {
       </h1>
       <div className="mt-5 flex flex-wrap items-end justify-between gap-6 md:mt-14 md:ml-[33%] md:gap-7">
         <p className="m-0 max-w-[34ch] text-[17px] leading-[1.45] text-pretty md:text-[clamp(17px,1.5vw,21px)]">
-          Hjemmeside, Google-profil, lokal SEO og systemer til restauranter og caféer i Aarhus. Faste priser.
+          Hjemmeside og Google-profil til restauranter og caféer i Aarhus, med bordbooking, bestilling og gavekort, hvis I vil have det. Faste priser.
         </p>
         <a href="#prisberegner" className="btn btn-ink hov-ink-soft w-full text-[17px] md:w-auto">
           <span>Se din pris</span>
@@ -62,7 +62,7 @@ export function About() {
           Du taler direkte med den, der bygger din side.
         </h2>
         <p className="m-0 max-w-[44ch] text-[17px] leading-normal text-pretty">
-          Vi bygger hjemmesiden, sætter Google-profilen op og kobler de systemer på, I vælger. Svar inden for 24 timer.
+          Vi bygger hjemmesiden, sætter Google-profilen op og tilføjer de funktioner, I vælger. Svar inden for 24 timer.
         </p>
       </div>
     </section>

@@ -68,13 +68,13 @@ export function calculate(selection, cfg = prices) {
   sel.systems.forEach((key, i) => {
     const sys = cfg.systems.standard.find((s) => s.key === key);
     const inc = i < includedStandard;
-    add('sys-' + key, sys.name, inc ? 'Indgår' : 'Tilvalg', inc ? 0 : a.extraStandard.once, inc ? 0 : a.extraStandard.monthly, inc);
+    add('sys-' + key, sys.name, inc ? 'Indgår' : 'Ekstra', inc ? 0 : a.extraStandard.once, inc ? 0 : a.extraStandard.monthly, inc);
   });
   for (let i = 0; i < sel.custom; i++) {
     const inc = i < includedCustom;
-    add('custom-' + (i + 1), cfg.systems.custom.name, inc ? 'Indgår' : 'Tilvalg', inc ? 0 : a.custom.once, inc ? 0 : a.custom.monthly, inc);
+    add('custom-' + (i + 1), cfg.systems.custom.name, inc ? 'Indgår' : 'Ekstra', inc ? 0 : a.custom.once, inc ? 0 : a.custom.monthly, inc);
   }
-  if (sel.english) add('english', a.english.name, 'Tilvalg', a.english.once, 0);
+  if (sel.english) add('english', a.english.name, 'Ekstra', a.english.once, 0);
 
   const sum = (k) => lines.reduce((n, l) => n + l[k], 0);
   const once = sum('once');

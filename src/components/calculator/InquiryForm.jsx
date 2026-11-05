@@ -104,11 +104,11 @@ export default function InquiryForm({ receipt, hrefs }) {
           </div>
           <div className="mt-4 grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-[6px]">
-              <span className="text-[13px]">Engang</span>
+              <span className="text-[13px]">Én gang</span>
               <Total value={receipt.o} unit="kr." size={26} unitSize={12} gap={5} unitPad={2} />
             </div>
             <div className="flex flex-col gap-[6px]">
-              <span className="text-[13px]">Pr. måned</span>
+              <span className="text-[13px]">Hver måned</span>
               <Total value={receipt.m} unit="kr./md." size={26} unitSize={12} gap={5} unitPad={2} />
             </div>
           </div>

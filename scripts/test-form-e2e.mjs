@@ -231,7 +231,7 @@ async function run(label, width, height, mobile) {
   check(sim.mails.at(-1).to === 'ronnyhong723@gmail.com' && sim.mails.at(-1).from === 'kontakt@oviaspecs.com', 'afsender og modtager')
   check(m.subject === 'Ny forespørgsel: Mette Hansen, Café Mette – 13.000 kr. + 648 kr./md.', `emne: "${m.subject}"`)
   check(m.replyTo === 'mette@cafe.example', `Reply-To = kundens mail (${m.replyTo})`)
-  for (const want of ['Navn: Mette Hansen', 'Virksomhed: Café Mette', 'Telefon: 53613699', 'Mail: mette@cafe.example', '> Hej Ronny.', '> Vi åbner i foråret.', '- Pakke – Anbefalet: 9.500 kr. + 549 kr./md.', '- Bordbooking – Indgår: Indgår', '- Gavekort – Tilvalg: 2.000 kr. + 99 kr./md.', '- Engelsk version – Tilvalg: 1.500 kr.', 'Engang: 13.000 kr.', 'Pr. måned: 648 kr./md.', 'Alle priser er ekskl. moms.', `Se valgene: ${SITE}/?p=1&y=bg&e=1&t=4#prisberegner`]) {
+  for (const want of ['Navn: Mette Hansen', 'Virksomhed: Café Mette', 'Telefon: 53613699', 'Mail: mette@cafe.example', '> Hej Ronny.', '> Vi åbner i foråret.', '- Pakke – Anbefalet: 9.500 kr. + 549 kr./md.', '- Bordbooking – Indgår: Indgår', '- Gavekort – Ekstra: 2.000 kr. + 99 kr./md.', '- Engelsk version – Ekstra: 1.500 kr.', 'Engang: 13.000 kr.', 'Pr. måned: 648 kr./md.', 'Alle priser er ekskl. moms.', `Se valgene: ${SITE}/?p=1&y=bg&e=1&t=4#prisberegner`]) {
     check(m.text.includes(want), `mailen indeholder "${want}"`)
   }
   const row = db.prepare('SELECT * FROM henvendelser ORDER BY created_at DESC').get()

@@ -73,7 +73,7 @@ export default function Privatlivspolitik() {
             <ul className={list}>
               <li>
                 <strong className={strong}>Når du sender formularen under prisberegneren (&quot;Send mine valg&quot;):</strong> dit navn, dit
-                telefonnummer og/eller din mailadresse, virksomhed og besked, hvis du skriver dem, og dine valg i beregneren (pakke, systemer, tilvalg, om du har valgt introduktionsprisen, priser og et
+                telefonnummer og/eller din mailadresse, virksomhed og besked, hvis du skriver dem, og dine valg i beregneren (pakke, funktioner, ekstra valg, om du har valgt introduktionsprisen, priser og et
                 link til dem). Valgene sendes med automatisk, og vi regner priserne ud igen på serveren. Din IP-adresse bruges kun kortvarigt til
                 at begrænse, hvor mange forespørgsler der kan sendes fra samme sted (spambeskyttelse); den gemmes ikke sammen med forespørgslen.
                 Et skjult felt, som kun robotter udfylder, bruges til samme formål.

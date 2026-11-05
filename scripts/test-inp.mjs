@@ -55,7 +55,7 @@ async function tap(text) {
 }
 
 // Et realistisk forløb: vælg pakke, systemer, tilvalg og intropris, åbn og luk kvitteringen, guidet hjælp.
-for (const t of ['Start', 'Max', 'Anbefalet', 'Næste: Vælg systemer', 'Bordbooking', 'Gavekort', 'Gavekort', 'Flere skræddersyede systemer', 'Færre skræddersyede systemer', 'Næste: Tilvalg', 'Engelsk version', 'Introduktionspris', 'Se kvittering', 'Luk', 'Se opsummering']) {
+for (const t of ['Start', 'Max', 'Anbefalet', 'Næste: Vælg funktioner', 'Bordbooking', 'Gavekort', 'Gavekort', 'Tilføj én bygget til jer', 'Fjern én bygget til jer', 'Næste: Sprog og rabat', 'Engelsk version', 'Introduktionspris', 'Se kvittering', 'Luk', 'Se samlet pris']) {
   try {
     await tap(t)
   } catch (e) {
@@ -68,7 +68,7 @@ all.push(...(await page.evaluate(() => window.__inp)))
 await page.goto(SITE + '/', { waitUntil: 'networkidle0' })
 await wait(600)
 await arm()
-for (const t of ['Hjælp mig med at vælge', 'Op til 6 sider', 'Bordbooking', 'Gavekort', 'Næste spørgsmål', 'Nej', 'Se opsummering']) {
+for (const t of ['Hjælp mig med at vælge', 'Op til 6 sider', 'Bordbooking', 'Gavekort', 'Næste spørgsmål', 'Nej', 'Se samlet pris']) {
   try {
     await tap(t)
   } catch (e) {

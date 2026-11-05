@@ -9,7 +9,7 @@ export function Check({ on, size = 28 }) {
   return (
     <span
       aria-hidden="true"
-      className="flex flex-none items-center justify-center bg-paper text-ink"
+      className="flex flex-none items-center justify-center border-2 border-ink bg-paper text-ink"
       style={{ width: size, height: size }}
     >
       <span
@@ -152,7 +152,7 @@ export const ReceiptLine = memo(function ReceiptLine({ line, dark = true, animat
   )
 })
 
-export const TERMS_SHORT = `Ingen binding. 1 md. opsigelse. Frikøb af siden ${formatKr(prices.addons.buyout.once)}`
+export const TERMS_SHORT = `Ingen binding. 1 måneds opsigelse. Siden kan købes fri for ${formatKr(prices.addons.buyout.once)}`
 
 /** Pakkens pris: engang + pr. måned. Med intro valgt står normalprisen overstreget foran intropris. */
 export function PkgPrice({ pkg, intro }) {

@@ -31,12 +31,12 @@ const VAT = 'Alle priser er ekskl. moms.'
 export const seo = {
   home: {
     title: 'Hjemmeside til restauranter og caféer i Aarhus | OviaSpecs',
-    description: `Hjemmeside, Google-profil og lokal SEO til restauranter og caféer i Aarhus. Start: ${priceOf('start')} ${VAT}`,
+    description: `Hjemmeside og Google-profil til restauranter og caféer i Aarhus, med bordbooking og gavekort. Start: ${priceOf('start')} ${VAT}`,
     updated: UPDATED,
   },
   hjemmeside: {
-    title: 'Hjemmeside, Google og systemer til restauranter | OviaSpecs',
-    description: `Hjemmeside, Google-profil, lokal SEO og systemer til din restaurant eller café. Tre pakker til faste priser: Start ${priceOf('start')} ${VAT}`,
+    title: 'Hjemmeside, Google og bordbooking til restauranter | OviaSpecs',
+    description: `Hjemmeside, Google-profil og funktioner som bordbooking og gavekort til din restaurant eller café. Faste priser: Start ${priceOf('start')} ${VAT}`,
     updated: UPDATED,
   },
   priser: {
@@ -83,7 +83,7 @@ const packageOffers = () =>
     name: `Hjemmeside: ${p.name}`,
     description: p.points.join(', '),
     priceSpecification: [spec(p.once, { name: 'Engangspris' }), spec(p.monthly, { monthly: true, name: 'Pr. måned' })],
-    itemOffered: { '@type': 'Service', name: 'Hjemmeside, Google-profil og lokal SEO' },
+    itemOffered: { '@type': 'Service', name: 'Hjemmeside og Google-profil' },
   }))
 
 /** Forsidens JSON-LD: organisationen, websitet og tilbuddene. Kun forsiden. */
@@ -99,7 +99,7 @@ export const organisationLd = () => ({
       image: `${ORIGIN}/og.jpg`,
       email: contact.email,
       telephone: contact.phoneHref,
-      description: 'Hjemmeside, Google-profil, lokal SEO og systemer til restauranter og caféer. Base i Aarhusområdet.',
+      description: 'Hjemmeside, Google-profil og funktioner som bordbooking og gavekort til restauranter og caféer. Base i Aarhusområdet.',
       areaServed: [
         { '@type': 'City', name: 'Aarhus' },
         { '@type': 'Country', name: 'Danmark' },

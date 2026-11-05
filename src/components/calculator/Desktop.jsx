@@ -15,7 +15,7 @@ const extraText = (c) => (!c ? '' : c.once === 0 && c.monthly === 0 ? 'Indgår' 
 /** Glidende mørk markering bag den valgte mulighed. index < 0 = intet valgt (markeringen skjules). */
 function Segmented({ cols, index, children }) {
   return (
-    <div className="relative grid bg-surface" style={{ gridTemplateColumns: `repeat(${cols},minmax(0,1fr))` }}>
+    <div className="relative grid border-2 border-ink bg-paper [&>button+button]:border-l-2 [&>button+button]:border-ink" style={{ gridTemplateColumns: `repeat(${cols},minmax(0,1fr))` }}>
       <div
         aria-hidden="true"
         className="absolute top-0 bottom-0 bg-ink"
@@ -79,7 +79,7 @@ function StepPackages({ calc }) {
           })}
         </Segmented>
       </div>
-      <p className="mt-3 mb-0 text-sm text-muted-2">Faste priser. Hosting, domæne og backup er med i månedsprisen.</p>
+      <p className="mt-3 mb-0 text-[15px] leading-normal">Tryk på den pakke, der passer bedst. Priserne er faste. Drift, domæne og sikkerhedskopi er med i den månedlige pris.</p>
     </div>
   )
 }
@@ -93,14 +93,15 @@ function StepSystems({ calc }) {
   const nextCustom = nextSystemCost(sel, 'custom')
   const intro =
     pkg.slots === 0
-      ? `${pkg.name} har ingen systemer med. Hvert system lægges til som tilvalg.`
+      ? `${pkg.name} har ingen funktioner med. Hver funktion, I vælger, lægges til som ekstra.`
       : pkg.customSlots
-        ? `${pkg.name} har ${pkg.slots} systemer med, og ét af dem kan være skræddersyet. Flere lægges til som tilvalg.`
-        : `${pkg.name} har ${pkg.slots} standardsystem med, efter eget valg. Flere lægges til som tilvalg.`
+        ? `${pkg.name} har ${pkg.slots} funktioner med. Én af dem kan være bygget specielt til jer. Flere lægges til som ekstra.`
+        : `${pkg.name} har ${pkg.slots} funktion med, efter eget valg. Flere lægges til som ekstra.`
   return (
     <div className="anim-step flex flex-col gap-2">
-      <p className="m-0 mb-2 text-[15px] leading-normal text-muted-2">{intro}</p>
-      <div className="flex flex-col gap-2" role="group" aria-label="Standardsystemer">
+      <p className="m-0 text-[15px] leading-normal">{intro}</p>
+      <p className="m-0 mb-2 text-[15px] leading-normal">Tryk på en funktion for at vælge den. Tryk igen for at fjerne den.</p>
+      <div className="flex flex-col gap-3" role="group" aria-label="Funktioner">
         {prices.systems.standard.map((s) => {
           const on = sel.systems.includes(s.key)
           const line = byKey['sys-' + s.key]
@@ -111,7 +112,7 @@ function StepSystems({ calc }) {
               type="button"
               aria-pressed={on}
               onClick={() => dispatch({ type: 'toggleSystem', key: s.key })}
-              className={`press grid items-center gap-8 px-6 py-5 text-left [--press:.99] ${on ? 'bg-ink text-paper' : 'bg-surface text-ink'}`}
+              className={`press grid items-center gap-8 px-6 py-5 text-left [--press:.99] border-2 border-ink ${on ? 'bg-ink text-paper' : 'bg-paper text-ink'}`}
               style={{ gridTemplateColumns: 'minmax(0,1fr) 230px 28px' }}
             >
               <span className="flex flex-col gap-1">
@@ -128,14 +129,14 @@ function StepSystems({ calc }) {
             <span className="text-[17px] font-semibold">{prices.systems.custom.name}</span>
             <span className="text-sm leading-normal">{prices.systems.custom.desc}</span>
           </div>
-          <span className="price text-sm">{sel.custom < prices.systems.custom.max ? `Næste flow: ${extraText(nextCustom)}` : 'Højeste antal nået'}</span>
-          <div className="grid h-12 bg-paper" style={{ gridTemplateColumns: '48px 52px 48px' }}>
+          <span className="price text-sm">{sel.custom < prices.systems.custom.max ? `Næste opgave: ${extraText(nextCustom)}` : 'Højeste antal nået'}</span>
+          <div className="grid h-12" style={{ gridTemplateColumns: '48px 52px 48px' }}>
             <button
               type="button"
-              aria-label="Færre skræddersyede systemer"
+              aria-label="Fjern én bygget til jer"
               disabled={sel.custom <= 0}
               onClick={() => dispatch({ type: 'setCustom', value: sel.custom - 1 })}
-              className="press text-lg [--press:.88] disabled:opacity-40"
+              className="press border-2 border-ink bg-paper text-lg [--press:.88] disabled:opacity-40"
             >
               −
             </button>
@@ -144,10 +145,10 @@ function StepSystems({ calc }) {
             </span>
             <button
               type="button"
-              aria-label="Flere skræddersyede systemer"
+              aria-label="Tilføj én bygget til jer"
               disabled={sel.custom >= prices.systems.custom.max}
               onClick={() => dispatch({ type: 'setCustom', value: sel.custom + 1 })}
-              className="press text-lg [--press:.88] disabled:opacity-40"
+              className="press border-2 border-ink bg-paper text-lg [--press:.88] disabled:opacity-40"
             >
               +
             </button>
@@ -168,8 +169,9 @@ function StepAddons({ calc }) {
   const englishIncluded = pkg.english === 'included'
   const saving = Math.round(pkg.once * prices.intro.discount)
   return (
-    <div className="anim-step flex flex-col gap-2">
-      <span className={`${heading} mb-1 text-[22px] tracking-[-0.02em]`}>Tilvalg</span>
+    <div className="anim-step flex flex-col gap-3">
+      <span className={`${heading} mb-1 text-[22px] tracking-[-0.02em]`}>Sprog og rabat</span>
+      <p className="m-0 mb-2 text-[15px] leading-normal">Begge dele er valgfrie. Tryk for at vælge, tryk igen for at fjerne.</p>
       {englishIncluded ? (
         <div className="grid items-center gap-8 bg-surface px-6 py-5" style={{ gridTemplateColumns: 'minmax(0,1fr) auto' }}>
           <span className="flex flex-col gap-1">
@@ -183,7 +185,7 @@ function StepAddons({ calc }) {
           type="button"
           aria-pressed={sel.english}
           onClick={() => dispatch({ type: 'toggleEnglish' })}
-          className={`press grid items-center gap-8 px-6 py-5 text-left [--press:.99] ${sel.english ? 'bg-ink text-paper' : 'bg-surface text-ink'}`}
+          className={`press grid items-center gap-8 px-6 py-5 text-left [--press:.99] border-2 border-ink ${sel.english ? 'bg-ink text-paper' : 'bg-paper text-ink'}`}
           style={{ gridTemplateColumns: 'minmax(0,1fr) 230px 28px' }}
         >
           <span className="flex flex-col gap-1">
@@ -199,15 +201,15 @@ function StepAddons({ calc }) {
           type="button"
           aria-pressed={sel.intro}
           onClick={() => dispatch({ type: 'toggleIntro' })}
-          className={`press grid items-center gap-8 px-6 py-5 text-left [--press:.99] ${sel.intro ? 'bg-ink text-paper' : 'bg-surface text-ink'}`}
+          className={`press grid items-center gap-8 px-6 py-5 text-left [--press:.99] border-2 border-ink ${sel.intro ? 'bg-ink text-paper' : 'bg-paper text-ink'}`}
           style={{ gridTemplateColumns: 'minmax(0,1fr) 28px' }}
         >
           <span className="flex flex-col gap-1">
-            <span className="text-[17px] font-semibold">Introduktionspris: {Math.round(prices.intro.discount * 100)}&nbsp;% på engangsprisen</span>
+            <span className="text-[17px] font-semibold">Introduktionspris: {Math.round(prices.intro.discount * 100)}&nbsp;% rabat på engangsprisen</span>
             <span className="text-sm leading-normal">
-              De første {prices.intro.total} kunder, mod at vi må vise siden som case. {slotsText()}. Månedsprisen og tilvalg er uden rabat.
+              De første {prices.intro.total} kunder får rabat, hvis vi må vise jeres side som eksempel på vores hjemmeside. {slotsText()}. Rabatten gælder ikke den månedlige pris.
             </span>
-            <span className="text-sm font-semibold">Ja, I må vise siden som case{sel.intro ? ` · du sparer ${formatKr(saving)} på engangsprisen` : ''}</span>
+            <span className="text-sm font-semibold">Ja, I må vise siden som case (eksempel){sel.intro ? ` · du sparer ${formatKr(saving)} på engangsprisen` : ''}</span>
           </span>
           <Check on={sel.intro} />
         </button>
@@ -267,7 +269,7 @@ function Help({ calc }) {
         </button>
       </div>
       <h3 className="mt-14 mb-7 text-[clamp(32px,3.6vw,56px)] leading-none tracking-[-0.035em]">{helpQuestions[q].title}</h3>
-      <div className="flex flex-col gap-2" role="group" aria-label={helpQuestions[q].title}>
+      <div className="flex flex-col gap-3" role="group" aria-label={helpQuestions[q].title}>
         {helpQuestions[q].options.map((label, i) => {
           const on = multi ? answers.includes(i) : help.a[q] === i
           return (
@@ -276,7 +278,7 @@ function Help({ calc }) {
               type="button"
               aria-pressed={on}
               onClick={() => dispatch({ type: 'helpAnswer', i })}
-              className={`press flex min-h-[72px] w-full items-center gap-5 px-6 text-left [--press:.985] ${on ? 'bg-ink text-paper' : 'bg-surface text-ink'}`}
+              className={`press flex min-h-[72px] w-full items-center gap-5 px-6 text-left [--press:.985] border-2 border-ink ${on ? 'bg-ink text-paper' : 'bg-paper text-ink'}`}
             >
               <span className="flex-1 text-xl font-medium">{label}</span>
               <Check on={on} />
@@ -298,7 +300,7 @@ function Help({ calc }) {
         </div>
       )}
       {q > 0 && (
-        <button type="button" onClick={() => dispatch({ type: 'helpPrev' })} className="mt-5 min-h-12 text-sm">
+        <button type="button" onClick={() => dispatch({ type: 'helpPrev' })} className="press mt-5 min-h-12 border-2 border-ink bg-paper px-5 text-sm font-medium">
           ← Forrige spørgsmål
         </button>
       )}
@@ -330,7 +332,7 @@ function HelpResult({ calc }) {
       </div>
       <div className="mt-7 flex gap-2">
         <button type="button" onClick={() => dispatch({ type: 'helpToSummary' })} className="btn btn-ink hov-ink-soft">
-          Se opsummering
+          Se samlet pris
         </button>
         <button type="button" onClick={() => dispatch({ type: 'helpCustomize' })} className="btn btn-surface">
           Tilpas selv
@@ -395,7 +397,7 @@ function Aside({ calc }) {
       <div className="mt-5 flex flex-col gap-4 pt-6">
         <div className="swap-out flex flex-col gap-4" data-off={!any ? '' : undefined} aria-hidden={!any}>
           <div className="relative flex items-end justify-between gap-3">
-            <span className="pb-[6px] text-[13px] text-on-ink-2">Engang</span>
+            <span className="pb-[6px] text-[13px] text-on-ink-2">Én gang</span>
             {delta?.o < 0 && <DeltaChip key={delta.id} amount={delta.o} className="-top-[18px] right-0" />}
             <Total value={receipt.o} unit="kr." size={48} unitSize={15} />
           </div>
@@ -405,7 +407,7 @@ function Aside({ calc }) {
             </span>
           </div>
           <div className="relative flex items-end justify-between gap-3">
-            <span className="pb-[6px] text-[13px] text-on-ink-2">Pr. måned</span>
+            <span className="pb-[6px] text-[13px] text-on-ink-2">Hver måned</span>
             {delta?.m < 0 && <DeltaChip key={delta.id} amount={delta.m} monthly className="-top-[18px] right-0" />}
             <Total value={receipt.m} unit="kr./md." size={48} unitSize={15} />
           </div>
@@ -436,7 +438,7 @@ export default function Desktop({ calc }) {
   const { step, help } = state
   const inHelp = !!help
   const next =
-    step === 1 ? (any ? 'Næste: Vælg systemer' : 'Vælg en pakke') : step === 2 ? 'Næste: Tilvalg' : 'Næste: Se opsummering'
+    step === 1 ? (any ? 'Næste: Vælg funktioner' : 'Vælg en pakke') : step === 2 ? 'Næste: Sprog og rabat' : 'Næste: Se samlet pris'
   const nextDisabled = step === 1 && !any
   return (
     <div className="grid items-start" style={{ gridTemplateColumns: 'minmax(0,1fr) 440px', minHeight: '100svh' }}>
@@ -506,7 +508,7 @@ export default function Desktop({ calc }) {
             <button
               type="button"
               onClick={() => dispatch({ type: 'back' })}
-              className="min-h-12 text-[15px]"
+              className="press min-h-12 border-2 border-ink bg-paper px-5 text-[15px] font-medium [--press:.97]"
               style={{ visibility: step > 1 ? 'visible' : 'hidden' }}
             >
               ← Tilbage

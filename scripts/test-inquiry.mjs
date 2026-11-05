@@ -183,8 +183,8 @@ check(danishPhone('+45 53 61 36 99') === '53613699', 'dansk nummer normaliseres 
     '- Pakke – Anbefalet: 9.500 kr. + 549 kr./md.',
     '- Introduktionspris – 30 % på engangsprisen: −2.850 kr.',
     '- Bordbooking – Indgår: Indgår',
-    '- Gavekort – Tilvalg: 2.000 kr. + 99 kr./md.',
-    '- Engelsk version – Tilvalg: 1.500 kr.',
+    '- Gavekort – Ekstra: 2.000 kr. + 99 kr./md.',
+    '- Engelsk version – Ekstra: 1.500 kr.',
     'Engang: 10.150 kr. (normalpris 13.000 kr.)',
     'Pr. måned: 648 kr./md.',
     'Alle priser er ekskl. moms.',
@@ -212,7 +212,7 @@ check(danishPhone('+45 53 61 36 99') === '53613699', 'dansk nummer normaliseres 
   const { text, subject } = decode(e.mail.sent[0].raw)
   check(subject.endsWith('– 15.000 kr. + 895 kr./md.'), `snydt tal i emnet: "${subject}"`)
   check(text.includes('Engang: 15.000 kr.') && text.includes('Pr. måned: 895 kr./md.') && !text.includes('Gratis'), `snydt tal i mailen:\n${text}`)
-  check(text.includes('- Skræddersyet system – Indgår: Indgår'), `inkluderet skræddersyet system mangler:\n${text}`)
+  check(text.includes('- Bygget specielt til jer – Indgår: Indgår'), `inkluderet skræddersyet system mangler:\n${text}`)
   check(!text.includes('intro:brugt') && !text.includes('Introduktionspris'), 'intro i mailen uden at være valgt')
 }
 

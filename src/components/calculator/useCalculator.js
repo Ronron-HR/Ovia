@@ -7,7 +7,7 @@ import { oldLinkNotice } from '../../data/calculator.js'
  * Beregnerens tilstand. Valget (selection) har samme form som calculate() i lib/calculate.js; resten er trin,
  * guidet hjælp og kvitteringsarket.
  *
- *   step 1 Pakke · 2 Systemer · 3 Tilvalg · 4 Opsummering
+ *   step 1 Pakke · 2 Funktioner · 3 Sprog og rabat · 4 Samlet pris
  *   help  null eller { q: 0..3, a: [svar 1, [svar 2 (flervalg)], svar 3] }; q 3 = forslaget
  */
 
@@ -135,7 +135,7 @@ export function useCalculator() {
     }
   }, [state.selection, state.step, state.notice])
 
-  // Formularen (lazy) hentes, når kunden er nået til Tilvalg: så er den klar, når opsummeringen vises, og trykket på
+  // Formularen (lazy) hentes, når kunden er nået til "Sprog og rabat": så er den klar, når opsummeringen vises, og trykket på
   // "Se opsummering" venter ikke på en netværkshentning (INP). Forsiden og de første trin henter den ikke.
   const nearSummary = state.step >= 3
   useEffect(() => {
