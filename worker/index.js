@@ -14,7 +14,7 @@ import { canonicalLink, composeMail, danishPhone, inquiry, normalize, validate, 
  *      sat, kræves en gyldig token (403 uden). Uden hemmeligheden springes den over (se README).
  *   4. felterne tjekkes igen (src/inquiry.js); kvitteringen regnes ud af valgene i linket med calculate.js
  *   5. henvendelsen GEMMES i D1 (DB) — først derefter sendes mailen
- *   6. kunden får svar (OK) HER; mailen sendes bagefter i baggrunden (ctx.waitUntil) med Cloudflare Email Routing
+ *   6. kunden får svar (OK) HER; mailen sendes bagefter i baggrunden (ctx.waitUntil, med ét genforsøg efter 2 s) med Cloudflare Email Routing
  *      (SEND_EMAIL, MAIL_FROM → MAIL_TO), og rækken opdateres til sent/failed
  *
  * Svaret er { ok: true } (200), når henvendelsen er gemt. Fejler mailen bagefter,
@@ -100,6 +100,26 @@ async function verifyTurnstile(secret, token, ip) {
   }
 }
 
+/** Pause før det ene genforsøg i baggrunden (ms). Kan overstyres med deps.retryDelayMs, så testene ikke venter. */
+const RETRY_DELAY_MS = 2000
+
+/**
+ * Sender mailen; fejler den, prøves der ÉN gang til efter en kort pause. Det fanger korte udfald hos Email Routing, uden at kunden
+ * mærker noget (svaret er allerede sendt). Fejler begge forsøg, kastes den sidste fejl, og rækken markeres 'failed' (cron sender igen).
+ * Returnerer antal forsøg (1 eller 2).
+ */
+async function sendWithRetry(env, message, deps) {
+  try {
+    await sendMail(env, message, deps)
+    return 1
+  } catch (e) {
+    console.error('henvendelse: mail fejlede, prøver én gang til', e)
+    await new Promise((resolve) => setTimeout(resolve, deps?.retryDelayMs ?? RETRY_DELAY_MS))
+    await sendMail(env, message, deps)
+    return 2
+  }
+}
+
 /** Tidtagning pr. forespørgsel (Server-Timing-headeren og loggen), så man kan se, hvor tiden går. */
 const timer = () => {
   const t0 = Date.now()
@@ -182,9 +202,11 @@ export async function handleInquiry(request, env, deps, ctx) {
     const t = Date.now()
     let status = 'sent'
     let error = null
+    let attempts = 0
     try {
-      await sendMail(env, { subject: mail.subject, text: mail.text, replyTo: p.email }, deps)
+      attempts = await sendWithRetry(env, { subject: mail.subject, text: mail.text, replyTo: p.email }, deps)
     } catch (e) {
+      attempts = 2
       status = 'failed'
       error = errorText(e)
       console.error('henvendelse: mail fejlede (henvendelsen er gemt)', id, e)
@@ -195,7 +217,7 @@ export async function handleInquiry(request, env, deps, ctx) {
     } catch (e) {
       console.error('henvendelse: status kunne ikke skrives', id, e)
     }
-    console.log('henvendelse baggrund', JSON.stringify({ id, status, send_email_ms: sent, total_ms: Date.now() - t }))
+    console.log('henvendelse baggrund', JSON.stringify({ id, status, attempts, send_email_ms: sent, total_ms: Date.now() - t }))
   }
   if (ctx?.waitUntil) ctx.waitUntil(finish())
   else await finish() // uden ctx (tests, lokal kørsel) venter vi, så resultatet er til at teste

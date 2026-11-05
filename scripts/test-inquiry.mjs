@@ -71,6 +71,9 @@ class EmailMessage {
   }
 }
 
+/** Uden pause før baggrundens ene genforsøg, så testene ikke venter 2 s hver. */
+const DEPS = { EmailMessage, retryDelayMs: 0 }
+
 /** Miljø med falsk mail: `mail.down = true` simulerer en mailfejl. Uden TURNSTILE_SECRET som i dag. */
 function env({ db = d1(), limited = false, ...rest } = {}) {
   const mail = { down: false, sent: [] }
@@ -107,7 +110,7 @@ const post = (body, { origin = ORIGIN } = {}) =>
   })
 
 async function call(body, e = env(), opts) {
-  const res = await handleInquiry(post(body, opts), e, { EmailMessage })
+  const res = await handleInquiry(post(body, opts), e, DEPS)
   return { status: res.status, data: await res.json(), env: e }
 }
 
@@ -235,7 +238,7 @@ for (const host of ['https://oviaspecs.com', 'https://redesign-handoff-ovia.ronn
       headers: { 'Content-Type': 'application/json', Origin: host },
       body: JSON.stringify({ ...GOOD, link }),
     })
-    await handleInquiry(req, e, { EmailMessage })
+    await handleInquiry(req, e, DEPS)
     const got = /Se valgene: (\S+)/.exec(decode(e.mail.sent[0]?.raw ?? '').text)?.[1] ?? ''
     check(got.startsWith(`${host}/?w=1`), `link på ${host} (sendt: ${link.slice(0, 40)}…) blev ${got}`)
   }
@@ -334,7 +337,7 @@ for (const [label, e] of [['uden Turnstile', env()], ['med Turnstile', env({ TUR
   check(keys[0] === '203.0.113.7', `rate limit-nøgle: ${keys[0]}`)
   const o = await call(GOOD, env(), { origin: 'https://evil.example' })
   check(o.status === 403 && o.env.DB.rows().length === 0, `fremmed origin: ${o.status}`)
-  const g = await handleInquiry(new Request(`${ORIGIN}/api/henvendelse`), env(), { EmailMessage })
+  const g = await handleInquiry(new Request(`${ORIGIN}/api/henvendelse`), env(), DEPS)
   check(g.status === 405, `GET: ${g.status}`)
 }
 
@@ -361,7 +364,7 @@ for (const [label, e] of [['uden Turnstile', env()], ['med Turnstile', env({ TUR
   const e = slow(400)
   const ctx = makeCtx()
   const t0 = Date.now()
-  const res = await handleInquiry(post(GOOD), e, { EmailMessage }, ctx)
+  const res = await handleInquiry(post(GOOD), e, DEPS, ctx)
   const took = Date.now() - t0
   check(res.status === 200 && (await res.json()).ok === true, `baggrundsmail: svar ${res.status}`)
   check(took < 250, `kunden får svar, før den langsomme mail (400 ms) er sendt (${took} ms)`)
@@ -374,19 +377,19 @@ for (const [label, e] of [['uden Turnstile', env()], ['med Turnstile', env({ TUR
   const f = slow(50)
   f.mail.down = true
   const fctx = makeCtx()
-  const fres = await handleInquiry(post({ ...GOOD, email: 'fejl@example.com' }), f, { EmailMessage }, fctx)
+  const fres = await handleInquiry(post({ ...GOOD, email: 'fejl@example.com' }), f, DEPS, fctx)
   check(fres.status === 200, `baggrundsfejl: svar ${fres.status}`)
   await Promise.all(fctx.promises)
   const frow = f.DB.rows()[0]
   check(frow.mail_status === 'failed' && /simuleret/.test(frow.last_error), `mailfejl i baggrunden markerer rækken failed (${frow.mail_status}, ${frow.last_error})`)
   f.mail.down = false
-  await runDaily(f, { EmailMessage }, new Date(Date.now() + 24 * 3600_000))
+  await runDaily(f, DEPS, new Date(Date.now() + 24 * 3600_000))
   check(f.DB.rows()[0].mail_status === 'sent' && f.mail.sent.length >= 1, `cron sender den fejlede mail igen (${f.DB.rows()[0].mail_status})`)
 
   // Afbrudt efter gem (workeren stoppet før baggrundsarbejdet): rækken står som pending, og cron sender den, når den er over en time gammel.
   const g = env()
   g.DB.raw.prepare('INSERT INTO henvendelser (id, created_at, contact, name, link, subject, summary, mail_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run('afbrudt', new Date(Date.now() - 2 * 3600_000).toISOString(), 'a@b.dk', 'X', LINK, 'Emne', 'Tekst', 'pending')
-  await runDaily(g, { EmailMessage }, new Date())
+  await runDaily(g, DEPS, new Date())
   check(g.DB.rows()[0].mail_status === 'sent', 'afbrudt pending sendes af cron')
 }
 
@@ -407,17 +410,17 @@ for (const [label, e] of [['uden Turnstile', env()], ['med Turnstile', env({ TUR
     if (e.mail.down && decode(m.raw).subject.includes('Opgivet ApS')) throw new Error('Email Routing: simuleret fejl')
     e.mail.sent.push(m)
   }
-  let res = await runDaily(e, { EmailMessage }, day(1))
+  let res = await runDaily(e, DEPS, day(1))
   check(status('b@example.com').mail_status === 'sent' && status('b@example.com').retries === 1, `cron dag 1: B ikke sendt (${JSON.stringify(status('b@example.com'))})`)
   check(status('a@example.com').mail_status === 'failed' && status('a@example.com').retries === 1, `cron dag 1: A (${JSON.stringify(status('a@example.com'))})`)
   const resent = e.mail.sent.map((m) => m.raw).find((raw) => decode(raw).subject.includes('Bent'))
   check(/^Reply-To: b@example\.com$/m.test(resent ?? ''), 'cron: Reply-To mangler ved genforsøg')
 
   // Dag 2 og 3: A fejler igen → efter MAX_RETRIES genforsøg 'gave_up'.
-  await runDaily(e, { EmailMessage }, day(2))
+  await runDaily(e, DEPS, day(2))
   check(status('a@example.com').mail_status === 'failed' && status('a@example.com').retries === 2, 'cron dag 2: A burde stadig være failed')
   e.mail.sent.length = 0
-  res = await runDaily(e, { EmailMessage }, day(3))
+  res = await runDaily(e, DEPS, day(3))
   check(MAX_RETRIES === 3, `MAX_RETRIES er ${MAX_RETRIES}`)
   check(status('a@example.com').mail_status === 'gave_up' && status('a@example.com').retries === 3, `cron dag 3: A ikke gave_up (${JSON.stringify(status('a@example.com'))})`)
   check(res.gaveUp === 1 && res.digest === 'sent', `cron dag 3: ${JSON.stringify(res)}`)
@@ -434,7 +437,7 @@ for (const [label, e] of [['uden Turnstile', env()], ['med Turnstile', env({ TUR
   // Dag 4: A sendes ikke igen og står ikke i opsummeringen igen; intet nyt = ingen mail.
   e.mail.sent.length = 0
   e.mail.down = false
-  res = await runDaily(e, { EmailMessage }, day(4))
+  res = await runDaily(e, DEPS, day(4))
   check(status('a@example.com').mail_status === 'gave_up' && e.mail.sent.length === 0 && res.digest === 'none', `cron dag 4: ${JSON.stringify(res)}, ${e.mail.sent.length} mails`)
 }
 
@@ -444,11 +447,11 @@ for (const [label, e] of [['uden Turnstile', env()], ['med Turnstile', env({ TUR
   e.mail.down = true
   await call({ ...GOOD, email: 'c@example.com' }, e)
   const at = (n) => new Date(Date.now() + n * 24 * 3600_000)
-  for (let n = 1; n <= 3; n++) await runDaily(e, { EmailMessage }, at(n))
+  for (let n = 1; n <= 3; n++) await runDaily(e, DEPS, at(n))
   const row = e.DB.rows()[0]
   check(row.mail_status === 'gave_up' && !row.reported_at, `alt nede: ${JSON.stringify(row)}`)
   e.mail.down = false
-  const res = await runDaily(e, { EmailMessage }, at(4))
+  const res = await runDaily(e, DEPS, at(4))
   check(res.digest === 'sent' && e.DB.rows()[0].reported_at, `opgivet ikke rapporteret, da mailen virkede igen: ${JSON.stringify(res)}`)
 }
 
@@ -465,11 +468,67 @@ for (const [label, e] of [['uden Turnstile', env()], ['med Turnstile', env({ TUR
   insert('haenger', new Date(now - 2 * 3600_000).toISOString(), 'pending')
   insert('frisk', new Date(now - 60_000).toISOString(), 'pending')
   insert('gammel', old.toISOString(), 'sent')
-  await runDaily(e, { EmailMessage }, now)
+  await runDaily(e, DEPS, now)
   const rows = Object.fromEntries(e.DB.rows().map((r) => [r.id, r.mail_status]))
   check(rows.haenger === 'sent', `hængende pending ikke sendt: ${rows.haenger}`)
   check(rows.frisk === 'pending', `frisk pending rørt af cron: ${rows.frisk}`)
   check(!('gammel' in rows), `forespørgsel ældre end ${inquiry.retentionMonths} md ikke slettet`)
+}
+
+// Ét genforsøg i baggrunden: fejler første send_email og lykkes den anden, er mailen sendt, og rækken er 'sent' (uden at cron skal gribe ind).
+// Fejler begge, står rækken som 'failed' med fejlen, og cron sender den senere. Kunden får svar, før noget genforsøges.
+{
+  const makeCtx = () => ({ promises: [], waitUntil(p) { this.promises.push(p) } })
+  const flaky = (failures, delayMs = 0) => {
+    const e = env()
+    let calls = 0
+    e.calls = () => calls
+    e.SEND_EMAIL.send = async (m) => {
+      calls++
+      if (delayMs) await new Promise((r) => setTimeout(r, delayMs))
+      if (calls <= failures) throw new Error('Email Routing: kortvarigt udfald ' + calls)
+      e.mail.sent.push(m)
+    }
+    return e
+  }
+
+  // Fejl, så succes: sendt ved andet forsøg.
+  const a = flaky(1)
+  const actx = makeCtx()
+  const ares = await handleInquiry(post(GOOD), a, DEPS, actx)
+  check(ares.status === 200, `retry: svar ${ares.status}`)
+  await Promise.all(actx.promises)
+  check(a.calls() === 2 && a.mail.sent.length === 1, `retry: to forsøg, én mail sendt (${a.calls()} forsøg, ${a.mail.sent.length} mails)`)
+  check(a.DB.rows()[0].mail_status === 'sent' && a.DB.rows()[0].last_error === null, `retry: rækken er sent uden fejl (${a.DB.rows()[0].mail_status})`)
+
+  // Succes første gang: ingen ekstra forsøg.
+  const b = flaky(0)
+  const bctx = makeCtx()
+  await handleInquiry(post(GOOD), b, DEPS, bctx)
+  await Promise.all(bctx.promises)
+  check(b.calls() === 1 && b.DB.rows()[0].mail_status === 'sent', `retry: ingen ekstra forsøg, når første lykkes (${b.calls()})`)
+
+  // Fejl begge gange: præcis to forsøg, rækken failed med den sidste fejl, og cron sender den senere.
+  const c = flaky(2)
+  const cctx = makeCtx()
+  const cres = await handleInquiry(post(GOOD), c, DEPS, cctx)
+  check(cres.status === 200, `retry-fejl: kunden får stadig OK (${cres.status})`)
+  await Promise.all(cctx.promises)
+  const crow = c.DB.rows()[0]
+  check(c.calls() === 2 && crow.mail_status === 'failed' && /kortvarigt udfald 2/.test(crow.last_error), `retry-fejl: to forsøg og failed med sidste fejl (${c.calls()}, ${crow.mail_status}, ${crow.last_error})`)
+  await runDaily(c, DEPS, new Date(Date.now() + 24 * 3600_000))
+  check(c.DB.rows()[0].mail_status === 'sent' && c.mail.sent.length >= 1, `retry-fejl: cron sender den (${c.DB.rows()[0].mail_status})`)
+
+  // Svaret afventer hverken første forsøg, pausen eller genforsøget (langsom mail + 300 ms pause).
+  const d = flaky(1, 200)
+  const dctx = makeCtx()
+  const t0 = Date.now()
+  const dres = await handleInquiry(post(GOOD), d, { EmailMessage, retryDelayMs: 300 }, dctx)
+  const took = Date.now() - t0
+  check(dres.status === 200 && took < 200, `kunden får svar, før forsøg og pause (200 + 300 + 200 ms) er overstået (${took} ms)`)
+  check(d.mail.sent.length === 0 && d.DB.rows()[0].mail_status === 'pending', 'ved svaret er mailen ikke sendt endnu, og rækken er pending')
+  await Promise.all(dctx.promises)
+  check(d.calls() === 2 && d.DB.rows()[0].mail_status === 'sent', `bagefter er mailen sendt efter retry (${d.calls()} forsøg)`)
 }
 
 // Gamle rækker i D1 (før redesignet) sendes ALDRIG igen af cron og kommer ikke med i opsummeringen, men slettes stadig efter retentionMonths.
@@ -483,14 +542,14 @@ for (const [label, e] of [['uden Turnstile', env()], ['med Turnstile', env({ TUR
   ins('gammel-pending', '2026-11-04T20:00:00.000Z', 'pending')
   ins('gammel-gaveup', '2026-10-10T10:00:00.000Z', 'gave_up', 3)
   check(CRON_FROM === '2026-11-05T00:00:00.000Z', 'CRON_FROM er redesignets dato')
-  const res = await runDaily(e, { EmailMessage }, new Date())
+  const res = await runDaily(e, DEPS, new Date())
   const st = Object.fromEntries(e.DB.rows().map((r) => [r.id, r.mail_status]))
   check(e.mail.sent.length === 0 && res.digest === 'none' && res.retried === 0, `gamle rækker udløste mail eller opsummering: ${JSON.stringify(res)}, ${e.mail.sent.length} mails`)
   check(st['gammel-failed'] === 'failed' && st['gammel-pending'] === 'pending' && st['gammel-gaveup'] === 'gave_up', `gamle rækker blev ændret: ${JSON.stringify(st)}`)
 }
 
 // Uden database gør cron ingenting (og fejler ikke).
-check((await runDaily({}, { EmailMessage })).skipped === 'no_db', 'cron uden database')
+check((await runDaily({}, DEPS)).skipped === 'no_db', 'cron uden database')
 
 console.error = logError
 console.log = logInfo
