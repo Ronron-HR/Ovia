@@ -1,11 +1,15 @@
 {
-  "_note": "Eneste kilde til priser, pakker, systemer og intro. Beregneren, /priser/, /hjemmeside/, formularen og workeren læser herfra. Alle priser i kr., ekskl. moms. introSlotsLeft (antal introduktionspladser tilbage) styres med `npm run intro:status` og `npm run intro:brugt`.",
+  "_note": "Eneste kilde til priser, pakker, systemer og intro. Beregneren, /priser/, /hjemmeside/, formularen og workeren læser herfra. Alle priser i kr., ekskl. moms. introSlotsLeft (antal introduktionspladser tilbage) styres med `npm run intro:status` og `npm run intro:brugt`. Engelsk version er med i alle hjemmesidepakker.",
   "currency": "DKK",
   "vatIncluded": false,
   "introSlotsLeft": 3,
   "intro": {
     "total": 3,
     "discount": 0.3
+  },
+  "website": {
+    "title": "Hjemmeside designet til jer",
+    "parts": ["Mobilvenlig", "Menu", "Billeder", "Åbningstider", "Kort og adresse", "Kontakt", "På dansk og engelsk"]
   },
   "packages": [
     {
@@ -16,9 +20,9 @@
       "recommended": false,
       "slots": 0,
       "customSlots": 0,
-      "english": "addon",
+      "pages": "1–3 sider",
       "points": [
-        "1–3 sider (menu, åbningstider, kontakt)",
+        "Funktioner som bordbooking og gavekort lægges til som ekstra (priserne står i beregneren)",
         "Jeres Google-profil sat op og udfyldt",
         "Siden gøres klar til at blive fundet lokalt på Google",
         "Link til jeres egen booking eller bestilling",
@@ -26,7 +30,7 @@
         "Små rettelser af tekst og billeder"
       ],
       "short": [
-        "1–3 sider",
+        "Funktioner kan lægges til som ekstra",
         "Google-profil sat op",
         "Gør siden klar til at blive fundet lokalt",
         "Drift, domæne og sikkerhedskopi"
@@ -40,18 +44,16 @@
       "recommended": true,
       "slots": 1,
       "customSlots": 0,
-      "english": "addon",
+      "pages": "Op til 6 sider",
       "points": [
-        "Op til 6 sider",
-        "1 funktion efter eget valg, fx bordbooking eller gavekort",
+        "1 funktion er med i prisen, fx bordbooking eller gavekort",
         "Google-profil og 1 opslag om måneden",
         "Siden gøres klar til de ord, jeres gæster søger på lokalt",
         "Drift, domæne og sikkerhedskopi",
         "1 times rettelser om måneden"
       ],
       "short": [
-        "Op til 6 sider",
-        "1 funktion efter eget valg",
+        "1 funktion er med i prisen",
         "Google-profil og 1 opslag om måneden",
         "1 times rettelser om måneden"
       ]
@@ -64,18 +66,16 @@
       "recommended": false,
       "slots": 2,
       "customSlots": 1,
-      "english": "included",
+      "pages": "Så mange sider, som I har brug for",
       "points": [
-        "Så mange sider, I har brug for, og engelsk version",
-        "2 funktioner, eller 1 almindelig og 1 bygget specielt til jer",
+        "2 funktioner er med i prisen, eller 1 almindelig og 1 bygget specielt til jer",
         "Google-profil, 2 opslag om måneden og svar på anmeldelser",
         "Gennemgang af jeres lokale synlighed hvert kvartal",
         "Drift, domæne og sikkerhedskopi",
         "2 timers rettelser om måneden og en kort status hver måned"
       ],
       "short": [
-        "Så mange sider som nødvendigt, engelsk version",
-        "2 funktioner (1 kan være bygget til jer)",
+        "2 funktioner er med i prisen (1 kan være bygget til jer)",
         "2 opslag om måneden og svar på anmeldelser",
         "2 timers rettelser om måneden"
       ]
@@ -123,6 +123,19 @@
     "excluded": "Vi bygger ikke store kassesystemer eller vagtplaner.",
     "thirdParty": "Abonnementer hos andre udbydere (fx bookingsystem, betaling eller nyhedsbrevsprogram) betaler I selv direkte til dem."
   },
+  "systemOnly": {
+    "note": "Vi kobler det på jeres nuværende hjemmeside.",
+    "standard": {
+      "name": "Almindelig funktion",
+      "once": 2500,
+      "monthly": 149
+    },
+    "custom": {
+      "name": "Bygget specielt til jer",
+      "once": 5000,
+      "monthly": 199
+    }
+  },
   "addons": {
     "extraStandard": {
       "name": "Ekstra funktion",
@@ -133,10 +146,6 @@
       "name": "Bygget specielt til jer (én opgave)",
       "once": 5000,
       "monthly": 199
-    },
-    "english": {
-      "name": "Engelsk version",
-      "once": 1500
     },
     "buyout": {
       "name": "Køb siden fri",

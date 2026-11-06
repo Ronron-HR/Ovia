@@ -1,5 +1,5 @@
 import prices from './data/prices.json' with { type: 'json' }
-import { NBSP, formatKr, fromQuery, isOldLink, toQuery } from './lib/calculate.js'
+import { NBSP, formatKr, fromQuery, isComplete, isOldLink, toQuery } from './lib/calculate.js'
 import { buildReceipt, specId } from './lib/receipt.js'
 import { retentionMonths } from './data/site.js'
 
@@ -79,7 +79,7 @@ export function validate(p) {
 
 /**
  * Linket til valgene, bygget forfra ud fra det, kunden sendte: kun gyldige svar (fromQuery), altid på forsiden.
- * `{ old: true }` for et gammelt link (fra før pakkerne), `null` hvis der ikke er valgt en pakke.
+ * `{ old: true }` for et gammelt link (fra før pakkerne), `null` hvis valget ikke er færdigt (hjemmeside: ingen pakke; system alene: ingen funktion).
  */
 export function canonicalLink(link, origin, cfg = prices) {
   let url
@@ -90,15 +90,15 @@ export function canonicalLink(link, origin, cfg = prices) {
   }
   if (isOldLink(url.search)) return { old: true }
   const { selection } = fromQuery(url.search, cfg)
-  if (selection.pkg === null) return null
-  return { url: `${origin}/?${toQuery(selection, 4)}#prisberegner`, selection }
+  if (!isComplete(selection, cfg)) return null
+  return { url: `${origin}/?${toQuery(selection, 'sum')}#prisberegner`, selection }
 }
 
 const plain = (s) => String(s).replace(/ /g, ' ')
 
 /**
  * Mailen til Ronny. Emne: "Ny forespørgsel: [navn], [virksomhed] – [engang] + [md]".
- * Indhold: kontakt, besked, pakke, systemer og tilvalg med priser, om introprisen er valgt, totaler ekskl. moms og
+ * Indhold: kontakt, besked, hvad de har brug for (hjemmeside, system eller begge), pakke og funktioner med priser, om introprisen er valgt, totaler ekskl. moms og
  * del-linket. Er introprisen valgt (og der er pladser), står nederst, hvordan en plads tælles ned (npm run intro:brugt).
  */
 export function composeMail({ name, company = '', phone = '', email = '', message = '', link, selection }, cfg = prices) {
@@ -119,6 +119,7 @@ export function composeMail({ name, company = '', phone = '', email = '', messag
       `Mail: ${email || '(ikke udfyldt)'}`,
       ...(message ? ['', 'Besked (hver linje starter med >):', ...message.split('\n').map((l) => `> ${l}`)] : []),
       '',
+      `Hvad de har brug for: ${rc.pathText}`,
       `Valg (${specId(selection, cfg)}):`,
       ...rc.all.map(line),
       '',

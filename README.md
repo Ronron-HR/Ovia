@@ -17,13 +17,24 @@ Regler for teksten: vi-form, ingen "bureau", ingen oplysninger om alder, antal a
 
 ## Pakker og regler (prices.json)
 
-- **Start** 5.000 kr. + 299 kr./md.: 1–3 sider, Google-profil, grundlæggende lokal SEO, link til kundens eget booking/bestilling. Ingen systemer med.
-- **Anbefalet** 9.500 + 549/md.: op til 6 sider, 1 standardsystem, Google-profil + 1 opslag/md., lokal SEO med lokale søgeord, 1 times rettelser/md.
-- **Max** 15.000 + 895/md.: sider efter behov og engelsk version, 2 systemer (højst 1 skræddersyet), 2 opslag/md. og svar på anmeldelser, kvartalsvis SEO-gennemgang, 2 timers rettelser/md., kort månedlig status.
-- **Tilvalg:** ekstra standardsystem 2.000 + 99/md., skræddersyet system (ét flow) 5.000 + 199/md., engelsk version 1.500 (Start/Anbefalet), frikøb 2.000. Systemer, pakken har med, koster ikke ekstra; flere end det giver tilvalgsprisen automatisk. Skræddersyede systemer bruger de inkluderede pladser først.
-- **Vilkår:** ingen binding, 1 måneds opsigelse, domænet står i kundens navn, hosting og domæne er med.
+Beregnerens første trin er "Hvad har I brug for?" med tre veje, og kun de trin, der passer, vises:
 
-Beregningen står i `src/lib/calculate.js` (`calculate`), kvitteringen i `src/lib/receipt.js`. Valget i adresselinjen: `p` (pakke 0–2), `y` (systemkoder: b bordbooking, o bestilling, g gavekort, n nyhedsbrev, a anmeldelser), `c` (skræddersyede), `e` (engelsk), `i` (intropris), `t` (trin). Links fra før pakkerne (`w`, `m`, `b`, `d`, `bk`, `x`) kan ikke regnes om: beregneren viser en venlig besked, og workeren svarer 400 `old_selection`.
+- **En hjemmeside:** Behov → Pakke → Rabat → Samlet pris.
+- **Et system til den nuværende hjemmeside:** Behov → Funktioner → Samlet pris (ingen pakke og ingen rabat).
+- **Begge dele:** Behov → Pakke → Funktioner → Rabat → Samlet pris.
+
+Rabat-trinnet findes kun, mens `introSlotsLeft` er over 0.
+
+Alle pakker har "Hjemmeside designet til jer": mobilvenlig, menu, billeder, åbningstider, kort og adresse, kontakt og på dansk og engelsk (engelsk er med i alle pakker, der er ikke noget tilvalg). Funktioner og Google kommer efter selve hjemmesiden.
+
+- **Start** 5.000 kr. + 299 kr./md.: 1–3 sider, Google-profil, grundlæggende lokal SEO, link til kundens eget booking/bestilling. Ingen funktioner med.
+- **Anbefalet** 9.500 + 549/md.: op til 6 sider, 1 funktion med i prisen, Google-profil + 1 opslag/md., lokal SEO med lokale søgeord, 1 times rettelser/md.
+- **Max** 15.000 + 895/md.: så mange sider, som kunden har brug for, 2 funktioner med i prisen (højst 1 bygget specielt til kunden), 2 opslag/md. og svar på anmeldelser, kvartalsvis SEO-gennemgang, 2 timers rettelser/md., kort månedlig status.
+- **Begge dele:** funktioner, pakken har plads til, koster ikke ekstra; flere lægges til som ekstra: almindelig funktion 2.000 + 99/md., bygget specielt til kunden 5.000 + 199/md. pr. stk. Bygget specielt til kunden bruger de inkluderede pladser først. I listen står "Indgår" kun på valgte funktioner, pakken dækker; en ledig plads står som "Med i prisen", alle andre viser deres ekstrapris.
+- **System alene** (uden ny hjemmeside, "systemOnly" i prices.json): almindelig funktion 2.500 + 149/md. pr. stk., bygget specielt til kunden 5.000 + 199/md. pr. stk. Mindst 1 skal vælges. Ingen intro.
+- **Frikøb** af siden 2.000. **Vilkår:** ingen binding, 1 måneds opsigelse, domænet står i kundens navn, hosting og domæne er med.
+
+Beregningen står i `src/lib/calculate.js` (`calculate`, `flowOf`, `optionTag`), kvitteringen og mailens linjer i `src/lib/receipt.js`. Valget i adresselinjen: `v` (vej: h hjemmeside, s system, b begge), `p` (pakke 0–2), `y` (funktionskoder: b bordbooking, o bestilling, g gavekort, n nyhedsbrev, a anmeldelser), `c` (bygget specielt), `i` (intropris), `t` (trin: need, pkg, sys, disc, sum). Kun felter, der hører til vejen, kommer med i linket og i prisen; serveren regner prisen ud af linket med samme funktioner som beregneren. Links fra pakke-versionen (uden `v`, med `e` og tal-trin) virker stadig: vejen udledes af indholdet og `e` ignoreres. Links fra før pakkerne (`w`, `m`, `b`, `d`, `bk`, `x`) kan ikke regnes om: beregneren viser en venlig besked, og workeren svarer 400 `old_selection`. Mailen til Ronny har linjen "Hvad de har brug for: …", og id'et i emnet begynder med vejens bogstav (OVIA-H…, OVIA-S…, OVIA-B…).
 
 ## Introduktionspris og pladser
 
@@ -52,7 +63,7 @@ Adresser: `src/routes.js` (metadata fra `src/data/seo.js`). Nøglerne skal passe
 | `npm run preview` | Serverer `dist/` på http://localhost:4173 |
 | `npm test` | Enhedstest (priser, kvittering, beregnerens tilstand), henvendelsestest (worker med simuleret D1 og mail, genberegnede priser for hver pakke, tilvalg og intro 3/0) og intro-scriptets test |
 | `npm run test:content` | Indholdstjek af det byggede site (kræver build): gamle ord, links til udgåede sider, omdirigeringer, sitemap, metatekster |
-| `npm run test:e2e` | Browsertests mod `npm run preview` (beregner, formular med lokal worker, undersider, demoer) |
+| `npm run test:e2e` | Browsertests mod `npm run preview` (de tre veje og layout i 360–1920 px, beregner, formular med lokal worker, undersider, demoer) |
 | `npm run intro:status` / `intro:brugt` | Se ovenfor |
 | `npm run lint` | oxlint |
 | `npm run fonts` / `brand` / `images` / `demo-shots` | Skrifter, mærkefiler, billeder og demoskærmbilleder |

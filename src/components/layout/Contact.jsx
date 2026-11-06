@@ -13,8 +13,8 @@ export default function Contact() {
         <h2 id="kontakt-titel" className="display t-h2">
           Svar inden for 24 timer.
         </h2>
-        <div className="mt-7 grid gap-2 md:mt-14 md:grid-cols-[2fr_1fr_1fr]">
-          <a href={links.tel} className={tile}>
+        <div className="mt-7 grid gap-2 md:mt-14 md:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr]">
+          <a href={links.tel} className={`${tile} md:col-span-2 lg:col-span-1`}>
             <span className={`${heading} whitespace-nowrap text-[19px] tracking-[-0.025em] md:text-[26px]`}>
               Ring til Ronny
             </span>

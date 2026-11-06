@@ -4,7 +4,7 @@ import Desktop from './Desktop.jsx'
 import Mobile from './Mobile.jsx'
 import { useCalculator } from './useCalculator.js'
 
-const MOBILE_QUERY = '(max-width: 759.98px)'
+import { MOBILE_QUERY } from '../../lib/viewport.js'
 const subscribe = (cb) => {
   const mq = window.matchMedia(MOBILE_QUERY)
   mq.addEventListener('change', cb)
@@ -127,7 +127,7 @@ export default function Calculator() {
           <Desktop calc={{ ...calc, delta }} />
         )}
         <p className="sr-only" aria-live="polite" aria-atomic="true">
-          {calc.any ? `Én gang ${formatKr(receipt.o)}. Hver måned ${formatKr(receipt.m, true)}. Alle priser er ekskl. moms.` : 'Ingen valg endnu. Vælg en pakke for at se prisen.'}
+          {calc.any ? `Én gang ${formatKr(receipt.o)}. Hver måned ${formatKr(receipt.m, true)}. Alle priser er ekskl. moms.` : 'Ingen valg endnu. Vælg, hvad I har brug for, for at se prisen.'}
         </p>
       </div>
       <noscript>

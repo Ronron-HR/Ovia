@@ -2,6 +2,7 @@ import { useId, useRef, useState } from 'react'
 import { LIMITS, normalize, sendInquiry, validate } from '../../inquiry.js'
 import { turnstileEnabled, turnstileToken } from '../../lib/turnstile.js'
 import { contact, links, paths } from '../../data/site.js'
+import { MOBILE_QUERY } from '../../lib/viewport.js'
 import { smsHref } from '../../lib/receipt.js'
 import { ReceiptLine, Total } from './parts.jsx'
 
@@ -9,7 +10,7 @@ const heading = 'font-[family-name:var(--font-display)] font-bold [font-stretch:
 const field =
   'block w-full min-h-14 rounded-none border-0 bg-surface px-4 text-base text-ink placeholder:text-muted-2 aria-[invalid=true]:outline-2 aria-[invalid=true]:outline-ink'
 
-const isMobile = () => window.matchMedia('(max-width: 759.98px)').matches
+const isMobile = () => window.matchMedia(MOBILE_QUERY).matches
 
 function Field({ label, name, error, hint, children }) {
   const id = useId()

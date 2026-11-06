@@ -42,8 +42,8 @@ const check = (ok, msg) => {
 }
 
 const ORIGIN = 'https://oviaspecs.com'
-/** Anbefalet + Bordbooking (indgår) + Gavekort (tilvalg) + engelsk + intropris: 9.500 + 2.000 + 1.500 − 2.850 = 10.150 kr. + 648 kr./md. (håndregnet). */
-const LINK = '/?p=1&y=bg&e=1&i=1&t=4'
+/** Begge dele: Anbefalet + Bordbooking (indgår) + Gavekort (ekstra) + intropris: 9.500 + 2.000 − 2.850 = 8.650 kr. + 648 kr./md. (håndregnet). */
+const LINK = '/?v=b&p=1&y=bg&i=1&t=sum'
 /** Priserne i testene er altid låst, så testen ikke ændrer sig, når introSlotsLeft i prices.json tælles ned. */
 const cfgWith = (n) => ({ ...prices, introSlotsLeft: n })
 const plainText = (t) => t.replaceAll('\u00a0', ' ')
@@ -170,7 +170,7 @@ check(danishPhone('+45 53 61 36 99') === '53613699', 'dansk nummer normaliseres 
   const { text, subject } = decode(mail.raw)
   check(mail.from === 'kontakt@oviaspecs.com' && mail.to === 'modtager@example.com', 'afsender/modtager er forkert')
   check(/^Reply-To: kunde@example\.com$/m.test(mail.raw), 'Reply-To mangler, når kunden har en mail')
-  check(subject === 'Ny forespørgsel: Café Test, Café Test ApS – 10.150 kr. + 648 kr./md.', `emnet er "${subject}"`)
+  check(subject === 'Ny forespørgsel: Café Test, Café Test ApS – 8.650 kr. + 648 kr./md.', `emnet er "${subject}"`)
   check(subject === rows[0].subject, 'emnet i mailen og i D1 er forskellige')
   for (const want of [
     'Navn: Café Test',
@@ -179,18 +179,18 @@ check(danishPhone('+45 53 61 36 99') === '53613699', 'dansk nummer normaliseres 
     'Mail: kunde@example.com',
     '> Hej Ronny.',
     '> Kontakt: svindler@example.com Tak',
-    'Valg (OVIA-2bg-E-I):',
+    'Hvad de har brug for: Hjemmeside og system (begge dele)',
+    'Valg (OVIA-B2bg-I):',
     '- Pakke – Anbefalet: 9.500 kr. + 549 kr./md.',
     '- Introduktionspris – 30 % på engangsprisen: −2.850 kr.',
     '- Bordbooking – Indgår: Indgår',
     '- Gavekort – Ekstra: 2.000 kr. + 99 kr./md.',
-    '- Engelsk version – Ekstra: 1.500 kr.',
-    'Engang: 10.150 kr. (normalpris 13.000 kr.)',
+    'Engang: 8.650 kr. (normalpris 11.500 kr.)',
     'Pr. måned: 648 kr./md.',
     'Alle priser er ekskl. moms.',
     'Introduktionspris: valgt (30 % på engangsprisen, mod at siden må vises som case).',
     prices.systems.thirdParty,
-    `Se valgene: ${ORIGIN}/?p=1&y=bg&e=1&i=1&t=4#prisberegner`,
+    `Se valgene: ${ORIGIN}/?v=b&p=1&y=bg&i=1&t=sum#prisberegner`,
     'Intropris valgt. Lander du kunden, så kør: npm run intro:brugt (3 pladser tilbage nu).',
     'en forespørgsel, ikke en bestilling',
   ]) {
@@ -200,14 +200,14 @@ check(danishPhone('+45 53 61 36 99') === '53613699', 'dansk nummer normaliseres 
   check(!/^Kontakt: svindler/m.test(text), 'beskeden kan efterligne et felt i mailen')
   // Hver valgt linje (under "Valg") har sin pris til sidst.
   const valgLines = text.slice(text.indexOf('Valg (')).split('\n').filter((l) => l.startsWith('- '))
-  check(valgLines.length === 5 && valgLines.every((l) => /: (Indgår|−?[\d.]+ kr\.( \+ [\d.]+ kr\.\/md\.)?)$/.test(l)), `en valgt linje mangler pris:\n${valgLines.join('\n')}`)
+  check(valgLines.length === 4 && valgLines.every((l) => /: (Indgår|−?[\d.]+ kr\.( \+ [\d.]+ kr\.\/md\.)?)$/.test(l)), `en valgt linje mangler pris:\n${valgLines.join('\n')}`)
   check(rows[0].summary.includes('Hej Ronny.') && rows[0].contact === 'kunde@example.com' && rows[0].name === 'Café Test (Café Test ApS)', `D1-rækken: ${JSON.stringify(rows[0])}`)
 }
 
 // Priserne regnes på serveren: et snydt tal fra browseren bruges aldrig, og kvitteringen følger valgene.
 {
   const e = env()
-  const r = await call({ ...GOOD, link: '/?p=2&c=1&t=4', total: 1, once: 1, monthly: 1, lines: [{ label: 'Gratis', price: '0 kr.' }] }, e)
+  const r = await call({ ...GOOD, link: '/?v=b&p=2&c=1&t=sum', total: 1, once: 1, monthly: 1, lines: [{ label: 'Gratis', price: '0 kr.' }] }, e)
   check(r.status === 200, `snydt tal: ${r.status}`)
   const { text, subject } = decode(e.mail.sent[0].raw)
   check(subject.endsWith('– 15.000 kr. + 895 kr./md.'), `snydt tal i emnet: "${subject}"`)
@@ -218,7 +218,7 @@ check(danishPhone('+45 53 61 36 99') === '53613699', 'dansk nummer normaliseres 
 
 // Uden virksomhed og med telefon: emnet uden komma, nummeret normaliseret, ingen Reply-To.
 {
-  const r = await call({ name: 'Mette', phone: '+45 53 61 36 99', link: '/?p=0&t=4' })
+  const r = await call({ name: 'Mette', phone: '+45 53 61 36 99', link: '/?v=h&p=0&t=sum' })
   check(r.status === 200 && r.data.ok, `telefon: ${r.status}`)
   const raw = r.env.mail.sent[0].raw
   const { text, subject } = decode(raw)
@@ -247,38 +247,62 @@ for (const host of ['https://oviaspecs.com', 'https://pakker-ovia.ronnyhong723.w
     })
     await handleInquiry(req, e, DEPS)
     const got = /Se valgene: (\S+)/.exec(decode(e.mail.sent[0]?.raw ?? '').text)?.[1] ?? ''
-    check(got.startsWith(`${host}/?p=1`), `link på ${host} (sendt: ${link.slice(0, 40)}…) blev ${got}`)
+    check(got.startsWith(`${host}/?v=b&p=1`), `link på ${host} (sendt: ${link.slice(0, 40)}…) blev ${got}`)
   }
 }
 
 section('priser')
-// Serverens genberegnede pris = beregnerens pris (håndregnet) for hver pakke alene, med 1 og 2 systemer, Max med
-// standard + skræddersyet, hvert tilvalg, og med introSlotsLeft = 3 og 0. Ved 0 findes introprisen ingen steder.
+// Serverens genberegnede pris = beregnerens pris (håndregnet) for hver af de tre veje: hver pakke alene; System alene med 1 og 2
+// almindelige funktioner og 0/1/2 bygget specielt til jer; Begge med Anbefalet (1 og 2 funktioner) og Max (2 og 3), bygget specielt
+// 0/1/2; hver med og uden intro, og med introSlotsLeft = 3 og 0. Ved 0 findes introprisen ingen steder. Intro (30 % af pakkens
+// engangspris) findes kun med en hjemmeside: Start 1.500, Anbefalet 2.850, Max 4.500.
 {
-  const sc = (pkg, o = {}) => ({ pkg, systems: [], custom: 0, english: false, ...o })
+  const SAVE = [1500, 2850, 4500]
+  const site = (pkg) => ({ path: 'site', pkg, systems: [], custom: 0 })
+  const sysOnly = (systems, custom = 0) => ({ path: 'system', pkg: null, systems, custom })
+  const both = (pkg, systems, custom = 0) => ({ path: 'both', pkg, systems, custom })
+  const F5 = ['booking', 'bestilling', 'gavekort', 'nyhedsbrev', 'anmeldelser']
+  const n = (k) => F5.slice(0, k)
+  // [tekst, valg, [engang, måned]]
   const cases = [
-    ['Start alene', sc(0), [5000, 299], [3500, 299]],
-    ['Anbefalet alene', sc(1), [9500, 549], [6650, 549]],
-    ['Max alene', sc(2), [15000, 895], [10500, 895]],
-    ['Anbefalet + 1 system (indgår)', sc(1, { systems: ['booking'] }), [9500, 549], [6650, 549]],
-    ['Anbefalet + 2 systemer', sc(1, { systems: ['booking', 'bestilling'] }), [11500, 648], [8650, 648]],
-    ['Max + standard + skræddersyet (indgår)', sc(2, { systems: ['booking'], custom: 1 }), [15000, 895], [10500, 895]],
-    ['Max + 2 standard + 1 skræddersyet', sc(2, { systems: ['booking', 'bestilling'], custom: 1 }), [17000, 994], [12500, 994]],
-    ['Start + ekstra standardsystem', sc(0, { systems: ['gavekort'] }), [7000, 398], [5500, 398]],
-    ['Anbefalet + skræddersyet tilvalg', sc(1, { custom: 1 }), [14500, 748], [11650, 748]],
-    ['Start + engelsk', sc(0, { english: true }), [6500, 299], [5000, 299]],
-    ['Anbefalet + engelsk', sc(1, { english: true }), [11000, 549], [8150, 549]],
-    ['Max + engelsk (indgår)', sc(2, { english: true }), [15000, 895], [10500, 895]],
-    ['Anbefalet + 2 systemer + engelsk', sc(1, { systems: ['booking', 'gavekort'], english: true }), [13000, 648], [10150, 648]],
+    ['Hjemmeside: Start', site(0), [5000, 299]],
+    ['Hjemmeside: Anbefalet', site(1), [9500, 549]],
+    ['Hjemmeside: Max', site(2), [15000, 895]],
+    ['System: 1 almindelig', sysOnly(n(1)), [2500, 149]],
+    ['System: 2 almindelige', sysOnly(n(2)), [5000, 298]],
+    ['System: 1 almindelig + 1 specielt', sysOnly(n(1), 1), [7500, 348]],
+    ['System: 2 almindelige + 1 specielt', sysOnly(n(2), 1), [10000, 497]],
+    ['System: 1 almindelig + 2 specielle', sysOnly(n(1), 2), [12500, 547]],
+    ['System: 2 almindelige + 2 specielle', sysOnly(n(2), 2), [15000, 696]],
+    ['System: kun 1 specielt', sysOnly([], 1), [5000, 199]],
+    ['System: kun 2 specielle', sysOnly([], 2), [10000, 398]],
+    ['Begge: Anbefalet, 1 funktion', both(1, n(1)), [9500, 549]],
+    ['Begge: Anbefalet, 1 funktion + 1 specielt', both(1, n(1), 1), [14500, 748]],
+    ['Begge: Anbefalet, 1 funktion + 2 specielle', both(1, n(1), 2), [19500, 947]],
+    ['Begge: Anbefalet, 2 funktioner', both(1, n(2)), [11500, 648]],
+    ['Begge: Anbefalet, 2 funktioner + 1 specielt', both(1, n(2), 1), [16500, 847]],
+    ['Begge: Anbefalet, 2 funktioner + 2 specielle', both(1, n(2), 2), [21500, 1046]],
+    ['Begge: Max, 2 funktioner', both(2, n(2)), [15000, 895]],
+    ['Begge: Max, 2 funktioner + 1 specielt', both(2, n(2), 1), [17000, 994]],
+    ['Begge: Max, 2 funktioner + 2 specielle', both(2, n(2), 2), [22000, 1193]],
+    ['Begge: Max, 3 funktioner', both(2, n(3)), [17000, 994]],
+    ['Begge: Max, 3 funktioner + 1 specielt', both(2, n(3), 1), [19000, 1093]],
+    ['Begge: Max, 3 funktioner + 2 specielle', both(2, n(3), 2), [24000, 1292]],
+    ['Begge: Max, kun 1 specielt', both(2, [], 1), [15000, 895]],
+    ['Begge: Max, kun 2 specielle', both(2, [], 2), [20000, 1094]],
+    ['Begge: Start, 1 funktion', both(0, n(1)), [7000, 398]],
+    ['Begge: Start, 1 funktion + 1 specielt', both(0, n(1), 1), [12000, 597]],
+    ['Begge: Anbefalet uden funktioner', both(1, []), [9500, 549]],
   ]
   for (const slots of [3, 0]) {
     const cfg = cfgWith(slots)
-    for (const [label, sel, normal, intro] of cases) {
+    for (const [label, sel, normal] of cases) {
       for (const withIntro of [false, true]) {
-        const link = '/?' + toQuery({ ...sel, intro: withIntro }, 4)
+        const link = '/?' + toQuery({ ...sel, intro: withIntro }, 'sum')
         const e = env()
         const res = await handleInquiry(post({ ...GOOD, link }), e, { ...DEPS, prices: cfg })
-        const want = withIntro && slots > 0 ? intro : normal
+        const introOn = withIntro && slots > 0 && sel.path !== 'system'
+        const want = [normal[0] - (introOn ? SAVE[sel.pkg] : 0), normal[1]]
         const tag = `${label}, intro=${withIntro}, pladser=${slots}`
         check(res.status === 200 && e.mail.sent.length === 1, `${tag}: ${res.status}`)
         const { text, subject } = decode(e.mail.sent[0].raw)
@@ -288,10 +312,16 @@ section('priser')
         // Browserens regnemaskine (receipt.js) giver samme tal som serveren.
         const rc = buildReceipt({ ...sel, intro: withIntro }, cfg)
         check(rc.o === want[0] && rc.m === want[1], `${tag}: beregneren giver ${rc.o}/${rc.m}, ikke ${want}`)
-        if (slots === 0 || !withIntro) {
+        // Mailen siger, hvilken vej kunden tog, og id'et begynder med vejens bogstav.
+        const needText = { site: 'Kun en hjemmeside', system: 'Kun et system til deres nuværende hjemmeside', both: 'Hjemmeside og system (begge dele)' }[sel.path]
+        check(text.includes(`Hvad de har brug for: ${needText}`), `${tag}: vejen mangler i mailen`)
+        check(new RegExp(`Valg \\(OVIA-${{ site: 'H', system: 'S', both: 'B' }[sel.path]}`).test(text), `${tag}: id'et har ikke vejens bogstav`)
+        check((sel.path === 'system') === !text.includes('- Pakke –'), `${tag}: pakke-linje og vej passer ikke sammen`)
+        check(!/engelsk/i.test(text), `${tag}: engelsk-tilvalg i mailen`)
+        if (!introOn) {
           check(!/intro/i.test(text + subject + e.DB.rows()[0].summary + e.DB.rows()[0].subject), `${tag}: spor af intro`)
         } else {
-          check(text.includes(`Intropris valgt. Lander du kunden, så kør: npm run intro:brugt (3 pladser tilbage nu).`), `${tag}: intro-linjen mangler`)
+          check(text.includes('Intropris valgt. Lander du kunden, så kør: npm run intro:brugt (3 pladser tilbage nu).'), `${tag}: intro-linjen mangler`)
         }
       }
     }
@@ -344,12 +374,18 @@ for (const [label, body, field] of [
 {
   const r = await call('{ikke json')
   check(r.status === 400 && r.env.DB.rows().length === 0, `ikke-JSON: ${r.status}`)
-  for (const link of ['/', '/?t=4', '/?p=9', 'ikke et link']) {
+  for (const link of ['/', '/?t=sum', '/?p=9', 'ikke et link', '/?v=s', '/?v=h', '/?v=b&y=b', '/?v=s&p=2&t=sum']) {
     const n = await call({ ...GOOD, link })
     check(n.status === 400 && n.data.error === 'invalid_link', `link uden valg "${link}": ${n.status} ${n.data.error}`)
   }
-  check(canonicalLink('/?p=1&y=bxq&c=99&e=1&i=1&t=9', ORIGIN, cfgWith(3))?.url === `${ORIGIN}/?p=1&y=b&c=5&e=1&i=1&t=4#prisberegner`, 'canonicalLink renser ugyldige svar')
-  check(canonicalLink('/?p=1&i=1', ORIGIN, cfgWith(0))?.url === `${ORIGIN}/?p=1&t=4#prisberegner`, 'canonicalLink beholder intro ved 0 pladser')
+  check(canonicalLink('/?v=b&p=1&y=bxq&c=99&i=1&t=9', ORIGIN, cfgWith(3))?.url === `${ORIGIN}/?v=b&p=1&y=b&c=5&i=1&t=sum#prisberegner`, 'canonicalLink renser ugyldige svar')
+  check(canonicalLink('/?v=h&p=1&i=1', ORIGIN, cfgWith(0))?.url === `${ORIGIN}/?v=h&p=1&t=sum#prisberegner`, 'canonicalLink fjerner intro ved 0 pladser')
+  // Felter, der ikke hører til vejen, kommer ikke med i linket: pakke og intro ved System alene, funktioner ved Hjemmeside alene.
+  check(canonicalLink('/?v=s&p=2&y=bg&c=1&i=1&t=pkg', ORIGIN, cfgWith(3))?.url === `${ORIGIN}/?v=s&y=bg&c=1&t=sum#prisberegner`, 'canonicalLink: system alene beholder pakke eller intro')
+  check(canonicalLink('/?v=h&p=1&y=bg&c=2', ORIGIN, cfgWith(3))?.url === `${ORIGIN}/?v=h&p=1&t=sum#prisberegner`, 'canonicalLink: hjemmeside alene beholder funktioner')
+  // Links fra pakke-versionen (uden v og med e og tal-trin) virker stadig: vejen udledes, engelsk ignoreres.
+  check(canonicalLink('/?p=1&y=bg&e=1&i=1&t=4', ORIGIN, cfgWith(3))?.url === `${ORIGIN}/?v=b&p=1&y=bg&i=1&t=sum#prisberegner`, 'canonicalLink: link fra pakke-versionen')
+  check(canonicalLink('/?p=0&t=3', ORIGIN, cfgWith(3))?.url === `${ORIGIN}/?v=h&p=0&t=sum#prisberegner`, 'canonicalLink: link fra pakke-versionen uden funktioner')
 }
 
 // Honeypot: OK til robotten, men intet gemt og intet sendt — med og uden Turnstile.
@@ -413,11 +449,11 @@ for (const [label, e] of [['uden Turnstile', env()], ['med Turnstile', env({ TUR
 
 // composeMail kan også bruges direkte (samme tekst som workeren sender).
 {
-  const l = canonicalLink(LINK, ORIGIN)
+  const l = canonicalLink(LINK, ORIGIN, cfgWith(3))
   const m = composeMail({ name: 'X', link: l.url, selection: l.selection }, cfgWith(3))
-  check(m.subject === 'Ny forespørgsel: X – 10.150 kr. + 648 kr./md.', `composeMail emne: ${m.subject}`)
+  check(m.subject === 'Ny forespørgsel: X – 8.650 kr. + 648 kr./md.', `composeMail emne: ${m.subject}`)
   const m0 = composeMail({ name: 'X', link: l.url, selection: l.selection }, cfgWith(0))
-  check(m0.subject === 'Ny forespørgsel: X – 13.000 kr. + 648 kr./md.' && !/intro/i.test(m0.text), `composeMail ved 0 pladser: ${m0.subject}`)
+  check(m0.subject === 'Ny forespørgsel: X – 11.500 kr. + 648 kr./md.' && !/intro/i.test(m0.text), `composeMail ved 0 pladser: ${m0.subject}`)
 }
 
 // Svar først, mail bagefter (ctx.waitUntil): kunden får OK lige efter validering og gem, mens send_email er langsom;

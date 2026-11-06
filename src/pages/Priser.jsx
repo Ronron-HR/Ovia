@@ -1,6 +1,6 @@
 import Contact from '../components/layout/Contact.jsx'
 import prices from '../data/prices.json'
-import { addonRows, compareRows } from '../data/pages.js'
+import { addonRows, compareRows, systemOnlyRows } from '../data/pages.js'
 import { NBSP, formatKr, introActive } from '../lib/calculate.js'
 import { slotsText } from '../components/calculator/parts.jsx'
 import { priceText } from '../lib/receipt.js'
@@ -9,6 +9,7 @@ const heading = 'font-[family-name:var(--font-display)] font-bold [font-stretch:
 
 const jump = [
   ['Pakker', '#pakker'],
+  ['Kun et system', '#system-alene'],
   ['Ekstra ting', '#ekstra'],
   ['Vilkår', '#vilkaar'],
 ]
@@ -76,16 +77,24 @@ export default function Priser() {
               </div>
             ))}
           </div>
-          {compareRows.map(([label, ...cells]) => (
-            <div key={label} role="row" className="contents">
-              <span role="rowheader" className="col-span-full border-t border-hairline pt-[14px] pb-[2px] text-sm leading-[1.35] md:col-auto md:py-3 md:pr-4">
-                {label}
-              </span>
-              {cells.map((c, i) => (
-                <Cell key={i} value={c} tint={prices.packages[i].recommended} />
-              ))}
-            </div>
-          ))}
+          {compareRows.map((row) =>
+            Array.isArray(row) ? (
+              <div key={row[0]} role="row" className="contents">
+                <span role="rowheader" className="col-span-full border-t border-hairline pt-[14px] pb-[2px] text-sm leading-[1.35] md:col-auto md:py-3 md:pr-4">
+                  {row[0]}
+                </span>
+                {row.slice(1).map((c, i) => (
+                  <Cell key={i} value={c} tint={prices.packages[i].recommended} />
+                ))}
+              </div>
+            ) : (
+              <div key={row.group} role="row" className="contents">
+                <span role="rowheader" className={`${heading} col-span-full border-t-2 border-ink pt-5 pb-1 text-base tracking-[-0.01em] md:pt-7`}>
+                  {row.group}
+                </span>
+              </div>
+            ),
+          )}
         </div>
         <p className="mt-[14px] mb-0 text-sm text-muted-2">Engangsbeløbet betales én gang for at bygge siden. Den månedlige pris dækker drift, domæne, sikkerhedskopi og det, pakken ellers indeholder.</p>
         {intro && (
@@ -106,6 +115,31 @@ export default function Priser() {
             </p>
           </div>
         )}
+      </section>
+
+      <section id="system-alene" aria-labelledby="system-alene-t" className="mx-auto max-w-[1440px] scroll-mt-20 px-5 pb-12 md:scroll-mt-[152px] md:px-14 md:pb-16">
+        <h2 id="system-alene-t" className="display t-h2s">
+          Kun et system
+        </h2>
+        <p className="mt-4 mb-0 max-w-[60ch] text-[17px] leading-normal">
+          Har I allerede en hjemmeside? {prices.systemOnly.note}{intro && ' Introduktionsrabatten gælder kun, når I får en ny hjemmeside hos os.'}
+        </p>
+        <div className="mt-5 max-w-[760px]">
+          {systemOnlyRows.map((r) => {
+            const a = prices.systemOnly[r.key]
+            return (
+              <div key={r.key} className="grid items-baseline gap-x-4 gap-y-1 border-t border-hairline py-4" style={{ gridTemplateColumns: 'minmax(0,1fr) auto' }}>
+                <span className="text-base font-medium">{a.name}</span>
+                <span className="price text-sm">{priceText({ once: a.once, monthly: a.monthly })} pr. stk.</span>
+                <span className="col-span-full text-sm text-muted-2">{r.note}</span>
+              </div>
+            )
+          })}
+        </div>
+        <a href="/#prisberegner" className="btn btn-ink hov-ink-soft mt-6 w-full text-[17px] md:w-auto">
+          <span>Beregn prisen på et system</span>
+          <span aria-hidden="true">→</span>
+        </a>
       </section>
 
       <section id="ekstra" aria-label="Ekstra ting og vilkår" className="mx-auto grid max-w-[1440px] scroll-mt-20 gap-7 section-pad px-5 md:scroll-mt-[152px] md:grid-cols-2 md:gap-14 md:px-14">

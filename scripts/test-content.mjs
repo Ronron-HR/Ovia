@@ -4,6 +4,8 @@
  */
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
+import prices from '../src/data/prices.json' with { type: 'json' }
+import { formatKr } from '../src/lib/calculate.js'
 
 if (!existsSync('dist/index.html')) {
   console.error('Kør npm run build først.')
@@ -93,6 +95,20 @@ for (const [p, t] of text) {
   check(desc.length >= 100 && desc.length <= 175, `beskrivelsens længde ${desc.length} i ${p}`)
   check(!/\.\./.test(desc.replace(/\.\.\./g, '')), `dobbelt punktum i beskrivelsen: ${p}`)
 }
+
+// 6. Hjemmesiden, funktioner alene og engelsk: priserne kommer fra prices.json, og der er intet tilvalg "Engelsk version".
+const flat = (p) => (text.get(join('dist', p, 'index.html')) ?? '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;| /g, ' ').replace(/\s+/g, ' ')
+const kr = (o, m) => `${formatKr(o)} + ${formatKr(m, true)}`.replace(/ /g, ' ')
+for (const page of ['priser', 'hjemmeside']) {
+  const t = flat(page)
+  check(t.includes(prices.website.title), `/${page}/ mangler "${prices.website.title}"`)
+  for (const part of prices.website.parts) check(t.toLowerCase().includes(part.toLowerCase()), `/${page}/ mangler "${part}"`)
+  check(t.includes(prices.systemOnly.note), `/${page}/ mangler "${prices.systemOnly.note}"`)
+  check(t.includes(kr(prices.systemOnly.standard.once, prices.systemOnly.standard.monthly)), `/${page}/ mangler prisen på en almindelig funktion alene`)
+  check(t.includes(kr(prices.systemOnly.custom.once, prices.systemOnly.custom.monthly)), `/${page}/ mangler prisen på bygget specielt til jer alene`)
+}
+for (const [p, t] of text) check(!/engelsk version|english version/i.test(t), `tilvalget "Engelsk version" findes i ${p}`)
+check(!JSON.stringify(prices).toLowerCase().includes('"english"'), 'prices.json har stadig et english-felt')
 
 console.log(report.join('\n'))
 if (fails.length) {

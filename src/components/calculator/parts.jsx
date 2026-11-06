@@ -132,20 +132,17 @@ export const Total = memo(function Total({ value, unit, size, unitSize, gap = 8,
   )
 })
 
-/** En kvitteringslinje: "Pakke · Anbefalet ..... 9.500 kr. + 549 kr./md." */
-export const ReceiptLine = memo(function ReceiptLine({ line, dark = true, animate = false, priceSize = 14, labelSmall = 13 }) {
+/** En kvitteringslinje: "Pakke · Anbefalet ..... 9.500 kr. + 549 kr./md.". Prisen flytter ned under teksten, hvis der ikke er plads ved siden af (smal kolonne). */
+export const ReceiptLine = memo(function ReceiptLine({ line, dark = true, animate = false, priceSize = 14, labelSmall = 13, tight = false }) {
   return (
-    <div
-      className={`grid items-baseline gap-4 py-3 ${dark ? 'border-b border-hairline-dark' : 'border-b border-hairline'} ${animate ? 'anim-line' : ''}`}
-      style={{ gridTemplateColumns: 'minmax(0,1fr) auto' }}
-    >
-      <span className="text-[15px]">
+    <div className={`flex flex-wrap items-baseline justify-between gap-x-4 gap-y-[2px] ${tight ? 'py-2' : 'py-3'} ${dark ? 'border-b border-hairline-dark' : 'border-b border-hairline'} ${animate ? 'anim-line' : ''}`}>
+      <span className="min-w-0 flex-[1_1_9rem] text-[15px]">
         {line.label}{' '}
         <span style={{ fontSize: labelSmall }} className={dark ? 'text-on-ink-2' : ''}>
           · {line.pkg}
         </span>
       </span>
-      <span className="price" style={{ fontSize: priceSize }}>
+      <span className="price ml-auto flex-none text-right" style={{ fontSize: priceSize }}>
         {line.price}
       </span>
     </div>

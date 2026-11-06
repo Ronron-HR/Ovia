@@ -5,32 +5,43 @@
    eller andre resultater.
    ========================================================================= */
 
+import prices from './prices.json' with { type: 'json' }
+
 const YES = 1
 const NO = 0
 
 /**
  * Prisoversigten: rækker, der sammenligner de tre pakker (i rækkefølgen i prices.json).
  * Hver række er [tekst, Start, Anbefalet, Max]; 1 = indgår (flueben), 0 = indgår ikke (–), tekst = værdi.
+ * { group } er en overskrift i tabellen. Først selve hjemmesiden, så funktioner og Google, så drift og hjælp.
  */
 export const compareRows = [
-  ['Sider', '1–3', 'Op til 6', 'Efter behov'],
-  ['Engelsk version', 'Kan lægges til', 'Kan lægges til', YES],
+  { group: prices.website.title },
+  ['Sider', ...prices.packages.map((p) => p.pages)],
+  ...prices.website.parts.map((part) => [part, YES, YES, YES]),
+  { group: 'Funktioner og Google' },
+  ['Funktioner med i prisen', 'Link til jeres egen booking', '1 funktion', '2 (1 kan være bygget til jer)'],
   ['Jeres Google-profil sat op og udfyldt', YES, YES, YES],
   ['Opslag på Google-profilen', NO, '1 om måneden', '2 om måneden'],
   ['Svar på anmeldelser', NO, NO, YES],
   ['Bliv fundet lokalt på Google', 'Det grundlæggende', 'Også de ord, gæsterne søger på', 'Gennemgang hvert kvartal'],
-  ['Funktioner med i prisen', 'Link til jeres egen booking', '1 funktion', '2 (1 kan være bygget til jer)'],
+  { group: 'Drift og hjælp' },
   ['Rettelser', 'Små rettelser af tekst og billeder', '1 time om måneden', '2 timer om måneden'],
   ['Kort status hver måned', NO, NO, YES],
   ['Drift, domæne og sikkerhedskopi', YES, YES, YES],
 ]
 
-/** Tilvalg på /priser: beløbene kommer fra prices.json (addons). `note` er sidens egen tekst. */
+/** Ekstra ting på /priser: beløbene kommer fra prices.json (addons). `note` er sidens egen tekst. */
 export const addonRows = [
   { key: 'extraStandard', note: 'Pr. ekstra funktion (fx gavekort), ud over dem pakken har med.' },
   { key: 'custom', note: 'Én afgrænset opgave, vi bygger til jer. Flere opgaver koster det samme pr. stk.' },
-  { key: 'english', note: 'Til Start og Anbefalet. Indgår i Max.' },
   { key: 'buyout', note: 'Hvis I stopper hos os og vil beholde siden. Så stopper den månedlige betaling.' },
+]
+
+/** Et system alene (uden ny hjemmeside) på /priser: beløbene kommer fra prices.json (systemOnly). */
+export const systemOnlyRows = [
+  { key: 'standard', note: 'Fx bordbooking, online bestilling, gavekort, nyhedsbrev eller anmeldelser. Pr. stk.' },
+  { key: 'custom', note: 'Én afgrænset opgave, vi bygger til jer. Pr. stk.' },
 ]
 
 /** /hjemmeside: hvad systemerne er, og hvad vi gør for Google og lokal SEO. */

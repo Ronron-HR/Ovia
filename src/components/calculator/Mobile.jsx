@@ -1,19 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import prices from '../../data/prices.json'
-import { helpQuestions, stepLabels } from '../../data/calculator.js'
-import { formatKr, introActive, nextSystemCost } from '../../lib/calculate.js'
-import { priceText } from '../../lib/receipt.js'
+import { helpQuestions, needTitle, needs, nextLabels, stepLabels } from '../../data/calculator.js'
+import { formatKr } from '../../lib/calculate.js'
 import InquirySlot from './InquirySlot.jsx'
-import { Check, DeltaChip, PkgPrice, ReceiptLine, TERMS_SHORT, Total, slotsText } from './parts.jsx'
+import { Check, DeltaChip, PkgPrice, ReceiptLine, TERMS_SHORT, Total } from './parts.jsx'
+import { CustomCard, DiscountCard, FunctionList, NeedList, SiteBlock, choice, functionsIntro } from './steps.jsx'
 import { useExitList } from './useExitList.js'
 
 const heading = 'font-[family-name:var(--font-display)] font-bold [font-stretch:125%]'
-
-/** Valgflade: mørk når valgt, lys med tydelig ramme ellers (så den ser trykbar ud). Hele fladen er en knap (≥ 48 px). */
-const choice = (on) => `press w-full text-left min-h-12 border-2 border-ink ${on ? 'bg-ink text-paper' : 'bg-paper text-ink'}`
-
-/** Hvad et ekstra system koster oven i valget nu: "Indgår" (der er plads i pakken) eller "+2.000 kr. + 99 kr./md.". */
-const extraText = (c) => (!c ? '' : c.once === 0 && c.monthly === 0 ? 'Indgår' : '+' + priceText({ once: c.once, monthly: c.monthly }))
 
 function StepHead({ children, aside }) {
   return (
@@ -24,25 +18,36 @@ function StepHead({ children, aside }) {
   )
 }
 
-function Packages({ calc }) {
-  const { state, dispatch } = calc
-  const sel = state.selection
+function Need({ calc }) {
+  const { state } = calc
   return (
     <div>
       <h2 className="text-[clamp(26px,8vw,36px)] leading-none tracking-[-0.035em]">Prisberegner</h2>
-      <button
-        type="button"
-        onClick={() => dispatch({ type: 'helpStart' })}
-        className="press mt-3 flex min-h-12 w-full items-center justify-between bg-surface px-4 active:bg-ink active:text-paper"
-      >
-        <span className="text-[15px] font-medium whitespace-nowrap">Hjælp mig med at vælge</span>
-        <span aria-hidden="true">→</span>
-      </button>
       {state.notice && (
         <p role="status" className="mt-3 mb-0 bg-surface p-3 text-sm leading-normal">
           {state.notice}
         </p>
       )}
+      <h3 className="mt-4 mb-3 text-[clamp(19px,5.6vw,24px)] leading-[1.1] tracking-[-0.025em]">{needTitle}</h3>
+      <NeedList calc={calc} />
+    </div>
+  )
+}
+
+function Packages({ calc }) {
+  const { state, dispatch } = calc
+  const sel = state.selection
+  return (
+    <div>
+      <StepHead>Vælg pakke</StepHead>
+      <button
+        type="button"
+        onClick={() => dispatch({ type: 'helpStart' })}
+        className="press flex min-h-12 w-full items-center justify-between bg-surface px-4 active:bg-ink active:text-paper"
+      >
+        <span className="text-[15px] font-medium whitespace-nowrap">Hjælp mig med at vælge</span>
+        <span aria-hidden="true">→</span>
+      </button>
       <p className="mt-3 mb-0 text-[15px] leading-normal">Tryk på den pakke, der passer bedst. I kan altid gå tilbage og ændre.</p>
       <div className="mt-3 flex flex-col gap-3" role="group" aria-label="Vælg pakke">
         {prices.packages.map((p, i) => {
@@ -54,7 +59,7 @@ function Packages({ calc }) {
               aria-pressed={on}
               data-removal={on || (sel.pkg !== null && i < sel.pkg) ? '' : undefined}
               onClick={() => dispatch({ type: 'togglePkg', pkg: i })}
-              className={`${choice(on)} flex flex-col gap-[6px] p-4 [--press:.98]`}
+              className={`${choice(on)} flex flex-col gap-2 p-4 [--press:.98]`}
             >
               <span className="flex w-full items-center gap-[10px]">
                 <span className={`${heading} text-[clamp(18px,5.2vw,22px)] leading-[1.1] tracking-[-0.025em]`}>{p.name}</span>
@@ -65,6 +70,7 @@ function Packages({ calc }) {
               <span className="text-[13px] leading-4">
                 <PkgPrice pkg={p} intro={sel.intro} />
               </span>
+              <SiteBlock pkg={p} />
               <span className="flex flex-col gap-[2px]">
                 {p.short.map((pt) => (
                   <span key={pt} className="text-sm leading-[1.35]">
@@ -76,82 +82,22 @@ function Packages({ calc }) {
           )
         })}
       </div>
+      {sel.path === 'site' && <p className="mt-3 mb-0 text-[13px] leading-normal text-muted-2">Vil I også vælge funktioner? Gå tilbage og vælg “Begge dele”.</p>}
     </div>
   )
 }
 
 function Systems({ calc }) {
-  const { state, dispatch, receipt } = calc
+  const { state } = calc
   const sel = state.selection
-  const pkg = prices.packages[sel.pkg]
-  const byKey = Object.fromEntries(receipt.all.map((l) => [l.key, l]))
-  const nextStd = nextSystemCost(sel, 'standard')
-  const nextCustom = nextSystemCost(sel, 'custom')
-  const intro =
-    pkg.slots === 0
-      ? `${pkg.name} har ingen funktioner med. Hver funktion, I vælger, lægges til som ekstra.`
-      : pkg.customSlots
-        ? `${pkg.name} har ${pkg.slots} funktioner med. Én af dem kan være bygget specielt til jer. Flere lægges til som ekstra.`
-        : `${pkg.name} har ${pkg.slots} funktion med, efter eget valg. Flere lægges til som ekstra.`
   return (
     <div>
       <StepHead>Funktioner</StepHead>
-      <p className="m-0 mb-1 text-[15px] leading-normal">{intro}</p>
+      <p className="m-0 mb-1 text-[15px] leading-normal">{functionsIntro(sel)}</p>
       <p className="m-0 mb-3 text-[15px] leading-normal">Tryk på en funktion for at vælge den. Tryk igen for at fjerne den.</p>
-      <div className="flex flex-col gap-3" role="group" aria-label="Funktioner">
-        {prices.systems.standard.map((s) => {
-          const on = sel.systems.includes(s.key)
-          const line = byKey['sys-' + s.key]
-          const tag = on ? (line.included ? line.price : '+' + line.price) : extraText(nextStd)
-          return (
-            <button
-              key={s.key}
-              type="button"
-              aria-pressed={on}
-              data-removal={on ? '' : undefined}
-              onClick={() => dispatch({ type: 'toggleSystem', key: s.key })}
-              className={`${choice(on)} flex flex-col gap-[2px] p-4 [--press:.98]`}
-            >
-              <span className="flex w-full items-center justify-between gap-3">
-                <span className={`${heading} text-[17px] leading-[1.1] tracking-[-0.015em]`}>{s.name}</span>
-                <Check on={on} size={24} />
-              </span>
-              <span className="text-sm leading-[1.3]">{s.desc}</span>
-              <span className="price text-[13px] leading-4">{tag}</span>
-            </button>
-          )
-        })}
-        <div className="flex flex-col gap-3 bg-surface p-4">
-          <div className="flex flex-col gap-[2px]">
-            <span className={`${heading} text-[17px] leading-[1.1] tracking-[-0.015em]`}>{prices.systems.custom.name}</span>
-            <span className="text-sm leading-[1.3]">{prices.systems.custom.desc}</span>
-            <span className="price text-[13px] leading-4">{sel.custom < prices.systems.custom.max ? `Næste opgave: ${extraText(nextCustom)}` : 'Højeste antal nået'}</span>
-          </div>
-          <div className="grid h-12 self-start" style={{ gridTemplateColumns: '48px 56px 48px' }}>
-            <button
-              type="button"
-              aria-label="Fjern én bygget til jer"
-              data-removal=""
-              disabled={sel.custom <= 0}
-              onClick={() => dispatch({ type: 'setCustom', value: sel.custom - 1 })}
-              className="press border-2 border-ink bg-paper text-xl [--press:.88] disabled:opacity-40"
-            >
-              −
-            </button>
-            <span className="price flex items-center justify-center text-base" aria-live="polite">
-              {sel.custom}
-            </span>
-            <button
-              type="button"
-              aria-label="Tilføj én bygget til jer"
-              disabled={sel.custom >= prices.systems.custom.max}
-              onClick={() => dispatch({ type: 'setCustom', value: sel.custom + 1 })}
-              className="press border-2 border-ink bg-paper text-xl [--press:.88] disabled:opacity-40"
-            >
-              +
-            </button>
-          </div>
-        </div>
+      <div className="flex flex-col gap-3">
+        <FunctionList calc={calc} />
+        <CustomCard calc={calc} />
       </div>
       <p className="mt-3 mb-0 text-[13px] leading-normal text-muted-2">
         {prices.systems.thirdParty} {prices.systems.excluded}
@@ -160,61 +106,12 @@ function Systems({ calc }) {
   )
 }
 
-function Addons({ calc }) {
-  const { state, dispatch } = calc
-  const sel = state.selection
-  const pkg = prices.packages[sel.pkg]
-  const englishIncluded = pkg.english === 'included'
-  const saving = Math.round(pkg.once * prices.intro.discount)
+function Discount({ calc }) {
   return (
     <div>
-      <StepHead>Sprog og rabat</StepHead>
-      <p className="m-0 mb-3 text-[15px] leading-normal">Begge dele er valgfrie. Tryk for at vælge, tryk igen for at fjerne.</p>
-      <div className="flex flex-col gap-3">
-        {englishIncluded ? (
-          <div className="flex items-center gap-3 bg-surface p-4">
-            <span className="flex flex-1 flex-col gap-1">
-              <span className="text-base font-semibold">{prices.addons.english.name}</span>
-              <span className="text-[13px]">Indgår i {pkg.name}.</span>
-            </span>
-            <span className="flex-none bg-paper px-[10px] py-[6px] text-[13px] font-medium text-ink">Indgår</span>
-          </div>
-        ) : (
-          <button
-            type="button"
-            aria-pressed={sel.english}
-            data-removal={sel.english ? '' : undefined}
-            onClick={() => dispatch({ type: 'toggleEnglish' })}
-            className={`${choice(sel.english)} flex items-center gap-3 p-4 [--press:.98]`}
-          >
-            <span className="flex flex-1 flex-col gap-1">
-              <span className="text-base font-semibold">
-                {prices.addons.english.name} <span className="price text-[13px] font-normal">+{formatKr(prices.addons.english.once)}</span>
-              </span>
-              <span className="text-[13px]">Hele siden på engelsk.</span>
-            </span>
-            <Check on={sel.english} size={24} />
-          </button>
-        )}
-        {introActive() && (
-          <button
-            type="button"
-            aria-pressed={sel.intro}
-            data-removal={sel.intro ? '' : undefined}
-            onClick={() => dispatch({ type: 'toggleIntro' })}
-            className={`${choice(sel.intro)} flex items-start gap-3 p-4 [--press:.98]`}
-          >
-            <span className="flex flex-1 flex-col gap-1">
-              <span className="text-base font-semibold">Introduktionspris: {Math.round(prices.intro.discount * 100)}&nbsp;% rabat på engangsprisen</span>
-              <span className="text-[13px] leading-normal">
-                De første {prices.intro.total} kunder får rabat, hvis vi må vise jeres side som eksempel på vores hjemmeside. {slotsText()}. Rabatten gælder ikke den månedlige pris.
-              </span>
-              <span className="text-[13px] font-semibold">Ja, I må vise siden som case (eksempel){sel.intro ? ` · du sparer ${formatKr(saving)}` : ''}</span>
-            </span>
-            <Check on={sel.intro} size={24} />
-          </button>
-        )}
-      </div>
+      <StepHead>Rabat</StepHead>
+      <p className="m-0 mb-3 text-[15px] leading-normal">Rabatten er valgfri. Tryk for at vælge, tryk igen for at fjerne.</p>
+      <DiscountCard calc={calc} />
     </div>
   )
 }
@@ -234,7 +131,10 @@ function Summary({ calc }) {
   return (
     <div>
       <h3 className="text-[clamp(26px,8vw,36px)] leading-none tracking-[-0.035em]">Din pris er klar.</h3>
-      <p className="mt-2 text-[15px] text-muted-2">Svar inden for 24 timer.</p>
+      <p className="mt-2 mb-0 text-[15px] text-muted-2">Svar inden for 24 timer.</p>
+      <p className="mt-1 mb-0 text-[15px]">
+        Hvad I har brug for: <span className="font-semibold">{needs.find((n) => n.key === receipt.path)?.title}</span>
+      </p>
       <div className="mt-5 bg-surface px-4 pt-1 pb-4">
         {receipt.all.map((l) => (
           <ReceiptLine key={l.key + l.pkg} line={l} dark={false} priceSize={13} labelSmall={13} />
@@ -324,7 +224,7 @@ function HelpResult({ calc }) {
  * Enter/Space åbner arket, som lukkes med træk ned, bagtæppe, Luk eller Escape.
  */
 function BarAndSheet({ calc, barRef, barVisible }) {
-  const { state, dispatch, receipt, any, hrefs, delta } = calc
+  const { state, dispatch, receipt, any, complete, hrefs, delta } = calc
   const { sheet } = state
   const [drag, setDrag] = useState({ dy: 0, active: false, from: false })
   const ds = useRef(null)
@@ -391,7 +291,7 @@ function BarAndSheet({ calc, barRef, barVisible }) {
           role="button"
           tabIndex={barVisible ? 0 : -1}
           aria-expanded={sheet}
-          aria-label={sheet ? 'Luk kvittering' : 'Se kvittering'}
+          aria-label={sheet ? 'Luk dine valg' : 'Se dine valg'}
           onPointerDown={down}
           onPointerMove={move}
           onPointerUp={up}
@@ -405,7 +305,7 @@ function BarAndSheet({ calc, barRef, barVisible }) {
             {all.length > 0 && <span className="flex-none text-[13px] font-semibold whitespace-nowrap">{all.length} valg</span>}
             <span className="relative block min-w-0 flex-1 overflow-hidden text-[13px] leading-[1.35] text-ellipsis whitespace-nowrap text-on-ink-2">
               <span className="swap-in absolute top-0 left-0" data-on={any ? undefined : ''}>
-                Vælg en ydelse for at se prisen
+                Vælg for at se prisen
               </span>
               <span className="swap-out block overflow-hidden text-ellipsis" data-off={any ? undefined : ''}>
                 {shortRows.map(({ item: l, exiting }, i) => (
@@ -419,7 +319,7 @@ function BarAndSheet({ calc, barRef, barVisible }) {
                 {!any && ' '}
               </span>
             </span>
-            <span className="flex-none text-[13px] font-semibold whitespace-nowrap">{sheet ? 'Luk kvittering ↓' : 'Se kvittering ↑'}</span>
+            <span className="flex-none text-[13px] font-semibold whitespace-nowrap">{sheet ? 'Luk dine valg ↓' : 'Se dine valg ↑'}</span>
           </div>
           {/* Kun de totaler, der har et beløb (en total uden beløb vises ikke); en total folder sig ud, når den får et beløb, og sammen efter nedtællingen, når den mister det. */}
           <div className="swap-out mt-[6px] flex items-end" data-off={any ? undefined : ''}>
@@ -453,7 +353,7 @@ function BarAndSheet({ calc, barRef, barVisible }) {
       />
       <div
         role="dialog"
-        aria-label="Din kvittering"
+        aria-label="Din pris"
         aria-modal="true"
         inert={!sheet}
         className="absolute right-0 bottom-0 left-0 z-[41] flex flex-col bg-ink text-paper"
@@ -475,7 +375,7 @@ function BarAndSheet({ calc, barRef, barVisible }) {
             style={{ touchAction: 'none' }}
           >
             <span aria-hidden="true" className="mb-[10px] block h-1 w-9 bg-muted" />
-            <span className="text-base font-semibold">Din kvittering</span>
+            <span className="text-base font-semibold">Din pris</span>
           </div>
           <button
             ref={closeRef}
@@ -487,7 +387,7 @@ function BarAndSheet({ calc, barRef, barVisible }) {
           </button>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-5" style={{ scrollbarWidth: 'none' }}>
-          {!any && <p className="mt-2 text-[15px] text-on-ink-2">Vælg en ydelse for at se prisen.</p>}
+          {!any && <p className="mt-2 text-[15px] text-on-ink-2">Vælg for at se prisen.</p>}
           {all.map((l) => (
             <ReceiptLine key={l.key + l.pkg} line={l} priceSize={13} />
           ))}
@@ -505,10 +405,12 @@ function BarAndSheet({ calc, barRef, barVisible }) {
           <p className="mt-3 text-[13px] text-on-ink-2">Alle priser er ekskl. moms</p>
           {any && (
             <div className="mt-5 flex flex-col gap-2">
-              <button type="button" onClick={() => dispatch({ type: 'go', step: 4 })} className="btn btn-white px-4 [--press:.98]">
-                <span className="whitespace-nowrap">Gå til opsummering</span>
-                <span aria-hidden="true">→</span>
-              </button>
+              {complete && (
+                <button type="button" onClick={() => dispatch({ type: 'go', step: 'sum' })} className="btn btn-white px-4 [--press:.98]">
+                  <span className="whitespace-nowrap">Se samlet pris</span>
+                  <span aria-hidden="true">→</span>
+                </button>
+              )}
               <div className="grid grid-cols-2 gap-2">
                 <a href="tel:+4553613699" className="btn btn-surface min-h-[52px] justify-center text-[15px]">
                   Ring til Ronny
@@ -526,16 +428,17 @@ function BarAndSheet({ calc, barRef, barVisible }) {
 }
 
 export default function Mobile({ calc, barRef, fly }) {
-  const { state, dispatch, any } = calc
-  const { step, help } = state
+  const { state, dispatch, flow } = calc
+  const { help } = state
+  const step = flow.step
   const inHelp = !!help
   const hq = help ? help.q : 0
-  const stepName = stepLabels[step - 1]
-  const nextLabel = step === 1 ? (any ? 'Næste: Vælg funktioner' : 'Vælg en pakke') : step === 2 ? 'Næste: Sprog og rabat' : 'Se samlet pris'
-  const nextDisabled = step === 1 && !any
+  const stepName = stepLabels[step]
+  const nextLabel = flow.next ? nextLabels[flow.next] : 'Vælg, hvad I har brug for'
+  const nextDisabled = !flow.canNext
   const canBack = inHelp && hq > 0
-  const canBackStep = !inHelp && step > 1 && step < 4
-  const barVisible = (!inHelp && step < 4) || (inHelp && hq === 3)
+  const canBackStep = !inHelp && !!flow.prev && step !== 'sum'
+  const barVisible = (!inHelp && step !== 'sum') || (inHelp && hq === 3)
   const multiNextOk = inHelp && hq === 1 && (help.a[1] || []).length > 0
 
   // Nyt trin: tilbage til toppen og fokus på panelet, så tastatur og skærmlæser følger med.
@@ -554,7 +457,7 @@ export default function Mobile({ calc, barRef, fly }) {
 
   // Handlingsknapperne ligger i rullefeltet: lige under sidste valg (16 px margen + 8 px polstring = 24 px), og klæbet til bunden over bundbaren, hvis indholdet er højere.
   const actions =
-    !inHelp && step < 4 ? (
+    !inHelp && step !== 'sum' ? (
       <div className={canBackStep ? 'grid gap-2' : ''} style={canBackStep ? { gridTemplateColumns: 'auto minmax(0,1fr)' } : undefined}>
         {canBackStep && (
           <button
@@ -603,14 +506,14 @@ export default function Mobile({ calc, barRef, fly }) {
             <span aria-hidden="true">← </span>Tilbage
           </button>
         )}
-        {!inHelp && step < 4 && (
+        {!inHelp && step !== 'sum' && (
           <div className="min-w-0 flex-1">
             <div className="mb-[7px] text-[13px] whitespace-nowrap text-muted-2">
-              Trin {step} af 4 · {stepName}
+              {flow.total > 1 ? `Trin ${flow.index + 1} af ${flow.total} · ${stepName}` : `Trin 1 · ${stepName}`}
             </div>
-            <div className="grid gap-1" style={{ gridTemplateColumns: 'repeat(4,minmax(0,1fr))' }} aria-hidden="true">
-              {[1, 2, 3, 4].map((n) => (
-                <span key={n} className="h-[3px]" style={{ background: n <= step ? 'var(--ink)' : 'var(--hairline)', transition: 'background 240ms ease-out' }} />
+            <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${flow.total},minmax(0,1fr))` }} aria-hidden="true">
+              {flow.steps.map((k, i) => (
+                <span key={k} className="h-[3px]" style={{ background: i <= flow.index ? 'var(--ink)' : 'var(--hairline)', transition: 'background 240ms ease-out' }} />
               ))}
             </div>
           </div>
@@ -638,7 +541,7 @@ export default function Mobile({ calc, barRef, fly }) {
             </button>
           </>
         )}
-        {!inHelp && step === 4 && (
+        {!inHelp && step === 'sum' && (
           <button type="button" onClick={() => dispatch({ type: 'mBack' })} className="press min-h-12 border-2 border-ink bg-paper px-4 text-[15px] font-medium [--press:.96]">
             ← Tilbage og ret mine valg
           </button>
@@ -653,12 +556,14 @@ export default function Mobile({ calc, barRef, fly }) {
             ) : (
               <HelpResult calc={calc} />
             )
-          ) : step === 1 ? (
+          ) : step === 'need' ? (
+            <Need calc={calc} />
+          ) : step === 'pkg' ? (
             <Packages calc={calc} />
-          ) : step === 2 ? (
+          ) : step === 'sys' ? (
             <Systems calc={calc} />
-          ) : step === 3 ? (
-            <Addons calc={calc} />
+          ) : step === 'disc' ? (
+            <Discount calc={calc} />
           ) : (
             <Summary calc={calc} />
           )}

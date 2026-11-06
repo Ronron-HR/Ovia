@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react'
-import { clean, emptySelection, fromQuery, guidedHelp, toQuery } from '../../lib/calculate.js'
+import { clean, emptySelection, flowOf, fromQuery, guidedHelp, isComplete, toQuery } from '../../lib/calculate.js'
 import { buildReceipt, mailtoHref, smsHref } from '../../lib/receipt.js'
 import { oldLinkNotice } from '../../data/calculator.js'
 
@@ -7,21 +7,22 @@ import { oldLinkNotice } from '../../data/calculator.js'
  * Beregnerens tilstand. Valget (selection) har samme form som calculate() i lib/calculate.js; resten er trin,
  * guidet hjælp og kvitteringsarket.
  *
- *   step 1 Pakke · 2 Funktioner · 3 Sprog og rabat · 4 Samlet pris
+ *   step  'need' Hvad har I brug for? · 'pkg' Pakke · 'sys' Funktioner · 'disc' Rabat · 'sum' Samlet pris.
+ *         Hvilke trin der findes, afhænger af vejen (stepsFor i lib/calculate.js). Trinnet er altid gyldigt (flowOf).
  *   help  null eller { q: 0..3, a: [svar 1, [svar 2 (flervalg)], svar 3] }; q 3 = forslaget
  */
 
 export const initialState = {
   selection: emptySelection(),
-  step: 1,
+  step: 'need',
   help: null,
   sheet: false,
   notice: '',
 }
 
-/** Gør et trin gyldigt: uden pakke findes kun trin 1. */
+/** Gør trinnet gyldigt: et trin, der ikke hører til vejen, eller som ligger forbi det første ufærdige, bliver til nærmeste gyldige. */
 function sane(state) {
-  const step = state.selection.pkg === null ? 1 : state.step
+  const step = flowOf(state.selection, state.step).step
   return step === state.step ? state : { ...state, step }
 }
 
@@ -34,17 +35,18 @@ export function reducer(state, action) {
       return sane({ ...state, selection: action.selection, step: action.step, notice: '' })
     case 'oldLink':
       return { ...state, notice: oldLinkNotice }
-    // Pakken er et valg mellem tre; et tryk på den valgte pakke fjerner den igen (så starter alt forfra).
+    // Vejen: valgene under de andre veje bliver stående, så et skift frem og tilbage ikke mister noget.
+    case 'setPath':
+      return withSelection(state, { path: action.path })
+    // Pakken er et valg mellem tre; et tryk på den valgte pakke fjerner den igen.
     case 'togglePkg':
-      return sane({ ...state, selection: sel.pkg === action.pkg ? emptySelection() : clean({ ...sel, pkg: action.pkg }), notice: '' })
+      return withSelection(state, { pkg: sel.pkg === action.pkg ? null : action.pkg })
     case 'toggleSystem': {
       const on = sel.systems.includes(action.key)
       return withSelection(state, { systems: on ? sel.systems.filter((k) => k !== action.key) : [...sel.systems, action.key] })
     }
     case 'setCustom':
       return withSelection(state, { custom: action.value })
-    case 'toggleEnglish':
-      return withSelection(state, { english: !sel.english })
     case 'toggleIntro':
       return withSelection(state, { intro: !sel.intro })
     case 'go':
@@ -52,12 +54,16 @@ export function reducer(state, action) {
     case 'sheet':
       return { ...state, sheet: action.open }
     case 'next':
-    case 'mNext':
-      return sane({ ...state, step: Math.min(4, state.step + 1), help: null })
+    case 'mNext': {
+      const f = flowOf(sel, state.step)
+      return f.canNext ? sane({ ...state, step: f.next, help: null }) : state
+    }
     case 'back':
-    case 'mBack':
+    case 'mBack': {
       if (state.help) return state.help.q > 0 ? { ...state, help: { ...state.help, q: state.help.q - 1 } } : { ...state, help: null }
-      return sane({ ...state, step: Math.max(1, state.step - 1) })
+      const f = flowOf(sel, state.step)
+      return f.prev ? sane({ ...state, step: f.prev }) : state
+    }
     // Guidet hjælp.
     case 'helpStart':
       return { ...state, help: { q: 0, a: [] } }
@@ -84,15 +90,15 @@ export function reducer(state, action) {
       return sane({ ...state, selection: picked, help: { q: 3, a }, notice: '' })
     }
     case 'helpToSummary':
-      return sane({ ...state, step: 4, help: null })
+      return sane({ ...state, step: 'sum', help: null })
     case 'helpCustomize':
-      return sane({ ...state, step: 2, help: null })
+      return sane({ ...state, step: sel.path === 'both' ? 'sys' : 'pkg', help: null })
     default:
       return state
   }
 }
 
-const QUERY_KEYS = ['p', 'y', 'c', 'e', 'i', 't', 'w', 'm', 'b', 'd', 'bk', 'x', 's']
+const QUERY_KEYS = ['v', 'p', 'y', 'c', 'e', 'i', 't', 'w', 'm', 'b', 'd', 'bk', 'x', 's']
 
 /**
  * Hook til hele beregneren: tilstand, kvittering, del-link (opdateres med history.replaceState, aldrig pushState)
@@ -106,7 +112,7 @@ export function useCalculator() {
   useEffect(() => {
     const parsed = fromQuery(window.location.search)
     if (parsed.old) dispatch({ type: 'oldLink' })
-    else if (parsed.selection.pkg !== null) dispatch({ type: 'hydrate', selection: parsed.selection, step: parsed.step })
+    else if (parsed.selection.path !== null) dispatch({ type: 'hydrate', selection: parsed.selection, step: parsed.step })
     ready.current = true
   }, [])
 
@@ -118,7 +124,7 @@ export function useCalculator() {
     const frame = requestAnimationFrame(() => {
       timer = setTimeout(() => {
         // Et gammelt link står, til der vælges noget nyt.
-        if (state.selection.pkg === null && state.notice) return
+        if (state.selection.path === null && state.notice) return
         const q = new URLSearchParams(window.location.search)
         QUERY_KEYS.forEach((k) => q.delete(k))
         new URLSearchParams(toQuery(state.selection, state.step)).forEach((v, k) => q.set(k, v))
@@ -135,9 +141,10 @@ export function useCalculator() {
     }
   }, [state.selection, state.step, state.notice])
 
-  // Formularen (lazy) hentes, når kunden er nået til "Sprog og rabat": så er den klar, når opsummeringen vises, og trykket på
-  // "Se opsummering" venter ikke på en netværkshentning (INP). Forsiden og de første trin henter den ikke.
-  const nearSummary = state.step >= 3
+  // Formularen (lazy) hentes, når det næste trin er den samlede pris: så er den klar, når opsummeringen vises, og trykket på
+  // "Se samlet pris" venter ikke på en netværkshentning (INP). Forsiden og de første trin henter den ikke.
+  const flow = useMemo(() => flowOf(state.selection, state.step), [state.selection, state.step])
+  const nearSummary = flow.next === 'sum' || flow.step === 'sum'
   useEffect(() => {
     if (nearSummary) import('./InquiryForm.jsx')
   }, [nearSummary])
@@ -156,5 +163,5 @@ export function useCalculator() {
     return { mail: mailtoHref(state.selection, url), sms: smsHref(url), url }
   }, [shareUrl, state.selection])
 
-  return { state, dispatch, receipt, hrefs, any: state.selection.pkg !== null }
+  return { state, dispatch, receipt, hrefs, flow, complete: isComplete(state.selection), any: receipt.all.length > 0 }
 }
