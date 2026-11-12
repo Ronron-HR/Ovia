@@ -145,7 +145,7 @@ export function ExampleOffer({ calc, wide = false }) {
       aria-pressed={sel.intro}
       data-removal={sel.intro ? '' : undefined}
       onClick={() => dispatch({ type: 'toggleIntro' })}
-      className={`press flex w-full items-center gap-3 bg-surface px-4 py-3 text-left [--press:.99] ${wide ? 'max-w-[680px]' : ''}`}
+      className={`press flex min-h-12 w-full items-center gap-3 bg-surface px-4 py-3 text-left [--press:.99] ${wide ? 'max-w-[680px]' : ''}`}
     >
       <Check on={sel.intro} size={22} />
       <span className="text-[15px] leading-[1.4]">Må vi vise jeres side som eksempel hos os? Så er engangsprisen lidt lavere.</span>

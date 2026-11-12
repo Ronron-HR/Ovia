@@ -1,5 +1,5 @@
 /**
- * Browsertest af beregnerens tre veje: En hjemmeside · Et system til den nuværende hjemmeside · Begge dele.
+ * Browsertest af beregnerens tre veje: Ny hjemmeside · Løs et problem · Begge dele.
  *
  * Kræver en kørende `npm run preview` (http://localhost:4173, eller SITE=…) og Chrome (CHROME=… hvis den ikke ligger på
  * standardstien). SHOTS=<mappe> gemmer et skærmbillede af hvert trin for hver vej (navn: <bredde>-<vej>-<nr>-<trin>.png).
@@ -9,8 +9,9 @@
  *  - på hvert trin: ingen vandret scroll, intet uden for skærmen, ingen tekst skåret af, ingen tekst oven i anden tekst,
  *    og trykflader (knapper) på mindst 44 × 44 px
  *  - det sorte opsummeringsfelt (desktop-kvitteringen) går aldrig ud over skærmkanten og skærer ingen tekst af
- *  - funktioner: "Indgår" står kun på de funktioner, pakken faktisk dækker lige nu; alle andre viser deres ekstrapris
- *  - "Bygget specielt til jer": pris pr. stk. og en −/antal/+-styring med knapper på mindst 44 × 44 px
+ *  - Hvad skal løses?: tre kort; "Indgår" står kun på de funktioner, pakken faktisk dækker lige nu; alle andre viser deres ekstrapris
+ *  - "Lad et system tage det, der æder tid": idéer og "Pris aftales" (ingen pris i totalerne)
+ *  - rabatten er et stille spørgsmål på sidste trin (ikke et trin), uden knaphedstekst og uden overstregede priser
  *  - skift af vej midt i: pris og valg er rigtige, og intet mistes ved at gå frem og tilbage
  */
 import { mkdirSync, readFileSync } from 'node:fs'
@@ -81,7 +82,7 @@ const buttonsText = (page) => page.$$eval('#prisberegner button', (b) => b.map((
 /** Knappens tekst for en funktion, fx "Gavekort … +2.000 kr. + 99 kr./md.". */
 const optionText = (page, name) =>
   page.evaluate((name) => {
-    const b = [...document.querySelectorAll('#prisberegner [role="group"][aria-label="Funktioner"] button')].find((x) => x.textContent.includes(name))
+    const b = [...document.querySelectorAll('#prisberegner [role="group"][aria-label="Hvad skal løses?"] button')].find((x) => x.textContent.includes(name))
     return b ? b.textContent.replace(/\s+/g, ' ').trim() : null
   }, name)
 
@@ -203,15 +204,25 @@ const layout = async (page, tag) => {
   check(found.size === 0, `${tag}: layout ${[...found].slice(0, 4).join(' | ')}`)
 }
 
-const NEED = { site: 'En hjemmeside', system: 'Et system til vores nuværende hjemmeside', both: 'Begge dele' }
+const NEED = { site: 'Ny hjemmeside', system: 'Løs et problem', both: 'Begge dele' }
+const BOOK = 'Gæsterne skal kunne booke bord'
+const ORDER = 'Gæsterne skal kunne bestille mad'
+const IDEA = 'Lad et system tage det'
 
-/** Trinene i den rigtige rækkefølge for en vej (rabat kun mens der er intro-pladser). */
+/** Trinene i den rigtige rækkefølge for en vej. Rabatten er ikke et trin. */
 const stepsOf = (path) =>
   ({
-    site: ['Behov', 'Pakke', ...(INTRO ? ['Rabat'] : []), 'Samlet pris'],
-    system: ['Behov', 'Funktioner', 'Samlet pris'],
-    both: ['Behov', 'Pakke', 'Funktioner', ...(INTRO ? ['Rabat'] : []), 'Samlet pris'],
+    site: ['Behov', 'Pakke', 'Samlet pris'],
+    system: ['Behov', 'Hvad skal løses?', 'Samlet pris'],
+    both: ['Behov', 'Pakke', 'Hvad skal løses?', 'Samlet pris'],
   })[path]
+
+/** Vælger en vej. På mobil går ét tryk videre af sig selv; på desktop skal Næste trykkes. */
+async function choose(page, mobile, path) {
+  await press(page, NEED[path])
+  if (!mobile) await press(page, path === 'system' ? 'Næste: Hvad skal løses?' : 'Næste: Vælg pakke')
+  await wait(300)
+}
 
 /** Går én vej igennem trin for trin og tjekker pris, trin og layout undervejs. */
 async function walk(w, h, path) {
@@ -227,106 +238,95 @@ async function walk(w, h, path) {
   // Trin 1: hvad har I brug for?
   const t0 = await text(page)
   check(t0.includes('Hvad har I brug for?') && Object.values(NEED).every((x) => t0.includes(x)), `${tag}: første trin viser "Hvad har I brug for?" og tre valg`)
-  check((await buttonsText(page)).some((b) => b.startsWith('Vælg, hvad I har brug for') ), `${tag}: Næste er slukket med "Vælg, hvad I har brug for", til der er valgt`)
+  check((await buttonsText(page)).some((b) => b.startsWith('Vælg, hvad I har brug for')), `${tag}: Næste er slukket med "Vælg, hvad I har brug for", til der er valgt`)
   await here('behov')
   await press(page, NEED[path])
-  if (mobile) check((await text(page)).includes('Næste: ' + (path === 'system' ? 'Vælg funktioner' : 'Vælg pakke')), `${tag}: Næste-knappen peger på det rigtige trin`)
+  if (mobile) check((await text(page)).includes(`Trin 2 af ${names.length} · ${names[1]}`), `${tag}: ét tryk på vejen går videre til "${names[1]}"`)
   else {
     const nav = await page.$$eval('#prisberegner nav[aria-label="Trin i beregneren"] li', (li) => li.map((x) => x.textContent.trim()))
     check(JSON.stringify(nav) === JSON.stringify(names), `${tag}: trin-baren viser kun de relevante trin (${nav.join(' → ')})`)
+    await press(page, path === 'system' ? 'Næste: Hvad skal løses?' : 'Næste: Vælg pakke')
   }
-  if (mobile) check((await text(page)).includes(`Trin 1 af ${names.length} · Behov`), `${tag}: trin-baren siger "Trin 1 af ${names.length}"`)
-  await press(page, path === 'system' ? 'Næste: Vælg funktioner' : 'Næste: Vælg pakke')
 
   if (path !== 'system') {
     const tp = await text(page)
     check(tp.includes('Hjemmeside designet til jer') && tp.includes('Mobilvenlig') && tp.includes('på dansk og engelsk') && tp.includes('1–3 sider') && tp.includes('Op til 6 sider'), `${tag}: pakkerne viser "Hjemmeside designet til jer" og de konkrete dele`)
     check(!/Engelsk version/.test(tp), `${tag}: intet tilvalg "Engelsk version"`)
+    check(!/pladser? tilbage|første \d+ kunder/.test(tp), `${tag}: ingen knaphedstekst på pakketrinnet`)
+    check(!/Introduktionspris|Må vi vise jeres side/.test(tp), `${tag}: rabatten står ikke under pakkerne`)
     // Hjemmesiden står før funktioner og Google i hver pakke.
     const order = await page.$$eval('#prisberegner [role="group"][aria-label="Vælg pakke"] button', (bs) =>
       bs.map((b) => {
         const t = b.textContent
-        return t.indexOf('Hjemmeside designet til jer') < t.search(/Google|funktion/i)
+        return t.indexOf('Hjemmeside designet til jer') < t.search(/Google|bordbooking/i)
       }),
     )
     check(order.length === 3 && order.every(Boolean), `${tag}: hjemmesiden står før funktioner og Google i alle pakker`)
     await here('pakke')
     await press(page, 'Anbefalet')
-    let t = await totals(page)
-    check(t[0] === '9.500' && t[1] === '549', `${tag}: Anbefalet = 9.500 og 549 (${t.slice(0, 2)})`)
+    const t = await totals(page)
+    check(t[0] === '9.500' && t[1] === '699', `${tag}: Anbefalet = 9.500 og 699 (${t.slice(0, 2)})`)
     await here('pakke-valgt')
-    await press(page, path === 'both' ? 'Næste: Vælg funktioner' : INTRO ? 'Næste: Rabat' : 'Se samlet pris')
+    await press(page, path === 'both' ? 'Næste: Hvad skal løses?' : 'Se samlet pris')
   }
 
   if (path !== 'site') {
     const ts = await text(page)
-    if (path === 'system') check(ts.includes('Vi kobler det på jeres nuværende hjemmeside') && ts.includes('Vælg mindst én'), `${tag}: "Vi kobler det på jeres nuværende hjemmeside" og kravet om mindst én`)
-    else check(ts.includes('1 funktion er med i prisen i Anbefalet'), `${tag}: "1 funktion er med i prisen"`)
-    // Næste er slukket i System alene, til der er valgt mindst én.
-    if (path === 'system') check((await buttonsText(page)).some((b) => b === 'Se samlet pris') && (await page.$('#prisberegner button:disabled')) !== null, `${tag}: Se samlet pris er slukket uden en funktion`)
-    await here('funktioner')
-    const free = await optionText(page, 'Gavekort')
+    check(ts.includes(`Trin ${path === 'both' ? 3 : 2} af ${names.length} · Hvad skal løses?`) || !mobile, `${tag}: trinnet hedder "Hvad skal løses?"`)
+    if (path === 'system') check(ts.includes('Har I en hjemmeside, kobler vi det på den') && ts.includes('Har I ikke, får det sit eget link'), `${tag}: siger, hvor løsningen sidder`)
+    else check(ts.includes('Anbefalet har én af dem med i prisen: bordbooking eller online bestilling'), `${tag}: "Anbefalet har én af dem med i prisen"`)
+    check(ts.includes('Lad et system tage det, der æder tid') && ts.includes('Poster indhold for jer') && ts.includes('Pris aftales'), `${tag}: idékortet viser titel, idéer og "Pris aftales"`)
+    check((await page.$$eval('#prisberegner [role="group"][aria-label="Hvad skal løses?"] > button', (b) => b.length)) === 3, `${tag}: højst tre kort at vælge imellem`)
+    check(!/gavekort|nyhedsbrev|anmeldelser fra/i.test(ts), `${tag}: gavekort, nyhedsbrev og anmeldelser er væk`)
+    // Løs et problem: Se samlet pris er slukket, til der er valgt noget.
+    if (path === 'system') check((await buttonsText(page)).some((b) => b === 'Se samlet pris') && (await page.$('#prisberegner button:disabled')) !== null, `${tag}: Se samlet pris er slukket uden et valg`)
+    await here('hvad-skal-loeses')
+    const free = await optionText(page, BOOK)
+    if (path === 'both') check(!/Indgår/.test(free) && /Med i prisen/.test(free) && /\+2\.500 kr\. \+ 299 kr\.\/md\./.test(free), `${tag}: ledig plads: "Med i prisen", ikke "Indgår", ekstraprisen ved siden af (${free})`)
+    else check(/2\.500 kr\. \+ 299 kr\.\/md\./.test(free) && !/Indgår/.test(free), `${tag}: bordbooking viser sin egen pris, 2.500 + 299/md. (${free})`)
+    await press(page, BOOK)
+    const booked = await optionText(page, BOOK)
+    const other = await optionText(page, ORDER)
     if (path === 'both') {
-      check(!/Indgår/.test(free) && /Med i prisen/.test(free) && /\+2\.000 kr\. \+ 99 kr\.\/md\./.test(free), `${tag}: ledig plads: "Med i prisen", men ikke "Indgår", og ekstraprisen står ved siden af (${free})`)
-    } else {
-      check(/2\.500 kr\. \+ 149 kr\.\/md\./.test(free) && !/Indgår/.test(free), `${tag}: funktionen viser sin egen pris, 2.500 + 149/md. (${free})`)
+      check(/Indgår/.test(booked), `${tag}: bordbooking er dækket af pakken: "Indgår"`)
+      check(!/Indgår/.test(other) && /\+3\.500 kr\. \+ 449 kr\.\/md\./.test(other), `${tag}: online bestilling viser ekstrapris, ikke "Indgår" (${other})`)
+      const t = await totals(page)
+      check(t[0] === '9.500' && t[1] === '699', `${tag}: 1 funktion indgår: uændret pris (${t.slice(0, 2)})`)
     }
-    await press(page, 'Bordbooking')
-    const booked = await optionText(page, 'Bordbooking')
-    const other = await optionText(page, 'Gavekort')
-    if (path === 'both') {
-      check(/Indgår/.test(booked), `${tag}: Bordbooking er dækket af pakken: "Indgår"`)
-      check(!/Indgår/.test(other) && /\+2\.000 kr\. \+ 99 kr\.\/md\./.test(other), `${tag}: alle andre viser ekstrapris, ikke "Indgår" (${other})`)
-      let t = await totals(page)
-      check(t[0] === '9.500' && t[1] === '549', `${tag}: 1 funktion indgår: uændret pris (${t.slice(0, 2)})`)
-    }
-    await press(page, 'Gavekort')
+    await press(page, ORDER)
     let t = await totals(page)
-    const [o2, m2] = path === 'both' ? ['11.500', '648'] : ['5.000', '298']
-    check(t[0] === o2 && t[1] === m2, `${tag}: to funktioner = ${o2} og ${m2} (${t.slice(0, 2)})`)
-    // Bygget specielt til jer: pris pr. stk. og en styring på mindst 44 × 44 px, uden overlap.
-    const custom = await page.evaluate(() => {
-      const g = document.querySelector('#prisberegner [role="group"][aria-label="Antal bygget specielt til jer"]')
-      if (!g) return null
-      const bs = [...g.querySelectorAll('button')].map((b) => ({ l: b.getAttribute('aria-label'), w: Math.round(b.getBoundingClientRect().width), h: Math.round(b.getBoundingClientRect().height) }))
-      const card = g.parentElement.textContent.replace(/\s+/g, ' ')
-      return { bs, card, count: g.querySelector('[aria-live]').textContent }
-    })
-    check(custom && custom.bs.length === 2 && custom.bs.every((b) => b.w >= 44 && b.h >= 44), `${tag}: − og + er mindst 44×44 px (${JSON.stringify(custom?.bs)})`)
-    check(custom.count === '0' && !/Næste opgave/.test(custom.card), `${tag}: antal 0 er standard, og "Næste opgave" er væk`)
-    check(path === 'both' ? /\+5\.000 kr\. \+ 199 kr\.\/md\. pr\. stk\./.test(custom.card) : /5\.000 kr\. \+ 199 kr\.\/md\. pr\. stk\./.test(custom.card), `${tag}: pris pr. stk. står ved siden af styringen (${custom.card.slice(-70)})`)
-    await press(page, 'Tilføj én bygget til jer')
+    const [o2, m2] = path === 'both' ? ['13.000', '1.148'] : ['6.000', '748']
+    check(t[0] === o2 && t[1] === m2, `${tag}: bordbooking + online bestilling = ${o2} og ${m2} (${t.slice(0, 2)})`)
+    // Idékortet: ingen pris, ingen − / +, og totalerne ændres ikke.
+    check((await page.$('#prisberegner [role="group"][aria-label="Antal bygget specielt til jer"]')) === null, `${tag}: ingen −/+-styring (bygget specielt er ét valg)`)
+    await press(page, IDEA)
     await wait(500)
     t = await totals(page)
-    const [o3, m3] = path === 'both' ? ['16.500', '847'] : ['10.000', '497']
-    check(t[0] === o3 && t[1] === m3, `${tag}: + ét specielt = ${o3} og ${m3} (${t.slice(0, 2)})`)
-    await here('funktioner-valgt')
-    if (path === 'both' && INTRO) await press(page, 'Næste: Rabat')
-    else await press(page, 'Se samlet pris')
-  }
-
-  if (INTRO && path !== 'system') {
-    await here('rabat')
-    check((await text(page)).includes('Introduktionspris'), `${tag}: rabat-trinnet viser introprisen`)
-    await press(page, 'Introduktionspris')
-    await wait(500)
-    const t = await totals(page)
-    const [o, m] = path === 'both' ? ['13.650', '847'] : ['6.650', '549']
-    check(t[0] === o && t[1] === m, `${tag}: intro valgt = ${o} og ${m} (${t.slice(0, 2)})`)
-    await here('rabat-valgt')
+    check(t[0] === o2 && t[1] === m2, `${tag}: noget bygget specielt har ingen pris og ændrer ikke totalen (${t.slice(0, 2)})`)
+    await here('hvad-skal-loeses-valgt')
     await press(page, 'Se samlet pris')
   }
-  if (!INTRO || path === 'system') await wait(100)
 
   await page.waitForSelector('#prisberegner form', { timeout: 8000 })
   await wait(500)
   const ts = await text(page)
   check(ts.includes('Din pris er klar.') && ts.includes('Hvad I har brug for: ' + NEED[path]), `${tag}: samlet pris viser vejen (${NEED[path]})`)
+  check(ts.includes(path === 'site' ? 'Leveringstid: 1–2 uger.' : 'Leveringstid: 2–3 uger.'), `${tag}: samlet pris viser leveringstiden`)
+  check(path !== 'system' ? true : ts.includes('Pris aftales'), `${tag}: pris aftales vises for bygget specielt`)
+  // Rabatten: ét stille spørgsmål, kun for hjemmesider og kun mens der er pladser.
+  const hasOffer = await page.evaluate(() => [...document.querySelectorAll('#prisberegner button')].some((b) => b.textContent.includes('Må vi vise jeres side som eksempel')))
+  check(hasOffer === (INTRO && path !== 'system'), `${tag}: spørgsmålet om at vise siden som eksempel vises kun med hjemmeside og pladser (${hasOffer})`)
+  check(!/pladser? tilbage|første \d+ kunder/.test(ts) && !/Introduktionspris/.test(ts), `${tag}: ingen knaphedstekst og ingen intropris, før kunden siger ja`)
+  if (hasOffer) {
+    await press(page, 'Må vi vise jeres side som eksempel')
+    await wait(700)
+    check((await page.$$eval('#prisberegner s, #prisberegner del', (e) => e.length)) === 0, `${tag}: ingen overstregede priser`)
+  }
   const t = await totals(page)
-  const want = { site: INTRO ? ['6.650', '549'] : ['9.500', '549'], system: ['10.000', '497'], both: INTRO ? ['13.650', '847'] : ['16.500', '847'] }[path]
+  const want = { site: INTRO ? ['8.495', '699'] : ['9.500', '699'], system: ['6.000', '748'], both: INTRO ? ['11.995', '1.148'] : ['13.000', '1.148'] }[path]
   check(t[0] === want[0] && t[1] === want[1], `${tag}: samlet pris ${want[0]} og ${want[1]} (${t.slice(0, 2)})`)
   const url = page.url()
-  const wantUrl = { site: `v=h&p=1${INTRO ? '&i=1' : ''}&t=sum`, system: 'v=s&y=bg&c=1&t=sum', both: `v=b&p=1&y=bg&c=1${INTRO ? '&i=1' : ''}&t=sum` }[path]
+  const wantUrl = { site: `v=h&p=1${INTRO ? '&i=1' : ''}&t=sum`, system: 'v=s&y=bo&c=1&t=sum', both: `v=b&p=1&y=bo&c=1${INTRO ? '&i=1' : ''}&t=sum` }[path]
   check(new URL(url).search === '?' + wantUrl, `${tag}: adresselinjen er ${wantUrl} (${url.replace(SITE, '')})`)
   check(!(await text(page)).includes('Engelsk version'), `${tag}: ingen "Engelsk version" på samlet pris`)
   await here('samlet-pris')
@@ -349,22 +349,22 @@ for (const w of [...MOBILE, ...DESKTOP]) {
   for (const path of ['site', 'system', 'both']) await walk(w, h, path)
 }
 
-/* ---- Start: ingen funktioner med, så alle viser ekstrapris ------------------------------------------------------------ */
+/* ---- Start: ingen funktioner med, så begge viser ekstrapris ------------------------------------------------------------ */
 {
-  console.log('\nStart: alle funktioner viser ekstrapris')
+  console.log('\nStart: begge funktioner viser ekstrapris')
   const { page } = await open(390, 844, '/?v=b&p=0&t=sys')
-  for (const f of ['Bordbooking', 'Online bestilling', 'Gavekort', 'Tilmelding til nyhedsbrev', 'Anmeldelser']) {
-    const o = await optionText(page, f)
-    check(/\+2\.000 kr\. \+ 99 kr\.\/md\./.test(o) && !/Indgår|Med i prisen/.test(o), `Start: ${f} viser ekstrapris (${o?.slice(-40)})`)
-  }
-  check((await text(page)).includes('Start har ingen funktioner med i prisen'), 'Start: "har ingen funktioner med i prisen"')
+  const b = await optionText(page, BOOK)
+  const o = await optionText(page, ORDER)
+  check(/\+2\.500 kr\. \+ 299 kr\.\/md\./.test(b) && !/Indgår|Med i prisen/.test(b), `Start: bordbooking viser ekstrapris (${b?.slice(-40)})`)
+  check(/\+3\.500 kr\. \+ 449 kr\.\/md\./.test(o) && !/Indgår|Med i prisen/.test(o), `Start: online bestilling viser ekstrapris (${o?.slice(-40)})`)
+  check((await text(page)).includes('Start har hverken bordbooking eller online bestilling med i prisen'), 'Start: "har hverken bordbooking eller online bestilling med i prisen"')
   await page.close()
-  console.log('\nMax: to funktioner er med i prisen')
+  console.log('\nMax: begge funktioner er med i prisen')
   const m = await open(390, 844, '/?v=b&p=2&y=b&t=sys')
-  check((await text(m.page)).includes('2 funktioner er med i prisen i Max'), 'Max: "2 funktioner er med i prisen"')
-  check(/Indgår/.test(await optionText(m.page, 'Bordbooking')) && /Med i prisen/.test(await optionText(m.page, 'Gavekort')), 'Max: 1 valgt = Indgår, 1 ledig plads = Med i prisen')
-  await press(m.page, 'Gavekort')
-  check(/\+2\.000/.test(await optionText(m.page, 'Anmeldelser')) && !/Med i prisen|Indgår/.test(await optionText(m.page, 'Anmeldelser')), 'Max: 2 valgt = alle andre viser ekstrapris')
+  check((await text(m.page)).includes('Max har både bordbooking og online bestilling med i prisen'), 'Max: "har både bordbooking og online bestilling med i prisen"')
+  check(/Indgår/.test(await optionText(m.page, BOOK)) && /Med i prisen/.test(await optionText(m.page, ORDER)), 'Max: 1 valgt = Indgår, 1 ledig plads = Med i prisen')
+  await press(m.page, ORDER)
+  check(/Indgår/.test(await optionText(m.page, ORDER)) && /Indgår/.test(await optionText(m.page, BOOK)), 'Max: begge valgt = begge Indgår')
   await m.page.close()
 }
 
@@ -384,51 +384,46 @@ for (const [w, h] of [
       await wait(400)
     }
   }
-  await press(page, NEED.both)
-  await press(page, 'Næste: Vælg pakke')
+  await choose(page, mobile, 'both')
   await press(page, 'Anbefalet')
-  await press(page, 'Næste: Vælg funktioner')
-  await press(page, 'Bordbooking')
-  await press(page, 'Gavekort')
-  await press(page, 'Tilføj én bygget til jer')
+  await press(page, 'Næste: Hvad skal løses?')
+  await press(page, BOOK)
+  await press(page, ORDER)
+  await press(page, IDEA)
   let t = await totals(page)
-  check(t[0] === '16.500' && t[1] === '847', `Begge: 16.500 og 847 (${t.slice(0, 2)})`)
+  check(t[0] === '13.000' && t[1] === '1.148', `Begge: 13.000 og 1.148 (${t.slice(0, 2)})`)
   await back()
   check((await text(page)).includes('Hvad har I brug for?'), 'tilbage til første trin ad Tilbage-knappen')
-  await press(page, NEED.system)
-  await press(page, 'Næste: Vælg funktioner')
+  await choose(page, mobile, 'system')
   t = await totals(page)
-  check(t[0] === '10.000' && t[1] === '497', `Begge → System: 10.000 og 497, uden pakken (${t.slice(0, 2)})`)
-  check((await text(page)).includes('Vi kobler det på jeres nuværende hjemmeside') && !(await text(page)).includes('Anbefalet'), 'System: ingen pakke i teksten')
-  check((await page.$$eval('#prisberegner [role="group"][aria-label="Funktioner"] button[aria-pressed="true"]', (b) => b.length)) === 2, 'System: de to valgte funktioner står stadig valgt')
+  check(t[0] === '6.000' && t[1] === '748', `Begge → Løs et problem: 6.000 og 748, uden pakken (${t.slice(0, 2)})`)
+  check((await text(page)).includes('Har I en hjemmeside, kobler vi det på den') && !(await text(page)).includes('Anbefalet'), 'Løs et problem: ingen pakke i teksten')
+  check((await page.$$eval('#prisberegner [role="group"][aria-label="Hvad skal løses?"] button[aria-pressed="true"]', (b) => b.length)) === 3, 'Løs et problem: de tre valgte kort står stadig valgt')
   await back()
-  await press(page, NEED.site)
-  await press(page, 'Næste: Vælg pakke')
+  await choose(page, mobile, 'site')
   t = await totals(page)
-  check(t[0] === '9.500' && t[1] === '549', `System → Hjemmeside: kun pakken, 9.500 og 549 (${t.slice(0, 2)})`)
-  check((await page.$$eval('#prisberegner [role="group"][aria-label="Vælg pakke"] button[aria-pressed="true"]', (b) => b.length)) === 1, 'Hjemmeside: Anbefalet står stadig valgt')
+  check(t[0] === '9.500' && t[1] === '699', `Løs et problem → Ny hjemmeside: kun pakken, 9.500 og 699 (${t.slice(0, 2)})`)
+  check((await page.$$eval('#prisberegner [role="group"][aria-label="Vælg pakke"] button[aria-pressed="true"]', (b) => b.length)) === 1, 'Ny hjemmeside: Anbefalet står stadig valgt')
   await back()
-  await press(page, NEED.both)
-  await press(page, 'Næste: Vælg pakke')
+  await choose(page, mobile, 'both')
   t = await totals(page)
-  check(t[0] === '16.500' && t[1] === '847', `Hjemmeside → Begge: alle valg er der igen, 16.500 og 847 (${t.slice(0, 2)})`)
-  check(new URL(page.url()).search.startsWith('?v=b&p=1&y=bg&c=1'), `adresselinjen følger med (${page.url().replace(SITE, '')})`)
+  check(t[0] === '13.000' && t[1] === '1.148', `Ny hjemmeside → Begge: alle valg er der igen, 13.000 og 1.148 (${t.slice(0, 2)})`)
+  check(new URL(page.url()).search.startsWith('?v=b&p=1&y=bo&c=1'), `adresselinjen følger med (${page.url().replace(SITE, '')})`)
   // Fjern pakken på Begge: man kan ikke gå videre.
   await press(page, 'Anbefalet')
   await wait(400)
   check((await page.$$eval('#prisberegner button:disabled', (b) => b.length)) > 0, 'uden pakke kan man ikke gå videre')
   t = await totals(page)
   check(t.length === 0 || (t[0] === '0' && t[1] === '0'), `uden pakke: ingen pris (${t.slice(0, 2)})`)
-  void mobile
   await page.close()
 }
 
 /* ---- Gamle links ---------------------------------------------------------------------------------------------------------- */
 {
   console.log('\nLinks fra pakke-versionen og gamle links')
-  const a = await open(390, 844, '/?p=1&y=bg&e=1&i=1&t=4')
+  const a = await open(390, 844, '/?p=1&y=bo&e=1&i=1&t=4')
   const t = await totals(a.page)
-  check((await text(a.page)).includes('Din pris er klar.') && t[0] === (INTRO ? '8.650' : '11.500') && t[1] === '648', `link fra pakke-versionen (uden v) åbner samlet pris: ${t.slice(0, 2)}`)
+  check((await text(a.page)).includes('Din pris er klar.') && t[0] === (INTRO ? '11.995' : '13.000') && t[1] === '1.148', `link fra pakke-versionen (uden v) åbner samlet pris: ${t.slice(0, 2)}`)
   await a.page.close()
   const o = await open(390, 844, '/?w=1&m=1&d=p&bk=1&s=4')
   check((await text(o.page)).includes('Beregneren er opdateret med nye pakker'), 'gammelt link: venlig besked')

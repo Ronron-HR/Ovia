@@ -125,9 +125,9 @@ async function run(label, width, height, mobile) {
   const text = (sel) => page.$eval(sel, (e) => e.textContent.replace(/\s+/g, ' '))
 
   // Formularen hentes først, når opsummeringen vises.
-  await page.goto(`${SITE}/?v=b&p=1&y=bg`, { waitUntil: 'networkidle0' })
+  await page.goto(`${SITE}/?v=b&p=1&y=bo`, { waitUntil: 'networkidle0' })
   check(!requested.some((u) => u.includes('InquiryForm')), 'formularens kode hentes ikke på forsiden (lazy)')
-  await page.goto(`${SITE}/?v=b&p=1&y=bg&t=sum`, { waitUntil: 'networkidle0' })
+  await page.goto(`${SITE}/?v=b&p=1&y=bo&t=sum`, { waitUntil: 'networkidle0' })
   await page.evaluate(() => document.querySelector('#prisberegner').scrollIntoView({ behavior: 'instant' }))
   await page.waitForSelector('form[aria-describedby="inq-intro"]')
   check(requested.some((u) => u.includes('InquiryForm')), 'formularens kode hentes på opsummeringen')
@@ -222,16 +222,16 @@ async function run(label, width, height, mobile) {
   const thanks = await text('#prisberegner [role="status"]')
   check(thanks.includes('Tak, Mette Hansen.') && thanks.includes('Vi vender tilbage inden for 24 timer.'), `sendt: "${thanks.slice(0, 70)}"`)
   const sums = await page.$$eval('#prisberegner [role="status"] [role="img"][aria-label]', (els) => els.map((e) => e.getAttribute('aria-label')))
-  check(thanks.includes('Anbefalet') && sums.includes('11.500') && sums.includes('648') && thanks.includes('ekskl. moms'), `sendt: kvitteringen vises (${sums})`)
+  check(thanks.includes('Anbefalet') && sums.includes('13.000') && sums.includes('1.148') && thanks.includes('ekskl. moms'), `sendt: kvitteringen vises (${sums})`)
   await shot('form-sendt')
 
   // Mailen og D1.
   check(sim.mails.length === base.mails + 1, `præcis én mail sendt (${sim.mails.length - base.mails})`)
   const m = decodeMail(sim.mails.at(-1).raw)
   check(sim.mails.at(-1).to === 'ronnyhong723@gmail.com' && sim.mails.at(-1).from === 'kontakt@oviaspecs.com', 'afsender og modtager')
-  check(m.subject === 'Ny forespørgsel: Mette Hansen, Café Mette – 11.500 kr. + 648 kr./md.', `emne: "${m.subject}"`)
+  check(m.subject === 'Ny forespørgsel: Mette Hansen, Café Mette – 13.000 kr. + 1.148 kr./md.', `emne: "${m.subject}"`)
   check(m.replyTo === 'mette@cafe.example', `Reply-To = kundens mail (${m.replyTo})`)
-  for (const want of ['Navn: Mette Hansen', 'Virksomhed: Café Mette', 'Telefon: 53613699', 'Mail: mette@cafe.example', '> Hej Ronny.', '> Vi åbner i foråret.', '- Pakke – Anbefalet: 9.500 kr. + 549 kr./md.', '- Bordbooking – Indgår: Indgår', '- Gavekort – Ekstra: 2.000 kr. + 99 kr./md.', 'Hvad de har brug for: Hjemmeside og system (begge dele)', 'Engang: 11.500 kr.', 'Pr. måned: 648 kr./md.', 'Alle priser er ekskl. moms.', `Se valgene: ${SITE}/?v=b&p=1&y=bg&t=sum#prisberegner`]) {
+  for (const want of ['Navn: Mette Hansen', 'Virksomhed: Café Mette', 'Telefon: 53613699', 'Mail: mette@cafe.example', '> Hej Ronny.', '> Vi åbner i foråret.', '- Pakke – Anbefalet: 9.500 kr. + 699 kr./md.', '- Bordbooking – Indgår: Indgår', '- Online bestilling og takeaway – Ekstra: 3.500 kr. + 449 kr./md.', 'Hvad de har brug for: Ny hjemmeside og en løsning på et problem (begge dele)', 'Engang: 13.000 kr.', 'Pr. måned: 1.148 kr./md.', 'Alle priser er ekskl. moms.', `Se valgene: ${SITE}/?v=b&p=1&y=bo&t=sum#prisberegner`]) {
     check(m.text.includes(want), `mailen indeholder "${want}"`)
   }
   const row = db.prepare('SELECT * FROM henvendelser ORDER BY created_at DESC').get()
