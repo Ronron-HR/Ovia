@@ -1,5 +1,3 @@
-import { demos } from './content.demos.js'
-
 /**
  * Adresse → sidenøgle (samme nøgler som `page` i routes.js og som i pages.jsx og
  * pageLoaders.js; prerender.mjs fejler, hvis de ikke passer sammen). Holdes adskilt
@@ -10,8 +8,8 @@ export const pageKeyByPath = {
   '/': 'home',
   '/hjemmeside/': 'hjemmeside',
   '/priser/': 'priser',
-  '/demoer/': 'demoer',
-  ...Object.fromEntries(demos.projects.map((p) => [p.path, `demo-${p.id}`])),
+  '/cases/': 'cases',
+  '/cases/palmy-spisested/': 'case-palmy-spisested',
 }
 
 /** Sidens kildefil: prerender.mjs finder dens JS-filer i byggets manifest og forhåndshenter dem. */
@@ -19,11 +17,8 @@ export const pageFiles = {
   home: 'src/pages/Home.jsx',
   hjemmeside: 'src/pages/Hjemmeside.jsx',
   priser: 'src/pages/Priser.jsx',
-  demoer: 'src/pages/Demoer.jsx',
-  'demo-cafe': 'src/demos/Cafe.jsx',
-  'demo-restaurant': 'src/demos/Restaurant.jsx',
-  'demo-salon': 'src/demos/Salon.jsx',
-  'demo-vinbar': 'src/demos/Vinbar.jsx',
+  cases: 'src/pages/Cases.jsx',
+  'case-palmy-spisested': 'src/pages/cases/PalmySpisested.jsx',
 }
 
 /** Adressens sidenøgle, med eller uden efterstillet skråstreg. */

@@ -1,4 +1,4 @@
-# Alt på siden må crawles, også CSS, JavaScript, skrifter og billeder (/assets, /fonts, /demoer).
+# Alt på siden må crawles, også CSS, JavaScript, skrifter og billeder (/assets, /fonts).
 # /api/henvendelse er en POST-adresse til formularen og har intet indhold at indeksere.
 User-agent: *
 Allow: /

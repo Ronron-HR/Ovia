@@ -1,7 +1,7 @@
 /**
  * Skærmbilleder af forsiden og beregneren til før/efter-sammenligning.
  * Brug: node scripts/ovia-shots.mjs <mappe> (kræver kørende `npm run preview`).
- * Gemmer 375, 768 og 1440 px (100 % zoom): forside, resultat og demo-sektion.
+ * Gemmer 375, 768 og 1440 px (100 % zoom): forside og resultat.
  */
 import { mkdirSync } from 'node:fs'
 import puppeteer from 'puppeteer-core'

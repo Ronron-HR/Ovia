@@ -1,28 +1,35 @@
 {
-  "_note": "Eneste kilde til priser, pakker, systemer og intro. Beregneren, /priser/, /hjemmeside/, formularen og workeren læser herfra. Alle priser i kr., ekskl. moms. introSlotsLeft (antal introduktionspladser tilbage) styres med `npm run intro:status` og `npm run intro:brugt`. Engelsk version er med i alle hjemmesidepakker.",
+  "_note": "Eneste kilde til priser, pakker, funktioner og intro. Beregneren, /priser/, /hjemmeside/, formularen og workeren læser herfra. Alle priser i kr., ekskl. moms. En funktion har én pris (once + monthly), hvad enten den købes alene eller som ekstra til en pakke; pakkerne har et antal funktioner med i prisen (slots). \"Bygget specielt\" har ingen pris: den aftales. introOnce er pakkens engangspris, hvis kunden lader siden vise som eksempel (kun hvis introSlotsLeft er over 0; tallet vises ikke på siden). introSlotsLeft (antal pladser tilbage) styres med `npm run intro:status` og `npm run intro:brugt`. Engelsk version er med i alle hjemmesidepakker.",
   "currency": "DKK",
   "vatIncluded": false,
   "introSlotsLeft": 3,
   "intro": {
-    "total": 3,
-    "discount": 0.3
+    "total": 3
   },
   "website": {
     "title": "Hjemmeside designet til jer",
-    "parts": ["Mobilvenlig", "Menu", "Billeder", "Åbningstider", "Kort og adresse", "Kontakt", "På dansk og engelsk"]
+    "parts": [
+      "Mobilvenlig",
+      "Menu",
+      "Billeder",
+      "Åbningstider",
+      "Kort og adresse",
+      "Kontakt",
+      "På dansk og engelsk"
+    ]
   },
   "packages": [
     {
       "key": "start",
       "name": "Start",
       "once": 5000,
+      "introOnce": 4495,
       "monthly": 299,
       "recommended": false,
       "slots": 0,
-      "customSlots": 0,
       "pages": "1–3 sider",
       "points": [
-        "Funktioner som bordbooking og gavekort lægges til som ekstra (priserne står i beregneren)",
+        "Bordbooking og online bestilling kan lægges til (priserne står i beregneren)",
         "Jeres Google-profil sat op og udfyldt",
         "Siden gøres klar til at blive fundet lokalt på Google",
         "Link til jeres egen booking eller bestilling",
@@ -30,7 +37,7 @@
         "Små rettelser af tekst og billeder"
       ],
       "short": [
-        "Funktioner kan lægges til som ekstra",
+        "Bordbooking og online bestilling kan lægges til",
         "Google-profil sat op",
         "Gør siden klar til at blive fundet lokalt",
         "Drift, domæne og sikkerhedskopi"
@@ -40,20 +47,20 @@
       "key": "anbefalet",
       "name": "Anbefalet",
       "once": 9500,
-      "monthly": 549,
+      "introOnce": 8495,
+      "monthly": 699,
       "recommended": true,
       "slots": 1,
-      "customSlots": 0,
       "pages": "Op til 6 sider",
       "points": [
-        "1 funktion er med i prisen, fx bordbooking eller gavekort",
+        "Bordbooking eller online bestilling er med i prisen (vælg én)",
         "Google-profil og 1 opslag om måneden",
         "Siden gøres klar til de ord, jeres gæster søger på lokalt",
         "Drift, domæne og sikkerhedskopi",
         "1 times rettelser om måneden"
       ],
       "short": [
-        "1 funktion er med i prisen",
+        "Bordbooking eller online bestilling er med i prisen",
         "Google-profil og 1 opslag om måneden",
         "1 times rettelser om måneden"
       ]
@@ -62,20 +69,20 @@
       "key": "max",
       "name": "Max",
       "once": 15000,
-      "monthly": 895,
+      "introOnce": 13495,
+      "monthly": 1295,
       "recommended": false,
       "slots": 2,
-      "customSlots": 1,
       "pages": "Så mange sider, som I har brug for",
       "points": [
-        "2 funktioner er med i prisen, eller 1 almindelig og 1 bygget specielt til jer",
+        "Bordbooking og online bestilling er med i prisen",
         "Google-profil, 2 opslag om måneden og svar på anmeldelser",
         "Gennemgang af jeres lokale synlighed hvert kvartal",
         "Drift, domæne og sikkerhedskopi",
         "2 timers rettelser om måneden og en kort status hver måned"
       ],
       "short": [
-        "2 funktioner er med i prisen (1 kan være bygget til jer)",
+        "Bordbooking og online bestilling er med i prisen",
         "2 opslag om måneden og svar på anmeldelser",
         "2 timers rettelser om måneden"
       ]
@@ -87,66 +94,43 @@
         "key": "booking",
         "code": "b",
         "name": "Bordbooking",
-        "desc": "Gæsterne kan booke bord på siden. Vi kobler jeres bookingsystem på (fx DinnerBooking eller easyTable) eller sætter et op."
+        "title": "Gæsterne skal kunne booke bord",
+        "desc": "Gæsterne booker selv på siden, så I får færre opkald. Vi kobler jeres bookingsystem på (fx DinnerBooking eller easyTable) eller sætter et op.",
+        "once": 2500,
+        "monthly": 299
       },
       {
         "key": "bestilling",
         "code": "o",
         "name": "Online bestilling og takeaway",
-        "desc": "Gæsterne kan se menuen og bestille mad til afhentning eller levering, koblet på jeres bestillingsløsning."
-      },
-      {
-        "key": "gavekort",
-        "code": "g",
-        "name": "Gavekort",
-        "desc": "Gæsterne kan købe gavekort på siden og bruge dem hos jer."
-      },
-      {
-        "key": "nyhedsbrev",
-        "code": "n",
-        "name": "Tilmelding til nyhedsbrev",
-        "desc": "Gæsterne kan tilmelde sig jeres nyhedsbrev på siden."
-      },
-      {
-        "key": "anmeldelser",
-        "code": "a",
-        "name": "Anmeldelser fra gæsterne",
-        "desc": "Et QR-skilt og et link, så det er nemt for gæsterne at skrive en anmeldelse efter besøget."
+        "title": "Gæsterne skal kunne bestille mad",
+        "desc": "Gæsterne bestiller selv til afhentning eller levering, så telefonen ikke er flaskehalsen. Koblet på jeres bestillingsløsning.",
+        "once": 3500,
+        "monthly": 449
       }
     ],
     "custom": {
       "key": "custom",
       "name": "Bygget specielt til jer",
-      "desc": "Én ting, vi bygger efter jeres behov. Fx automatisk svar og overblik over forespørgsler på selskaber og catering, en oversigt over bestillinger, eller en lille hjælper, der svarer gæster på åbningstider, menu og allergener.",
-      "max": 5
+      "title": "Lad et system tage det, der æder tid",
+      "desc": "Vi bygger et system til det, der tager tid hos jer. Fx:",
+      "price": "Pris aftales",
+      "priceNote": "Skriv jeres idé i beskeden til sidst.",
+      "max": 1,
+      "ideas": [
+        "Svarer på jeres mails",
+        "Poster indhold for jer",
+        "Tæller jeres lager og siger til, når noget er ved at løbe tør",
+        "Giver overblik over bestillinger og forespørgsler"
+      ]
     },
     "excluded": "Vi bygger ikke store kassesystemer eller vagtplaner.",
-    "thirdParty": "Abonnementer hos andre udbydere (fx bookingsystem, betaling eller nyhedsbrevsprogram) betaler I selv direkte til dem."
+    "thirdParty": "Abonnementer hos andre udbydere (fx bookingsystem eller betaling) betaler I selv direkte til dem."
   },
   "systemOnly": {
-    "note": "Vi kobler det på jeres nuværende hjemmeside.",
-    "standard": {
-      "name": "Almindelig funktion",
-      "once": 2500,
-      "monthly": 149
-    },
-    "custom": {
-      "name": "Bygget specielt til jer",
-      "once": 5000,
-      "monthly": 199
-    }
+    "note": "Har I en hjemmeside, kobler vi det på den. Har I ikke, får det sit eget link."
   },
   "addons": {
-    "extraStandard": {
-      "name": "Ekstra funktion",
-      "once": 2000,
-      "monthly": 99
-    },
-    "custom": {
-      "name": "Bygget specielt til jer (én opgave)",
-      "once": 5000,
-      "monthly": 199
-    },
     "buyout": {
       "name": "Køb siden fri",
       "once": 2000

@@ -5,13 +5,13 @@ const heading = 'font-[family-name:var(--font-display)] font-bold [font-stretch:
 const tile =
   'press hov-surface flex min-h-20 flex-col justify-between gap-1 bg-paper px-5 py-[14px] text-ink no-underline [--press:.97] md:min-h-[200px] md:gap-7 md:p-6'
 
-/** Mørk kontaktsektion: "Svar inden for 24 timer." og tre fliser. */
+/** Mørk kontaktsektion: "Vi svarer inden for 24 timer." og tre fliser. */
 export default function Contact() {
   return (
     <section id="kontakt" aria-labelledby="kontakt-titel" className="dark-zone bg-ink text-paper">
       <div className="mx-auto max-w-[1440px] section-pad px-5 md:px-14">
         <h2 id="kontakt-titel" className="display t-h2">
-          Svar inden for 24 timer.
+          Vi svarer inden for 24 timer.
         </h2>
         <div className="mt-7 grid gap-2 md:mt-14 md:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr]">
           <a href={links.tel} className={`${tile} md:col-span-2 lg:col-span-1`}>
@@ -22,7 +22,7 @@ export default function Contact() {
           </a>
           <a href={links.sms()} className={tile}>
             <span className={`${heading} whitespace-nowrap text-[19px] tracking-[-0.025em] md:text-[26px]`}>Skriv en SMS</span>
-            <span className="text-[15px] whitespace-nowrap">Svar samme dag</span>
+            <span className="text-[15px] whitespace-nowrap">Skriv, hvad I har brug for</span>
           </a>
           <a href={links.mail} className={tile}>
             <span className={`${heading} whitespace-nowrap text-[19px] tracking-[-0.025em] md:text-[26px]`}>Send en mail</span>

@@ -32,13 +32,13 @@ const MIME = { avif: 'image/avif', webp: 'image/webp' }
  * gray    sort/hvid via filter:grayscale(1) (portræt)
  * eager   hentes med det samme (kun hvis billedet er sidens LCP-element)
  * width / height   billedets egne mål, så browseren kender formatet, før filen er hentet
- * fallback  sti i public/ (fx /demoer/…webp), der vises, indtil pladsens egen fil findes
+ * position  hvilken del af billedet der vises, når formatet beskærer det (CSS object-position; standard: toppen)
  */
-export default function ImageSlot({ name, ratio, alt = '', gray = false, eager = false, width, height, fallback, className = '', fill = 'bg-paper' }) {
+export default function ImageSlot({ name, ratio, alt = '', gray = false, eager = false, width, height, position = 'top', className = '', fill = 'bg-paper' }) {
   const formats = formatsFor(name)
   const original = formats.jpg ?? formats.png ?? formats.webp ?? formats.avif
-  const src = original ?? fallback
-  const style = gray ? { filter: 'grayscale(1)' } : undefined
+  const src = original
+  const style = { objectPosition: position, ...(gray ? { filter: 'grayscale(1)' } : {}) }
   return (
     <div className={`relative overflow-hidden ${fill} ${className}`} style={{ aspectRatio: ratio }} data-image-slot={name}>
       {src ? (
@@ -55,7 +55,7 @@ export default function ImageSlot({ name, ratio, alt = '', gray = false, eager =
             loading={eager ? 'eager' : 'lazy'}
             fetchPriority={eager ? 'high' : undefined}
             decoding="async"
-            className="absolute inset-0 h-full w-full object-cover object-top"
+            className="absolute inset-0 h-full w-full object-cover"
             style={style}
           />
         </picture>

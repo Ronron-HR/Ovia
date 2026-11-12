@@ -20,7 +20,7 @@ export default defineConfig({
         manualChunks: (id) => {
           if (id.includes('node_modules')) return 'vendor'
           // Fælles kode (navigation, kontakt, priser, beregnerlogik) i én lille fil i stedet for fem: færre forespørgsler i kæden.
-          if (/\/src\/(lib\/|data\/|components\/(layout|ui)\/|content\.demos|pageKeys|routes|Site)/.test(id.replace(/\\/g, '/'))) return 'app'
+          if (/\/src\/(lib\/|data\/|components\/(layout|ui)\/|pageKeys|routes|Site)/.test(id.replace(/\\/g, '/'))) return 'app'
         },
       },
       input: {

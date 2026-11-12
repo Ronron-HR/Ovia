@@ -20,7 +20,7 @@ export const compareRows = [
   ['Sider', ...prices.packages.map((p) => p.pages)],
   ...prices.website.parts.map((part) => [part, YES, YES, YES]),
   { group: 'Funktioner og Google' },
-  ['Funktioner med i prisen', 'Link til jeres egen booking', '1 funktion', '2 (1 kan være bygget til jer)'],
+  ['Bordbooking og online bestilling', 'Kan lægges til (link til jeres egen booking er med)', 'Én af dem er med', 'Begge er med'],
   ['Jeres Google-profil sat op og udfyldt', YES, YES, YES],
   ['Opslag på Google-profilen', NO, '1 om måneden', '2 om måneden'],
   ['Svar på anmeldelser', NO, NO, YES],
@@ -31,29 +31,29 @@ export const compareRows = [
   ['Drift, domæne og sikkerhedskopi', YES, YES, YES],
 ]
 
-/** Ekstra ting på /priser: beløbene kommer fra prices.json (addons). `note` er sidens egen tekst. */
+/**
+ * Ekstra ting på /priser: beløbene kommer fra prices.json (systems.standard, systems.custom og addons.buyout). `note` er sidens egen tekst.
+ * En funktion koster det samme, hvad enten den lægges til en pakke (ud over dem, pakken har med) eller købes alene.
+ */
 export const addonRows = [
-  { key: 'extraStandard', note: 'Pr. ekstra funktion (fx gavekort), ud over dem pakken har med.' },
-  { key: 'custom', note: 'Én afgrænset opgave, vi bygger til jer. Flere opgaver koster det samme pr. stk.' },
+  { key: 'booking', note: 'Ud over de funktioner, pakken har med.' },
+  { key: 'bestilling', note: 'Ud over de funktioner, pakken har med.' },
+  { key: 'custom', note: 'Et system, vi bygger efter jeres behov. Prisen aftales.' },
   { key: 'buyout', note: 'Hvis I stopper hos os og vil beholde siden. Så stopper den månedlige betaling.' },
 ]
 
-/** Et system alene (uden ny hjemmeside) på /priser: beløbene kommer fra prices.json (systemOnly). */
+/** At løse et problem uden ny hjemmeside, på /priser: beløbene kommer fra prices.json (systems). */
 export const systemOnlyRows = [
-  { key: 'standard', note: 'Fx bordbooking, online bestilling, gavekort, nyhedsbrev eller anmeldelser. Pr. stk.' },
-  { key: 'custom', note: 'Én afgrænset opgave, vi bygger til jer. Pr. stk.' },
+  { key: 'booking', note: 'Gæsterne booker selv, så I får færre opkald.' },
+  { key: 'bestilling', note: 'Gæsterne bestiller selv til afhentning eller levering.' },
+  { key: 'custom', note: 'Noget andet, vi bygger til jer. Prisen aftales.' },
 ]
 
-/** /hjemmeside: hvad systemerne er, og hvad vi gør for Google og lokal SEO. */
-export const systemExamples = [
-  'Automatisk svar og overblik over forespørgsler på selskaber og catering.',
-  'En oversigt over bestillinger til jer selv.',
-  'En lille hjælper, der svarer gæster på åbningstider, menu og allergener ud fra jeres egne oplysninger.',
-]
+/** /hjemmeside: hvad vi gør for Google og lokal SEO. (Idéerne til, hvad der kan bygges, står i prices.json: systems.custom.ideas.) */
 
 export const googleWork = [
   'Jeres Google-profil sættes op og udfyldes: åbningstider, billeder, menu og kontaktoplysninger.',
-  'Siden gøres klar til at blive fundet lokalt: de rigtige titler, jeres adresse og åbningstider på en måde, Google kan læse, og hurtig indlæsning på mobil.',
+  'Siden gøres klar til lokale søgninger: de rigtige titler, adresse og åbningstider i en form, Google kan læse, og hurtig indlæsning på mobil.',
   'Med Anbefalet og Max arbejder vi også med de ord, jeres gæster søger på, og med opslag på Google-profilen.',
   'Vi kan ikke love en bestemt placering på Google. Vi fortæller, hvad vi gør, og gør det.',
 ]

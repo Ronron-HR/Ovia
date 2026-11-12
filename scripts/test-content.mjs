@@ -96,7 +96,7 @@ for (const [p, t] of text) {
   check(!/\.\./.test(desc.replace(/\.\.\./g, '')), `dobbelt punktum i beskrivelsen: ${p}`)
 }
 
-// 6. Hjemmesiden, funktioner alene og engelsk: priserne kommer fra prices.json, og der er intet tilvalg "Engelsk version".
+// 6. Hjemmesiden, at løse et problem alene og engelsk: priserne kommer fra prices.json, og der er intet tilvalg "Engelsk version".
 const flat = (p) => (text.get(join('dist', p, 'index.html')) ?? '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;| /g, ' ').replace(/\s+/g, ' ')
 const kr = (o, m) => `${formatKr(o)} + ${formatKr(m, true)}`.replace(/ /g, ' ')
 for (const page of ['priser', 'hjemmeside']) {
@@ -104,8 +104,8 @@ for (const page of ['priser', 'hjemmeside']) {
   check(t.includes(prices.website.title), `/${page}/ mangler "${prices.website.title}"`)
   for (const part of prices.website.parts) check(t.toLowerCase().includes(part.toLowerCase()), `/${page}/ mangler "${part}"`)
   check(t.includes(prices.systemOnly.note), `/${page}/ mangler "${prices.systemOnly.note}"`)
-  check(t.includes(kr(prices.systemOnly.standard.once, prices.systemOnly.standard.monthly)), `/${page}/ mangler prisen på en almindelig funktion alene`)
-  check(t.includes(kr(prices.systemOnly.custom.once, prices.systemOnly.custom.monthly)), `/${page}/ mangler prisen på bygget specielt til jer alene`)
+  for (const f of prices.systems.standard) check(t.includes(kr(f.once, f.monthly)), `/${page}/ mangler prisen på ${f.name}`)
+  check(t.includes(prices.systems.custom.price), `/${page}/ mangler "${prices.systems.custom.price}" ved bygget specielt`)
 }
 for (const [p, t] of text) check(!/engelsk version|english version/i.test(t), `tilvalget "Engelsk version" findes i ${p}`)
 check(!JSON.stringify(prices).toLowerCase().includes('"english"'), 'prices.json har stadig et english-felt')

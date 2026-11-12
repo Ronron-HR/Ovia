@@ -76,7 +76,7 @@ function chunksFor(file) {
 }
 const entryChunks = new Set(chunksFor('index.html'))
 
-/** CSS-filer hørende til en kildefil og dens importer (Vite lægger dem på chunken, fx demoernes stilark). */
+/** CSS-filer hørende til en kildefil og dens importer (Vite lægger dem på chunken, fx en sides egne klasser). */
 function cssFor(file) {
   const seen = new Set()
   const out = new Set()
@@ -121,7 +121,7 @@ if (!fontPreloads.includes('archivo-latin')) throw new Error('fandt ikke Archivo
 
 function build(route) {
   const url = ORIGIN + route.path
-  // Sidens egne stilark (ud over forsidens) lægges også ind, så fx demoerne ikke blinker uden stil.
+  // Sidens egne stilark (ud over forsidens) lægges også ind, så siden ikke blinker uden stil.
   const extraCss = cssFor(pageFiles[route.page])
     .filter((f) => !entryCss.has(f))
     .map((f) => readFileSync(`dist/${f}`, 'utf8'))
@@ -135,16 +135,24 @@ function build(route) {
   html = setMeta(html, 'property', 'og:url', url)
   html = setMeta(html, 'name', 'twitter:title', route.title)
   html = setMeta(html, 'name', 'twitter:description', route.description)
+  // Sider med eget delingsbillede (fx casen): Open Graph og Twitter peger på det i stedet for forsidens.
+  if (route.ogImage) {
+    const image = ORIGIN + route.ogImage
+    html = setMeta(html, 'property', 'og:image', image)
+    html = setMeta(html, 'property', 'og:image:alt', route.ogAlt ?? route.title)
+    html = setMeta(html, 'name', 'twitter:image', image)
+    html = setMeta(html, 'name', 'twitter:image:alt', route.ogAlt ?? route.title)
+  }
   html = html.replace(/(<link rel="canonical" href=")[^"]*(")/, (_, a, b) => `${a}${url}${b}`)
   if (!html.includes(`<link rel="canonical" href="${url}"`)) throw new Error(`${route.path}: canonical blev ikke sat`)
 
-  // Organisationens strukturerede data (bygget fra pricing.js) hører til forsiden.
+  // Strukturerede data: organisationens (bygget fra prices.json) hører til forsiden; øvrige sider kan have egne (route.ld).
   const ld = /<script type="application\/ld\+json">[\s\S]*?<\/script>/
   if (!ld.test(html)) throw new Error('dist/index.html: fandt ikke JSON-LD-pladsholderen')
   html = html.replace(
     ld,
-    route.path === '/'
-      ? () => `<script type="application/ld+json">${JSON.stringify(organisationLd()).replace(/</g, '\\u003c')}</script>`
+    route.path === '/' || route.ld
+      ? () => `<script type="application/ld+json">${JSON.stringify(route.path === '/' ? organisationLd() : route.ld()).replace(/</g, '\\u003c')}</script>`
       : '',
   )
 

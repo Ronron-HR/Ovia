@@ -6,6 +6,7 @@ const NBSP = ' '
 
 export const contact = {
   name: 'Ronny Hong',
+  cvr: '46893727',
   /** Hårde mellemrum, så nummeret aldrig brydes over to linjer. */
   phone: `53${NBSP}61${NBSP}36${NBSP}99`,
   phoneHref: '+4553613699',
@@ -23,7 +24,8 @@ export const paths = {
   home: '/',
   hjemmeside: '/hjemmeside/',
   priser: '/priser/',
-  demoer: '/demoer/',
+  cases: '/cases/',
+  casePalmy: '/cases/palmy-spisested/',
   privatliv: '/privatlivspolitik/',
   /** Beregneren bor på forsiden. */
   beregner: '/#prisberegner',
@@ -33,19 +35,14 @@ export const paths = {
 export const navLinks = [
   { label: 'Hjemmeside', href: paths.hjemmeside },
   { label: 'Priser', href: paths.priser },
-  { label: 'Eksempler', href: paths.demoer },
+  { label: 'Cases', href: paths.cases },
 ]
+
+/** Palmy Spisested: live-adressen (sitets egen canonical), brugt af casen. */
+export const palmyUrl = 'https://www.palmyspisested.com/'
 
 /** Hvor længe en forespørgsel gemmes i D1, før workeren sletter den (også i privatlivspolitikken). */
 export const retentionMonths = 12
-
-export const flags = {
-  /**
-   * Palmy-casen er skjult (mangler adresse til "Besøg siden"). Komponenten
-   * (PalmyCase i Examples.jsx) er bevaret; sæt til true for at vise den.
-   */
-  showPalmy: false,
-}
 
 /** Sider med prisberegneren: "Se din pris" hopper til den på siden, ellers til forsiden. */
 export const calcPages = [paths.home, paths.hjemmeside]

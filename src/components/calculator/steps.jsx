@@ -1,11 +1,11 @@
 import prices from '../../data/prices.json'
 import { needTitle, needs } from '../../data/calculator.js'
-import { customInfo, formatKr, optionTag } from '../../lib/calculate.js'
+import { introActive, optionTag, usesSite } from '../../lib/calculate.js'
 import { priceText } from '../../lib/receipt.js'
-import { Check, slotsText } from './parts.jsx'
+import { Check } from './parts.jsx'
 
 /**
- * Trinene, som mobil og desktop deler: Hvad har I brug for?, funktioner, "bygget specielt til jer" og rabat.
+ * Trinene, som mobil og desktop deler: Hvad har I brug for?, Hvad skal løses? og rabatlinjen.
  * `wide` er desktop (større luft og skrift). Layoutet er en enkelt kolonne af bokse, så det også holder i smalle kolonner.
  */
 
@@ -16,7 +16,7 @@ export const choice = (on) => `press w-full min-h-12 text-left border-2 border-i
 
 const pad = (wide) => (wide ? 'px-6 py-5' : 'p-4')
 
-/** Hvad en funktion koster, som tekst under den: "Indgår", "Med i prisen (ellers +2.000 kr. + 99 kr./md.)" eller "+2.000 kr. + 99 kr./md.". */
+/** Hvad en funktion koster, som tekst under den: "Indgår", "Med i prisen (ellers +2.500 kr. + 299 kr./md.)", "+2.500 kr. + 299 kr./md." eller bare prisen. */
 export function tagText(tag) {
   if (!tag) return ''
   const price = priceText({ once: tag.once, monthly: tag.monthly })
@@ -26,14 +26,13 @@ export function tagText(tag) {
   return price
 }
 
-/** Teksten over funktionerne: hvor mange der er med i prisen, eller at de kobles på den nuværende hjemmeside. */
+/** Teksten over valgene: hvad pakken har med (bordbooking, online bestilling), eller hvor løsningen sidder, hvis der ikke er en ny hjemmeside. */
 export function functionsIntro(sel) {
-  if (sel.path === 'system') return `${prices.systemOnly.note} Vælg mindst én funktion. Prisen står ved hver.`
+  if (sel.path === 'system') return prices.systemOnly.note
   const pkg = prices.packages[sel.pkg]
-  if (pkg.slots === 0) return `${pkg.name} har ingen funktioner med i prisen. Hver funktion lægges til som ekstra, og prisen står ved hver.`
-  const n = pkg.slots === 1 ? '1 funktion er' : `${pkg.slots} funktioner er`
-  const custom = pkg.customSlots ? ' Én af dem kan være bygget specielt til jer.' : ''
-  return `${n} med i prisen i ${pkg.name}.${custom} Flere lægges til som ekstra, og prisen står ved hver.`
+  if (pkg.slots === 0) return `${pkg.name} har hverken bordbooking eller online bestilling med i prisen. Hver af dem kan lægges til.`
+  if (pkg.slots === 1) return `${pkg.name} har én af dem med i prisen: bordbooking eller online bestilling. Den anden kan lægges til.`
+  return `${pkg.name} har både bordbooking og online bestilling med i prisen.`
 }
 
 /** "Hjemmeside designet til jer": de konkrete dele og antal sider. Står øverst i hver pakke, før funktioner og Google. */
@@ -50,7 +49,7 @@ export function SiteBlock({ pkg, wide = false }) {
 }
 
 /** Første trin: tre store valg. */
-export function NeedList({ calc, wide = false }) {
+export function NeedList({ calc, wide = false, autoNext = false }) {
   const { state, dispatch } = calc
   return (
     <div className="flex flex-col gap-3" role="group" aria-label={needTitle}>
@@ -61,7 +60,10 @@ export function NeedList({ calc, wide = false }) {
             key={n.key}
             type="button"
             aria-pressed={on}
-            onClick={() => dispatch({ type: 'setPath', path: n.key })}
+            onClick={() => {
+              dispatch({ type: 'setPath', path: n.key })
+              if (autoNext) dispatch({ type: 'next' })
+            }}
             className={`${choice(on)} flex items-center gap-4 ${wide ? 'px-6 py-6' : 'p-4'} [--press:.98]`}
           >
             <span className="flex min-w-0 flex-1 flex-col gap-1">
@@ -76,25 +78,47 @@ export function NeedList({ calc, wide = false }) {
   )
 }
 
-/** De almindelige funktioner. Prisen står ved hver, før man trykker. */
-export function FunctionList({ calc, wide = false }) {
+/**
+ * Hvad skal løses? Tre kort, aldrig flere: bordbooking, online bestilling og noget bygget specielt. Flervalg. Prisen står ved hvert kort,
+ * før man trykker; bygget specielt har ingen pris (den aftales).
+ */
+export function ProblemList({ calc, wide = false }) {
   const { state, dispatch } = calc
   const sel = state.selection
+  const custom = prices.systems.custom
+  const card = (on) => `${choice(on)} flex flex-col gap-1 ${pad(wide)} [--press:.98]`
+  const title = `${heading} ${wide ? 'text-[19px]' : 'text-[17px]'} leading-[1.15] tracking-[-0.015em]`
   return (
-    <div className="flex flex-col gap-3" role="group" aria-label="Funktioner">
+    <div className="flex flex-col gap-3" role="group" aria-label="Hvad skal løses?">
+      <button
+        type="button"
+        aria-pressed={sel.custom > 0}
+        data-removal={sel.custom > 0 ? '' : undefined}
+        onClick={() => dispatch({ type: 'setCustom', value: sel.custom > 0 ? 0 : 1 })}
+        className={card(sel.custom > 0)}
+      >
+        <span className="flex w-full items-center justify-between gap-3">
+          <span className={title}>{custom.title}</span>
+          <Check on={sel.custom > 0} size={wide ? 28 : 24} />
+        </span>
+        <span className="text-sm leading-[1.35]">{custom.desc}</span>
+        <span className="flex flex-col gap-[3px]">
+          {custom.ideas.map((idea) => (
+            <span key={idea} className="text-sm leading-[1.35]">
+              – {idea}
+            </span>
+          ))}
+        </span>
+        <span className="price text-[13px] leading-[1.4] whitespace-normal">
+          {custom.price}. {custom.priceNote}
+        </span>
+      </button>
       {prices.systems.standard.map((s) => {
         const on = sel.systems.includes(s.key)
         return (
-          <button
-            key={s.key}
-            type="button"
-            aria-pressed={on}
-            data-removal={on ? '' : undefined}
-            onClick={() => dispatch({ type: 'toggleSystem', key: s.key })}
-            className={`${choice(on)} flex flex-col gap-1 ${pad(wide)} [--press:.98]`}
-          >
+          <button key={s.key} type="button" aria-pressed={on} data-removal={on ? '' : undefined} onClick={() => dispatch({ type: 'toggleSystem', key: s.key })} className={card(on)}>
             <span className="flex w-full items-center justify-between gap-3">
-              <span className={`${heading} ${wide ? 'text-[19px]' : 'text-[17px]'} leading-[1.15] tracking-[-0.015em]`}>{s.name}</span>
+              <span className={title}>{s.title}</span>
               <Check on={on} size={wide ? 28 : 24} />
             </span>
             <span className="text-sm leading-[1.35]">{s.desc}</span>
@@ -106,72 +130,25 @@ export function FunctionList({ calc, wide = false }) {
   )
 }
 
-/** "Bygget specielt til jer": pris pr. stk. og en −/antal/+-styring med knapper på 48 × 48 px. Teksten og styringen ombrydes, så intet overlapper. */
-export function CustomCard({ calc, wide = false }) {
+/**
+ * Introduktionspris: ét lille, roligt spørgsmål på sidste trin, når prisen er klar (ikke en rabatboks, ingen tal og ingen knaphed).
+ * Siger kunden ja, må siden vises som eksempel, og engangsprisen er pakkens introOnce; ændringen ses i totalen og i kvitteringen.
+ * Vises kun for hjemmesider og kun, mens introprisen er i gang.
+ */
+export function ExampleOffer({ calc, wide = false }) {
   const { state, dispatch } = calc
   const sel = state.selection
-  const info = customInfo(sel)
-  const price = priceText({ once: info.once, monthly: info.monthly })
-  const btn = 'press flex h-12 w-12 items-center justify-center border-2 border-ink bg-paper text-2xl leading-none [--press:.9] disabled:opacity-40'
-  return (
-    <div className={`flex flex-wrap items-center justify-between gap-x-6 gap-y-3 bg-surface ${pad(wide)}`}>
-      <div className="flex min-w-0 flex-[1_1_220px] flex-col gap-1">
-        <span className={`${heading} ${wide ? 'text-[19px]' : 'text-[17px]'} leading-[1.15] tracking-[-0.015em]`}>{prices.systems.custom.name}</span>
-        <span className="text-sm leading-[1.35]">{prices.systems.custom.desc}</span>
-        <span className="price text-[13px] leading-[1.4] whitespace-normal">{`${sel.path === 'system' ? '' : '+'}${price} pr. stk.`}</span>
-        {info.free && <span className="text-[13px] leading-[1.4]">Den næste er med i prisen.</span>}
-        {info.atMax && <span className="text-[13px] leading-[1.4]">Højeste antal nået.</span>}
-      </div>
-      <div role="group" aria-label="Antal bygget specielt til jer" className="flex flex-none items-center">
-        <button
-          type="button"
-          aria-label="Fjern én bygget til jer"
-          data-removal=""
-          disabled={sel.custom <= 0}
-          onClick={() => dispatch({ type: 'setCustom', value: sel.custom - 1 })}
-          className={btn}
-        >
-          <span aria-hidden="true">−</span>
-        </button>
-        <span className="price flex h-12 min-w-14 items-center justify-center text-lg" aria-live="polite">
-          {sel.custom}
-        </span>
-        <button
-          type="button"
-          aria-label="Tilføj én bygget til jer"
-          disabled={sel.custom >= prices.systems.custom.max}
-          onClick={() => dispatch({ type: 'setCustom', value: sel.custom + 1 })}
-          className={btn}
-        >
-          <span aria-hidden="true">+</span>
-        </button>
-      </div>
-    </div>
-  )
-}
-
-/** Rabat: introduktionsprisen (kun hjemmesider, kun mens der er pladser). */
-export function DiscountCard({ calc, wide = false }) {
-  const { state, dispatch } = calc
-  const sel = state.selection
-  const pkg = prices.packages[sel.pkg]
-  const saving = Math.round(pkg.once * prices.intro.discount)
+  if (!introActive() || !usesSite(sel) || sel.pkg === null) return null
   return (
     <button
       type="button"
       aria-pressed={sel.intro}
       data-removal={sel.intro ? '' : undefined}
       onClick={() => dispatch({ type: 'toggleIntro' })}
-      className={`${choice(sel.intro)} flex items-start gap-3 ${pad(wide)} [--press:.98]`}
+      className={`press flex w-full items-center gap-3 bg-surface px-4 py-3 text-left [--press:.99] ${wide ? 'max-w-[680px]' : ''}`}
     >
-      <span className="flex min-w-0 flex-1 flex-col gap-1">
-        <span className={`${wide ? 'text-[17px]' : 'text-base'} font-semibold`}>Introduktionspris: {Math.round(prices.intro.discount * 100)}&nbsp;% rabat på engangsprisen</span>
-        <span className="text-sm leading-normal">
-          De første {prices.intro.total} kunder får rabat, hvis vi må vise jeres side som eksempel på vores hjemmeside. {slotsText()}. Rabatten gælder ikke den månedlige pris.
-        </span>
-        <span className="text-sm font-semibold">Ja, I må vise siden som case (eksempel){sel.intro ? ` · du sparer ${formatKr(saving)}` : ''}</span>
-      </span>
-      <Check on={sel.intro} size={wide ? 28 : 24} />
+      <Check on={sel.intro} size={22} />
+      <span className="text-[15px] leading-[1.4]">Må vi vise jeres side som eksempel hos os? Så er engangsprisen lidt lavere.</span>
     </button>
   )
 }

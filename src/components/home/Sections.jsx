@@ -2,7 +2,7 @@ import ImageSlot from '../ui/ImageSlot.jsx'
 
 const heading = 'font-[family-name:var(--font-display)] font-bold [font-stretch:125%]'
 
-const steps = ['Vi mødes', 'Du ser et udkast på din telefon', 'Det går live']
+const steps = ['Vi mødes', 'I ser et udkast på jeres telefon', 'Det går live']
 
 export function Hero() {
   return (
@@ -15,7 +15,7 @@ export function Hero() {
       </h1>
       <div className="mt-5 flex flex-wrap items-end justify-between gap-6 md:mt-14 md:ml-[33%] md:gap-7">
         <p className="m-0 max-w-[34ch] text-[17px] leading-[1.45] text-pretty md:text-[clamp(17px,1.5vw,21px)]">
-          Hjemmeside og Google-profil til restauranter og caféer i Aarhus, med bordbooking, bestilling og gavekort, hvis I vil have det. Faste priser.
+          Hjemmeside og Google-profil til restauranter og caféer i Aarhus, og systemer, der tager det, der æder jeres tid. Faste priser.
         </p>
         <a href="#prisberegner" className="btn btn-ink hov-ink-soft w-full text-[17px] md:w-auto">
           <span>Se din pris</span>
@@ -59,10 +59,10 @@ export function About() {
       <ImageSlot name="portraet-ronny" ratio="4 / 5" width={500} height={625} alt="Ronny Hong" gray fill="bg-surface" className="max-w-[72%] md:max-w-none" />
       <div className="flex flex-col gap-5 md:pb-8">
         <h2 id="om-titel" className="display t-h2 max-w-[14ch]" style={{ lineHeight: 0.98 }}>
-          Du taler direkte med den, der bygger din side.
+          I taler direkte med den, der bygger jeres side.
         </h2>
         <p className="m-0 max-w-[44ch] text-[17px] leading-normal text-pretty">
-          Vi bygger hjemmesiden, sætter Google-profilen op og tilføjer de funktioner, I vælger. Svar inden for 24 timer.
+          Vi bygger hjemmesiden, sætter Google-profilen op og tilføjer det, I vælger: fx bordbooking, online bestilling eller et system, der tager det kedelige.
         </p>
       </div>
     </section>

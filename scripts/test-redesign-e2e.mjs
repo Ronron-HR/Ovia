@@ -312,7 +312,7 @@ for (const [w, h, mobile] of [
   [390, 844, true],
   [1440, 900, false],
 ]) {
-  for (const path of ['/priser/', '/hjemmeside/', '/demoer/', '/privatlivspolitik/']) {
+  for (const path of ['/priser/', '/hjemmeside/', '/cases/', '/cases/palmy-spisested/', '/privatlivspolitik/']) {
     const { page, errors } = await open(w, h, mobile, path)
     const name = `${w}x${h}${path.replaceAll('/', '-')}`
     await shot(page, name)

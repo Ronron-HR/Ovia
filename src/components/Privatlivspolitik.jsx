@@ -9,13 +9,12 @@ import Logo from './ui/Logo.jsx'
  *   (slås Turnstile til, skal politikken nævne det)
  * - skrifterne er selvhostede (@fontsource-variable, ingen Google Fonts)
  * - prisberegnerens valg står i adresselinjen og forlader kun browseren, hvis du selv sender dem
- * - koncepterne husker i sessionStorage, hvilken side man kom fra (DemoShell)
  * Ændrer noget af det sig, skal politikken ændres SAMTIDIG.
  *
  * Det er en fornuftig standardtekst, ikke juridisk rådgivning.
  */
 
-const UPDATED = '5. november 2026'
+const UPDATED = '8. november 2026'
 const RETENTION_MONTHS = retentionMonths
 const PROVIDERS = [
   ['Cloudflare', 'hosting af siden, serverlogs, besøgsstatistik (Web Analytics), modtagelse af formularen (Workers), databasen med forespørgsler (D1) og afsendelse og videresendelse af mail (Email Routing).'],
@@ -62,6 +61,8 @@ export default function Privatlivspolitik() {
             <p>OviaSpecs er dataansvarlig for de oplysninger, du giver os.</p>
             <p>
               OviaSpecs v/ {contact.name}
+              <br />
+              CVR {contact.cvr}
               <br />
               <a href={links.mail}>{contact.email}</a>
               <br />
@@ -167,11 +168,6 @@ export default function Privatlivspolitik() {
               Prisberegnerens valg står i adresselinjen, så du kan dele eller gemme linket. De forlader kun din browser, hvis du selv sender
               formularen &quot;Send mine valg&quot; eller en SMS. Ring og SMS åbner din egen telefon eller SMS-app med en færdigskrevet besked, som du
               selv vælger, om du vil sende.
-            </p>
-            <p>
-              Når du åbner et af koncepterne, husker din browserfane (sessionStorage), hvilken side du kom fra, så &quot;Tilbage til OviaSpecs&quot;
-              fører det rigtige sted hen. Det forlader ikke din browser, er ikke en cookie og slettes, når du lukker fanen. Koncepterne er
-              fiktive: formularer og knapper i dem sender og gemmer intet.
             </p>
           </Section>
 

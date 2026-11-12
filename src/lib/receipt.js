@@ -4,9 +4,10 @@ import prices from '../data/prices.json' with { type: 'json' };
 import { needs } from '../data/calculator.js';
 import { NBSP, calculate, clean, formatKr, formatSigned, toQuery, usesSite, usesSystems } from './calculate.js';
 
-/** Prisen på en linje som tekst: "Indgår", "−2.850 kr.", "2.000 kr. + 99 kr./md." eller "9.500 kr. + 549 kr./md.". */
+/** Prisen på en linje som tekst: "Indgår", "Pris aftales", "−2.850 kr.", "2.500 kr. + 299 kr./md." eller "9.500 kr. + 699 kr./md.". */
 export function priceText(line) {
   if (line.included) return 'Indgår';
+  if (line.quote) return prices.systems.custom.price;
   if (line.once < 0) return formatSigned(line.once);
   const parts = [];
   if (line.once) parts.push(formatKr(line.once));
@@ -14,12 +15,12 @@ export function priceText(line) {
   return parts.join(' + ') || formatKr(0);
 }
 
-/** Kort form til bundbaren, fx "Anbefalet", "Gavekort", "Intro −30 %". */
-const short = (l) => (l.key === 'intro' ? `Intro${NBSP}−30${NBSP}%` : l.key === 'package' ? l.package : l.key.startsWith('custom-') ? 'Bygget til jer' : l.label);
+/** Kort form til bundbaren, fx "Anbefalet", "Bordbooking", "Rabat". */
+const short = (l) => (l.key === 'intro' ? 'Rabat' : l.key === 'package' ? l.package : l.key.startsWith('custom-') ? 'Bygget til jer' : l.label);
 
 /**
  * Alt, kvitteringen skal vise. `all` er linjerne i rækkefølge; o/m er totalerne (engang efter intropris, pr. måned);
- * onceNormal er engangsprisen uden intro (vises overstreget, når intro er valgt).
+ * onceNormal er engangsprisen uden intro (bruges kun i mailen til Ronny).
  */
 export function buildReceipt(selection, cfg = prices) {
   const r = calculate(selection, cfg);
@@ -30,10 +31,11 @@ export function buildReceipt(selection, cfg = prices) {
     once: l.once,
     monthly: l.monthly,
     included: l.included,
+    quote: Boolean(l.quote),
     price: priceText(l),
     short: short(l),
   }));
-  return { path: r.selection.path, pathText: pathText(r.selection.path), all, o: r.once, m: r.monthly, onceNormal: r.onceNormal, introSaving: r.introSaving, introApplied: r.introApplied, selection: r.selection };
+  return { path: r.selection.path, pathText: pathText(r.selection.path), all, o: r.once, m: r.monthly, onceNormal: r.onceNormal, introSaving: r.introSaving, introApplied: r.introApplied, hasQuote: r.hasQuote, quoteOnly: r.hasQuote && r.once === 0 && r.monthly === 0, selection: r.selection };
 }
 
 /** Hvad kunden har brug for, som tekst i mailen. */
@@ -41,7 +43,7 @@ export const pathText = (path) => needs.find((n) => n.key === path)?.mail ?? '';
 
 /**
  * Henvendelses-id i emnet. H = hjemmeside, S = system alene, B = begge; derefter pakke 1–3 (H og B), funktionskoder (S og B),
- * C = bygget specielt til jer og I = intro. Fx OVIA-B2bg-C1-I, OVIA-H1, OVIA-Sbg-C1.
+ * C = bygget specielt til jer (pris aftales) og I = intro. Fx OVIA-B2bg-C1-I, OVIA-H1, OVIA-Sbg-C1.
  */
 export function specId(selection, cfg = prices) {
   const sel = clean(selection, cfg);

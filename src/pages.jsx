@@ -1,8 +1,5 @@
-import Cafe from './demos/Cafe.jsx'
-import Restaurant from './demos/Restaurant.jsx'
-import Salon from './demos/Salon.jsx'
-import Vinbar from './demos/Vinbar.jsx'
-import Demoer from './pages/Demoer.jsx'
+import Cases from './pages/Cases.jsx'
+import PalmySpisested from './pages/cases/PalmySpisested.jsx'
 import Hjemmeside from './pages/Hjemmeside.jsx'
 import Home from './pages/Home.jsx'
 import Priser from './pages/Priser.jsx'
@@ -16,9 +13,6 @@ export const pages = {
   home: Home,
   hjemmeside: Hjemmeside,
   priser: Priser,
-  demoer: Demoer,
-  'demo-cafe': Cafe,
-  'demo-restaurant': Restaurant,
-  'demo-salon': Salon,
-  'demo-vinbar': Vinbar,
+  cases: Cases,
+  'case-palmy-spisested': PalmySpisested,
 }

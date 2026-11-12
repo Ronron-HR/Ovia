@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import prices from '../../data/prices.json'
 import { helpQuestions, needTitle, needs, nextLabels, stepLabels } from '../../data/calculator.js'
-import { formatKr, introActive } from '../../lib/calculate.js'
+import { formatKr } from '../../lib/calculate.js'
 import InquirySlot from './InquirySlot.jsx'
 import { Check, DeltaChip, ReceiptLine, TERMS_SHORT, Total } from './parts.jsx'
-import { CustomCard, DiscountCard, FunctionList, NeedList, SiteBlock, functionsIntro } from './steps.jsx'
+import { ExampleOffer, NeedList, ProblemList, SiteBlock, functionsIntro } from './steps.jsx'
 import { useExitList } from './useExitList.js'
 
 const heading = 'font-[family-name:var(--font-display)] font-bold [font-stretch:125%]'
@@ -28,20 +28,11 @@ function Segmented({ cols, index, children }) {
   )
 }
 
-/** Pakkens pris på to linjer: engang og pr. måned (kolonnerne er smalle). Intro: normalprisen overstreget. */
-function PackagePrice({ pkg, intro }) {
-  const saving = intro && introActive() ? Math.round(pkg.once * prices.intro.discount) : 0
+/** Pakkens pris på to linjer: engang og pr. måned (kolonnerne er smalle). */
+function PackagePrice({ pkg }) {
   return (
     <span className="flex flex-col gap-1">
-      <span className="price text-lg">
-        {saving > 0 ? (
-          <>
-            <s className="text-sm opacity-70">{formatKr(pkg.once)}</s> {formatKr(pkg.once - saving)}
-          </>
-        ) : (
-          formatKr(pkg.once)
-        )}
-      </span>
+      <span className="price text-lg">{formatKr(pkg.once)}</span>
       <span className="price text-sm">+ {formatKr(pkg.monthly, true)}</span>
     </span>
   )
@@ -90,7 +81,7 @@ function StepPackages({ calc }) {
                 <span className="flex w-full items-baseline justify-between gap-2">
                   <span className={`${heading} text-[22px] tracking-[-0.02em]`}>{p.name}</span>
                 </span>
-                <PackagePrice pkg={p} intro={sel.intro} />
+                <PackagePrice pkg={p} />
                 <SiteBlock pkg={p} wide />
                 <ul className="m-0 flex list-none flex-col gap-[6px] p-0">
                   {p.points.map((pt) => (
@@ -104,7 +95,7 @@ function StepPackages({ calc }) {
           })}
         </Segmented>
       </div>
-      {sel.path === 'site' && <p className="mt-3 mb-0 text-sm leading-normal text-muted-2">Vil I også vælge funktioner? Gå tilbage og vælg “Begge dele”.</p>}
+      {sel.path === 'site' && <p className="mt-3 mb-0 text-sm leading-normal text-muted-2">Vil I også løse et problem? Gå tilbage og vælg “Begge dele”.</p>}
     </div>
   )
 }
@@ -115,24 +106,11 @@ function StepSystems({ calc }) {
   return (
     <div className="anim-step flex flex-col gap-2">
       <p className="m-0 text-[15px] leading-normal">{functionsIntro(sel)}</p>
-      <p className="m-0 mb-2 text-[15px] leading-normal">Tryk på en funktion for at vælge den. Tryk igen for at fjerne den.</p>
-      <div className="flex flex-col gap-3">
-        <FunctionList calc={calc} wide />
-        <CustomCard calc={calc} wide />
-      </div>
+      <p className="m-0 mb-2 text-[15px] leading-normal">Vælg det, I vil have hjælp til. Tryk igen for at fjerne det.</p>
+      <ProblemList calc={calc} wide />
       <p className="mt-2 mb-0 text-sm leading-normal text-muted-2">
         {prices.systems.thirdParty} {prices.systems.excluded}
       </p>
-    </div>
-  )
-}
-
-function StepDiscount({ calc }) {
-  return (
-    <div className="anim-step flex flex-col gap-3">
-      <span className={`${heading} mb-1 text-[22px] tracking-[-0.02em]`}>Rabat</span>
-      <p className="m-0 mb-2 text-[15px] leading-normal">Rabatten er valgfri. Tryk for at vælge, tryk igen for at fjerne.</p>
-      <DiscountCard calc={calc} wide />
     </div>
   )
 }
@@ -151,12 +129,15 @@ function StepSummary({ calc }) {
   }
   return (
     <div className="anim-step max-w-[680px]">
-      <h3 className="text-[clamp(36px,4.4vw,68px)] leading-[.95] tracking-[-0.035em]">Din pris er klar.</h3>
-      <p className="mt-4 mb-0 text-[17px] text-muted-2">Send valgene. Svar inden for 24 timer.</p>
+      <h3 className="text-[clamp(36px,4.4vw,68px)] leading-[.95] tracking-[-0.035em]">{receipt.quoteOnly ? 'Din forespørgsel er klar.' : 'Din pris er klar.'}</h3>
+      <p className="mt-4 mb-0 text-[17px] text-muted-2">Send valgene til Ronny. Han svarer inden for 24 timer.</p>
       <p className="mt-1 mb-0 text-[17px]">
         Hvad I har brug for: <span className="font-semibold">{needs.find((n) => n.key === receipt.path)?.title}</span>
       </p>
-      <div className="mt-10">
+      <div className="mt-6">
+        <ExampleOffer calc={calc} wide />
+      </div>
+      <div className="mt-6">
         <InquirySlot receipt={receipt} hrefs={hrefs} />
       </div>
       <div className="mt-6 flex flex-wrap items-center gap-7">
@@ -314,24 +295,18 @@ function Aside({ calc }) {
       </div>
       <div className="mt-3 flex flex-col gap-3 pt-3">
         <div className="swap-out flex flex-col gap-3" data-off={!any ? '' : undefined} aria-hidden={!any}>
-          <div className="relative flex flex-col gap-[2px]">
-            <span className="text-[13px] text-on-ink-2">
-              Én gang
-              {receipt.introApplied && (
-                <>
-                  <s className="ml-2 opacity-70">{formatKr(receipt.onceNormal)}</s>
-                  <span className="sr-only"> er normalprisen, intropris er valgt</span>
-                </>
-              )}
-            </span>
+          {receipt.quoteOnly && <p className="m-0 text-[15px] leading-normal">Prisen aftales, når vi har talt om, hvad I har brug for.</p>}
+          <div className="relative flex flex-col gap-[2px]" style={receipt.quoteOnly ? { display: 'none' } : undefined}>
+            <span className="text-[13px] text-on-ink-2">Én gang</span>
             {delta?.o < 0 && <DeltaChip key={delta.id} amount={delta.o} className="top-0 right-0" />}
             <Total value={receipt.o} unit="kr." size={38} unitSize={14} />
           </div>
-          <div className="relative flex flex-col gap-[2px]">
+          <div className="relative flex flex-col gap-[2px]" style={receipt.quoteOnly ? { display: 'none' } : undefined}>
             <span className="text-[13px] text-on-ink-2">Hver måned</span>
             {delta?.m < 0 && <DeltaChip key={delta.id} amount={delta.m} monthly className="top-0 right-0" />}
             <Total value={receipt.m} unit="kr./md." size={38} unitSize={14} />
           </div>
+          {receipt.hasQuote && !receipt.quoteOnly && <p className="m-0 text-[13px] leading-[1.4] text-on-ink-2">Det, der bygges specielt, er ikke med i tallene. Prisen aftales.</p>}
           <p className="m-0 text-[13px] leading-[1.4] text-on-ink-2">Alle priser er ekskl. moms. {TERMS_SHORT}</p>
         </div>
         {state.step !== 'sum' ? (
@@ -404,8 +379,6 @@ export default function Desktop({ calc }) {
             <StepPackages calc={calc} />
           ) : step === 'sys' ? (
             <StepSystems calc={calc} />
-          ) : step === 'disc' ? (
-            <StepDiscount calc={calc} />
           ) : (
             <StepSummary calc={calc} />
           )}

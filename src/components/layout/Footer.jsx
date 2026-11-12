@@ -4,7 +4,7 @@ import Logo from '../ui/Logo.jsx'
 const row = 'flex min-h-12 items-center no-underline'
 
 // Rækkefølgen i designet: to kolonner, læst række for række.
-const order = ['Hjemmeside', 'Priser', 'Eksempler']
+const order = ['Hjemmeside', 'Priser', 'Cases']
 
 /** Footer uden skyline: logo, kontakt, links og ophavsret. */
 export default function Footer() {
@@ -28,7 +28,10 @@ export default function Footer() {
             </a>
           ))}
         </nav>
-        <span className="self-end text-sm text-muted-2">© 2026 OviaSpecs</span>
+        <span className="flex flex-col gap-[2px] self-end text-sm text-muted-2">
+          <span>© 2026 OviaSpecs v/ {contact.name}</span>
+          <span>CVR {contact.cvr}</span>
+        </span>
       </div>
     </footer>
   )

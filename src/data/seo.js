@@ -1,4 +1,4 @@
-import { demos } from '../content.demos.js'
+import { cases } from './cases.js'
 import prices from './prices.json' with { type: 'json' }
 import { formatKr } from '../lib/calculate.js'
 import { contact, paths } from './site.js'
@@ -26,17 +26,19 @@ const priceOf = (key) => plain(`${formatKr(pkg(key).once)} + ${formatKr(pkg(key)
  * brugt som <lastmod> i sitemap.xml. Ret den, når siden ændres indholdsmæssigt.
  */
 const UPDATED = '2026-11-05'
+/** Casesiderne er lavet 8. nov. 2026; ret datoen, når de ændres indholdsmæssigt. */
+const CASES_UPDATED = '2026-11-08'
 const VAT = 'Alle priser er ekskl. moms.'
 
 export const seo = {
   home: {
     title: 'Hjemmeside til restauranter og caféer i Aarhus | OviaSpecs',
-    description: `Hjemmeside og Google-profil til restauranter og caféer i Aarhus, med bordbooking og gavekort. Start: ${priceOf('start')} ${VAT}`,
+    description: `Hjemmeside og Google-profil til restauranter og caféer i Aarhus, med bordbooking og online bestilling. Start: ${priceOf('start')} ${VAT}`,
     updated: UPDATED,
   },
   hjemmeside: {
     title: 'Hjemmeside, Google og bordbooking til restauranter | OviaSpecs',
-    description: `Hjemmeside, Google-profil og funktioner som bordbooking og gavekort til din restaurant eller café. Faste priser: Start ${priceOf('start')} ${VAT}`,
+    description: `Hjemmeside, Google-profil og bordbooking eller online bestilling til din restaurant eller café. Faste priser: Start ${priceOf('start')} ${VAT}`,
     updated: UPDATED,
   },
   priser: {
@@ -44,18 +46,21 @@ export const seo = {
     description: `Tre pakker side om side: Start ${priceOf('start')}, Anbefalet ${priceOf('anbefalet')} og Max ${priceOf('max')} ${VAT}`,
     updated: UPDATED,
   },
-  demoer: {
-    title: 'Eksempler på hjemmesider til café og salon | OviaSpecs',
+  cases: {
+    title: 'Cases: hjemmeside og SEO til restauranter | OviaSpecs',
     description:
-      'Fire koncepter med opdigtet indhold: en café, en restaurant, en salon og en vinbar. De virker på din telefon, så du kan prøve dem selv.',
-    updated: UPDATED,
+      'Se, hvad vi har bygget til en restaurant: hjemmeside og lokal SEO til Palmy Spisested i Hjortshøj, med fakta om forløbet og det, der blev leveret.',
+    updated: CASES_UPDATED,
+    ld: () => casesLd(),
+  },
+  casePalmy: {
+    title: 'Case: Palmy Spisested, hjemmeside og SEO | OviaSpecs',
+    description:
+      'Hjemmeside og SEO til Palmy Spisested, en vietnamesisk restaurant i Hjortshøj: bygget til mobilen, med lokal SEO, Google-profil og Search Console.',
+    updated: CASES_UPDATED,
+    ld: () => caseLd(cases[0]),
   },
 }
-
-/** Demoernes titler og beskrivelser bor i content.demos.js; her samles de med sidenøgle. */
-export const demoSeo = Object.fromEntries(
-  demos.projects.map((p) => [`demo-${p.id}`, { title: p.metaTitle, description: p.metaDescription, updated: UPDATED }]),
-)
 
 /** Privatlivspolitikken er sin egen indgang (ikke i routes.js), men står i sitemap.xml. */
 export const privacySeo = { path: paths.privatliv, updated: UPDATED }
@@ -99,7 +104,7 @@ export const organisationLd = () => ({
       image: `${ORIGIN}/og.jpg`,
       email: contact.email,
       telephone: contact.phoneHref,
-      description: 'Hjemmeside, Google-profil og funktioner som bordbooking og gavekort til restauranter og caféer. Base i Aarhusområdet.',
+      description: 'Hjemmeside, Google-profil og funktioner som bordbooking og online bestilling til restauranter og caféer. Base i Aarhusområdet.',
       areaServed: [
         { '@type': 'City', name: 'Aarhus' },
         { '@type': 'Country', name: 'Danmark' },
@@ -122,5 +127,63 @@ export const organisationLd = () => ({
       inLanguage: 'da',
       publisher: { '@id': ORG_ID },
     },
+  ],
+})
+
+/* ---- Cases: strukturerede data ---------------------------------------------
+   /cases: CollectionPage + brødkrummer. Casesiden: CreativeWork + brødkrummer. Kun det, der står på siden. Der er
+   ingen anmeldelser, ratings eller resultater, og datePublished udelades, til leveringsdatoen er bekræftet.
+------------------------------------------------------------------------- */
+const crumbs = (items) => ({
+  '@type': 'BreadcrumbList',
+  itemListElement: items.map(([name, path], i) => ({ '@type': 'ListItem', position: i + 1, name, item: `${ORIGIN}${path}` })),
+})
+
+const casesLd = () => ({
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'CollectionPage',
+      '@id': `${ORIGIN}${paths.cases}#side`,
+      url: `${ORIGIN}${paths.cases}`,
+      name: 'Cases',
+      description: seo.cases.description,
+      inLanguage: 'da',
+      isPartOf: { '@id': `${ORIGIN}/#website` },
+      mainEntity: {
+        '@type': 'ItemList',
+        itemListElement: cases.map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: c.name, url: `${ORIGIN}${c.path}` })),
+      },
+    },
+    crumbs([['Forside', paths.home], ['Cases', paths.cases]]),
+  ],
+})
+
+const caseLd = (c) => ({
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'CreativeWork',
+      '@id': `${ORIGIN}${c.path}#case`,
+      url: `${ORIGIN}${c.path}`,
+      name: `Case: ${c.name}`,
+      headline: `${c.name}: hjemmeside og SEO`,
+      description: seo.casePalmy.description,
+      inLanguage: 'da',
+      keywords: c.tags.join(', '),
+      creator: { '@id': ORG_ID },
+      publisher: { '@id': ORG_ID },
+      isPartOf: { '@id': `${ORIGIN}${paths.cases}#side` },
+      mainEntityOfPage: `${ORIGIN}${c.path}`,
+      dateModified: CASES_UPDATED,
+      about: {
+        '@type': 'Restaurant',
+        name: c.name,
+        url: c.siteUrl,
+        servesCuisine: 'Vietnamese',
+        address: { '@type': 'PostalAddress', addressLocality: c.city, addressCountry: 'DK' },
+      },
+    },
+    crumbs([['Forside', paths.home], ['Cases', paths.cases], [c.name, c.path]]),
   ],
 })

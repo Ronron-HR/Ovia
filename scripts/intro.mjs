@@ -1,5 +1,5 @@
 /**
- * Introduktionspladser (30 % på engangsprisen til de første kunder, der lader siden vise som case).
+ * Introduktionspladser (en lidt lavere engangspris, introOnce i prices.json, til de første kunder, der lader siden vise som case).
  * Tallet bor ét sted: "introSlotsLeft" i src/data/prices.json. Når det er 0, findes introprisen ikke
  * længere på siden, i beregneren, i mailen eller i workeren.
  *

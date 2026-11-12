@@ -1,7 +1,8 @@
 import Calculator from '../components/calculator/Calculator.jsx'
 import Contact from '../components/layout/Contact.jsx'
 import prices from '../data/prices.json'
-import { googleWork, systemExamples } from '../data/pages.js'
+import { paths } from '../data/site.js'
+import { googleWork } from '../data/pages.js'
 import { priceText } from '../lib/receipt.js'
 
 /**
@@ -17,7 +18,7 @@ export default function Hjemmeside() {
         </h1>
         <div className="mt-5 flex flex-wrap items-end justify-between gap-6 md:mt-14 md:ml-[33%]">
           <p className="m-0 max-w-[36ch] text-[17px] leading-[1.45] text-pretty md:text-[clamp(17px,1.5vw,21px)]">
-            Hjemmeside og Google-profil til din restaurant eller café, med bordbooking, bestilling, gavekort og mere. Én pakke til en fast pris.
+            Hjemmeside og Google-profil til din restaurant eller café, med bordbooking, online bestilling og mere. Faste priser.
           </p>
           <a href="#prisberegner" className="btn btn-ink hov-ink-soft w-full text-[17px] md:w-auto">
             <span>Se din pris</span>
@@ -58,23 +59,25 @@ export default function Hjemmeside() {
       <section id="systemer" aria-labelledby="systemer-titel" className="scroll-mt-20 bg-surface md:scroll-mt-24">
         <div className="mx-auto max-w-[1440px] section-pad px-5 md:px-14">
           <h2 id="systemer-titel" className="display t-h2">
-            Funktioner, der passer til jer
+            Det kan vi løse for jer
           </h2>
           <p className="mt-4 mb-0 max-w-[48ch] text-[17px] leading-normal text-pretty">
-            Vi sætter funktionerne op eller kobler jeres egen udbyder på, fx DinnerBooking eller easyTable til bordbooking.
+            Vi sætter det op eller kobler jeres egen udbyder på, fx DinnerBooking eller easyTable til bordbooking. Det kræver ikke en ny hjemmeside.
           </p>
           <ul className="m-0 mt-7 grid list-none gap-2 p-0 md:mt-12 md:grid-cols-2 lg:grid-cols-3">
             {prices.systems.standard.map((s) => (
               <li key={s.key} className="flex flex-col gap-2 bg-paper p-5 md:p-6">
-                <h3 className="text-xl tracking-[-0.02em]">{s.name}</h3>
+                <h3 className="text-xl tracking-[-0.02em]">{s.title}</h3>
                 <p className="m-0 text-[15px] leading-normal">{s.desc}</p>
+                <p className="price m-0 text-sm">{priceText({ once: s.once, monthly: s.monthly })}</p>
               </li>
             ))}
             <li className="flex flex-col gap-3 bg-ink p-5 text-paper md:col-span-2 md:p-6 lg:col-span-1">
-              <h3 className="text-xl tracking-[-0.02em]">{prices.systems.custom.name}</h3>
+              <h3 className="text-xl tracking-[-0.02em]">{prices.systems.custom.title}</h3>
               <p className="m-0 text-[15px] leading-normal text-on-ink-2">{prices.systems.custom.desc}</p>
+              <p className="price m-0 text-sm">{prices.systems.custom.price}</p>
               <ul className="m-0 flex list-none flex-col gap-[6px] p-0">
-                {systemExamples.map((e) => (
+                {prices.systems.custom.ideas.map((e) => (
                   <li key={e} className="text-[15px] leading-normal">
                     – {e}
                   </li>
@@ -83,13 +86,12 @@ export default function Hjemmeside() {
             </li>
           </ul>
           <div className="mt-7 bg-paper p-5 md:max-w-[760px] md:p-6">
-            <h3 className="text-xl tracking-[-0.02em]">Har I allerede en hjemmeside?</h3>
+            <h3 className="text-xl tracking-[-0.02em]">Vil I kun løse et problem?</h3>
             <p className="mt-2 mb-0 text-[15px] leading-normal">
-              Så kan I få funktionerne alene. {prices.systemOnly.note} Almindelig funktion: {priceText({ once: prices.systemOnly.standard.once, monthly: prices.systemOnly.standard.monthly })} pr. stk.
-              Bygget specielt til jer: {priceText({ once: prices.systemOnly.custom.once, monthly: prices.systemOnly.custom.monthly })} pr. stk.
+              Det kan I få uden en ny hjemmeside, til de samme priser som ovenfor. {prices.systemOnly.note}
             </p>
             <a href="#prisberegner" className="btn btn-ink hov-ink-soft mt-4 w-full md:w-auto">
-              <span>Beregn prisen på et system</span>
+              <span>Beregn prisen</span>
               <span aria-hidden="true">↑</span>
             </a>
           </div>
@@ -103,13 +105,19 @@ export default function Hjemmeside() {
         <h2 id="google-titel" className="display t-h2s">
           Bliv fundet på Google
         </h2>
-        <ul className="m-0 flex list-none flex-col gap-2 p-0">
-          {googleWork.map((g) => (
-            <li key={g} className="bg-surface px-5 py-4 text-base leading-[1.4]">
-              {g}
-            </li>
-          ))}
-        </ul>
+        <div className="flex flex-col gap-4">
+          <ul className="m-0 flex list-none flex-col gap-2 p-0">
+            {googleWork.map((g) => (
+              <li key={g} className="bg-surface px-5 py-4 text-base leading-[1.4]">
+                {g}
+              </li>
+            ))}
+          </ul>
+          <a href={paths.casePalmy} className="flex min-h-12 w-fit items-center gap-2 text-base font-semibold">
+            <span>Se casen: Palmy Spisested</span>
+            <span aria-hidden="true">→</span>
+          </a>
+        </div>
       </section>
 
       <Contact />

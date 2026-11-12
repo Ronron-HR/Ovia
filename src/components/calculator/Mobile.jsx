@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import prices from '../../data/prices.json'
 import { helpQuestions, needTitle, needs, nextLabels, stepLabels } from '../../data/calculator.js'
-import { formatKr } from '../../lib/calculate.js'
 import InquirySlot from './InquirySlot.jsx'
 import { Check, DeltaChip, PkgPrice, ReceiptLine, TERMS_SHORT, Total } from './parts.jsx'
-import { CustomCard, DiscountCard, FunctionList, NeedList, SiteBlock, choice, functionsIntro } from './steps.jsx'
+import { ExampleOffer, NeedList, ProblemList, SiteBlock, choice, functionsIntro } from './steps.jsx'
 import { useExitList } from './useExitList.js'
 
 const heading = 'font-[family-name:var(--font-display)] font-bold [font-stretch:125%]'
@@ -29,7 +28,7 @@ function Need({ calc }) {
         </p>
       )}
       <h3 className="mt-4 mb-3 text-[clamp(19px,5.6vw,24px)] leading-[1.1] tracking-[-0.025em]">{needTitle}</h3>
-      <NeedList calc={calc} />
+      <NeedList calc={calc} autoNext />
     </div>
   )
 }
@@ -68,7 +67,7 @@ function Packages({ calc }) {
                 </span>
               </span>
               <span className="text-[13px] leading-4">
-                <PkgPrice pkg={p} intro={sel.intro} />
+                <PkgPrice pkg={p} />
               </span>
               <SiteBlock pkg={p} />
               <span className="flex flex-col gap-[2px]">
@@ -82,7 +81,7 @@ function Packages({ calc }) {
           )
         })}
       </div>
-      {sel.path === 'site' && <p className="mt-3 mb-0 text-[13px] leading-normal text-muted-2">Vil I også vælge funktioner? Gå tilbage og vælg “Begge dele”.</p>}
+      {sel.path === 'site' && <p className="mt-3 mb-0 text-[13px] leading-normal text-muted-2">Vil I også løse et problem? Gå tilbage og vælg “Begge dele”.</p>}
     </div>
   )
 }
@@ -92,26 +91,13 @@ function Systems({ calc }) {
   const sel = state.selection
   return (
     <div>
-      <StepHead>Funktioner</StepHead>
+      <StepHead>Hvad skal løses?</StepHead>
       <p className="m-0 mb-1 text-[15px] leading-normal">{functionsIntro(sel)}</p>
-      <p className="m-0 mb-3 text-[15px] leading-normal">Tryk på en funktion for at vælge den. Tryk igen for at fjerne den.</p>
-      <div className="flex flex-col gap-3">
-        <FunctionList calc={calc} />
-        <CustomCard calc={calc} />
-      </div>
+      <p className="m-0 mb-3 text-[15px] leading-normal">Vælg det, I vil have hjælp til. Tryk igen for at fjerne det.</p>
+      <ProblemList calc={calc} />
       <p className="mt-3 mb-0 text-[13px] leading-normal text-muted-2">
         {prices.systems.thirdParty} {prices.systems.excluded}
       </p>
-    </div>
-  )
-}
-
-function Discount({ calc }) {
-  return (
-    <div>
-      <StepHead>Rabat</StepHead>
-      <p className="m-0 mb-3 text-[15px] leading-normal">Rabatten er valgfri. Tryk for at vælge, tryk igen for at fjerne.</p>
-      <DiscountCard calc={calc} />
     </div>
   )
 }
@@ -130,8 +116,8 @@ function Summary({ calc }) {
   }
   return (
     <div>
-      <h3 className="text-[clamp(26px,8vw,36px)] leading-none tracking-[-0.035em]">Din pris er klar.</h3>
-      <p className="mt-2 mb-0 text-[15px] text-muted-2">Svar inden for 24 timer.</p>
+      <h3 className="text-[clamp(26px,8vw,36px)] leading-none tracking-[-0.035em]">{receipt.quoteOnly ? 'Din forespørgsel er klar.' : 'Din pris er klar.'}</h3>
+      <p className="mt-2 mb-0 text-[15px] text-muted-2">Send valgene til Ronny. Han svarer inden for 24 timer.</p>
       <p className="mt-1 mb-0 text-[15px]">
         Hvad I har brug for: <span className="font-semibold">{needs.find((n) => n.key === receipt.path)?.title}</span>
       </p>
@@ -139,19 +125,25 @@ function Summary({ calc }) {
         {receipt.all.map((l) => (
           <ReceiptLine key={l.key + l.pkg} line={l} dark={false} priceSize={13} labelSmall={13} />
         ))}
-        <div className="mt-4 grid grid-cols-2 gap-3">
-          <div className="flex flex-col gap-[6px]">
-            <span className="text-[13px]">
-              Én gang{receipt.introApplied && <s className="ml-2 opacity-70">{formatKr(receipt.onceNormal)}</s>}
-            </span>
-            <Total value={receipt.o} unit="kr." size={28} unitSize={12} gap={5} unitPad={2} />
+        {receipt.quoteOnly ? (
+          <p className="mt-4 mb-0 text-[15px]">Prisen aftales, når vi har talt om, hvad I har brug for.</p>
+        ) : (
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-[6px]">
+              <span className="text-[13px]">Én gang</span>
+              <Total value={receipt.o} unit="kr." size={28} unitSize={12} gap={5} unitPad={2} />
+            </div>
+            <div className="flex flex-col gap-[6px]">
+              <span className="text-[13px]">Hver måned</span>
+              <Total value={receipt.m} unit="kr./md." size={28} unitSize={12} gap={5} unitPad={2} />
+            </div>
           </div>
-          <div className="flex flex-col gap-[6px]">
-            <span className="text-[13px]">Hver måned</span>
-            <Total value={receipt.m} unit="kr./md." size={28} unitSize={12} gap={5} unitPad={2} />
-          </div>
-        </div>
+        )}
+        {receipt.hasQuote && !receipt.quoteOnly && <p className="mt-3 mb-0 text-[13px]">Det, der bygges specielt, er ikke med i tallene. Prisen aftales.</p>}
         <p className="mt-3 text-[13px]">Alle priser er ekskl. moms</p>
+      </div>
+      <div className="mt-4">
+        <ExampleOffer calc={calc} />
       </div>
       <div className="mt-5">
         <InquirySlot receipt={receipt} hrefs={hrefs} />
@@ -325,10 +317,7 @@ function BarAndSheet({ calc, barRef, barVisible }) {
           <div className="swap-out mt-[6px] flex items-end" data-off={any ? undefined : ''}>
             <div className="fold-x after-count" data-exiting={receipt.o > 0 ? undefined : ''}>
               <div className="relative flex flex-col gap-[3px] pr-5">
-                <span className="text-xs text-on-ink-2">
-                  Én gang
-                  {receipt.introApplied && <s className="ml-2 opacity-70">{formatKr(receipt.onceNormal)}</s>}
-                </span>
+                <span className="text-xs text-on-ink-2">Én gang</span>
                 {delta?.o < 0 && <DeltaChip key={delta.id} amount={delta.o} className="top-0 right-0" />}
                 <Total value={receipt.o} unit="kr." size={22} unitSize={12} gap={4} unitPad={1} />
               </div>
@@ -340,7 +329,7 @@ function BarAndSheet({ calc, barRef, barVisible }) {
                 <Total value={receipt.m} unit="kr./md." size={22} unitSize={12} gap={4} unitPad={1} />
               </div>
             </div>
-            <span className="ml-auto flex-none self-end pb-[2px] text-[11px] leading-tight whitespace-nowrap text-on-ink-2">ekskl. moms</span>
+            <span className="ml-auto flex-none self-end pb-[2px] text-[13px] leading-tight whitespace-nowrap text-on-ink-2">ekskl. moms</span>
           </div>
         </div>
       </div>
@@ -392,16 +381,21 @@ function BarAndSheet({ calc, barRef, barVisible }) {
             <ReceiptLine key={l.key + l.pkg} line={l} priceSize={13} />
           ))}
           {showTerms && <p className="mt-3 text-[13px] leading-normal text-on-ink-2">{TERMS_SHORT}</p>}
-          <div className="mt-5 grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-[6px]">
-              <span className="text-[13px] text-on-ink-2">Én gang</span>
-              <Total value={receipt.o} unit="kr." size={30} unitSize={13} gap={5} unitPad={2} />
+          {receipt.quoteOnly ? (
+            <p className="mt-5 mb-0 text-[15px]">Prisen aftales, når vi har talt om, hvad I har brug for.</p>
+          ) : (
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-[6px]">
+                <span className="text-[13px] text-on-ink-2">Én gang</span>
+                <Total value={receipt.o} unit="kr." size={30} unitSize={13} gap={5} unitPad={2} />
+              </div>
+              <div className="flex flex-col gap-[6px]">
+                <span className="text-[13px] text-on-ink-2">Hver måned</span>
+                <Total value={receipt.m} unit="kr./md." size={30} unitSize={13} gap={5} unitPad={2} />
+              </div>
             </div>
-            <div className="flex flex-col gap-[6px]">
-              <span className="text-[13px] text-on-ink-2">Hver måned</span>
-              <Total value={receipt.m} unit="kr./md." size={30} unitSize={13} gap={5} unitPad={2} />
-            </div>
-          </div>
+          )}
+          {receipt.hasQuote && !receipt.quoteOnly && <p className="mt-3 mb-0 text-[13px] text-on-ink-2">Det, der bygges specielt, er ikke med i tallene. Prisen aftales.</p>}
           <p className="mt-3 text-[13px] text-on-ink-2">Alle priser er ekskl. moms</p>
           {any && (
             <div className="mt-5 flex flex-col gap-2">
@@ -562,8 +556,6 @@ export default function Mobile({ calc, barRef, fly }) {
             <Packages calc={calc} />
           ) : step === 'sys' ? (
             <Systems calc={calc} />
-          ) : step === 'disc' ? (
-            <Discount calc={calc} />
           ) : (
             <Summary calc={calc} />
           )}

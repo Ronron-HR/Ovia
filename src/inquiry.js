@@ -126,7 +126,7 @@ export function composeMail({ name, company = '', phone = '', email = '', messag
       `Engang: ${plain(formatKr(rc.o))}${rc.introApplied ? ` (normalpris ${plain(formatKr(rc.onceNormal))})` : ''}`,
       `Pr. måned: ${plain(formatKr(rc.m, true))}`,
       'Alle priser er ekskl. moms.',
-      ...(rc.introApplied ? [`Introduktionspris: valgt (${Math.round(cfg.intro.discount * 100)} % på engangsprisen, mod at siden må vises som case).`] : []),
+      ...(rc.introApplied ? ['Introduktionspris: valgt (siden må vises som case).'] : []),
       ...(hasSystem ? [cfg.systems.thirdParty] : []),
       '',
       `Se valgene: ${link}`,

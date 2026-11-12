@@ -13,7 +13,7 @@ export function formatKr(n, monthly = false) {
 /** Beløb med fortegn: negative vises med rigtigt minus ("−2.850 kr."). */
 export const formatSigned = (n, monthly = false) => (n < 0 ? MINUS + formatKr(-n, monthly) : formatKr(n, monthly));
 
-/** De tre veje gennem beregneren: kun hjemmeside, kun system til den hjemmeside kunden har, eller begge dele. */
+/** De tre veje gennem beregneren: kun hjemmeside, kun en løsning på et problem (uden ny hjemmeside), eller begge dele. */
 export const PATHS = ['site', 'system', 'both'];
 
 export const emptySelection = () => ({ path: null, pkg: null, systems: [], custom: 0, intro: false });
@@ -30,7 +30,7 @@ export const usesSystems = (sel) => sel.path === 'system' || sel.path === 'both'
  *   path: 'site'|'system'|'both'|null, // hvad kunden har brug for (første trin)
  *   pkg: 0|1|2|null,          // indeks i cfg.packages (kun ved 'site' og 'both')
  *   systems: ['booking', …],  // almindelige funktioner i den rækkefølge, de er valgt (kun ved 'system' og 'both')
- *   custom: 0..5,             // antal bygget specielt til jer (kun ved 'system' og 'both')
+ *   custom: 0|1,              // noget bygget specielt til jer (pris aftales) (kun ved 'system' og 'both')
  *   intro: boolean,           // "Ja, I må vise siden som case" (kun ved 'site' og 'both', og kun mens der er intro-pladser)
  * }
  * clean() gør et vilkårligt input (fra adresselinjen eller fra browseren) til et gyldigt valg. Felter, der ikke hører til
@@ -65,17 +65,16 @@ export function isComplete(selection, cfg = prices) {
 
 /**
  * Regner pris og linjer ud.
- * Hjemmeside: pakkens pris. Begge: pakke + funktioner; funktioner, pakken har plads til, koster ikke ekstra, flere lægges til som ekstra
- * (almindelig: engang + pr. måned; bygget specielt til jer: engang + pr. måned pr. stk.). Bygget specielt til jer bruger de inkluderede
- * pladser først (det er billigst for kunden); almindelige funktioner fylder resten, i valgrækkefølge.
- * System alene: hver almindelig funktion og hver bygget specielt til jer koster sin egen pris (cfg.systemOnly), uden pakke og uden intro.
- * Intropris: rabat på pakkens ENGANGSPRIS (ikke på månedspris eller funktioner), kun når der er en hjemmeside med.
- * Returnerer { once, monthly, onceNormal, introSaving, introApplied, lines, selection }.
+ * Hjemmeside: pakkens pris. Begge: pakke + funktioner; de første funktioner (pakkens slots, i valgrækkefølge) koster ikke ekstra, resten lægges
+ * til med funktionens egen pris (engang + pr. måned). System alene: hver funktion koster sin egen pris, uden pakke og uden intro.
+ * Bygget specielt til jer har ingen pris (den aftales): linjen står i kvitteringen med quote: true og tæller ikke med i totalerne.
+ * Intropris: pakkens introOnce i stedet for engangsprisen (ikke rabat på månedspris eller funktioner), kun når der er en hjemmeside med.
+ * Returnerer { once, monthly, onceNormal, introSaving, introApplied, hasQuote, lines, selection }.
  */
 export function calculate(selection, cfg = prices) {
   const sel = clean(selection, cfg);
   const e = effective(sel);
-  const empty = { once: 0, monthly: 0, onceNormal: 0, introSaving: 0, introApplied: false, lines: [], selection: sel };
+  const empty = { once: 0, monthly: 0, onceNormal: 0, introSaving: 0, introApplied: false, hasQuote: false, lines: [], selection: sel };
   if (sel.path === null) return empty;
   if (usesSite(sel) && e.pkg === null) return empty;
   const lines = [];
@@ -85,90 +84,60 @@ export function calculate(selection, cfg = prices) {
   if (usesSite(sel)) {
     const pkg = cfg.packages[e.pkg];
     add('package', 'Pakke', pkg.name, pkg.once, pkg.monthly);
-    saving = e.intro ? Math.round(pkg.once * cfg.intro.discount) : 0;
-    if (saving) add('intro', 'Introduktionspris', `${Math.round(cfg.intro.discount * 100)}${NBSP}% på engangsprisen`, -saving, 0);
+    saving = e.intro ? pkg.once - pkg.introOnce : 0;
+    if (saving) add('intro', 'Introduktionspris', 'Siden må vises som eksempel', -saving, 0);
   }
 
+  const fn = (key) => cfg.systems.standard.find((s) => s.key === key);
+  // Bygget specielt til jer har ingen pris: linjen står der, men lægger intet til totalerne.
+  const addCustom = () => lines.push({ key: 'custom-1', label: cfg.systems.custom.name, package: 'Én opgave', once: 0, monthly: 0, included: false, quote: true });
+
   if (sel.path === 'system') {
-    const o = cfg.systemOnly;
-    e.systems.forEach((key) => {
-      const sys = cfg.systems.standard.find((s) => s.key === key);
-      add('sys-' + key, sys.name, 'Funktion', o.standard.once, o.standard.monthly);
-    });
-    for (let i = 0; i < e.custom; i++) add('custom-' + (i + 1), cfg.systems.custom.name, 'Én opgave', o.custom.once, o.custom.monthly);
+    e.systems.forEach((key) => add('sys-' + key, fn(key).name, 'Funktion', fn(key).once, fn(key).monthly));
+    if (e.custom) addCustom();
   } else if (sel.path === 'both') {
     const pkg = cfg.packages[e.pkg];
-    const includedCustom = Math.min(e.custom, pkg.customSlots, pkg.slots);
-    const includedStandard = Math.min(e.systems.length, pkg.slots - includedCustom);
-    const a = cfg.addons;
     e.systems.forEach((key, i) => {
-      const sys = cfg.systems.standard.find((s) => s.key === key);
-      const inc = i < includedStandard;
-      add('sys-' + key, sys.name, inc ? 'Indgår' : 'Ekstra', inc ? 0 : a.extraStandard.once, inc ? 0 : a.extraStandard.monthly, inc);
+      const inc = i < pkg.slots;
+      add('sys-' + key, fn(key).name, inc ? 'Indgår' : 'Ekstra', inc ? 0 : fn(key).once, inc ? 0 : fn(key).monthly, inc);
     });
-    for (let i = 0; i < e.custom; i++) {
-      const inc = i < includedCustom;
-      add('custom-' + (i + 1), cfg.systems.custom.name, inc ? 'Indgår' : 'Ekstra', inc ? 0 : a.custom.once, inc ? 0 : a.custom.monthly, inc);
-    }
+    if (e.custom) addCustom();
   }
 
   const sum = (k) => lines.reduce((n, l) => n + l[k], 0);
   const once = sum('once');
-  return { once, monthly: sum('monthly'), onceNormal: once + saving, introSaving: saving, introApplied: saving > 0, lines, selection: sel };
-}
-
-/** Prisen (engang og pr. måned) for ét ekstra system af en given slags, hvis det lægges til det nuværende valg. */
-export function nextSystemCost(selection, kind, cfg = prices) {
-  const sel = clean(selection, cfg);
-  if (!usesSystems(sel) || (sel.path === 'both' && sel.pkg === null)) return null;
-  if (sel.path === 'system') return { ...cfg.systemOnly[kind === 'custom' ? 'custom' : 'standard'] };
-  const before = calculate(sel, cfg);
-  const next =
-    kind === 'custom'
-      ? { ...sel, custom: Math.min(cfg.systems.custom.max, sel.custom + 1) }
-      : { ...sel, systems: [...sel.systems, cfg.systems.standard.find((s) => !sel.systems.includes(s.key))?.key].filter(Boolean) };
-  const after = calculate(next, cfg);
-  return { once: after.once - before.once, monthly: after.monthly - before.monthly };
+  return { once, monthly: sum('monthly'), onceNormal: once + saving, introSaving: saving, introApplied: saving > 0, hasQuote: lines.some((l) => l.quote), lines, selection: sel };
 }
 
 /**
- * Hvad en almindelig funktion står som i listen, så prisen er synlig før man trykker:
+ * Hvad en funktion står som i listen, så prisen er synlig før man trykker:
  *   'included' valgt og dækket af pakken (står som "Indgår") · 'free' ikke valgt, men pakken har en ledig plads (once/monthly = prisen, hvis pladsen er brugt)
  *   'extra' koster ekstra (once/monthly) · 'price' System alene: funktionens egen pris
  * null når der ikke er funktioner at vælge (ingen pakke endnu, eller kun hjemmeside).
  */
 export function optionTag(selection, key, cfg = prices) {
   const sel = clean(selection, cfg);
-  if (sel.path === 'system') return { kind: 'price', ...cfg.systemOnly.standard };
+  const f = cfg.systems.standard.find((s) => s.key === key);
+  const price = { once: f.once, monthly: f.monthly };
+  if (sel.path === 'system') return { kind: 'price', ...price };
   if (sel.path !== 'both' || sel.pkg === null) return null;
-  const extra = { once: cfg.addons.extraStandard.once, monthly: cfg.addons.extraStandard.monthly };
   if (sel.systems.includes(key)) {
     const line = calculate(sel, cfg).lines.find((l) => l.key === 'sys-' + key);
-    return line.included ? { kind: 'included', once: 0, monthly: 0 } : { kind: 'extra', ...extra };
+    return line.included ? { kind: 'included', once: 0, monthly: 0 } : { kind: 'extra', ...price };
   }
   const before = calculate(sel, cfg);
   const after = calculate({ ...sel, systems: [...sel.systems, key] }, cfg);
-  return after.once === before.once && after.monthly === before.monthly ? { kind: 'free', ...extra } : { kind: 'extra', ...extra };
-}
-
-/** "Bygget specielt til jer": prisen pr. stk. og om den næste er med i prisen (kun Max, når der er en ledig plads). */
-export function customInfo(selection, cfg = prices) {
-  const sel = clean(selection, cfg);
-  if (sel.path === 'system') return { ...cfg.systemOnly.custom, free: false, atMax: sel.custom >= cfg.systems.custom.max };
-  const next = nextSystemCost(sel, 'custom', cfg);
-  const atMax = sel.custom >= cfg.systems.custom.max;
-  return { once: cfg.addons.custom.once, monthly: cfg.addons.custom.monthly, free: Boolean(next) && !atMax && next.once === 0 && next.monthly === 0, atMax };
+  return after.once === before.once && after.monthly === before.monthly ? { kind: 'free', ...price } : { kind: 'extra', ...price };
 }
 
 /**
- * Trinene for en vej. 'need' = Hvad har I brug for?, 'pkg' = Pakke, 'sys' = Funktioner, 'disc' = Rabat, 'sum' = Samlet pris.
- * Rabat-trinnet findes kun, når der er en hjemmeside med og introprisen er i gang.
+ * Trinene for en vej. 'need' = Hvad har I brug for?, 'pkg' = Pakke, 'sys' = Hvad skal løses?, 'sum' = Samlet pris.
+ * Rabatten (introprisen) er ikke et trin: den er én linje under pakkerne, når introprisen er i gang.
  */
-export function stepsFor(path, cfg = prices) {
-  const disc = introActive(cfg) ? ['disc'] : [];
-  if (path === 'site') return ['need', 'pkg', ...disc, 'sum'];
+export function stepsFor(path) {
+  if (path === 'site') return ['need', 'pkg', 'sum'];
   if (path === 'system') return ['need', 'sys', 'sum'];
-  if (path === 'both') return ['need', 'pkg', 'sys', ...disc, 'sum'];
+  if (path === 'both') return ['need', 'pkg', 'sys', 'sum'];
   return ['need'];
 }
 
@@ -177,17 +146,17 @@ function stepDone(sel, key) {
   if (key === 'need') return sel.path !== null;
   if (key === 'pkg') return sel.pkg !== null;
   if (key === 'sys') return sel.path === 'system' ? sel.systems.length + sel.custom >= 1 : true;
-  return key === 'disc';
+  return true;
 }
 
 /**
- * Hvor man er, og hvor man kan komme hen. Et ugyldigt trin (fx 'disc', når der ikke er intro, eller et trin, der hører til en anden vej)
+ * Hvor man er, og hvor man kan komme hen. Et ugyldigt trin (fx 'disc' fra et gammelt link, eller et trin, der hører til en anden vej)
  * bliver til nærmeste gyldige. Man kan højst nå det første trin, der endnu ikke er udfyldt.
  * Returnerer { steps, step, index, total, reach, next, prev, canNext }.
  */
 export function flowOf(selection, step, cfg = prices) {
   const sel = clean(selection, cfg);
-  const steps = stepsFor(sel.path, cfg);
+  const steps = stepsFor(sel.path);
   let reach = 0;
   while (reach < steps.length - 1 && stepDone(sel, steps[reach])) reach++;
   let want = step;
@@ -209,7 +178,7 @@ export function flowOf(selection, step, cfg = prices) {
  * Guidet hjælp. answers = { q1: 'A'|'B'|'C', q2: ['A'…'E'] (flervalg), q3: 'A'|'B'|'C' }
  *
  * q1 Hvor mange sider? A 1–3 → mindst Start · B op til 6 → mindst Anbefalet · C så mange som nødvendigt → Max
- * q2 Hvad skal gæsterne kunne? Bogstav = almindelig funktion i listens rækkefølge (bordbooking, bestilling, gavekort, nyhedsbrev, anmeldelser)
+ * q2 Hvad skal gæsterne kunne? Bogstav = funktion i listens rækkefølge (A bordbooking, B online bestilling)
  * q3 Skal noget bygges specielt? B = én ting bygget specielt til jer
  * Pakken er den billigste (engang + 12 måneder) blandt dem, der opfylder q1. Vejen er 'both', hvis der er valgt funktioner, ellers 'site'.
  * Intro slås ikke til.

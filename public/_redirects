@@ -1,6 +1,10 @@
 # Gamle adresser -> nuværende sider. 301 = permanent. Ét hop (ingen kæder):
 # målene nedenfor er altid de endelige adresser. Redesign nov. 2026: OviaSpecs er ét tilbud
 # (hjemmeside + Google + lokal SEO + systemer); /marketing/ og /booking-google/ er udgået.
+# Eksempler (de fiktive demoer) er udgået; casen er Palmy Spisested.
+/demoer/                       /cases/            301
+/demoer                        /cases/            301
+/demoer/*                      /cases/            301
 /hjemmesider/                  /hjemmeside/       301
 /hjemmesider                   /hjemmeside/       301
 /marketing/                    /hjemmeside/       301

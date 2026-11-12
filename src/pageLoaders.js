@@ -6,9 +6,6 @@ export const pageLoaders = {
   home: () => import('./pages/Home.jsx').then((m) => m.default),
   hjemmeside: () => import('./pages/Hjemmeside.jsx').then((m) => m.default),
   priser: () => import('./pages/Priser.jsx').then((m) => m.default),
-  demoer: () => import('./pages/Demoer.jsx').then((m) => m.default),
-  'demo-cafe': () => import('./demos/Cafe.jsx').then((m) => m.default),
-  'demo-restaurant': () => import('./demos/Restaurant.jsx').then((m) => m.default),
-  'demo-salon': () => import('./demos/Salon.jsx').then((m) => m.default),
-  'demo-vinbar': () => import('./demos/Vinbar.jsx').then((m) => m.default),
+  cases: () => import('./pages/Cases.jsx').then((m) => m.default),
+  'case-palmy-spisested': () => import('./pages/cases/PalmySpisested.jsx').then((m) => m.default),
 }

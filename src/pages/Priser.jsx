@@ -1,15 +1,22 @@
 import Contact from '../components/layout/Contact.jsx'
 import prices from '../data/prices.json'
 import { addonRows, compareRows, systemOnlyRows } from '../data/pages.js'
-import { NBSP, formatKr, introActive } from '../lib/calculate.js'
-import { slotsText } from '../components/calculator/parts.jsx'
+import { formatKr, introActive } from '../lib/calculate.js'
 import { priceText } from '../lib/receipt.js'
 
 const heading = 'font-[family-name:var(--font-display)] font-bold [font-stretch:125%]'
 
+/** En række med navn og pris: funktion, bygget specielt (pris aftales) eller frikøb. */
+function rowInfo(key) {
+  const f = prices.systems.standard.find((s) => s.key === key)
+  if (f) return { name: f.name, price: priceText({ once: f.once, monthly: f.monthly }) }
+  if (key === 'custom') return { name: prices.systems.custom.name, price: prices.systems.custom.price }
+  return { name: prices.addons[key].name, price: priceText({ once: prices.addons[key].once, monthly: 0 }) }
+}
+
 const jump = [
   ['Pakker', '#pakker'],
-  ['Kun et system', '#system-alene'],
+  ['Løs et problem', '#system-alene'],
   ['Ekstra ting', '#ekstra'],
   ['Vilkår', '#vilkaar'],
 ]
@@ -99,19 +106,16 @@ export default function Priser() {
         <p className="mt-[14px] mb-0 text-sm text-muted-2">Engangsbeløbet betales én gang for at bygge siden. Den månedlige pris dækker drift, domæne, sikkerhedskopi og det, pakken ellers indeholder.</p>
         {intro && (
           <div className="mt-6 bg-surface p-5 md:p-6">
-            <h3 className="text-xl tracking-[-0.02em]">
-              Introduktionspris: {Math.round(prices.intro.discount * 100)}
-              {NBSP}% rabat på engangsprisen
-            </h3>
+            <h3 className="text-xl tracking-[-0.02em]">Introduktionspris, hvis vi må vise jeres side som eksempel</h3>
             <p className="mt-2 mb-0 max-w-[60ch] text-[15px] leading-normal">
-              De første {prices.intro.total} kunder, hvis vi må vise jeres side som eksempel. {slotsText()}. Rabatten gælder ikke den månedlige pris eller ekstra ting. Intropriserne:{' '}
+              Må vi vise siden som eksempel hos os, er engangsprisen lidt lavere:{' '}
               {prices.packages.map((p, i) => (
                 <span key={p.key}>
                   {i ? ', ' : ''}
-                  {p.name} {formatKr(Math.round(p.once * (1 - prices.intro.discount)))}
+                  {p.name} {formatKr(p.introOnce)}
                 </span>
               ))}
-              .
+              . Det gælder ikke den månedlige pris eller ekstra ting.
             </p>
           </div>
         )}
@@ -119,25 +123,25 @@ export default function Priser() {
 
       <section id="system-alene" aria-labelledby="system-alene-t" className="mx-auto max-w-[1440px] scroll-mt-20 px-5 pb-12 md:scroll-mt-[152px] md:px-14 md:pb-16">
         <h2 id="system-alene-t" className="display t-h2s">
-          Kun et system
+          Løs et problem
         </h2>
         <p className="mt-4 mb-0 max-w-[60ch] text-[17px] leading-normal">
-          Har I allerede en hjemmeside? {prices.systemOnly.note}{intro && ' Introduktionsrabatten gælder kun, når I får en ny hjemmeside hos os.'}
+          Vil I ikke have en ny hjemmeside, men løse noget, der driller? {prices.systemOnly.note}{intro && ' Introduktionsprisen gælder kun, når I får en ny hjemmeside hos os.'}
         </p>
         <div className="mt-5 max-w-[760px]">
           {systemOnlyRows.map((r) => {
-            const a = prices.systemOnly[r.key]
+            const a = rowInfo(r.key)
             return (
               <div key={r.key} className="grid items-baseline gap-x-4 gap-y-1 border-t border-hairline py-4" style={{ gridTemplateColumns: 'minmax(0,1fr) auto' }}>
                 <span className="text-base font-medium">{a.name}</span>
-                <span className="price text-sm">{priceText({ once: a.once, monthly: a.monthly })} pr. stk.</span>
+                <span className="price text-sm">{a.price}</span>
                 <span className="col-span-full text-sm text-muted-2">{r.note}</span>
               </div>
             )
           })}
         </div>
         <a href="/#prisberegner" className="btn btn-ink hov-ink-soft mt-6 w-full text-[17px] md:w-auto">
-          <span>Beregn prisen på et system</span>
+          <span>Beregn prisen</span>
           <span aria-hidden="true">→</span>
         </a>
       </section>
@@ -146,13 +150,13 @@ export default function Priser() {
         <div>
           <h2 className="display t-h2s mb-4">Ekstra ting</h2>
           {addonRows.map((r) => {
-            const a = prices.addons[r.key]
+            const a = rowInfo(r.key)
             return (
               <div key={r.key} className="grid items-baseline gap-x-4 gap-y-1 border-t border-hairline py-4" style={{ gridTemplateColumns: 'minmax(0,1fr) auto' }}>
                 <span className="text-base font-medium">{a.name}</span>
                 <span className="price text-sm">
-                  {r.key === 'buyout' ? '' : '+'}
-                  {priceText({ once: a.once, monthly: a.monthly ?? 0 })}
+                  {r.key === 'buyout' || r.key === 'custom' ? '' : '+'}
+                  {a.price}
                 </span>
                 <span className="col-span-full text-sm text-muted-2">{r.note}</span>
               </div>

@@ -11,34 +11,35 @@ oviaspecs.com er ét tilbud: **hjemmeside, Google-profil, lokal SEO og systemer 
 | `src/data/calculator.js` | Beregnerens tekster (trin, guidet hjælp, besked ved gammelt link). |
 | `src/data/site.js` | Kontakt, adresser (`paths`), menu og flag. |
 | `src/data/seo.js` | Titler, metabeskrivelser, `updated` (sitemap-lastmod) og JSON-LD. Priser i metatekster hentes fra prices.json. |
-| `src/content.demos.js` | De fire koncepter under /demoer/ (mærket "Koncept – ikke en kundeopgave"). |
+| `src/data/cases.js` | Cases: forsiden, /cases og casesiderne læser herfra. Kun fakta, ingen tal eller udtalelser. |
 
 Regler for teksten: vi-form, ingen "bureau", ingen oplysninger om alder, antal ansatte eller "ny virksomhed", ingen løfter om placeringer, gæster eller resultater, ingen opdigtede udtalelser, kundetal eller logoer. Intet "fra"-pris og intet "pris efter en snak": alt er faste priser. `npm run test:content` leder det byggede site igennem efter gamle ord.
 
 ## Pakker og regler (prices.json)
 
-Beregnerens første trin er "Hvad har I brug for?" med tre veje, og kun de trin, der passer, vises:
+Beregnerens første trin er "Hvad har I brug for?" med tre veje (højst 3 valg pr. skærmbillede), og kun de trin, der passer, vises:
 
-- **En hjemmeside:** Behov → Pakke → Rabat → Samlet pris.
-- **Et system til den nuværende hjemmeside:** Behov → Funktioner → Samlet pris (ingen pakke og ingen rabat).
-- **Begge dele:** Behov → Pakke → Funktioner → Rabat → Samlet pris.
+- **Ny hjemmeside:** Behov → Pakke → Samlet pris.
+- **Løs et problem** (uden ny hjemmeside): Behov → Hvad skal løses? → Samlet pris (ingen pakke og ingen rabat).
+- **Begge dele:** Behov → Pakke → Hvad skal løses? → Samlet pris.
 
-Rabat-trinnet findes kun, mens `introSlotsLeft` er over 0.
+Rabatten (introprisen) er ikke et trin, men én linje under pakkerne, og den vises kun, mens `introSlotsLeft` er over 0.
+
+"Hvad skal løses?" har tre kort: bordbooking, online bestilling og "noget andet, bygget til jer". Gavekort, nyhedsbrev og anmeldelser er ikke længere funktioner. En funktion har én pris (`systems.standard[].once/monthly`), hvad enten den købes alene eller lægges til en pakke. Bygget specielt har **ingen pris** ("Pris aftales", højst ét valg): linjen står i kvitteringen, men tæller ikke med i totalerne og tager ingen plads i pakken.
 
 Alle pakker har "Hjemmeside designet til jer": mobilvenlig, menu, billeder, åbningstider, kort og adresse, kontakt og på dansk og engelsk (engelsk er med i alle pakker, der er ikke noget tilvalg). Funktioner og Google kommer efter selve hjemmesiden.
 
 - **Start** 5.000 kr. + 299 kr./md.: 1–3 sider, Google-profil, grundlæggende lokal SEO, link til kundens eget booking/bestilling. Ingen funktioner med.
-- **Anbefalet** 9.500 + 549/md.: op til 6 sider, 1 funktion med i prisen, Google-profil + 1 opslag/md., lokal SEO med lokale søgeord, 1 times rettelser/md.
-- **Max** 15.000 + 895/md.: så mange sider, som kunden har brug for, 2 funktioner med i prisen (højst 1 bygget specielt til kunden), 2 opslag/md. og svar på anmeldelser, kvartalsvis SEO-gennemgang, 2 timers rettelser/md., kort månedlig status.
-- **Begge dele:** funktioner, pakken har plads til, koster ikke ekstra; flere lægges til som ekstra: almindelig funktion 2.000 + 99/md., bygget specielt til kunden 5.000 + 199/md. pr. stk. Bygget specielt til kunden bruger de inkluderede pladser først. I listen står "Indgår" kun på valgte funktioner, pakken dækker; en ledig plads står som "Med i prisen", alle andre viser deres ekstrapris.
-- **System alene** (uden ny hjemmeside, "systemOnly" i prices.json): almindelig funktion 2.500 + 149/md. pr. stk., bygget specielt til kunden 5.000 + 199/md. pr. stk. Mindst 1 skal vælges. Ingen intro.
+- **Anbefalet** 9.500 + 699/md.: op til 6 sider, 1 funktion med i prisen, Google-profil + 1 opslag/md., lokal SEO med lokale søgeord, 1 times rettelser/md.
+- **Max** 15.000 + 1.295/md.: så mange sider, som kunden har brug for, begge funktioner med i prisen, 2 opslag/md. og svar på anmeldelser, kvartalsvis SEO-gennemgang, 2 timers rettelser/md., kort månedlig status.
+- **Funktioner:** Bordbooking 2.500 + 299/md. · Online bestilling og takeaway 3.500 + 449/md. De månedlige priser er højere end før, fordi de kræver løbende opdatering og opsyn. Pakkernes første funktioner (`slots`) er med i pakkeprisen; flere koster funktionens egen pris, og alene (Løs et problem) koster de også deres egen pris. Mindst ét valg (funktion eller "noget andet").
 - **Frikøb** af siden 2.000. **Vilkår:** ingen binding, 1 måneds opsigelse, domænet står i kundens navn, hosting og domæne er med.
 
-Beregningen står i `src/lib/calculate.js` (`calculate`, `flowOf`, `optionTag`), kvitteringen og mailens linjer i `src/lib/receipt.js`. Valget i adresselinjen: `v` (vej: h hjemmeside, s system, b begge), `p` (pakke 0–2), `y` (funktionskoder: b bordbooking, o bestilling, g gavekort, n nyhedsbrev, a anmeldelser), `c` (bygget specielt), `i` (intropris), `t` (trin: need, pkg, sys, disc, sum). Kun felter, der hører til vejen, kommer med i linket og i prisen; serveren regner prisen ud af linket med samme funktioner som beregneren. Links fra pakke-versionen (uden `v`, med `e` og tal-trin) virker stadig: vejen udledes af indholdet og `e` ignoreres. Links fra før pakkerne (`w`, `m`, `b`, `d`, `bk`, `x`) kan ikke regnes om: beregneren viser en venlig besked, og workeren svarer 400 `old_selection`. Mailen til Ronny har linjen "Hvad de har brug for: …", og id'et i emnet begynder med vejens bogstav (OVIA-H…, OVIA-S…, OVIA-B…).
+Beregningen står i `src/lib/calculate.js` (`calculate`, `flowOf`, `optionTag`), kvitteringen og mailens linjer i `src/lib/receipt.js`. Valget i adresselinjen: `v` (vej: h hjemmeside, s system, b begge), `p` (pakke 0–2), `y` (funktionskoder: b bordbooking, o bestilling), `c` (noget bygget specielt, 0/1), `i` (intropris), `t` (trin: need, pkg, sys, sum; et gammelt `disc` bliver til sum). Kun felter, der hører til vejen, kommer med i linket og i prisen; serveren regner prisen ud af linket med samme funktioner som beregneren. Links fra pakke-versionen (uden `v`, med `e` og tal-trin) virker stadig: vejen udledes af indholdet og `e` ignoreres. Links fra før pakkerne (`w`, `m`, `b`, `d`, `bk`, `x`) kan ikke regnes om: beregneren viser en venlig besked, og workeren svarer 400 `old_selection`. Mailen til Ronny har linjen "Hvad de har brug for: …", og id'et i emnet begynder med vejens bogstav (OVIA-H…, OVIA-S…, OVIA-B…).
 
 ## Introduktionspris og pladser
 
-30 % på pakkens **engangspris** (ikke måned, ikke tilvalg) til de første 3 kunder, der lader siden vise som case. Beregneren har det som et valgfrit felt ("Ja, I må vise siden som case"), slået fra som standard. Pladserne styres af ét tal: `introSlotsLeft` i `src/data/prices.json`. Er det 0, findes introprisen ikke på siden, i beregneren, i mailen eller i workeren (et gammelt link med `i=1` ignoreres).
+En lidt lavere engangspris (ca. 10 %): pakkernes `introOnce` i `src/data/prices.json` (Start 4.495, Anbefalet 8.495, Max 13.495, i stedet for 5.000 / 9.500 / 15.000) til de første 3 kunder, der lader siden vise som case. Ikke månedsprisen og ikke funktioner. Beregneren spørger stille på det sidste trin ("Må vi vise jeres side som eksempel hos os?"), slået fra som standard; der står ingen tal, ingen overstregede priser og ingen "pladser tilbage" på siden. Pladserne styres af ét tal: `introSlotsLeft` i `src/data/prices.json`. Er det 0, findes introprisen ikke på siden, i beregneren, i mailen eller i workeren (et gammelt link med `i=1` ignoreres).
 
 ```
 npm run intro:status   viser kun antal pladser tilbage
@@ -50,7 +51,7 @@ npm run intro:brugt    trækker 1 fra (aldrig under 0), kører npm test, committ
 
 ## Sider
 
-`/` · `/hjemmeside/` (hovedside med systemer og lokal SEO) · `/priser/` · `/demoer/` (+ `/demoer/cafe|restaurant|salon|vinbar/`) · `/privatlivspolitik/`
+`/` · `/hjemmeside/` (hovedside med systemer og lokal SEO) · `/priser/` · `/cases/` (+ `/cases/palmy-spisested/`) · `/privatlivspolitik/`
 
 Adresser: `src/routes.js` (metadata fra `src/data/seo.js`). Nøglerne skal passe med `src/pageKeys.js`, `src/pages.jsx` og `src/pageLoaders.js` (bygget fejler ellers). Udgåede adresser (/marketing/, /booking-google/, /seo/, /lokal-synlighed/, /google-ads/ m.fl.) viderestilles med 301 i `public/_redirects`, altid direkte til den endelige adresse (ingen kæder). Tilføjer du en omdirigering, så peg på målet, ikke på en anden omdirigering; `npm run test:content` tjekker det.
 
@@ -63,19 +64,18 @@ Adresser: `src/routes.js` (metadata fra `src/data/seo.js`). Nøglerne skal passe
 | `npm run preview` | Serverer `dist/` på http://localhost:4173 |
 | `npm test` | Enhedstest (priser, kvittering, beregnerens tilstand), henvendelsestest (worker med simuleret D1 og mail, genberegnede priser for hver pakke, tilvalg og intro 3/0) og intro-scriptets test |
 | `npm run test:content` | Indholdstjek af det byggede site (kræver build): gamle ord, links til udgåede sider, omdirigeringer, sitemap, metatekster |
-| `npm run test:e2e` | Browsertests mod `npm run preview` (de tre veje og layout i 360–1920 px, beregner, formular med lokal worker, undersider, demoer) |
+| `npm run test:e2e` | Browsertests mod `npm run preview` (de tre veje og layout i 360–1920 px, beregner, formular med lokal worker, undersider) |
 | `npm run intro:status` / `intro:brugt` | Se ovenfor |
 | `npm run lint` | oxlint |
-| `npm run fonts` / `brand` / `images` / `demo-shots` | Skrifter, mærkefiler, billeder og demoskærmbilleder |
+| `npm run fonts` / `brand` / `images` | Skrifter, mærkefiler og billeder |
 
 ## Opbygning
 
 ```
 src/data/            Konfiguration og tekster (se ovenfor)
 src/lib/             calculate.js (priser), receipt.js (kvittering, mail- og SMS-link)
-src/pages/           Home, Hjemmeside, Priser, Demoer
+src/pages/           Home, Hjemmeside, Priser, Cases (+ cases/PalmySpisested)
 src/components/      calculator/ (Mobile, Desktop, InquiryForm, useCalculator), home/, layout/, ui/
-src/demos/           De fire koncepter
 src/inquiry.js       Validering, mailtekst og canonicalLink: fælles for formularen og workeren
 worker/index.js      /api/henvendelse: gemmer (D1) og sender mail; daglig cron
 scripts/             prerender, tests, intro.mjs
@@ -83,7 +83,7 @@ public/_headers      Sikkerhedsheaders og cache
 public/_redirects    301 fra gamle adresser
 ```
 
-Design: tokens og bevægelse i `src/styles/`, resten i `src/index.css` (Tailwind v4). Skrifter: Archivo, Geist og Geist Mono (kun latin, woff2, selvhostede; `npm run fonts`). Billeder: `src/assets/billeder/README.md`. Palmy-casen er skjult (`flags.showPalmy`). Privatlivspolitikken (`src/components/Privatlivspolitik.jsx`) beskriver præcis, hvad siden gør; ændres noget, skal den ændres samtidig.
+Design: tokens og bevægelse i `src/styles/`, resten i `src/index.css` (Tailwind v4). Skrifter: Archivo, Geist og Geist Mono (kun latin, woff2, selvhostede; `npm run fonts`). Billeder: `src/assets/billeder/README.md`. Privatlivspolitikken (`src/components/Privatlivspolitik.jsx`) beskriver præcis, hvad siden gør; ændres noget, skal den ændres samtidig.
 
 ## Henvendelser
 
