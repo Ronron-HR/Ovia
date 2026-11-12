@@ -127,7 +127,11 @@ export default function Calculator() {
           <Desktop calc={{ ...calc, delta }} />
         )}
         <p className="sr-only" aria-live="polite" aria-atomic="true">
-          {calc.any ? `Én gang ${formatKr(receipt.o)}. Hver måned ${formatKr(receipt.m, true)}. Alle priser er ekskl. moms.` : 'Ingen valg endnu. Vælg, hvad I har brug for, for at se prisen.'}
+          {!calc.any
+            ? 'Ingen valg endnu. Vælg, hvad I har brug for, for at se prisen.'
+            : receipt.quoteOnly
+              ? 'Prisen aftales, når vi har talt om, hvad I har brug for.'
+              : `Én gang ${formatKr(receipt.o)} Hver måned ${formatKr(receipt.m, true)} Alle priser er ekskl. moms.`}
         </p>
       </div>
       <noscript>

@@ -3,7 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import prices from '../data/prices.json' with { type: 'json' };
 import { NBSP, emptySelection } from './calculate.js';
-import { buildReceipt, deliveryText, mailtoHref, pathText, priceText, smsHref, specId } from './receipt.js';
+import { buildReceipt, deliveryText, mailtoHref, pathText, priceText, smsHref, specId, termsShort } from './receipt.js';
 
 const S = (path, extra = {}) => ({ ...emptySelection(), path, ...extra });
 const withSlots = (n) => ({ ...prices, introSlotsLeft: n });
@@ -71,10 +71,34 @@ test('Leveringstid: 1–2 uger for en hjemmeside, 2–3 uger med bordbooking ell
   assert.match(deliveryText(S('site', { pkg: 1 })), /^Leveringstid: 1–2 uger\. Tiden regnes fra/);
   assert.match(deliveryText(S('both', { pkg: 1, systems: ['booking'] })), /^Leveringstid: 2–3 uger\./);
   assert.match(deliveryText(S('both', { pkg: 0, systems: ['bestilling'] })), /^Leveringstid: 2–3 uger\./);
-  assert.match(deliveryText(S('system', { systems: ['booking'] })), /^Leveringstid: 2–3 uger\./);
+  assert.match(deliveryText(S('system', { systems: ['booking'] })), /^Leveringstid: 2–3 uger, når vi har aftalt/);
   assert.match(deliveryText(S('both', { pkg: 1, custom: 1 })), /1–2 uger for hjemmesiden\..*bygges specielt, aftales\.$/);
-  assert.match(deliveryText(S('system', { systems: ['booking'], custom: 1 })), /2–3 uger for bordbooking og online bestilling\./);
+  assert.match(deliveryText(S('system', { systems: ['booking'], custom: 1 })), /2–3 uger, når vi har aftalt.*bygges specielt, aftales\./);
+  assert.match(deliveryText(S('both', { pkg: 1, systems: ['booking'], custom: 1 })), /2–3 uger for bordbooking og online bestilling\./);
   assert.equal(deliveryText(S('system', { custom: 1 })), '');
   assert.equal(deliveryText(S('site')), '');
   assert.equal(deliveryText(emptySelection()), '');
+});
+test('Vilkår og leveringstid passer til valget: frikøb kun med hjemmeside, ingen billeder/design uden hjemmeside, intet dobbelt punktum', () => {
+  const site = buildReceipt(S('site', { pkg: 1 }));
+  assert.equal(termsShort(site), 'Ingen binding. 1 måneds opsigelse. Siden kan købes fri for 2.000' + NBSP + 'kr.');
+  assert.ok(!termsShort(site).endsWith('..'));
+  const problem = buildReceipt(S('system', { systems: ['booking'] }));
+  assert.equal(termsShort(problem), 'Ingen binding. 1 måneds opsigelse.');
+  assert.ok(!/købes fri/.test(termsShort(problem)));
+  assert.equal(termsShort(buildReceipt(S('system', { custom: 1 }))), '');
+  assert.equal(deliveryText(S('system', { systems: ['booking'] })), 'Leveringstid: 2–3 uger, når vi har aftalt, hvordan det skal sættes op.');
+  assert.ok(!/billeder|retning/.test(deliveryText(S('system', { systems: ['booking'], custom: 1 }))));
+  assert.match(deliveryText(S('system', { systems: ['booking'], custom: 1 })), /bygges specielt, aftales\.$/);
+  assert.match(deliveryText(S('both', { pkg: 1, systems: ['booking'] })), /billeder i god kvalitet/);
+});
+test('Kun noget bygget specielt: "Pris aftales" i stedet for 0 kr. (mailto-reserven)', () => {
+  const href = decodeURIComponent(mailtoHref(S('system', { custom: 1 }), 'https://oviaspecs.com/?v=s&c=1'));
+  assert.match(href, /Pris: aftales/);
+  assert.ok(!/Engang i alt: 0|ekskl\. moms/.test(href));
+});
+test('Vilkårene på /priser siger, at hjemmeside-vilkår gælder hjemmesider', () => {
+  assert.ok(prices.terms.some((t) => /^Hjemmesider: domænet/.test(t)));
+  assert.ok(prices.terms.some((t) => /Vil I eje hjemmesiden/.test(t)));
+  assert.ok(!prices.terms.some((t) => /^Domænet registreres|^Drift og domæne/.test(t)));
 });

@@ -103,17 +103,23 @@ export default function InquiryForm({ receipt, hrefs }) {
               <ReceiptLine key={l.key + l.pkg} line={l} dark={false} priceSize={13} />
             ))}
           </div>
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-[6px]">
-              <span className="text-[13px]">Én gang</span>
-              <Total value={receipt.o} unit="kr." size={26} unitSize={12} gap={5} unitPad={2} />
-            </div>
-            <div className="flex flex-col gap-[6px]">
-              <span className="text-[13px]">Hver måned</span>
-              <Total value={receipt.m} unit="kr./md." size={26} unitSize={12} gap={5} unitPad={2} />
-            </div>
-          </div>
-          <p className="mt-3 mb-0 text-[13px]">Alle priser er ekskl. moms</p>
+          {receipt.quoteOnly ? (
+            <p className="mt-4 mb-0 text-base">Prisen aftales, når vi har talt sammen.</p>
+          ) : (
+            <>
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-[6px]">
+                  <span className="text-[13px]">Én gang</span>
+                  <Total value={receipt.o} unit="kr." size={26} unitSize={12} gap={5} unitPad={2} />
+                </div>
+                <div className="flex flex-col gap-[6px]">
+                  <span className="text-[13px]">Hver måned</span>
+                  <Total value={receipt.m} unit="kr./md." size={26} unitSize={12} gap={5} unitPad={2} />
+                </div>
+              </div>
+              <p className="mt-3 mb-0 text-[13px]">Alle priser er ekskl. moms</p>
+            </>
+          )}
         </div>
       </div>
     )

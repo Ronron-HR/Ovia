@@ -311,8 +311,18 @@ async function walk(w, h, path) {
   await wait(500)
   const ts = await text(page)
   check(ts.includes('Din pris er klar.') && ts.includes('Hvad I har brug for: ' + NEED[path]), `${tag}: samlet pris viser vejen (${NEED[path]})`)
-  check(ts.includes(path === 'site' ? 'Leveringstid: 1–2 uger.' : 'Leveringstid: 2–3 uger for bordbooking og online bestilling.'), `${tag}: samlet pris viser leveringstiden`)
-  check(path !== 'system' ? true : ts.includes('Pris aftales'), `${tag}: pris aftales vises for bygget specielt`)
+  const wantDelivery = { site: 'Leveringstid: 1–2 uger.', system: 'Leveringstid: 2–3 uger, når vi har aftalt', both: 'Leveringstid: 2–3 uger for bordbooking og online bestilling.' }[path]
+  check(ts.includes(wantDelivery), `${tag}: samlet pris viser leveringstiden (${wantDelivery})`)
+  // Kun det, der gælder valget: ingen frikøb og ingen billeder/design uden en hjemmeside, og intet dobbelt punktum.
+  check(!/kr\.\./.test(ts), `${tag}: intet dobbelt punktum efter kr.`)
+  if (path === 'system') {
+    check(!/købes fri|købe den fri/.test(ts), `${tag}: Løs et problem nævner ikke frikøb af en side`)
+    check(!/billeder i god kvalitet|retning I vil gå/.test(ts), `${tag}: Løs et problem nævner ikke billeder og design`)
+    check(ts.includes('Leveringstid: 2–3 uger, når vi har aftalt'), `${tag}: Løs et problem har sin egen leveringstekst`)
+  } else {
+    check(/købes fri for 2\.000/.test(ts) || mobile, `${tag}: frikøb står, når der er en hjemmeside (desktop-kvitteringen)`)
+    check(/billeder i god kvalitet/.test(ts), `${tag}: billeder og retning står, når der er en hjemmeside`)
+  }
   // Rabatten: ét stille spørgsmål, kun for hjemmesider og kun mens der er pladser.
   const hasOffer = await page.evaluate(() => [...document.querySelectorAll('#prisberegner button')].some((b) => b.textContent.includes('Må vi vise jeres side som eksempel')))
   check(hasOffer === (INTRO && path !== 'system'), `${tag}: spørgsmålet om at vise siden som eksempel vises kun med hjemmeside og pladser (${hasOffer})`)

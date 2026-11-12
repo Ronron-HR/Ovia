@@ -47,9 +47,21 @@ export function deliveryText(selection, cfg = prices) {
   const d = cfg.delivery;
   const hasFunction = usesSystems(sel) && sel.systems.length > 0;
   const custom = usesSystems(sel) && sel.custom > 0;
+  // Uden ny hjemmeside gælder billeder og design ikke: tiden regnes fra, at vi har aftalt opsætningen.
+  if (hasFunction && !usesSite(sel)) return `Leveringstid: ${d.functionsWeeks}, ${d.systemStarts}.${custom ? ' Det, der bygges specielt, aftales.' : ''}`;
   if (hasFunction) return `Leveringstid: ${d.functionsWeeks}${custom ? ' for bordbooking og online bestilling' : ''}. ${d.startsWhen}${custom ? ' Det, der bygges specielt, aftales.' : ''}`;
   if (usesSite(sel) && sel.pkg !== null) return `Leveringstid: ${d.siteWeeks}${custom ? ' for hjemmesiden' : ''}. ${d.startsWhen}${custom ? ' Det, der bygges specielt, aftales.' : ''}`;
   return '';
+}
+
+/**
+ * Vilkår i kort form, kun det der gælder valget: "Siden kan købes fri" kun med en hjemmeside, og ingen vilkår, når kun noget bygget
+ * specielt er valgt (prisen aftales). Slutter med punktum (formatKr gør det allerede, så der lægges ikke et ekstra på).
+ */
+export function termsShort(rc, cfg = prices) {
+  if (rc.quoteOnly) return '';
+  const free = rc.path === 'system' ? '' : ` Siden kan købes fri for ${formatKr(cfg.addons.buyout.once)}`;
+  return `Ingen binding. 1 måneds opsigelse.${free}`;
 }
 
 /** Hvad kunden har brug for, som tekst i mailen. */
@@ -77,7 +89,7 @@ export function mailtoHref(selection, url, to = 'kontakt@oviaspecs.com', cfg = p
   const id = specId(selection, cfg);
   const body = [`Spec-ark ${id}`, plain(`Hvad I har brug for: ${pathText(rc.path)}`), '']
     .concat(rc.all.map((l) => plain(`${l.label} – ${l.pkg}: ${l.price}`)))
-    .concat(['', plain(`Engang i alt: ${formatKr(rc.o)}`), plain(`Pr. måned: ${formatKr(rc.m, true)}`), 'Alle priser er ekskl. moms', '', `Se valgene: ${url}`])
+    .concat(rc.quoteOnly ? ['', 'Pris: aftales', '', `Se valgene: ${url}`] : ['', plain(`Engang i alt: ${formatKr(rc.o)}`), plain(`Pr. måned: ${formatKr(rc.m, true)}`), 'Alle priser er ekskl. moms', '', `Se valgene: ${url}`])
     .join('\n');
   return `mailto:${to}?subject=${encodeURIComponent('Forespørgsel ' + id)}&body=${encodeURIComponent(body)}`;
 }

@@ -656,6 +656,19 @@ check((await runDaily({}, DEPS)).skipped === 'no_db', 'cron uden database')
 
 console.error = logError
 console.log = logInfo
+
+// Kun noget bygget specielt: mailen siger "pris aftales" (ikke 0 kr.), nævner ikke abonnementer hos andre, og er uden moms-linje.
+{
+  const l = canonicalLink('/?v=s&c=1&t=sum', ORIGIN, cfgWith(3))
+  const m = composeMail({ name: 'X', link: l.url, selection: l.selection }, cfgWith(3))
+  check(m.subject === 'Ny forespørgsel: X – pris aftales', `kun specielt: emne "${m.subject}"`)
+  check(m.text.includes('Pris: aftales') && !/Engang:|Pr\. måned:|ekskl\. moms/.test(m.text), 'kun specielt: ingen 0 kr. og ingen moms-linje i mailen')
+  check(!m.text.includes(prices.systems.thirdParty), 'kun specielt: ingen tekst om abonnementer hos andre udbydere')
+  const b = canonicalLink('/?v=s&y=b&t=sum', ORIGIN, cfgWith(3))
+  const mb = composeMail({ name: 'X', link: b.url, selection: b.selection }, cfgWith(3))
+  check(mb.text.includes(prices.systems.thirdParty), 'bordbooking: teksten om abonnementer hos andre er med')
+  check(!/Intropris|Introduktionspris/.test(mb.text), 'løs et problem: intet om intropris i mailen')
+}
 globalThis.fetch = realFetch
 if (failures.length) {
   console.error(`Forespørgselstest FEJLEDE (${failures.length}):\n- ${failures.join('\n- ')}`)

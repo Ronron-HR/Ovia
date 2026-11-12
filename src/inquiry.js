@@ -104,9 +104,9 @@ const plain = (s) => String(s).replace(/ /g, ' ')
 export function composeMail({ name, company = '', phone = '', email = '', message = '', link, selection }, cfg = prices) {
   const rc = buildReceipt(selection, cfg)
   const who = company ? `${name}, ${company}` : name
-  const subject = `Ny forespørgsel: ${who} – ${plain(formatKr(rc.o))} + ${plain(formatKr(rc.m, true))}`
+  const subject = rc.quoteOnly ? `Ny forespørgsel: ${who} – pris aftales` : `Ny forespørgsel: ${who} – ${plain(formatKr(rc.o))} + ${plain(formatKr(rc.m, true))}`
   const line = (l) => `- ${plain(l.label)} – ${plain(l.pkg)}: ${plain(l.price)}`
-  const hasSystem = rc.all.some((l) => l.key.startsWith('sys-') || l.key.startsWith('custom-'))
+  const hasSystem = rc.all.some((l) => l.key.startsWith('sys-')) // kun bordbooking og online bestilling har abonnementer hos andre
   const left = cfg.introSlotsLeft
   return {
     subject,
@@ -123,9 +123,13 @@ export function composeMail({ name, company = '', phone = '', email = '', messag
       `Valg (${specId(selection, cfg)}):`,
       ...rc.all.map(line),
       '',
-      `Engang: ${plain(formatKr(rc.o))}${rc.introApplied ? ` (normalpris ${plain(formatKr(rc.onceNormal))})` : ''}`,
-      `Pr. måned: ${plain(formatKr(rc.m, true))}`,
-      'Alle priser er ekskl. moms.',
+      ...(rc.quoteOnly
+        ? ['Pris: aftales (kun noget bygget specielt er valgt).']
+        : [
+            `Engang: ${plain(formatKr(rc.o))}${rc.introApplied ? ` (normalpris ${plain(formatKr(rc.onceNormal))})` : ''}`,
+            `Pr. måned: ${plain(formatKr(rc.m, true))}`,
+            'Alle priser er ekskl. moms.',
+          ]),
       ...(rc.introApplied ? ['Introduktionspris: valgt (siden må vises som case).'] : []),
       ...(hasSystem ? [cfg.systems.thirdParty] : []),
       '',

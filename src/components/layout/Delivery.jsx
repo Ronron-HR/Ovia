@@ -1,6 +1,6 @@
 import prices from '../../data/prices.json'
 
-/** "Hvor lang tid tager det?": to tider, hvad kunden skal levere, og at rettelsesrunder er med. Tallene står i prices.json (delivery). */
+/** "Hvor lang tid tager det?": to tider, hvad kunden skal levere, og at rettelsesrunder er med. Tallene står i prices.json (delivery). Sidste linje gælder dem, der kun vil have bordbooking eller online bestilling. */
 export default function Delivery() {
   const d = prices.delivery
   return (
@@ -21,7 +21,7 @@ export default function Delivery() {
         ))}
       </div>
       <ul className="m-0 mt-4 flex list-none flex-col gap-2 p-0 md:max-w-[900px]">
-        {[d.startsWhen, d.provide, d.rounds].map((t) => (
+        {[d.startsWhen, d.provide, d.rounds, d.systemOnlyNote].map((t) => (
           <li key={t} className="px-1 text-[15px] leading-normal">
             {t}
           </li>
