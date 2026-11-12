@@ -46,9 +46,9 @@ export function deliveryText(selection, cfg = prices) {
   const sel = clean(selection, cfg);
   const d = cfg.delivery;
   const hasFunction = usesSystems(sel) && sel.systems.length > 0;
-  const custom = usesSystems(sel) && sel.custom > 0 ? ' Tiden for det, der bygges specielt, aftales.' : '';
-  if (hasFunction) return `Leveringstid: ${d.functionsWeeks}. ${d.startsWhen}${custom}`;
-  if (usesSite(sel) && sel.pkg !== null) return `Leveringstid: ${d.siteWeeks}. ${d.startsWhen}${custom}`;
+  const custom = usesSystems(sel) && sel.custom > 0;
+  if (hasFunction) return `Leveringstid: ${d.functionsWeeks}${custom ? ' for bordbooking og online bestilling' : ''}. ${d.startsWhen}${custom ? ' Det, der bygges specielt, aftales.' : ''}`;
+  if (usesSite(sel) && sel.pkg !== null) return `Leveringstid: ${d.siteWeeks}${custom ? ' for hjemmesiden' : ''}. ${d.startsWhen}${custom ? ' Det, der bygges specielt, aftales.' : ''}`;
   return '';
 }
 

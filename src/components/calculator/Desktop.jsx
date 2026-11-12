@@ -4,7 +4,7 @@ import { helpQuestions, needTitle, needs, nextLabels, stepLabels } from '../../d
 import { formatKr } from '../../lib/calculate.js'
 import { deliveryText } from '../../lib/receipt.js'
 import InquirySlot from './InquirySlot.jsx'
-import { Check, DeltaChip, ReceiptLine, TERMS_SHORT, Total } from './parts.jsx'
+import { Check, DeltaChip, ReceiptLine, Total, termsShort } from './parts.jsx'
 import { ExampleOffer, NeedList, ProblemList, SiteBlock, functionsIntro } from './steps.jsx'
 import { useExitList } from './useExitList.js'
 
@@ -308,8 +308,8 @@ function Aside({ calc }) {
             {delta?.m < 0 && <DeltaChip key={delta.id} amount={delta.m} monthly className="top-0 right-0" />}
             <Total value={receipt.m} unit="kr./md." size={38} unitSize={14} />
           </div>
-          {receipt.hasQuote && !receipt.quoteOnly && <p className="m-0 text-[13px] leading-[1.4] text-on-ink-2">Det, der bygges specielt, er ikke med i tallene. Prisen aftales.</p>}
-          <p className="m-0 text-[13px] leading-[1.4] text-on-ink-2">Alle priser er ekskl. moms. {TERMS_SHORT}</p>
+          {receipt.hasQuote && !receipt.quoteOnly && <p className="m-0 text-[13px] leading-[1.4] text-on-ink-2">Oveni kommer det, der bygges specielt. Prisen aftales.</p>}
+          <p className="m-0 text-[13px] leading-[1.4] text-on-ink-2">Alle priser er ekskl. moms. {termsShort(receipt.path !== 'system')}</p>
         </div>
         {state.step !== 'sum' ? (
           <button

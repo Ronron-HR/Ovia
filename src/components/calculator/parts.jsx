@@ -149,7 +149,8 @@ export const ReceiptLine = memo(function ReceiptLine({ line, dark = true, animat
   )
 })
 
-export const TERMS_SHORT = `Ingen binding. 1 måneds opsigelse. Siden kan købes fri for ${formatKr(prices.addons.buyout.once)}`
+/** Vilkår i kort form. "Siden kan købes fri" står kun, når der er en hjemmeside med. */
+export const termsShort = (withSite) => `Ingen binding. 1 måneds opsigelse.${withSite ? ` Siden kan købes fri for ${formatKr(prices.addons.buyout.once)}.` : ''}`
 
 /** Pakkens pris: engang + pr. måned. */
 export function PkgPrice({ pkg }) {

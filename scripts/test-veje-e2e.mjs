@@ -311,7 +311,7 @@ async function walk(w, h, path) {
   await wait(500)
   const ts = await text(page)
   check(ts.includes('Din pris er klar.') && ts.includes('Hvad I har brug for: ' + NEED[path]), `${tag}: samlet pris viser vejen (${NEED[path]})`)
-  check(ts.includes(path === 'site' ? 'Leveringstid: 1–2 uger.' : 'Leveringstid: 2–3 uger.'), `${tag}: samlet pris viser leveringstiden`)
+  check(ts.includes(path === 'site' ? 'Leveringstid: 1–2 uger.' : 'Leveringstid: 2–3 uger for bordbooking og online bestilling.'), `${tag}: samlet pris viser leveringstiden`)
   check(path !== 'system' ? true : ts.includes('Pris aftales'), `${tag}: pris aftales vises for bygget specielt`)
   // Rabatten: ét stille spørgsmål, kun for hjemmesider og kun mens der er pladser.
   const hasOffer = await page.evaluate(() => [...document.querySelectorAll('#prisberegner button')].some((b) => b.textContent.includes('Må vi vise jeres side som eksempel')))

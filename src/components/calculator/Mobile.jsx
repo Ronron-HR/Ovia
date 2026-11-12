@@ -3,7 +3,7 @@ import prices from '../../data/prices.json'
 import { helpQuestions, needTitle, needs, nextLabels, stepLabels } from '../../data/calculator.js'
 import { deliveryText } from '../../lib/receipt.js'
 import InquirySlot from './InquirySlot.jsx'
-import { Check, DeltaChip, PkgPrice, ReceiptLine, TERMS_SHORT, Total } from './parts.jsx'
+import { Check, DeltaChip, PkgPrice, ReceiptLine, Total, termsShort } from './parts.jsx'
 import { ExampleOffer, NeedList, ProblemList, SiteBlock, choice, functionsIntro } from './steps.jsx'
 import { useExitList } from './useExitList.js'
 
@@ -140,7 +140,7 @@ function Summary({ calc }) {
             </div>
           </div>
         )}
-        {receipt.hasQuote && !receipt.quoteOnly && <p className="mt-3 mb-0 text-[13px]">Det, der bygges specielt, er ikke med i tallene. Prisen aftales.</p>}
+        {receipt.hasQuote && !receipt.quoteOnly && <p className="mt-3 mb-0 text-[13px]">Oveni kommer det, der bygges specielt. Prisen aftales.</p>}
         <p className="mt-3 text-[13px]">Alle priser er ekskl. moms</p>
       </div>
       {deliveryText(receipt.selection) && <p className="mt-4 mb-0 text-[15px] leading-normal">{deliveryText(receipt.selection)}</p>}
@@ -382,7 +382,7 @@ function BarAndSheet({ calc, barRef, barVisible }) {
           {all.map((l) => (
             <ReceiptLine key={l.key + l.pkg} line={l} priceSize={13} />
           ))}
-          {showTerms && <p className="mt-3 text-[13px] leading-normal text-on-ink-2">{TERMS_SHORT}</p>}
+          {showTerms && <p className="mt-3 text-[13px] leading-normal text-on-ink-2">{termsShort(receipt.path !== 'system')}</p>}
           {receipt.quoteOnly ? (
             <p className="mt-5 mb-0 text-[15px]">Prisen aftales, når vi har talt om, hvad I har brug for.</p>
           ) : (
@@ -397,7 +397,7 @@ function BarAndSheet({ calc, barRef, barVisible }) {
               </div>
             </div>
           )}
-          {receipt.hasQuote && !receipt.quoteOnly && <p className="mt-3 mb-0 text-[13px] text-on-ink-2">Det, der bygges specielt, er ikke med i tallene. Prisen aftales.</p>}
+          {receipt.hasQuote && !receipt.quoteOnly && <p className="mt-3 mb-0 text-[13px] text-on-ink-2">Oveni kommer det, der bygges specielt. Prisen aftales.</p>}
           <p className="mt-3 text-[13px] text-on-ink-2">Alle priser er ekskl. moms</p>
           {any && (
             <div className="mt-5 flex flex-col gap-2">

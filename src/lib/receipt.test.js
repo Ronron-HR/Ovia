@@ -72,7 +72,8 @@ test('Leveringstid: 1–2 uger for en hjemmeside, 2–3 uger med bordbooking ell
   assert.match(deliveryText(S('both', { pkg: 1, systems: ['booking'] })), /^Leveringstid: 2–3 uger\./);
   assert.match(deliveryText(S('both', { pkg: 0, systems: ['bestilling'] })), /^Leveringstid: 2–3 uger\./);
   assert.match(deliveryText(S('system', { systems: ['booking'] })), /^Leveringstid: 2–3 uger\./);
-  assert.match(deliveryText(S('both', { pkg: 1, custom: 1 })), /1–2 uger\..*aftales\.$/);
+  assert.match(deliveryText(S('both', { pkg: 1, custom: 1 })), /1–2 uger for hjemmesiden\..*bygges specielt, aftales\.$/);
+  assert.match(deliveryText(S('system', { systems: ['booking'], custom: 1 })), /2–3 uger for bordbooking og online bestilling\./);
   assert.equal(deliveryText(S('system', { custom: 1 })), '');
   assert.equal(deliveryText(S('site')), '');
   assert.equal(deliveryText(emptySelection()), '');
