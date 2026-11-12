@@ -1,5 +1,6 @@
 import Calculator from '../components/calculator/Calculator.jsx'
 import Contact from '../components/layout/Contact.jsx'
+import Delivery from '../components/layout/Delivery.jsx'
 import prices from '../data/prices.json'
 import { paths } from '../data/site.js'
 import { googleWork } from '../data/pages.js'
@@ -55,6 +56,8 @@ export default function Hjemmeside() {
           </p>
         </div>
       </section>
+
+      <Delivery />
 
       <section id="systemer" aria-labelledby="systemer-titel" className="scroll-mt-20 bg-surface md:scroll-mt-24">
         <div className="mx-auto max-w-[1440px] section-pad px-5 md:px-14">

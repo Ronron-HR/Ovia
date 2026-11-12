@@ -2,6 +2,7 @@ import { useState } from 'react'
 import prices from '../../data/prices.json'
 import { helpQuestions, needTitle, needs, nextLabels, stepLabels } from '../../data/calculator.js'
 import { formatKr } from '../../lib/calculate.js'
+import { deliveryText } from '../../lib/receipt.js'
 import InquirySlot from './InquirySlot.jsx'
 import { Check, DeltaChip, ReceiptLine, TERMS_SHORT, Total } from './parts.jsx'
 import { ExampleOffer, NeedList, ProblemList, SiteBlock, functionsIntro } from './steps.jsx'
@@ -134,6 +135,7 @@ function StepSummary({ calc }) {
       <p className="mt-1 mb-0 text-[17px]">
         Hvad I har brug for: <span className="font-semibold">{needs.find((n) => n.key === receipt.path)?.title}</span>
       </p>
+      {deliveryText(receipt.selection) && <p className="mt-4 mb-0 max-w-[60ch] text-[15px] leading-normal">{deliveryText(receipt.selection)}</p>}
       <div className="mt-6">
         <ExampleOffer calc={calc} wide />
       </div>

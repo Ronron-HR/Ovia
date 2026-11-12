@@ -1,4 +1,5 @@
 import Contact from '../components/layout/Contact.jsx'
+import Delivery from '../components/layout/Delivery.jsx'
 import prices from '../data/prices.json'
 import { addonRows, compareRows, systemOnlyRows } from '../data/pages.js'
 import { formatKr, introActive } from '../lib/calculate.js'
@@ -17,6 +18,7 @@ function rowInfo(key) {
 const jump = [
   ['Pakker', '#pakker'],
   ['Løs et problem', '#system-alene'],
+  ['Levering', '#levering'],
   ['Ekstra ting', '#ekstra'],
   ['Vilkår', '#vilkaar'],
 ]
@@ -145,6 +147,8 @@ export default function Priser() {
           <span aria-hidden="true">→</span>
         </a>
       </section>
+
+      <Delivery />
 
       <section id="ekstra" aria-label="Ekstra ting og vilkår" className="mx-auto grid max-w-[1440px] scroll-mt-20 gap-7 section-pad px-5 md:scroll-mt-[152px] md:grid-cols-2 md:gap-14 md:px-14">
         <div>

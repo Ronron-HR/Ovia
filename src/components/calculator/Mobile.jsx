@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import prices from '../../data/prices.json'
 import { helpQuestions, needTitle, needs, nextLabels, stepLabels } from '../../data/calculator.js'
+import { deliveryText } from '../../lib/receipt.js'
 import InquirySlot from './InquirySlot.jsx'
 import { Check, DeltaChip, PkgPrice, ReceiptLine, TERMS_SHORT, Total } from './parts.jsx'
 import { ExampleOffer, NeedList, ProblemList, SiteBlock, choice, functionsIntro } from './steps.jsx'
@@ -142,6 +143,7 @@ function Summary({ calc }) {
         {receipt.hasQuote && !receipt.quoteOnly && <p className="mt-3 mb-0 text-[13px]">Det, der bygges specielt, er ikke med i tallene. Prisen aftales.</p>}
         <p className="mt-3 text-[13px]">Alle priser er ekskl. moms</p>
       </div>
+      {deliveryText(receipt.selection) && <p className="mt-4 mb-0 text-[15px] leading-normal">{deliveryText(receipt.selection)}</p>}
       <div className="mt-4">
         <ExampleOffer calc={calc} />
       </div>

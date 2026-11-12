@@ -1,3 +1,4 @@
+import prices from '../../data/prices.json'
 import ImageSlot from '../ui/ImageSlot.jsx'
 
 const heading = 'font-[family-name:var(--font-display)] font-bold [font-stretch:125%]'
@@ -32,6 +33,7 @@ export function Process() {
       <h2 id="proces-titel" className="display t-h2s">
         Sådan foregår det
       </h2>
+      <div className="flex flex-col gap-7">
       <ol className="m-0 grid list-none gap-5 p-0 md:grid-cols-3 md:gap-10">
         {steps.map((text, i) => (
           <li key={text} className="flex items-baseline gap-4 md:flex-col md:items-start md:gap-[14px]">
@@ -45,6 +47,10 @@ export function Process() {
           </li>
         ))}
       </ol>
+      <p className="m-0 max-w-[60ch] text-[17px] leading-normal text-pretty">
+        Hjemmeside: {prices.delivery.siteWeeks}. Med bordbooking eller online bestilling: {prices.delivery.functionsWeeks}. {prices.delivery.startsWhen} {prices.delivery.rounds}
+      </p>
+      </div>
     </section>
   )
 }

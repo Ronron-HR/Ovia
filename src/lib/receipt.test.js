@@ -3,7 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import prices from '../data/prices.json' with { type: 'json' };
 import { NBSP, emptySelection } from './calculate.js';
-import { buildReceipt, mailtoHref, pathText, priceText, smsHref, specId } from './receipt.js';
+import { buildReceipt, deliveryText, mailtoHref, pathText, priceText, smsHref, specId } from './receipt.js';
 
 const S = (path, extra = {}) => ({ ...emptySelection(), path, ...extra });
 const withSlots = (n) => ({ ...prices, introSlotsLeft: n });
@@ -66,4 +66,14 @@ test('Mail- og SMS-link bærer id, vej og del-link', () => {
   assert.match(decodeURIComponent(href), /Hvad I har brug for: Kun en ny hjemmeside/);
   assert.match(decodeURIComponent(href), /Alle priser er ekskl\. moms/);
   assert.match(decodeURIComponent(smsHref('https://oviaspecs.com/?v=h&p=1')), /https:\/\/oviaspecs\.com\/\?v=h&p=1/);
+});
+test('Leveringstid: 1–2 uger for en hjemmeside, 2–3 uger med bordbooking eller online bestilling, intet for kun noget specielt', () => {
+  assert.match(deliveryText(S('site', { pkg: 1 })), /^Leveringstid: 1–2 uger\. Tiden regnes fra/);
+  assert.match(deliveryText(S('both', { pkg: 1, systems: ['booking'] })), /^Leveringstid: 2–3 uger\./);
+  assert.match(deliveryText(S('both', { pkg: 0, systems: ['bestilling'] })), /^Leveringstid: 2–3 uger\./);
+  assert.match(deliveryText(S('system', { systems: ['booking'] })), /^Leveringstid: 2–3 uger\./);
+  assert.match(deliveryText(S('both', { pkg: 1, custom: 1 })), /1–2 uger\..*aftales\.$/);
+  assert.equal(deliveryText(S('system', { custom: 1 })), '');
+  assert.equal(deliveryText(S('site')), '');
+  assert.equal(deliveryText(emptySelection()), '');
 });

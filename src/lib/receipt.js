@@ -38,6 +38,20 @@ export function buildReceipt(selection, cfg = prices) {
   return { path: r.selection.path, pathText: pathText(r.selection.path), all, o: r.once, m: r.monthly, onceNormal: r.onceNormal, introSaving: r.introSaving, introApplied: r.introApplied, hasQuote: r.hasQuote, quoteOnly: r.hasQuote && r.once === 0 && r.monthly === 0, selection: r.selection };
 }
 
+/**
+ * Leveringstid til sidste trin i beregneren: 2–3 uger, hvis bordbooking eller online bestilling er med, ellers 1–2 uger for en hjemmeside.
+ * Kun "bygget specielt" (uden hjemmeside eller funktion): ingen tid, den aftales. Tom streng, når der intet er at sige.
+ */
+export function deliveryText(selection, cfg = prices) {
+  const sel = clean(selection, cfg);
+  const d = cfg.delivery;
+  const hasFunction = usesSystems(sel) && sel.systems.length > 0;
+  const custom = usesSystems(sel) && sel.custom > 0 ? ' Tiden for det, der bygges specielt, aftales.' : '';
+  if (hasFunction) return `Leveringstid: ${d.functionsWeeks}. ${d.startsWhen}${custom}`;
+  if (usesSite(sel) && sel.pkg !== null) return `Leveringstid: ${d.siteWeeks}. ${d.startsWhen}${custom}`;
+  return '';
+}
+
 /** Hvad kunden har brug for, som tekst i mailen. */
 export const pathText = (path) => needs.find((n) => n.key === path)?.mail ?? '';
 

@@ -144,5 +144,14 @@
     "Vil I eje siden og stoppe den månedlige betaling, kan I købe den fri for 2.000 kr.",
     "Abonnementer hos andre udbydere (fx bookingsystemet) betaler I selv.",
     "Alle priser er ekskl. moms."
-  ]
+  ],
+  "delivery": {
+    "siteWeeks": "1–2 uger",
+    "functionsWeeks": "2–3 uger",
+    "siteNote": "En flot hjemmeside uden funktioner.",
+    "functionsNote": "Med bordbooking eller online bestilling. Her laver vi også et sikkerhedstjek og sætter et adminpanel op, så det tager lidt længere.",
+    "startsWhen": "Tiden regnes fra, at vi har jeres billeder i god kvalitet og ved, hvilken retning I vil gå.",
+    "provide": "Det skal I levere: billeder i god kvalitet og jeres ønsker til, hvordan siden skal se ud.",
+    "rounds": "Ønsker og rettelsesrunder er med, hvis I vil have det."
+  }
 }
