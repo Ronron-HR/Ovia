@@ -4,7 +4,8 @@ import { palmyUrl, paths } from './site.js'
  * CASES. Én liste, som forsiden, /cases og de enkelte casesider læser fra. En ny case er en ny post her
  * (plus dens side i src/pages/cases/, en sidenøgle i pageKeys.js og en post i seo.js).
  *
- * Kun fakta: ingen tal, resultater, udtalelser eller anmeldelser. Casesiderne har ingen billeder.
+ * Kun fakta: ingen tal, resultater, udtalelser eller anmeldelser. Billeder: Palmys egne (src/assets/billeder/palmy-*) og skærmbilleder af det live site;
+ * mangler et billede, står der en grå pladsholder ("BILLEDE MANGLER: ...").
  */
 
 export const cases = [

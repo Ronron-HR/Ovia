@@ -107,8 +107,38 @@ for (const page of ['priser', 'hjemmeside']) {
   for (const f of prices.systems.standard) check(t.includes(kr(f.once, f.monthly)), `/${page}/ mangler prisen på ${f.name}`)
   check(t.includes(prices.systems.custom.price), `/${page}/ mangler "${prices.systems.custom.price}" ved bygget specielt`)
 }
+const priserFlat = flat('priser')
+check(priserFlat.includes('Hjemmesider: domænet registreres i jeres navn'), '/priser/ mangler, at domæne-vilkåret gælder hjemmesider')
+check(priserFlat.includes('Kun bordbooking eller online bestilling, uden ny hjemmeside: 2–3 uger'), '/priser/ mangler leveringstiden for løsninger uden hjemmeside')
+check(!/kr\.\./.test(priserFlat), '/priser/ har et dobbelt punktum efter kr.')
 for (const [p, t] of text) check(!/engelsk version|english version/i.test(t), `tilvalget "Engelsk version" findes i ${p}`)
 check(!JSON.stringify(prices).toLowerCase().includes('"english"'), 'prices.json har stadig et english-felt')
+
+// 7. Palmy Spisested er den eneste case; ingen fiktive demoer; kun rigtige billeder, ellers grå pladsholder.
+{
+  const flatOf = (p) => (text.get(join('dist', p, 'index.html')) ?? '').replace(/<(style|script)[\s\S]*?<\/\1>/g, ' ').replace(/<[^>]+>/g, ' ').replace(/&nbsp;| /g, ' ').replace(/\s+/g, ' ')
+  const htmlOf = (p) => text.get(join('dist', p, 'index.html')) ?? ''
+  const cases = htmlOf('cases')
+  check((cases.match(/<article/g) ?? []).length === 1 && cases.includes('/cases/palmy-spisested/'), '/cases/ har ikke præcis ét case-kort (Palmy Spisested)')
+  const sitemap = text.get(join('dist', 'sitemap.xml')) ?? ''
+  check((sitemap.match(/\/cases\/[^<]+/g) ?? []).length === 1 && sitemap.includes('/cases/palmy-spisested/'), 'sitemap har flere cases end Palmy Spisested')
+  check(!existsSync(join('dist', 'demoer')), 'dist/demoer findes stadig (fiktive demoer skal være væk)')
+  const redirects = readFileSync(join('dist', '_redirects'), 'utf8')
+  check(/^\/demoer\/?\s+\/cases\/\s+301/m.test(redirects), '_redirects sender ikke /demoer til /cases/')
+  check(htmlOf('').includes('href="/cases/palmy-spisested/"'), 'forsiden linker ikke til Palmy-casen')
+  for (const [p, t] of text) if (!p.includes('privatlivspolitik')) check(!/\bdemo(er|sites?)?\b|fiktiv/i.test(t.replace(/<script[\s\S]*?<\/script>/g, '')), `rest af demo/fiktive eksempler i ${p}`)
+  const palmy = htmlOf(join('cases', 'palmy-spisested'))
+  const palmyText = flatOf(join('cases', 'palmy-spisested'))
+  // Billeder: hver billedplads har et rigtigt billede (ikke filnavnet som pladsholder), og pladsholderne er de aftalte.
+  for (const m of palmy.matchAll(/data-image-slot="([^"]+)"/g)) {
+    check(palmy.slice(m.index, m.index + 900).includes('<img'), `billedpladsen "${m[1]}" på Palmy-casen har ingen billedfil`)
+  }
+  const missing = [...palmy.matchAll(/BILLEDE MANGLER: (?:<!-- -->)?([^<]+)</g)].map((m) => m[1].trim())
+  check(missing.length === 2 && missing.some((x) => /Google Business-profil/.test(x)) && missing.some((x) => /Search Console/.test(x)), `pladsholdere på Palmy-casen er ikke de aftalte (${missing.join(' | ')})`)
+  check(!/Google Maps indlæses først/.test(palmyText), 'Palmy-casen påstår, at Google Maps indlæses ved tryk (siden har intet indlejret kort)')
+  check(!/familie|anmeldelse|udtalelse|kunden siger|5,0/i.test(palmyText), 'Palmy-casen indeholder noget, der ikke må stå (familie, anmeldelser, udtalelser, 5,0)')
+  check(/2026-11-08|8\. november 2026/.test(palmyText) && palmyText.includes('91'), 'Palmy-casen mangler de daterede Lighthouse-tal')
+}
 
 console.log(report.join('\n'))
 if (fails.length) {

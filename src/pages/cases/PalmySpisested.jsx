@@ -1,6 +1,8 @@
 import Breadcrumb from '../../components/cases/Breadcrumb.jsx'
 import CaseCta from '../../components/cases/CaseCta.jsx'
+import ImagePlaceholder from '../../components/cases/ImagePlaceholder.jsx'
 import Contact from '../../components/layout/Contact.jsx'
+import ImageSlot from '../../components/ui/ImageSlot.jsx'
 import { caseBySlug, cases } from '../../data/cases.js'
 import { paths } from '../../data/site.js'
 
@@ -10,27 +12,34 @@ const heading = 'font-[family-name:var(--font-display)] font-bold [font-stretch:
 const body = 'm-0 max-w-[60ch] text-[17px] leading-[1.55] text-pretty'
 const label = 'text-[15px] font-semibold'
 
+/** Dato for skærmbillederne af det live site (taget fra palmyspisested.com). */
+const SHOT_DATE = '12. november 2026'
+
 /** Fakta i faktaboksen. */
 const facts = [
   ['Branche', 'Restaurant, vietnamesisk mad'],
   ['By', c.city],
-  ['Leveret', 'Hjemmeside og SEO'],
+  ['Leveret', 'Hjemmeside og lokal SEO'],
   ['Platform', 'Mobile-first'],
 ]
 
-/** Hjemmesidens dele. */
+/** Hjemmesidens sider. Kun det, der faktisk findes på palmyspisested.com. */
 const parts = [
   {
     title: 'Menu',
-    text: 'Menukortet er delt op i kategorier med pris fra. Numrene følger menukortet, så man kan bestille efter nummer, når man ringer.',
+    text: 'Menukortet er delt i forretter, hovedretter, ekstra retter, børnemenu, drikkevarer og ekstra tilbehør. Numrene følger det trykte menukort, så man kan ringe og bestille efter nummer. Der er også en udgave til udskrift.',
   },
   {
-    title: 'Åbningstider og kontakt',
-    text: 'Åbningstider, adresse og telefonnummer står samlet. Nummeret er et link, så man kan ringe med ét tryk, og adressen åbner Google Maps.',
+    title: 'Find os',
+    text: 'Adresse, åbningstider og telefonnummer samlet ét sted. Nummeret er et link, så man kan ringe med ét tryk, og adressen åbner Google Maps. Her står også to spørgsmål og svar som almindelig tekst.',
   },
   {
     title: 'Historien',
-    text: 'Et kort afsnit om restauranten og stedet, så siden ikke kun er en menu og et telefonnummer.',
+    text: 'En side om restauranten og stedet, så siden ikke kun er en menu og et telefonnummer.',
+  },
+  {
+    title: 'Billeder',
+    text: 'Et galleri med Palmys egne billeder og korte, lydløse loops fra køkkenet.',
   },
 ]
 
@@ -50,11 +59,11 @@ const seoItems = [
   },
   {
     title: 'Structured data',
-    text: 'Bag siden ligger data, som Google kan læse: at stedet er en restaurant, med adresse, åbningstider, telefon, køkken og menu. Så kan Google vise de rigtige oplysninger.',
+    text: 'Bag siden ligger data, som Google kan læse: at stedet er en restaurant, med adresse, åbningstider, telefon, køkken, prisinterval og menu. Find os har også sine spørgsmål og svar som data.',
   },
   {
     title: 'Teknisk SEO',
-    text: 'Siden har sin egen titel og beskrivelse, rene adresser og et sitemap, så Google kan finde og forstå den.',
+    text: 'Hver side har sin egen titel og beskrivelse, rene adresser, en canonical-adresse og et sitemap. www er den ene adresse; uden www sendes videre.',
   },
   {
     title: 'Hastighed',
@@ -62,14 +71,31 @@ const seoItems = [
   },
 ]
 
-/** Det tekniske, der er set på det live site. */
+/** Det tekniske, der er set på det live site og i Palmys kode. */
 const tech = [
   'Mobile-first: designet til telefonen først og skaleret op til computer.',
-  'Telefonnummeret er et opkaldslink, og adressen åbner Google Maps.',
-  'Google Maps indlæses først, når man trykker på kortet, så kortet ikke bremser siden.',
-  'Skrifterne ligger på sitet selv og hentes ikke fra Google.',
-  'Structured data af typen Restaurant med adresse, åbningstider, telefon, køkken og menu.',
+  'Telefonnummeret er et opkaldslink, og adressen er et link til Google Maps. Der er intet indlejret kort, der skal hentes.',
+  'Skrifterne (Libre Caslon Text og Source Sans 3) ligger på sitet selv og hentes ikke fra Google.',
+  'Alle sider bygges som færdig HTML på forhånd, så de kan åbne hurtigt.',
+  'Structured data af typen Restaurant med adresse, åbningstider, telefon, køkken, prisinterval og menu.',
 ]
+
+/** Palmys egne billeder (fra Palmys eget materiale). Billedteksterne er Palmys egne. */
+const photos = [
+  { name: 'palmy-spisesal', alt: 'Spisesalen hos Palmy Spisested med borde og stole' },
+  { name: 'palmy-karry', alt: 'Karry med forårsløg, der simrer i gryden i Palmys køkken' },
+  { name: 'palmy-wok', alt: 'Rejer og grøntsager i wokken over blå gasflamme' },
+]
+
+/** Billede med billedtekst. */
+function Figure({ caption, className = '', children }) {
+  return (
+    <figure className={`m-0 flex flex-col gap-2 ${className}`}>
+      {children}
+      <figcaption className="text-[15px] leading-[1.4] text-muted-2">{caption}</figcaption>
+    </figure>
+  )
+}
 
 /** Forrige/næste: vises først, når der er mere end én case. */
 function CaseNav() {
@@ -89,7 +115,11 @@ function CaseNav() {
   )
 }
 
-/** /cases/palmy-spisested/: den lange case. Kun fakta; ingen tal, resultater, udtalelser eller anmeldelser. */
+/**
+ * /cases/palmy-spisested/: den ene case. Kun fakta fra palmyspisested.com og Palmys egen kode; ingen tal, resultater, udtalelser eller
+ * anmeldelser. Billeder: Palmys egne (src/assets/billeder/palmy-*) og skærmbilleder af det live site. Mangler vi et billede, står
+ * der en grå pladsholder med teksten "BILLEDE MANGLER: ...".
+ */
 export default function PalmySpisested() {
   return (
     <>
@@ -119,6 +149,9 @@ export default function PalmySpisested() {
             <span aria-hidden="true">↗</span>
             <span className="sr-only">(åbner i ny fane)</span>
           </a>
+        </div>
+        <div className="mt-10 md:mt-16">
+          <ImageSlot name="palmy-facade" ratio="16 / 9" width={1280} height={720} eager alt="Facaden på Palmy Spisested med skiltet over vinduerne" fill="bg-surface" />
         </div>
       </section>
 
@@ -154,14 +187,32 @@ export default function PalmySpisested() {
         </div>
       </section>
 
+      {/* d0. Sådan ser det ud */}
+      <section aria-labelledby="udseende-titel" className="mx-auto max-w-[1440px] px-5 pb-12 md:px-14 md:pb-24">
+        <h2 id="udseende-titel" className="display t-h2s">
+          Sådan ser det ud
+        </h2>
+        <div className="mt-7 grid gap-6 md:mt-12 md:grid-cols-3 md:gap-8">
+          <Figure className="md:col-span-2" caption={`Forsiden på computer. Skærmbillede af palmyspisested.com, ${SHOT_DATE}.`}>
+            <ImageSlot name="palmy-case" ratio="16 / 10" width={2240} height={1400} alt="Forsiden på palmyspisested.com på computer: logo, telefonnummer til forudbestilling og menu" className="border border-hairline" />
+          </Figure>
+          <Figure caption={`Forsiden på telefon. Skærmbillede, ${SHOT_DATE}.`}>
+            <ImageSlot name="palmy-mobil" ratio="780 / 1688" width={780} height={1688} alt="Forsiden på palmyspisested.com på telefon: telefonnummer til forudbestilling og begyndelsen af menuen" className="mx-auto w-full max-w-[300px] border border-hairline md:max-w-none" />
+          </Figure>
+          <Figure className="md:col-span-3" caption={`Menukortet på computer. Skærmbillede af palmyspisested.com/menu, ${SHOT_DATE}.`}>
+            <ImageSlot name="palmy-menu" ratio="16 / 10" width={2240} height={1400} alt="Menukortet på palmyspisested.com med forretter og hovedretter, nummereret efter det trykte menukort" className="border border-hairline md:max-w-[66%]" />
+          </Figure>
+        </div>
+      </section>
+
       {/* d1. Hjemmesiden */}
       <section aria-labelledby="hjemmeside-titel" className="bg-surface">
         <div className="mx-auto max-w-[1440px] section-pad px-5 md:px-14">
           <h2 id="hjemmeside-titel" className="display t-h2">
             Hjemmesiden
           </h2>
-          <p className={`${body} mt-4`}>Bygget til telefonen først. Her er delene.</p>
-          <ul className="m-0 mt-8 grid list-none gap-2 p-0 md:mt-14 md:grid-cols-3">
+          <p className={`${body} mt-4`}>Bygget til telefonen først og tegnet som restaurantens trykte menukort og skilt. Her er siderne.</p>
+          <ul className="m-0 mt-8 grid list-none gap-2 p-0 md:mt-14 md:grid-cols-2 lg:grid-cols-4">
             {parts.map((p) => (
               <li key={p.title} className="flex flex-col gap-3 bg-paper p-5 md:p-6">
                 <h3 className={`${heading} text-[clamp(22px,6vw,28px)] leading-none tracking-[-0.03em]`}>{p.title}</h3>
@@ -169,6 +220,14 @@ export default function PalmySpisested() {
               </li>
             ))}
           </ul>
+          <ul className="m-0 mt-2 grid list-none gap-2 p-0 md:grid-cols-3">
+            {photos.map((p) => (
+              <li key={p.name}>
+                <ImageSlot name={p.name} ratio="4 / 5" width={800} height={1000} alt={p.alt} fill="bg-paper" />
+              </li>
+            ))}
+          </ul>
+          <p className="mt-3 mb-0 max-w-[60ch] text-[15px] leading-normal">Billederne er Palmys egne og ligger på sitet.</p>
         </div>
       </section>
 
@@ -176,18 +235,24 @@ export default function PalmySpisested() {
       <section aria-labelledby="seo-titel" className="mx-auto grid max-w-[1440px] gap-7 section-pad px-5 md:grid-cols-[5fr_7fr] md:gap-14 md:px-14">
         <div className="flex flex-col gap-4">
           <h2 id="seo-titel" className="display t-h2s">
-            SEO
+            Lokal SEO
           </h2>
           <p className={body}>Det, der gør restauranten lettere at finde, når nogen søger. Kort og i almindeligt sprog.</p>
         </div>
-        <ul className="m-0 flex list-none flex-col gap-2 p-0">
-          {seoItems.map((s) => (
-            <li key={s.title} className="flex flex-col gap-2 bg-surface px-5 py-5 md:p-6">
-              <h3 className="text-xl tracking-[-0.02em]">{s.title}</h3>
-              <p className="m-0 max-w-[60ch] text-base leading-[1.5]">{s.text}</p>
-            </li>
-          ))}
-        </ul>
+        <div className="flex flex-col gap-2">
+          <ul className="m-0 flex list-none flex-col gap-2 p-0">
+            {seoItems.map((s) => (
+              <li key={s.title} className="flex flex-col gap-2 bg-surface px-5 py-5 md:p-6">
+                <h3 className="text-xl tracking-[-0.02em]">{s.title}</h3>
+                <p className="m-0 max-w-[60ch] text-base leading-[1.5]">{s.text}</p>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-2 grid gap-2 md:grid-cols-2">
+            <ImagePlaceholder what="skærmbillede af Palmys Google Business-profil" />
+            <ImagePlaceholder what="skærmbillede fra Search Console" />
+          </div>
+        </div>
       </section>
 
       {/* f. Teknisk */}
