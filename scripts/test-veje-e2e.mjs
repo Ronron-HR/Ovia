@@ -1,5 +1,5 @@
 /**
- * Browsertest af beregnerens tre veje: Ny hjemmeside · Løs et problem · Begge dele.
+ * Browsertest af beregnerens tre veje: Ny hjemmeside · Kun et system · Begge dele.
  *
  * Kræver en kørende `npm run preview` (http://localhost:4173, eller SITE=…) og Chrome (CHROME=… hvis den ikke ligger på
  * standardstien). SHOTS=<mappe> gemmer et skærmbillede af hvert trin for hver vej (navn: <bredde>-<vej>-<nr>-<trin>.png).
@@ -156,7 +156,8 @@ function layoutCheck() {
       const a = boxes[i]
       const b = boxes[j]
       if (a.el === b.el || a.el.contains(b.el) || b.el.contains(a.el)) continue
-      if (a.el.closest('.sticky') || b.el.closest('.sticky')) continue
+      // Klæbende/svævende lag (fx prisbjælken i bunden på mobil) ligger bevidst oven på indhold, der ruller forbi.
+      if (a.el.closest('.sticky, .fixed') || b.el.closest('.sticky, .fixed')) continue
       const w = Math.min(a.r, b.r) - Math.max(a.l, b.l)
       const h = Math.min(a.b, b.b) - Math.max(a.t, b.t)
       if (w > 2 && h > 3) out.push(`overlap: "${a.name}" og "${b.name}" (${Math.round(w)}×${Math.round(h)} px)`)
@@ -204,7 +205,7 @@ const layout = async (page, tag) => {
   check(found.size === 0, `${tag}: layout ${[...found].slice(0, 4).join(' | ')}`)
 }
 
-const NEED = { site: 'Ny hjemmeside', system: 'Løs et problem', both: 'Begge dele' }
+const NEED = { site: 'Ny hjemmeside', system: 'Kun et system', both: 'Begge dele' }
 const BOOK = 'Gæsterne skal kunne booke bord'
 const ORDER = 'Gæsterne skal kunne bestille mad'
 const IDEA = 'Lad et system tage det'
@@ -238,7 +239,8 @@ async function walk(w, h, path) {
   // Trin 1: hvad har I brug for?
   const t0 = await text(page)
   check(t0.includes('Hvad har I brug for?') && Object.values(NEED).every((x) => t0.includes(x)), `${tag}: første trin viser "Hvad har I brug for?" og tre valg`)
-  check((await buttonsText(page)).some((b) => b.startsWith('Vælg, hvad I har brug for')), `${tag}: Næste er slukket med "Vælg, hvad I har brug for", til der er valgt`)
+  if (mobile) check((await page.$('#prisberegner button:disabled')) === null, `${tag}: første trin har ingen slukket Næste-knap (et tryk går videre)`)
+  else check((await buttonsText(page)).some((b) => b.startsWith('Vælg, hvad I har brug for')), `${tag}: Næste er slukket med "Vælg, hvad I har brug for", til der er valgt`)
   await here('behov')
   await press(page, NEED[path])
   if (mobile) check((await text(page)).includes(`Trin 2 af ${names.length} · ${names[1]}`), `${tag}: ét tryk på vejen går videre til "${names[1]}"`)
@@ -249,6 +251,17 @@ async function walk(w, h, path) {
   }
 
   if (path !== 'system') {
+    if (mobile) {
+      // Mobil: kortene er kompakte (navn, pris, antal sider), så alle tre ses på én skærm sammen med prisen.
+      const cut = await page.evaluate(() => {
+        const bar = document.querySelector('#prisberegner [role="button"][aria-label*="dine valg"]').getBoundingClientRect()
+        return [...document.querySelectorAll('#prisberegner [role="group"][aria-label="Vælg pakke"] button')].filter((b) => b.getBoundingClientRect().bottom > bar.top + 0.5).length
+      })
+      check(cut === 0, `${tag}: alle tre pakker ses over prisbjælken uden at rulle (${cut} skjult)`)
+      const short = await text(page)
+      check(short.includes('1–3 sider') && short.includes('Op til 6 sider') && !short.includes('Mobilvenlig'), `${tag}: pakkerne viser pris og antal sider; indholdet er foldet sammen`)
+      await press(page, 'Se hvad der er med i pakkerne')
+    }
     const tp = await text(page)
     check(tp.includes('Hjemmeside designet til jer') && tp.includes('Mobilvenlig') && tp.includes('på dansk og engelsk') && tp.includes('1–3 sider') && tp.includes('Op til 6 sider'), `${tag}: pakkerne viser "Hjemmeside designet til jer" og de konkrete dele`)
     check(!/Engelsk version/.test(tp), `${tag}: intet tilvalg "Engelsk version"`)
@@ -271,6 +284,11 @@ async function walk(w, h, path) {
   }
 
   if (path !== 'site') {
+    if (mobile) {
+      // Mobil: kortene viser titel og pris; idéerne står bag "Se hvad det dækker".
+      check(!(await text(page)).includes('Poster indhold for jer'), `${tag}: systemkortene er kompakte (idéerne er foldet sammen)`)
+      await press(page, 'Se hvad det dækker')
+    }
     const ts = await text(page)
     check(ts.includes(`Trin ${path === 'both' ? 3 : 2} af ${names.length} · Hvad skal løses?`) || !mobile, `${tag}: trinnet hedder "Hvad skal løses?"`)
     if (path === 'system') check(ts.includes('Har I en hjemmeside, kobler vi det på den') && ts.includes('Har I ikke, får det sit eget link'), `${tag}: siger, hvor løsningen sidder`)

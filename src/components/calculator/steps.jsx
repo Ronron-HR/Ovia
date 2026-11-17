@@ -49,10 +49,10 @@ export function SiteBlock({ pkg, wide = false }) {
 }
 
 /** Første trin: tre store valg. */
-export function NeedList({ calc, wide = false, autoNext = false }) {
+export function NeedList({ calc, wide = false, autoNext = false, compact = false }) {
   const { state, dispatch } = calc
   return (
-    <div className="flex flex-col gap-3" role="group" aria-label={needTitle}>
+    <div className={`flex flex-col ${compact ? 'gap-2' : 'gap-3'}`} role="group" aria-label={needTitle}>
       {needs.map((n) => {
         const on = state.selection.path === n.key
         return (
@@ -64,11 +64,11 @@ export function NeedList({ calc, wide = false, autoNext = false }) {
               dispatch({ type: 'setPath', path: n.key })
               if (autoNext) dispatch({ type: 'next' })
             }}
-            className={`${choice(on)} flex items-center gap-4 ${wide ? 'px-6 py-6' : 'p-4'} [--press:.98]`}
+            className={`${choice(on)} flex items-center gap-4 ${wide ? 'px-6 py-6' : compact ? 'px-4 py-3' : 'p-4'} [--press:.98]`}
           >
             <span className="flex min-w-0 flex-1 flex-col gap-1">
-              <span className={`${heading} ${wide ? 'text-[22px]' : 'text-[clamp(18px,5.2vw,22px)]'} leading-[1.15] tracking-[-0.02em]`}>{n.title}</span>
-              <span className="text-sm leading-[1.35]">{n.desc}</span>
+              <span className={`${heading} ${wide ? 'text-[22px]' : compact ? 'text-[20px]' : 'text-[clamp(18px,5.2vw,22px)]'} leading-[1.15] tracking-[-0.02em]`}>{n.title}</span>
+              <span className={`${compact ? 'text-[13px]' : 'text-sm'} leading-[1.35]`}>{n.desc}</span>
             </span>
             <Check on={on} size={wide ? 28 : 24} />
           </button>
@@ -82,14 +82,15 @@ export function NeedList({ calc, wide = false, autoNext = false }) {
  * Hvad skal løses? Tre kort, aldrig flere: bordbooking, online bestilling og noget bygget specielt. Flervalg. Prisen står ved hvert kort,
  * før man trykker; bygget specielt har ingen pris (den aftales).
  */
-export function ProblemList({ calc, wide = false }) {
+export function ProblemList({ calc, wide = false, compact = false }) {
   const { state, dispatch } = calc
   const sel = state.selection
   const custom = prices.systems.custom
-  const card = (on) => `${choice(on)} flex flex-col gap-1 ${pad(wide)} [--press:.98]`
+  // compact (mobil): titel og pris; beskrivelserne vises med "Se hvad det dækker" (Mobile.jsx).
+  const card = (on) => `${choice(on)} flex flex-col gap-1 ${compact ? 'px-4 py-3' : pad(wide)} [--press:.98]`
   const title = `${heading} ${wide ? 'text-[19px]' : 'text-[17px]'} leading-[1.15] tracking-[-0.015em]`
   return (
-    <div className="flex flex-col gap-3" role="group" aria-label="Hvad skal løses?">
+    <div className={`flex flex-col ${compact ? 'gap-2' : 'gap-3'}`} role="group" aria-label="Hvad skal løses?">
       <button
         type="button"
         aria-pressed={sel.custom > 0}
@@ -101,16 +102,20 @@ export function ProblemList({ calc, wide = false }) {
           <span className={title}>{custom.title}</span>
           <Check on={sel.custom > 0} size={wide ? 28 : 24} />
         </span>
-        <span className="text-sm leading-[1.35]">{custom.desc}</span>
-        <span className="flex flex-col gap-[3px]">
-          {custom.ideas.map((idea) => (
-            <span key={idea} className="text-sm leading-[1.35]">
-              – {idea}
+        {!compact && (
+          <>
+            <span className="text-sm leading-[1.35]">{custom.desc}</span>
+            <span className="flex flex-col gap-[3px]">
+              {custom.ideas.map((idea) => (
+                <span key={idea} className="text-sm leading-[1.35]">
+                  – {idea}
+                </span>
+              ))}
             </span>
-          ))}
-        </span>
+          </>
+        )}
         <span className="price text-[13px] leading-[1.4] whitespace-normal">
-          {custom.price}. {custom.priceNote}
+          {custom.price}.{compact ? '' : ` ${custom.priceNote}`}
         </span>
       </button>
       {prices.systems.standard.map((s) => {
@@ -121,7 +126,7 @@ export function ProblemList({ calc, wide = false }) {
               <span className={title}>{s.title}</span>
               <Check on={on} size={wide ? 28 : 24} />
             </span>
-            <span className="text-sm leading-[1.35]">{s.desc}</span>
+            {!compact && <span className="text-sm leading-[1.35]">{s.desc}</span>}
             <span className="price text-[13px] leading-[1.4] whitespace-normal">{tagText(optionTag(sel, s.key))}</span>
           </button>
         )

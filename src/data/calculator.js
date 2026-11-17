@@ -10,7 +10,7 @@ export const needs = [
   { key: 'site', title: 'Ny hjemmeside', desc: 'Vi laver en ny hjemmeside til jer, med Google-profil og det hele.', mail: 'Kun en ny hjemmeside' },
   {
     key: 'system',
-    title: 'Løs et problem',
+    title: 'Kun et system',
     desc: 'Et system, der tager det, der æder jeres tid. Fx at svare på mails, poste indhold eller tælle lageret. Kræver ikke en ny hjemmeside.',
     mail: 'Løs et problem (uden ny hjemmeside)',
   },

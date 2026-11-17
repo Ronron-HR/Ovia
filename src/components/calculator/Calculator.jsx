@@ -99,7 +99,8 @@ export default function Calculator() {
       const br = bar.getBoundingClientRect()
       if (br.height < 40) return
       const tx = br.left - rr.left + br.width / 2
-      const ty = br.top - rr.top + 52
+      // Målt fra barens bund (43 px over den), ikke toppen: ved første valg vokser baren opad, mens beløbet flyver.
+      const ty = br.bottom - rr.top - 43
       const sign = (d) => (d > 0 ? '+' : '−')
       const parts = []
       if (dO) parts.push(sign(dO) + formatKr(Math.abs(dO)))
@@ -119,7 +120,6 @@ export default function Calculator() {
         ref={rootRef}
         onPointerDownCapture={onPointerDownCapture}
         className="relative bg-paper text-ink"
-        style={isMobile ? { height: 'calc(100svh - 72px)', minHeight: 540 } : undefined}
       >
         {isMobile ? (
           <Mobile calc={{ ...calc, delta }} barRef={barRef} fly={fly ? <FlyingAmount fly={fly} /> : null} />

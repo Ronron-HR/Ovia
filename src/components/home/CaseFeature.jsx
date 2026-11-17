@@ -42,7 +42,7 @@ export default function CaseFeature() {
             ratio="16 / 10"
             width={2240}
             height={1400}
-            alt="Forsiden på palmyspisested.com: logo, telefonnummer til forudbestilling og menu"
+            alt="Forsiden på palmyspisested.com: overskriften Lidt Vietnam. Helt hjemmelavet., knappen Se menukortet, telefonnummer og et foto af stegte nudler med kylling"
             className="border border-hairline"
           />
         </a>

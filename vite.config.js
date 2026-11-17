@@ -18,6 +18,9 @@ export default defineConfig({
       output: {
         // React ligger i sin egen, cache-venlige fil frem for i en fil opkaldt efter en komponent.
         manualChunks: (id) => {
+          // three.js hentes kun dynamisk af heroens O (src/components/home/heroO/scene.js) og må
+          // ikke havne i vendor-filen, som alle sider henter med det samme.
+          if (id.replace(/\\/g, '/').includes('/node_modules/three/')) return
           if (id.includes('node_modules')) return 'vendor'
           // Fælles kode (navigation, kontakt, priser, beregnerlogik) i én lille fil i stedet for fem: færre forespørgsler i kæden.
           if (/\/src\/(lib\/|data\/|components\/(layout|ui)\/|pageKeys|routes|Site)/.test(id.replace(/\\/g, '/'))) return 'app'

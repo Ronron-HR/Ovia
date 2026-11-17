@@ -112,18 +112,28 @@ for (const [w, h] of [
   check(await page.evaluate(() => document.activeElement?.classList.contains('skip-link')), 'Tab: første stop er skip-linket')
   await page.evaluate(() => document.activeElement.blur())
 
-  await page.evaluate(() => document.querySelector('#prisberegner').scrollIntoView())
+  await page.evaluate(() => document.querySelector('#prisberegner').scrollIntoView({ behavior: 'instant' }))
   await wait(500)
   const top = await page.evaluate(() => Math.round(document.querySelector('#prisberegner > div').getBoundingClientRect().top))
   check(Math.abs(top - 72) <= 2, `beregneren ligger lige under navigationen (top ${top} px)`)
-  const calcH = await page.evaluate(() => Math.round(document.querySelector('#prisberegner > div').getBoundingClientRect().height))
-  check(Math.abs(calcH - (h - 72)) <= 2 || calcH >= 540, `beregneren fylder skærmen under navigationen (${calcH} px)`)
+  // Ingen fast højde eller indre rullefelt: prisbjælken står på skærmen sammen med trinnet.
+  const barBox = await page.evaluate(() => {
+    const r = document.querySelector('#prisberegner [role="button"][aria-label*="dine valg"]').getBoundingClientRect()
+    return { top: Math.round(r.top), bottom: Math.round(r.bottom) }
+  })
+  check(barBox.top > 72 && barBox.bottom <= h, `prisbjælken ses på skærmen sammen med trin 1 (${barBox.top}–${barBox.bottom} px)`)
+  check((await page.$$eval('#prisberegner .overflow-y-auto', (els) => els.filter((e) => !e.closest('[role="dialog"]')).length)) === 0, 'beregneren har intet indre rullefelt på mobil (kun prisarket ruller)')
   await shot(page, `${tag}-02-trin1`)
   const small1 = await smallTargets(page, '#prisberegner')
   check(small1.length === 0, `trin 1: trykflader ≥ 48 px ${small1.join(', ')}`)
   const t0 = await text(page)
-  check(t0.includes('Hvad har I brug for?') && t0.includes('Ny hjemmeside') && t0.includes('Løs et problem') && t0.includes('Begge dele'), 'trin 1: Hvad har I brug for?')
-  check((await page.$eval('#prisberegner button:disabled', (b) => b.textContent)).includes('Vælg, hvad I har brug for'), 'Næste er slukket, til der er valgt, hvad I har brug for')
+  check(t0.includes('Hvad har I brug for?') && t0.includes('Ny hjemmeside') && t0.includes('Kun et system') && t0.includes('Begge dele'), 'trin 1: Hvad har I brug for?')
+  check((await page.$('#prisberegner button:disabled')) === null, 'trin 1 har ingen slukket Næste-knap (et tryk på et kort går videre)')
+  const cut = await page.evaluate(() => {
+    const bar = document.querySelector('#prisberegner [role="button"][aria-label*="dine valg"]').getBoundingClientRect()
+    return [...document.querySelectorAll('#prisberegner [aria-pressed]')].filter((b) => b.getBoundingClientRect().bottom > bar.top + 0.5).map((b) => b.textContent.slice(0, 16))
+  })
+  check(cut.length === 0, `trin 1: alle tre valg står helt synlige uden at rulle ${cut.join(', ')}`)
   await press(page, 'Begge dele') // ét tryk på vejen går videre (mobil)
   const t1 = await text(page)
   check(['Start', 'Anbefalet', 'Max'].every((n) => t1.includes(n)) && t1.includes('5.000') && t1.includes('9.500') && t1.includes('15.000'), 'pakketrinnet viser de tre pakker med faste priser')
@@ -216,7 +226,7 @@ for (const [w, h] of [
 
   // Del-link: åbnes igen på opsummeringen.
   const re = await open(w, h, true, new URL(url).pathname + new URL(url).search)
-  await re.page.evaluate(() => document.querySelector('#prisberegner').scrollIntoView())
+  await re.page.evaluate(() => document.querySelector('#prisberegner').scrollIntoView({ behavior: 'instant' }))
   await wait(400)
   check((await text(re.page)).includes('Din pris er klar.'), 'del-linket åbner opsummeringen igen')
   t = await totals(re.page, '#prisberegner')
@@ -225,7 +235,7 @@ for (const [w, h] of [
 
   // Et gammelt link (fra før pakkerne) giver en venlig besked og vælger intet.
   const old = await open(w, h, true, '/?w=1&m=1&d=p&bk=1&s=4')
-  await old.page.evaluate(() => document.querySelector('#prisberegner').scrollIntoView())
+  await old.page.evaluate(() => document.querySelector('#prisberegner').scrollIntoView({ behavior: 'instant' }))
   await wait(300)
   check((await text(old.page)).includes('Beregneren er opdateret med nye pakker'), 'gammelt link: venlig besked')
   check((await totals(old.page, '#prisberegner')).length === 0 || (await totals(old.page, '#prisberegner'))[0] === '0', 'gammelt link: intet er valgt')
@@ -233,7 +243,7 @@ for (const [w, h] of [
 
   // Guidet hjælp: op til 6 sider + Bordbooking + ingen special = Anbefalet med Bordbooking (9.500 + 549/md.).
   const g = await open(w, h, true)
-  await g.page.evaluate(() => document.querySelector('#prisberegner').scrollIntoView())
+  await scrollCalc(g.page)
   await press(g.page, 'Ny hjemmeside')
   await press(g.page, 'Hjælp mig med at vælge')
   await shot(g.page, `${tag}-09-hjaelp`)
@@ -255,7 +265,7 @@ for (const [w, h] of [
   const { page, errors } = await open(1440, 900, false)
   await shot(page, '1440-01-forside')
   check((await overflow(page)) <= 0, 'ingen vandret scroll på forsiden')
-  await page.evaluate(() => document.querySelector('#prisberegner').scrollIntoView())
+  await page.evaluate(() => document.querySelector('#prisberegner').scrollIntoView({ behavior: 'instant' }))
   await wait(500)
   const aside = await page.$eval('#prisberegner aside', (e) => ({ pos: getComputedStyle(e).position, w: Math.round(e.getBoundingClientRect().width) }))
   check(aside.pos === 'sticky' && aside.w === 440, `spec-arket er sticky og 440 px bredt (${aside.pos}, ${aside.w})`)

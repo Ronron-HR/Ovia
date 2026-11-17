@@ -17,7 +17,7 @@ function rowInfo(key) {
 
 const jump = [
   ['Pakker', '#pakker'],
-  ['Løs et problem', '#system-alene'],
+  ['Kun et system', '#system-alene'],
   ['Levering', '#levering'],
   ['Ekstra ting', '#ekstra'],
   ['Vilkår', '#vilkaar'],
@@ -125,7 +125,7 @@ export default function Priser() {
 
       <section id="system-alene" aria-labelledby="system-alene-t" className="mx-auto max-w-[1440px] scroll-mt-20 px-5 pb-12 md:scroll-mt-[152px] md:px-14 md:pb-16">
         <h2 id="system-alene-t" className="display t-h2s">
-          Løs et problem
+          Kun et system
         </h2>
         <p className="mt-4 mb-0 max-w-[60ch] text-[17px] leading-normal">
           Vil I ikke have en ny hjemmeside, men løse noget, der driller? {prices.systemOnly.note}{intro && ' Introduktionsprisen gælder kun, når I får en ny hjemmeside hos os.'}

@@ -32,8 +32,9 @@ const VAT = 'Alle priser er ekskl. moms.'
 
 export const seo = {
   home: {
-    title: 'Hjemmeside til restauranter og caféer i Aarhus | OviaSpecs',
-    description: `Hjemmeside og Google-profil til restauranter og caféer i Aarhus, med bordbooking og online bestilling. Start: ${priceOf('start')} ${VAT}`,
+    title: 'Hjemmeside og systemer til restauranter og caféer | OviaSpecs',
+    // Højst 155 tegn (146 med de nuværende priser); intet enkelt område nævnt.
+    description: `Hjemmeside, Google-profil og systemer til restauranter og caféer, fx bordbooking og online bestilling. Start: ${priceOf('start')} ekskl. moms.`,
     updated: UPDATED,
   },
   hjemmeside: {

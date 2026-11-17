@@ -8,13 +8,20 @@ import { ExampleOffer, NeedList, ProblemList, SiteBlock, choice, functionsIntro 
 import { useExitList } from './useExitList.js'
 
 const heading = 'font-[family-name:var(--font-display)] font-bold [font-stretch:125%]'
+/** Navigationens højde på mobil (--nav-h-mobile). */
+const NAV_H = 72
 
-function StepHead({ children, aside }) {
+/**
+ * Ét trin skal kunne ses på én telefonskærm sammen med prisbjælken (målt ned til 390 × 664). Derfor er
+ * kortene kompakte: navn, pris og den vigtigste linje. De længere beskrivelser og punktlister står uændret
+ * bag én "Se …"-knap pr. trin (DetailsToggle).
+ */
+function DetailsToggle({ open, onToggle, show, hide }) {
   return (
-    <div className="mb-2 flex min-h-12 items-center justify-between gap-3">
-      <h3 className="text-[clamp(19px,5.6vw,24px)] leading-[1.05] tracking-[-0.025em]">{children}</h3>
-      {aside}
-    </div>
+    <button type="button" aria-expanded={open} onClick={onToggle} className="flex min-h-12 w-full items-center gap-2 text-left text-[15px] font-medium underline underline-offset-4">
+      {open ? hide : show}
+      <span aria-hidden="true">{open ? '↑' : '↓'}</span>
+    </button>
   )
 }
 
@@ -22,14 +29,14 @@ function Need({ calc }) {
   const { state } = calc
   return (
     <div>
-      <h2 className="text-[clamp(26px,8vw,36px)] leading-none tracking-[-0.035em]">Prisberegner</h2>
+      <h2 className="text-[26px] leading-none tracking-[-0.035em]">Prisberegner</h2>
       {state.notice && (
         <p role="status" className="mt-3 mb-0 bg-surface p-3 text-sm leading-normal">
           {state.notice}
         </p>
       )}
-      <h3 className="mt-4 mb-3 text-[clamp(19px,5.6vw,24px)] leading-[1.1] tracking-[-0.025em]">{needTitle}</h3>
-      <NeedList calc={calc} autoNext />
+      <h3 className="mt-3 mb-3 text-[20px] leading-[1.1] tracking-[-0.025em]">{needTitle}</h3>
+      <NeedList calc={calc} autoNext compact />
     </div>
   )
 }
@@ -37,19 +44,18 @@ function Need({ calc }) {
 function Packages({ calc }) {
   const { state, dispatch } = calc
   const sel = state.selection
+  const [details, setDetails] = useState(false)
   return (
     <div>
-      <StepHead>Vælg pakke</StepHead>
-      <button
-        type="button"
-        onClick={() => dispatch({ type: 'helpStart' })}
-        className="press flex min-h-12 w-full items-center justify-between bg-surface px-4 active:bg-ink active:text-paper"
-      >
-        <span className="text-[15px] font-medium whitespace-nowrap">Hjælp mig med at vælge</span>
-        <span aria-hidden="true">→</span>
-      </button>
-      <p className="mt-3 mb-0 text-[15px] leading-normal">Tryk på den pakke, der passer bedst. I kan altid gå tilbage og ændre.</p>
-      <div className="mt-3 flex flex-col gap-3" role="group" aria-label="Vælg pakke">
+      {/* Lav række: knappen har stadig 48 px trykflade, men den negative margen lader den gå ind i luften omkring. */}
+      <div className="mb-1 flex items-center justify-between gap-3">
+        <h3 className="text-[22px] leading-[1.05] tracking-[-0.025em]">Vælg pakke</h3>
+        <button type="button" onClick={() => dispatch({ type: 'helpStart' })} className="-my-3 min-h-12 flex-none text-[15px] font-medium underline underline-offset-4">
+          Hjælp mig med at vælge
+        </button>
+      </div>
+      <p className="m-0 text-[13px] leading-[1.4] text-muted-2">Tryk på den pakke, der passer bedst. I kan altid gå tilbage og ændre.</p>
+      <div className="mt-3 flex flex-col gap-2" role="group" aria-label="Vælg pakke">
         {prices.packages.map((p, i) => {
           const on = sel.pkg === i
           return (
@@ -59,30 +65,37 @@ function Packages({ calc }) {
               aria-pressed={on}
               data-removal={on || (sel.pkg !== null && i < sel.pkg) ? '' : undefined}
               onClick={() => dispatch({ type: 'togglePkg', pkg: i })}
-              className={`${choice(on)} flex flex-col gap-2 p-4 [--press:.98]`}
+              className={`${choice(on)} flex flex-col gap-1 px-4 py-3 [--press:.98]`}
             >
               <span className="flex w-full items-center gap-[10px]">
-                <span className={`${heading} text-[clamp(18px,5.2vw,22px)] leading-[1.1] tracking-[-0.025em]`}>{p.name}</span>
+                <span className={`${heading} text-[20px] leading-[1.1] tracking-[-0.025em]`}>{p.name}</span>
                 <span className="ml-auto">
                   <Check on={on} size={24} />
                 </span>
               </span>
-              <span className="text-[13px] leading-4">
-                <PkgPrice pkg={p} />
+              <span className="text-[13px] leading-[1.35]">
+                <PkgPrice pkg={p} /> · {p.pages}
               </span>
-              <SiteBlock pkg={p} />
-              <span className="flex flex-col gap-[2px]">
-                {p.short.map((pt) => (
-                  <span key={pt} className="text-sm leading-[1.35]">
-                    – {pt}
+              {details && (
+                <>
+                  <span className="mt-1">
+                    <SiteBlock pkg={p} />
                   </span>
-                ))}
-              </span>
+                  <span className="flex flex-col gap-[2px]">
+                    {p.short.map((pt) => (
+                      <span key={pt} className="text-sm leading-[1.35]">
+                        – {pt}
+                      </span>
+                    ))}
+                  </span>
+                </>
+              )}
             </button>
           )
         })}
       </div>
-      {sel.path === 'site' && <p className="mt-3 mb-0 text-[13px] leading-normal text-muted-2">Vil I også løse et problem? Gå tilbage og vælg “Begge dele”.</p>}
+      <DetailsToggle open={details} onToggle={() => setDetails((d) => !d)} show="Se hvad der er med i pakkerne" hide="Skjul indholdet" />
+      {sel.path === 'site' && <p className="m-0 text-[13px] leading-normal text-muted-2">Vil I også løse et problem? Gå tilbage og vælg “Begge dele”.</p>}
     </div>
   )
 }
@@ -90,15 +103,20 @@ function Packages({ calc }) {
 function Systems({ calc }) {
   const { state } = calc
   const sel = state.selection
+  const [details, setDetails] = useState(false)
   return (
     <div>
-      <StepHead>Hvad skal løses?</StepHead>
-      <p className="m-0 mb-1 text-[15px] leading-normal">{functionsIntro(sel)}</p>
-      <p className="m-0 mb-3 text-[15px] leading-normal">Vælg det, I vil have hjælp til. Tryk igen for at fjerne det.</p>
-      <ProblemList calc={calc} />
-      <p className="mt-3 mb-0 text-[13px] leading-normal text-muted-2">
-        {prices.systems.thirdParty} {prices.systems.excluded}
-      </p>
+      {/* Navnet står allerede i trinlinjen ("Trin 3 af 4 · Hvad skal løses?"); overskriften er kun for skærmlæsere. */}
+      <h3 className="sr-only">Hvad skal løses?</h3>
+      <p className="m-0 text-[13px] leading-[1.4]">{functionsIntro(sel)}</p>
+      <p className="m-0 mt-1 mb-3 text-[13px] leading-[1.4] text-muted-2">Vælg det, I vil have hjælp til. Tryk igen for at fjerne det.</p>
+      <ProblemList calc={calc} compact={!details} />
+      <DetailsToggle open={details} onToggle={() => setDetails((d) => !d)} show="Se hvad det dækker" hide="Skjul beskrivelserne" />
+      {details && (
+        <p className="m-0 text-[13px] leading-normal text-muted-2">
+          {prices.systems.thirdParty} {prices.systems.excluded}
+        </p>
+      )}
     </div>
   )
 }
@@ -214,6 +232,64 @@ function HelpResult({ calc }) {
 }
 
 /**
+ * Prisbjælkens plads. Bjælken står fast i bunden af skærmen (position: fixed), mens man er i beregneren og
+ * dens plads under trinnet endnu ikke er nået, og "parkerer" på pladsen, når man ruller dertil. Pladsen
+ * holder altid bjælkens højde, så intet hopper, og den står sidst i flowet, så den aldrig dækker sidste
+ * valg eller knapperne, når man er nede. Det er samme adfærd som position: sticky i bunden, men sticky
+ * blev placeret forkert under scroll i iOS Safari (bjælken hoppede op over knapperne).
+ */
+function DockedBar({ rootRef, children }) {
+  const slotRef = useRef(null)
+  const innerRef = useRef(null)
+  const [float, setFloat] = useState(false)
+  const [height, setHeight] = useState(0)
+
+  useEffect(() => {
+    const slot = slotRef.current
+    const inner = innerRef.current
+    const root = rootRef.current
+    if (!slot || !inner || !root) return
+    let raf = 0
+    const update = () => {
+      raf = 0
+      const vh = window.innerHeight
+      const h = inner.offsetHeight
+      const slotBottom = slot.getBoundingClientRect().top + h
+      // Svæv, når beregneren er kommet ind på skærmen, og pladsen endnu er under skærmens bund.
+      const next = root.getBoundingClientRect().top < vh - h && slotBottom > vh + 0.5
+      setFloat((f) => (f === next ? f : next))
+    }
+    const schedule = () => {
+      if (!raf) raf = requestAnimationFrame(update)
+    }
+    const ro = new ResizeObserver(() => {
+      setHeight(inner.offsetHeight)
+      schedule()
+    })
+    ro.observe(inner)
+    ro.observe(root)
+    window.addEventListener('scroll', schedule, { passive: true })
+    window.addEventListener('resize', schedule)
+    update()
+    return () => {
+      cancelAnimationFrame(raf)
+      ro.disconnect()
+      window.removeEventListener('scroll', schedule)
+      window.removeEventListener('resize', schedule)
+    }
+  }, [rootRef])
+
+  return (
+    <div ref={slotRef} style={float ? { height } : undefined}>
+      {/* z-30: over navigationen (z-20), så arket og bagtæppet (fixed) ligger øverst, når de er åbne. */}
+      <div ref={innerRef} className={float ? 'fixed inset-x-0 bottom-0 z-30' : 'relative z-30'}>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+/**
  * Bundbar og kvitteringsark. Baren viser valg og totaler; tryk, træk op eller
  * Enter/Space åbner arket, som lukkes med træk ned, bagtæppe, Luk eller Escape.
  */
@@ -233,7 +309,13 @@ function BarAndSheet({ calc, barRef, barVisible }) {
     if (!sheet) return
     const onKey = (e) => e.key === 'Escape' && dispatch({ type: 'sheet', open: false })
     document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
+    // Arket ligger fast over siden: siden bag det må ikke rulle imens.
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prevOverflow
+    }
   }, [sheet, dispatch, barRef])
 
   const down = (e) => {
@@ -291,10 +373,10 @@ function BarAndSheet({ calc, barRef, barVisible }) {
           onPointerUp={up}
           onPointerCancel={up}
           onKeyDown={barKey}
-          className="cursor-grab bg-ink px-4 pt-2 pb-3 text-paper select-none"
+          className="min-h-12 cursor-grab bg-ink px-4 pt-2 pb-2 text-paper select-none"
           style={{ touchAction: 'none' }}
         >
-          <span aria-hidden="true" className="mx-auto mb-2 block h-1 w-9 bg-muted" />
+          <span aria-hidden="true" className="mx-auto mb-1 block h-1 w-9 bg-muted" />
           <div className="flex items-baseline gap-3">
             {all.length > 0 && <span className="flex-none text-[13px] font-semibold whitespace-nowrap">{all.length} valg</span>}
             <span className="relative block min-w-0 flex-1 overflow-hidden text-[13px] leading-[1.35] text-ellipsis whitespace-nowrap text-on-ink-2">
@@ -315,7 +397,16 @@ function BarAndSheet({ calc, barRef, barVisible }) {
             </span>
             <span className="flex-none text-[13px] font-semibold whitespace-nowrap">{sheet ? 'Luk dine valg ↓' : 'Se dine valg ↑'}</span>
           </div>
-          {/* Kun de totaler, der har et beløb (en total uden beløb vises ikke); en total folder sig ud, når den får et beløb, og sammen efter nedtællingen, når den mister det. */}
+          {/* Kun de totaler, der har et beløb (en total uden beløb vises ikke); en total folder sig ud, når den får et beløb, og sammen efter nedtællingen, når den mister det.
+              Uden valg folder hele rækken sig sammen i højden (efter nedtælling og udtoning, 560 ms), så baren ikke har en tom, mørk flade. */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateRows: any ? '1fr' : '0fr',
+              transition: `grid-template-rows 320ms var(--ease-bar) ${any ? '0ms' : '560ms'}`,
+            }}
+          >
+          <div className="min-h-0 overflow-hidden">
           <div className="swap-out mt-[6px] flex items-end" data-off={any ? undefined : ''}>
             <div className="fold-x after-count" data-exiting={receipt.o > 0 ? undefined : ''}>
               <div className="relative flex flex-col gap-[3px] pr-5">
@@ -333,13 +424,15 @@ function BarAndSheet({ calc, barRef, barVisible }) {
             </div>
             <span className="ml-auto flex-none self-end pb-[2px] text-[13px] leading-tight whitespace-nowrap text-on-ink-2">ekskl. moms</span>
           </div>
+          </div>
+          </div>
         </div>
       </div>
 
       <div
         aria-hidden="true"
         onClick={() => dispatch({ type: 'sheet', open: false })}
-        className="absolute inset-0 z-40"
+        className="fixed inset-0 z-40"
         style={{ background: 'var(--scrim)', opacity: sheet ? 1 : 0, pointerEvents: sheet ? 'auto' : 'none', transition: 'opacity 300ms ease-out' }}
       />
       <div
@@ -347,9 +440,9 @@ function BarAndSheet({ calc, barRef, barVisible }) {
         aria-label="Din pris"
         aria-modal="true"
         inert={!sheet}
-        className="absolute right-0 bottom-0 left-0 z-[41] flex flex-col bg-ink text-paper"
+        className="fixed right-0 bottom-0 left-0 z-[41] flex flex-col bg-ink text-paper"
         style={{
-          maxHeight: '86%',
+          maxHeight: '86svh',
           transform,
           // Lukket ark tegnes ikke: visibility skifter først, når lukkeanimationen er færdig.
           visibility: sheet || dragging ? 'visible' : 'hidden',
@@ -437,8 +530,9 @@ export default function Mobile({ calc, barRef, fly }) {
   const barVisible = (!inHelp && step !== 'sum') || (inHelp && hq === 3)
   const multiNextOk = inHelp && hq === 1 && (help.a[1] || []).length > 0
 
-  // Nyt trin: tilbage til toppen og fokus på panelet, så tastatur og skærmlæser følger med.
-  const bodyRef = useRef(null)
+  // Nyt trin: beregnerens top rulles op lige under navigationen (så hele trinnet og prisbjælken ses på
+  // én skærm), og fokus flyttes til panelet, så tastatur og skærmlæser følger med.
+  const rootRef = useRef(null)
   const panelRef = useRef(null)
   const first = useRef(true)
   const panelKey = inHelp ? `h${hq}` : `s${step}`
@@ -447,20 +541,27 @@ export default function Mobile({ calc, barRef, fly }) {
       first.current = false
       return
     }
-    bodyRef.current?.scrollTo({ top: 0 })
+    const section = panelRef.current?.closest('#prisberegner')
+    if (section) {
+      const top = section.getBoundingClientRect().top + window.scrollY - NAV_H
+      // Øjeblikkeligt (ikke glidende): siden skal stå stille, når man trykker på næste valg. Trinnet
+      // toner selv ind (anim-step). 'instant', fordi html har scroll-behavior: smooth.
+      if (Math.abs(window.scrollY - top) > 2) window.scrollTo({ top, behavior: 'instant' })
+    }
     panelRef.current?.focus({ preventScroll: true })
   }, [panelKey])
 
   // Handlingsknapperne ligger i rullefeltet: lige under sidste valg (16 px margen + 8 px polstring = 24 px), og klæbet til bunden over bundbaren, hvis indholdet er højere.
+  // Første trin uden valg har ingen knap: et tryk på et kort går selv videre, og en deaktiveret knap skjulte bare "Begge dele" på lave skærme.
   const actions =
-    !inHelp && step !== 'sum' ? (
+    !inHelp && step !== 'sum' && !(step === 'need' && nextDisabled) ? (
       <div className={canBackStep ? 'grid gap-2' : ''} style={canBackStep ? { gridTemplateColumns: 'auto minmax(0,1fr)' } : undefined}>
         {canBackStep && (
           <button
             type="button"
             aria-label="Tilbage"
             onClick={() => dispatch({ type: 'mBack' })}
-            className="press min-h-14 border-2 border-ink bg-paper px-5 text-[15px] font-medium [--press:.96]"
+            className="press min-h-12 border-2 border-ink bg-paper px-5 text-[15px] font-medium [--press:.96]"
           >
             <span aria-hidden="true">← </span>Tilbage
           </button>
@@ -469,7 +570,7 @@ export default function Mobile({ calc, barRef, fly }) {
           type="button"
           disabled={nextDisabled}
           onClick={() => dispatch({ type: 'mNext' })}
-          className={`btn w-full justify-center ${nextDisabled ? '' : 'btn-ink'}`}
+          className={`btn min-h-12 w-full justify-center ${nextDisabled ? '' : 'btn-ink'}`}
         >
           {nextLabel}
         </button>
@@ -494,9 +595,12 @@ export default function Mobile({ calc, barRef, fly }) {
       </div>
     ) : null
 
+  // Ingen fast højde og intet indre rullefelt: trinnet flyder i siden, og prisbjælken klæber til
+  // skærmens bund, så længe beregneren er på skærmen (sticky inden for sektionen). Den står sidst i
+  // flowet og dækker derfor aldrig sidste valg eller knapperne.
   return (
-    <div className="relative flex h-full flex-col overflow-clip">
-      <div className="flex min-h-[52px] flex-none items-center gap-3 px-4 pt-[10px] pb-[2px]">
+    <div ref={rootRef} className="relative flex flex-col">
+      <div className="flex min-h-11 flex-none items-center gap-3 px-4 pt-2 pb-[2px]">
         {canBack && (
           <button type="button" aria-label="Tilbage" onClick={() => dispatch({ type: 'mBack' })} className="press min-h-12 flex-none border-2 border-ink bg-paper px-4 text-[15px] font-medium [--press:.96]">
             <span aria-hidden="true">← </span>Tilbage
@@ -544,7 +648,9 @@ export default function Mobile({ calc, barRef, fly }) {
         )}
       </div>
 
-      <div ref={bodyRef} className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-4 pt-3 pb-3" style={{ scrollbarWidth: 'none' }}>
+      {/* overflow-x: clip: trinnet glider 40 px ind fra højre (anim-step); uden klip gav det en kort vandret
+          scroll ved hvert trinskift. clip (ikke hidden) laver ingen rulleboks. */}
+      <div className="overflow-x-clip px-4 pt-3 pb-3">
         <div key={panelKey} ref={panelRef} tabIndex={-1} className="anim-step outline-none">
           {inHelp ? (
             hq < 3 ? (
@@ -562,14 +668,12 @@ export default function Mobile({ calc, barRef, fly }) {
             <Summary calc={calc} />
           )}
         </div>
-        {actions && (
-          <div className="sticky bottom-0 z-[1] -mx-4 mt-4 bg-paper px-4 pt-2 pb-3">{actions}</div>
-        )}
+        {actions && <div className="mt-3">{actions}</div>}
       </div>
 
-      <div className="flex-none">
+      <DockedBar rootRef={rootRef}>
         <BarAndSheet calc={calc} barRef={barRef} barVisible={barVisible} />
-      </div>
+      </DockedBar>
       {fly}
     </div>
   )

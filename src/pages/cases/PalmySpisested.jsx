@@ -13,7 +13,7 @@ const body = 'm-0 max-w-[60ch] text-[17px] leading-[1.55] text-pretty'
 const label = 'text-[15px] font-semibold'
 
 /** Dato for skærmbillederne af det live site (taget fra palmyspisested.com). */
-const SHOT_DATE = '12. november 2026'
+const SHOT_DATE = '16. november 2026'
 
 /** Fakta i faktaboksen. */
 const facts = [
@@ -75,7 +75,7 @@ const seoItems = [
 const tech = [
   'Mobile-first: designet til telefonen først og skaleret op til computer.',
   'Telefonnummeret er et opkaldslink, og adressen er et link til Google Maps. Der er intet indlejret kort, der skal hentes.',
-  'Skrifterne (Libre Caslon Text og Source Sans 3) ligger på sitet selv og hentes ikke fra Google.',
+  'Skrifterne (DM Serif Display og Albert Sans) ligger på sitet selv og hentes ikke fra Google.',
   'Alle sider bygges som færdig HTML på forhånd, så de kan åbne hurtigt.',
   'Structured data af typen Restaurant med adresse, åbningstider, telefon, køkken, prisinterval og menu.',
 ]
@@ -194,10 +194,10 @@ export default function PalmySpisested() {
         </h2>
         <div className="mt-7 grid gap-6 md:mt-12 md:grid-cols-3 md:gap-8">
           <Figure className="md:col-span-2" caption={`Forsiden på computer. Skærmbillede af palmyspisested.com, ${SHOT_DATE}.`}>
-            <ImageSlot name="palmy-case" ratio="16 / 10" width={2240} height={1400} alt="Forsiden på palmyspisested.com på computer: logo, telefonnummer til forudbestilling og menu" className="border border-hairline" />
+            <ImageSlot name="palmy-case" ratio="16 / 10" width={2240} height={1400} alt="Forsiden på palmyspisested.com på computer: overskriften Lidt Vietnam. Helt hjemmelavet., knappen Se menukortet, telefonnummer og et foto af stegte nudler med kylling" className="border border-hairline" />
           </Figure>
           <Figure caption={`Forsiden på telefon. Skærmbillede, ${SHOT_DATE}.`}>
-            <ImageSlot name="palmy-mobil" ratio="780 / 1688" width={780} height={1688} alt="Forsiden på palmyspisested.com på telefon: telefonnummer til forudbestilling og begyndelsen af menuen" className="mx-auto w-full max-w-[300px] border border-hairline md:max-w-none" />
+            <ImageSlot name="palmy-mobil" ratio="780 / 1688" width={780} height={1688} alt="Forsiden på palmyspisested.com på telefon: overskriften, knappen Se menukortet, telefonnummer til bestilling og åbningstider" className="mx-auto w-full max-w-[300px] border border-hairline md:max-w-none" />
           </Figure>
           <Figure className="md:col-span-3" caption={`Menukortet på computer. Skærmbillede af palmyspisested.com/menu, ${SHOT_DATE}.`}>
             <ImageSlot name="palmy-menu" ratio="16 / 10" width={2240} height={1400} alt="Menukortet på palmyspisested.com med forretter og hovedretter, nummereret efter det trykte menukort" className="border border-hairline md:max-w-[66%]" />

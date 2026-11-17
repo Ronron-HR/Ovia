@@ -32,8 +32,9 @@ export const paths = {
   systemer: '/hjemmeside/#systemer',
 }
 
+/** Samme punkter og rækkefølge i menuen (desktop og mobil) og i footeren. "Ydelser" er siden om hjemmeside, systemer og Google. */
 export const navLinks = [
-  { label: 'Hjemmeside', href: paths.hjemmeside },
+  { label: 'Ydelser', href: paths.hjemmeside },
   { label: 'Priser', href: paths.priser },
   { label: 'Cases', href: paths.cases },
 ]

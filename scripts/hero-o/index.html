@@ -1,0 +1,38 @@
+<!doctype html>
+<!--
+  Kun til udvikling (bygges ikke med): renderer heroens O på et gennemsigtigt lærred, så
+  scripts/hero-o.mjs kan tage stillbilledet og kontrolbilleder ved bestemte tidspunkter.
+  Åbn http://localhost:5173/scripts/hero-o/ med `npm run dev` kørende.
+-->
+<html lang="da">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Heroens O – rendering</title>
+    <style>
+      html, body { margin: 0; background: #fff; }
+      canvas { display: block; }
+    </style>
+  </head>
+  <body>
+    <canvas id="c"></canvas>
+    <script type="module">
+      import { createHeroO } from '/src/components/home/heroO/scene.js'
+      const params = new URLSearchParams(location.search)
+      const w = Number(params.get('w') ?? 480)
+      const h = Number(params.get('h') ?? 520)
+      const canvas = document.getElementById('c')
+      canvas.style.width = `${w}px`
+      canvas.style.height = `${h}px`
+      const api = await createHeroO(canvas)
+      api.setSize(w, h, Number(params.get('dpr') ?? 2))
+      window.renderAt = (t) => {
+        api.renderAt(t)
+        return canvas.toDataURL('image/png')
+      }
+      window.heroO = api
+      if (params.has('play')) api.start()
+      else api.renderAt(Number(params.get('t') ?? 0))
+      window.ready = true
+    </script>
+  </body>
+</html>

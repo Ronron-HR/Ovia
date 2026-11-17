@@ -1,5 +1,6 @@
 import prices from '../../data/prices.json'
 import ImageSlot from '../ui/ImageSlot.jsx'
+import HeroO from './heroO/HeroO.jsx'
 
 const heading = 'font-[family-name:var(--font-display)] font-bold [font-stretch:125%]'
 
@@ -7,16 +8,22 @@ const steps = ['Vi mødes', 'I ser et udkast på jeres telefon', 'Det går live'
 
 export function Hero() {
   return (
-    <section aria-labelledby="hero-titel" className="mx-auto max-w-[1440px] px-5 pt-7 pb-10 md:px-14 md:pt-[120px] md:pb-[136px]">
-      <h1
-        id="hero-titel"
-        className="display display-hero max-w-[12ch] text-[clamp(38px,11.6vw,52px)] md:text-[clamp(64px,9.4vw,152px)]"
-      >
-        Fra Google til bordet.
-      </h1>
-      <div className="mt-5 flex flex-wrap items-end justify-between gap-6 md:mt-14 md:ml-[33%] md:gap-7">
-        <p className="m-0 max-w-[34ch] text-[17px] leading-[1.45] text-pretty md:text-[clamp(17px,1.5vw,21px)]">
-          Hjemmeside og Google-profil til restauranter og caféer i Aarhus, og systemer, der tager det, der æder jeres tid. Faste priser.
+    <section aria-labelledby="hero-titel" className="mx-auto max-w-[1440px] px-5 pt-7 pb-10 md:px-14 md:pt-[72px] md:pb-[136px]">
+      <div className="grid items-center md:grid-cols-[minmax(0,1fr)_auto] md:gap-8">
+        <h1
+          id="hero-titel"
+          className="display display-hero max-w-[12ch] text-[clamp(38px,11.6vw,52px)] md:text-[clamp(64px,9.4vw,152px)]"
+        >
+          Fra Google til bordet.
+        </h1>
+        {/* Ringen er stemning, ikke hovedperson. Mobil: højst ca. 30 % af en 844 px høj skærm, så
+            overskrift, ring, tekst og knap står over folden. Desktop: 82 % af den bredde, der giver
+            overskriften plads til "Fra Google" på én linje (6,18 × skriftstørrelsen 9,4vw, højst 152 px). */}
+        <HeroO className="mx-auto mt-2 w-[min(60vw,232px)] md:mx-0 md:mt-0 md:w-[max(150px,min(380px,calc((41.9vw_-_150px)*0.82),calc((1288px_-_min(58.1vw,940px))*0.82)))]" />
+      </div>
+      <div className="mt-4 flex flex-wrap items-end justify-between gap-6 md:mt-7 md:ml-[33%] md:gap-7">
+        <p className="m-0 max-w-[34ch] text-[length:var(--text-lead-mobile)] leading-[1.4] text-pretty md:text-[clamp(17px,1.5vw,21px)] md:leading-[1.45]">
+          Hjemmesider og systemer til restauranter og caféer – vi tager det, der æder jeres tid. Faste priser.
         </p>
         <a href="#prisberegner" className="btn btn-ink hov-ink-soft w-full text-[17px] md:w-auto">
           <span>Se din pris</span>

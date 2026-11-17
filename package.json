@@ -5,11 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node --test src/lib/calculate.test.js src/lib/receipt.test.js src/components/calculator/useCalculator.test.js && node scripts/test-inquiry.mjs && vite build && vite build --ssr src/entry-server.jsx --outDir dist-ssr && node scripts/prerender.mjs",
+    "build": "node --test src/lib/calculate.test.js src/lib/receipt.test.js src/components/calculator/useCalculator.test.js src/components/home/heroO/heroO.test.js && node scripts/test-inquiry.mjs && vite build && vite build --ssr src/entry-server.jsx --outDir dist-ssr && node scripts/prerender.mjs",
     "lint": "oxlint",
     "preview": "vite preview",
     "images": "node scripts/images.mjs",
-    "test": "node --test src/lib/calculate.test.js src/lib/receipt.test.js src/components/calculator/useCalculator.test.js && node scripts/test-inquiry.mjs && node scripts/test-intro.mjs",
+    "test": "node --test src/lib/calculate.test.js src/lib/receipt.test.js src/components/calculator/useCalculator.test.js src/components/home/heroO/heroO.test.js && node scripts/test-inquiry.mjs && node scripts/test-intro.mjs",
     "test:e2e": "node scripts/test-redesign-e2e.mjs && node scripts/test-veje-e2e.mjs && node scripts/test-form-e2e.mjs",
     "fonts": "node scripts/fonts.mjs",
     "brand": "node scripts/brand-assets.mjs",
@@ -21,7 +21,8 @@
     "@tailwindcss/vite": "^4.3.3",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "tailwindcss": "^4.3.3"
+    "tailwindcss": "^4.3.3",
+    "three": "^0.187.0"
   },
   "devDependencies": {
     "@fontsource-variable/archivo": "^5.3.0",

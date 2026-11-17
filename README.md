@@ -20,7 +20,7 @@ Regler for teksten: vi-form, ingen "bureau", ingen oplysninger om alder, antal a
 Beregnerens første trin er "Hvad har I brug for?" med tre veje (højst 3 valg pr. skærmbillede), og kun de trin, der passer, vises:
 
 - **Ny hjemmeside:** Behov → Pakke → Samlet pris.
-- **Løs et problem** (uden ny hjemmeside): Behov → Hvad skal løses? → Samlet pris (ingen pakke og ingen rabat).
+- **Kun et system** (uden ny hjemmeside): Behov → Hvad skal løses? → Samlet pris (ingen pakke og ingen rabat).
 - **Begge dele:** Behov → Pakke → Hvad skal løses? → Samlet pris.
 
 Rabatten (introprisen) er ikke et trin, men én linje under pakkerne, og den vises kun, mens `introSlotsLeft` er over 0.
@@ -32,7 +32,7 @@ Alle pakker har "Hjemmeside designet til jer": mobilvenlig, menu, billeder, åbn
 - **Start** 5.000 kr. + 299 kr./md.: 1–3 sider, Google-profil, grundlæggende lokal SEO, link til kundens eget booking/bestilling. Ingen funktioner med.
 - **Anbefalet** 9.500 + 699/md.: op til 6 sider, 1 funktion med i prisen, Google-profil + 1 opslag/md., lokal SEO med lokale søgeord, 1 times rettelser/md.
 - **Max** 15.000 + 1.295/md.: så mange sider, som kunden har brug for, begge funktioner med i prisen, 2 opslag/md. og svar på anmeldelser, kvartalsvis SEO-gennemgang, 2 timers rettelser/md., kort månedlig status.
-- **Funktioner:** Bordbooking 2.500 + 299/md. · Online bestilling og takeaway 3.500 + 449/md. De månedlige priser er højere end før, fordi de kræver løbende opdatering og opsyn. Pakkernes første funktioner (`slots`) er med i pakkeprisen; flere koster funktionens egen pris, og alene (Løs et problem) koster de også deres egen pris. Mindst ét valg (funktion eller "noget andet").
+- **Funktioner:** Bordbooking 2.500 + 299/md. · Online bestilling og takeaway 3.500 + 449/md. De månedlige priser er højere end før, fordi de kræver løbende opdatering og opsyn. Pakkernes første funktioner (`slots`) er med i pakkeprisen; flere koster funktionens egen pris, og alene (Kun et system) koster de også deres egen pris. Mindst ét valg (funktion eller "noget andet").
 - **Frikøb** af siden 2.000. **Vilkår:** ingen binding, 1 måneds opsigelse, domænet står i kundens navn, hosting og domæne er med.
 
 Beregningen står i `src/lib/calculate.js` (`calculate`, `flowOf`, `optionTag`), kvitteringen og mailens linjer i `src/lib/receipt.js`. Valget i adresselinjen: `v` (vej: h hjemmeside, s system, b begge), `p` (pakke 0–2), `y` (funktionskoder: b bordbooking, o bestilling), `c` (noget bygget specielt, 0/1), `i` (intropris), `t` (trin: need, pkg, sys, sum; et gammelt `disc` bliver til sum). Kun felter, der hører til vejen, kommer med i linket og i prisen; serveren regner prisen ud af linket med samme funktioner som beregneren. Links fra pakke-versionen (uden `v`, med `e` og tal-trin) virker stadig: vejen udledes af indholdet og `e` ignoreres. Links fra før pakkerne (`w`, `m`, `b`, `d`, `bk`, `x`) kan ikke regnes om: beregneren viser en venlig besked, og workeren svarer 400 `old_selection`. Mailen til Ronny har linjen "Hvad de har brug for: …", og id'et i emnet begynder med vejens bogstav (OVIA-H…, OVIA-S…, OVIA-B…).

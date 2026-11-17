@@ -28,6 +28,7 @@
   --h2-desktop:clamp(40px,5vw,76px);
   --h2-small-mobile:clamp(26px,7.6vw,36px);
   --h2-small-desktop:clamp(32px,3.6vw,56px);
+  --text-lead-mobile:20px;    /* indledende tekst under en stor overskrift på mobil (heroen); godkendt nov. 2026 */
   --display-tracking:-0.04em; /* -0.045em på hero */
   --display-leading:.92;
 
